@@ -1,0 +1,115 @@
+# generated: 2026-09-08
+# last_updated: 2026-09-08
+# project: explore
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: {project-root}/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-09-08
+last_updated: 2026-09-08
+project: explore
+project_key: NOKEY
+tracking_system: file-system
+story_location: "{project-root}/_bmad-output/implementation-artifacts"
+
+development_status:
+  epic-1: in-progress
+  1-1-initialisation-du-projet: ready-for-dev
+  1-2-redaction-de-claude-md: backlog
+  1-3-selectionner-un-mode-jds-et-demarrer-une-partie: backlog
+  1-4-configurer-les-parametres-du-match-avant-de-demarrer: backlog
+  1-5-saisir-le-score-dune-serie-au-pave-numerique: backlog
+  1-6-calcul-et-affichage-du-score-total-en-temps-reel: backlog
+  1-7-annuler-la-saisie-en-cours-avant-validation: backlog
+  1-8-annuler-la-derniere-serie-validee: backlog
+  1-9-saisir-un-score-negatif: backlog
+  1-10-terminer-une-partie-et-consulter-le-recapitulatif-automatique: backlog
+  1-11-detecter-automatiquement-la-fin-dun-set-ou-dun-match: backlog
+  1-12-preserver-letat-de-la-partie-en-cas-de-fermeture-accidentelle: backlog
+  1-13-fonctionner-offline-et-sinstaller-comme-application-native: backlog
+  1-14-modifier-les-noms-des-joueurs-en-cours-de-partie: backlog
+  1-15-reinitialiser-une-partie-en-cours: backlog
+  1-16-activer-desactiver-lannonce-vocale-du-score: backlog
+  1-17-detecter-linactivite-prolongee-et-alerter-lutilisateur: backlog
+  epic-1-retrospective: optional
+
+  epic-2: backlog
+  2-1-selectionner-le-mode-3-bandes-et-demarrer-une-partie-avec-chronometre-actif: backlog
+  2-2-incrementer-le-score-point-par-point-tap-du-joueur-assis: backlog
+  2-3-saisir-un-score-global-en-fin-de-serie-backup-pave-numerique: backlog
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  3-1-sauvegarder-automatiquement-une-partie-terminee-dans-lhistorique: backlog
+  3-2-consulter-la-liste-des-parties-jouees: backlog
+  3-3-consulter-le-detail-complet-dune-partie-passee: backlog
+  3-4-conserver-lhistorique-des-parties-pendant-au-minimum-30-jours: backlog
+  3-5-detecter-et-signaler-un-nouveau-record-personnel-en-fin-de-partie: backlog
+  epic-3-retrospective: optional
+
+  epic-4: backlog
+  4-1-creer-un-compte-joueur-avec-un-identifiant-court-memorisable: backlog
+  4-2-sidentifier-sur-une-tablette-de-club-avec-son-identifiant: backlog
+  4-3-consulter-mes-statistiques-cumulees-de-carriere: backlog
+  4-4-visualiser-levolution-de-ma-moyenne-dans-le-temps: backlog
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-gerer-les-tables-de-son-club: backlog
+  5-2-synchroniser-automatiquement-les-donnees-locales-vers-le-cloud: backlog
+  5-3-consulter-les-statistiques-dusage-du-club: backlog
+  5-4-gerer-son-abonnement-club: backlog
+  5-5-activer-un-minuteur-de-facturation-a-la-table: backlog
+  epic-5-retrospective: optional
+
+  epic-6: backlog
+  6-1-activer-un-affichage-grand-format-lisible-a-distance: backlog
+  6-2-diffuser-les-scores-sur-un-ecran-tv-du-reseau-local: backlog
+  6-3-generer-une-url-doverlay-stream-temps-reel: backlog
+  6-4-signaler-visuellement-les-moments-cles-dune-partie: backlog
+  epic-6-retrospective: optional
+
+  epic-7: backlog
+  7-1-se-connecter-a-une-interface-deportee-pour-arbitrer-un-match: backlog
+  7-2-valider-et-corriger-un-score-depuis-linterface-deportee: backlog
+  7-3-mettre-en-pause-et-reprendre-le-chronometre-depuis-linterface-deportee: backlog
+  epic-7-retrospective: optional
+
+  epic-8: backlog
+  8-1-creer-un-tournoi-et-assigner-des-matchs-aux-tables-disponibles: backlog
+  8-2-consulter-un-tableau-de-bord-centralise-de-toutes-les-tables-actives: backlog
+  8-3-suivre-la-progression-du-tournoi-classements-disponibilite-des-tables: backlog
+  epic-8-retrospective: optional
+
+  epic-9: backlog
+  9-1-exporter-les-resultats-dans-un-format-compatible-avec-les-systemes-federaux: backlog
+  epic-9-retrospective: optional

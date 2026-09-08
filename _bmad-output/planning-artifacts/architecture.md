@@ -108,8 +108,8 @@ src/
 │   ├── useGameStore.ts
 │   └── useHistoryStore.ts
 ├── services/        ← logique métier / storage
-│   ├── storage.ts   ← localStorage (état partie en cours)
-│   └── database.ts  ← Dexie.js (historique)
+│   ├── storageService.ts   ← localStorage (état partie en cours)
+│   └── databaseService.ts  ← Dexie.js (historique)
 ├── composables/     ← logique réutilisable
 │   └── usePointerEvents.ts
 ├── components/      ← Vue SFCs flat (pas de sous-dossiers en V1)
@@ -258,15 +258,15 @@ Réglages en V1 : modales inline sur `GameView`, pas de route dédiée.
 **Séquence d'implémentation issue de ces décisions :**
 1. Init projet + `CLAUDE.md`
 2. Types TypeScript (`game.ts`, `history.ts`)
-3. Services storage (`storage.ts`, `database.ts`)
+3. Services storage (`storageService.ts`, `databaseService.ts`)
 4. Stores Pinia (`useGameStore`, `useHistoryStore`)
 5. Composants UI (PlayerPanel, CenterPanel, NumericPad)
 6. Routing + vues (GameView, HistoryView, GameDetailView)
 
 **Dépendances croisées :**
 - Les types → utilisés par stores ET services → utilisés par composants
-- `useGameStore` dépend de `storage.ts` (localStorage)
-- `useHistoryStore` dépend de `database.ts` (Dexie.js)
+- `useGameStore` dépend de `storageService.ts` (localStorage)
+- `useHistoryStore` dépend de `databaseService.ts` (Dexie.js)
 - `GameView` orchestre `PlayerPanel` + `CenterPanel` via `useGameStore`
 
 ## Patterns d'Implémentation & Règles de Consistance
@@ -405,10 +405,14 @@ async function loadHistory(): Promise<void> {
 
 ## Structure du Projet & Frontières Architecturales
 
+### Repository Layout
+
+Le dépôt Git racine (déjà existant, contient `_bmad/`, `_bmad-output/`, `docs/`, `explore/`, `.claude/`) héberge tout — artefacts BMad inclus — pour rester synchronisé entre les deux postes de travail de Nathan. Le code applicatif ne vit pas à la racine du dépôt : il est isolé dans un sous-dossier dédié `carom-scoreboard/`, dont l'arborescence complète est détaillée ci-dessous. Toute commande `npm`/`vite`/`vitest` s'exécute avec ce sous-dossier comme working directory.
+
 ### Arborescence Complète
 
 ```
-carom-scoreboard/
+carom-scoreboard/               ← sous-dossier applicatif, PAS la racine du dépôt Git
 │
 ├── CLAUDE.md                    ← 🔑 Guide IA (premier fichier créé)
 ├── README.md
@@ -501,7 +505,7 @@ Utilisateur (touch/pointer)
 | FR7-FR11 — Saisie & Correction | `NumericPad.vue`, `useGameStore.ts` |
 | FR12-FR16 — Modes de jeu | `ModeSelector.vue`, `types/game.ts` |
 | FR17-FR20 — Stats & Historique | `GameSummary.vue`, `useHistoryStore.ts`, `databaseService.ts`, `HistoryView.vue`, `GameDetailView.vue` |
-| FR39-FR43 — Admin & Config | `ModeSelector.vue`, `PlayerPanel.vue` (noms éditables inline) |
+| FR39-FR43 — Admin & Config | `ModeSelector.vue`, `PlayerPanel.vue` (noms éditables inline), `CenterPanel.vue` (FR43 — alerte d'inactivité) |
 | NFR1-NFR4 — Performance tactile | `usePointerEvents.ts`, `assets/main.css` |
 | NFR5-NFR8 — Fiabilité offline | `storageService.ts`, `databaseService.ts` |
 
@@ -535,7 +539,7 @@ Toutes les décisions sont compatibles. Aucune contradiction détectée. Écosys
 | FR7-FR11 Saisie/Correction | ✅ | `NumericPad`, `useGameStore` |
 | FR12-FR16 Modes de jeu | ✅ | `ModeSelector`, `types/game.ts` |
 | FR17-FR20 Stats/Historique | ✅ | `GameSummary`, `useHistoryStore`, vues history |
-| FR39-FR43 Admin/Config | ✅ | `PlayerPanel`, `ModeSelector` |
+| FR39-FR43 Admin/Config | ✅ | `PlayerPanel`, `ModeSelector`, `CenterPanel` |
 | FR45-FR46 Offline + PWA | ✅ | vite-plugin-pwa + `manifest.json` |
 | NFR1 < 100ms tactile | ✅ | Pointer Events + touch-action |
 | NFR2 < 2s chargement | ✅ | Vite build + cache Service Worker |
