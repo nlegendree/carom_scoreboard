@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+@theme {
+  /* Couleurs joueur */
+  --color-player-yellow: #FFC72C;
+  --color-player-white: #FFFFFF;
+  --color-player-orange: #FF7A1A;
+  --color-player-magenta: #F0388B;
+
+  /* Texte garantissant un contraste WCAG AA (4.5:1 min) sur chaque couleur joueur */
+  --color-on-player-yellow: #000000;
+  --color-on-player-white: #000000;
+  --color-on-player-orange: #000000;
+  --color-on-player-magenta: #000000;
+
+  /* Accent système, alerte, victoire */
+  --color-accent: #1E88E5;
+  --color-on-accent: #000000;
+  --color-alert: #FF3B30;
+  --color-on-alert: #000000;
+  --color-victory-gold: #FFD54A;
+  --color-on-victory-gold: #000000;
+  --color-victory-ribbon: #E63946;
+  --color-on-victory-ribbon: #000000;
+
+  /* Fond sombre (valeur de première passe, susceptible d'être affinée) */
+  --color-bg: #0D1117;
+
+  /* Échelle typographique fluide */
+  --font-size-score: clamp(120px, 15vw, 200px);
+  --font-size-label: clamp(16px, 2vw, 24px);
+  --font-size-stat: clamp(14px, 1.2vw, 18px);
+
+  /* Unité de base d'espacement */
+  --spacing: 8px;
+
+  /* Taille minimale de zone tactile */
+  --size-touch-target: 90px;
+
+  /* Breakpoints responsive (mobile-first) : md reste au défaut Tailwind (768px) */
+  --breakpoint-lg: 1280px;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+[role="button"] {
+  touch-action: manipulation;
+  user-select: none;
+}
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: var(--color-bg);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+.card {
+  padding: 2em;
+}
+
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+

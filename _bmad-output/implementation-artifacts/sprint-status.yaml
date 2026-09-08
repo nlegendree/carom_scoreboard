@@ -1,5 +1,6 @@
 # generated: 2026-09-08
 # last_updated: 2026-09-08
+
 # project: explore
 # project_key: NOKEY
 # tracking_system: file-system
@@ -43,7 +44,7 @@ story_location: "{project-root}/_bmad-output/implementation-artifacts"
 
 development_status:
   epic-1: in-progress
-  1-1-initialisation-du-projet: ready-for-dev
+  1-1-initialisation-du-projet: done
   1-2-redaction-de-claude-md: backlog
   1-3-selectionner-un-mode-jds-et-demarrer-une-partie: backlog
   1-4-configurer-les-parametres-du-match-avant-de-demarrer: backlog
