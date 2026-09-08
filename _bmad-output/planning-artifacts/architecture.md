@@ -170,10 +170,20 @@ La création du projet et la rédaction du `CLAUDE.md` sont les **deux première
 
 ```typescript
 // src/types/game.ts
-type GameMode = 'libre' | 'cadre' | 'bande' | '3bandes'
+type GameCategoryId = 'series' | '3bandes' | 'quilles' | 'casin'
+
+type GameMode =
+  | 'libre' | 'cadre-47-2' | 'cadre-47-1' | 'cadre-71-2' | 'bande' | '4billes'
+  | '3bandes'
+  | 'quilles-5' | 'quilles-9'
+  | 'casin'
+
 type GameStatus = 'idle' | 'playing' | 'finished'
 
-interface Player { id: 'player1' | 'player2'; name: string; score: number }
+// La bille est attachée au côté : gauche blanche, droite jaune (UX-DR2).
+type PlayerColor = 'white' | 'yellow'
+
+interface Player { id: 'player1' | 'player2'; name: string; score: number; color: PlayerColor }
 interface Reprise { player1: number | null; player2: number | null; timestamp: number }
 
 interface GameState {
@@ -181,13 +191,17 @@ interface GameState {
   status: GameStatus
   player1: Player
   player2: Player
+  activePlayer: 'player1' | 'player2'
   reprises: Reprise[]
   currentInput: { player1: string; player2: string }
   isNegative: { player1: boolean; player2: boolean }
+  targetScore: number
   startedAt: number | null
   lastSaved: string
 }
 ```
+
+Le catalogue des modes (`GAME_CATEGORIES`) vit dans ce même fichier : il décrit les catégories, leurs modes et leur disponibilité, et sert de source unique à l'écran d'accueil. Il ne porte **pas** les règles de score propres à chaque mode, qui arrivent avec la story de chaque mode.
 
 **Historique — IndexedDB via Dexie.js (async, quota safe iOS Safari)**
 
@@ -229,6 +243,8 @@ V2+ (différé) : ID court joueur + auth dans app compagnon mobile (modèle cor�
 
 Réglages en V1 : modales inline sur `GameView`, pas de route dédiée.
 
+**État d'implémentation :** seule la route `/` est déclarée en V1a. `/history` et `/history/:id` seront ajoutées avec l'Epic 3, quand `HistoryView` et `GameDetailView` existeront réellement.
+
 **Stores Pinia :**
 - `useGameStore` : état courant de partie + persistance `localStorage`
 - `useHistoryStore` : historique des parties + `Dexie.js`
@@ -237,7 +253,8 @@ Réglages en V1 : modales inline sur `GameView`, pas de route dédiée.
 - `PlayerPanel.vue` (×2) — zone joueur avec pavé numérique
 - `CenterPanel.vue` — reprises, stats, contrôles
 - `NumericPad.vue` — saisie tactile
-- `ModeSelector.vue` — modal sélection mode de jeu
+- `HomeScreen.vue` — écran d'accueil : veille, sélection catégorie → mode, saisie des joueurs
+- `ActionBar.vue` — barre d'action basse commune à tous les écrans (retour, CTA contextuels)
 - `GameSummary.vue` — récapitulatif fin de partie
 
 ### Infrastructure & Déploiement
@@ -466,8 +483,8 @@ carom-scoreboard/               ← sous-dossier applicatif, PAS la racine du d�
     │   ├── CenterPanel.test.ts
     │   ├── NumericPad.vue       ← Pavé numérique tactile
     │   ├── NumericPad.test.ts
-    │   ├── ModeSelector.vue     ← Modal sélection mode de jeu
-    │   ├── ModeSelector.test.ts
+    │   ├── HomeScreen.vue       ← Écran d'accueil (veille + sélection catégorie/mode + joueurs)
+    │   ├── HomeScreen.test.ts
     │   ├── GameSummary.vue      ← Récapitulatif fin de partie
     │   ├── GameSummary.test.ts
     │   ├── HistoryList.vue      ← Liste des parties passées
@@ -503,9 +520,9 @@ Utilisateur (touch/pointer)
 |---|---|
 | FR1-FR6 — Gestion de partie | `useGameStore.ts`, `GameView.vue`, `PlayerPanel.vue` |
 | FR7-FR11 — Saisie & Correction | `NumericPad.vue`, `useGameStore.ts` |
-| FR12-FR16 — Modes de jeu | `ModeSelector.vue`, `types/game.ts` |
+| FR12-FR16 — Modes de jeu | `HomeScreen.vue`, `types/game.ts` (catalogue `GAME_CATEGORIES`) |
 | FR17-FR20 — Stats & Historique | `GameSummary.vue`, `useHistoryStore.ts`, `databaseService.ts`, `HistoryView.vue`, `GameDetailView.vue` |
-| FR39-FR43 — Admin & Config | `ModeSelector.vue`, `PlayerPanel.vue` (noms éditables inline), `CenterPanel.vue` (FR43 — alerte d'inactivité) |
+| FR39-FR43 — Admin & Config | `HomeScreen.vue`, `PlayerPanel.vue` (noms éditables inline), `CenterPanel.vue` (FR43 — alerte d'inactivité) |
 | NFR1-NFR4 — Performance tactile | `usePointerEvents.ts`, `assets/main.css` |
 | NFR5-NFR8 — Fiabilité offline | `storageService.ts`, `databaseService.ts` |
 
@@ -537,9 +554,9 @@ Toutes les décisions sont compatibles. Aucune contradiction détectée. Écosys
 |---|---|---|
 | FR1-FR6 Gestion partie | ✅ | `useGameStore`, `GameView`, `PlayerPanel` |
 | FR7-FR11 Saisie/Correction | ✅ | `NumericPad`, `useGameStore` |
-| FR12-FR16 Modes de jeu | ✅ | `ModeSelector`, `types/game.ts` |
+| FR12-FR16 Modes de jeu | ✅ | `HomeScreen`, `types/game.ts` |
 | FR17-FR20 Stats/Historique | ✅ | `GameSummary`, `useHistoryStore`, vues history |
-| FR39-FR43 Admin/Config | ✅ | `PlayerPanel`, `ModeSelector`, `CenterPanel` |
+| FR39-FR43 Admin/Config | ✅ | `PlayerPanel`, `HomeScreen`, `CenterPanel` |
 | FR45-FR46 Offline + PWA | ✅ | vite-plugin-pwa + `manifest.json` |
 | NFR1 < 100ms tactile | ✅ | Pointer Events + touch-action |
 | NFR2 < 2s chargement | ✅ | Vite build + cache Service Worker |

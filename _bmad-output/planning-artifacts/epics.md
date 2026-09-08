@@ -37,7 +37,7 @@ This document provides the complete epic and story breakdown for Carom Scoreboar
 
 **3. Modes de Jeu**
 
-- FR12 : Un joueur peut sélectionner un mode JDS — Libre, Cadre ou Bande — avec reprises, séries entières, calcul de moyenne et meilleure série
+- FR12 : Un joueur peut sélectionner un mode JDS — Libre, Cadre 47/2, Cadre 47/1, Cadre 71/2, 1 Bande ou 4 Billes — avec reprises, séries entières, calcul de moyenne et meilleure série. Les six modes partagent le même mécanisme de saisie ; seule leur distance de jeu par défaut diffère.
 - FR13 : Un joueur peut sélectionner le mode 3 Bandes avec timer de série actif en permanence *(V1b)*
 - FR14 : En mode 3 Bandes, un joueur peut incrémenter son score point par point ou saisir le score global en fin de série *(V1b)*
 - FR15 : Un joueur peut configurer le format du match avant le début d'une partie (objectif de score, nombre de sets)
@@ -147,7 +147,7 @@ Ceci doit être la toute première story d'implémentation, suivie immédiatemen
 ### UX Design Requirements
 
 - UX-DR1 : Implémenter la direction visuelle "Bloc Plein" — blocs pleine couleur par panneau joueur, chiffre de score géant comme unique élément dominant, console centrale minimale (uniquement mode + numéro de reprise).
-- UX-DR2 : Implémenter l'attribution dynamique de la couleur joueur (pas fixe gauche/droite) avec la palette à 4 couleurs : jaune doré `#FFC72C`, blanc `#FFFFFF`, orange vif `#FF7A1A`, rose/magenta `#F0388B` — assignée par partie, jamais par position.
+- UX-DR2 : Implémenter la convention de bille fixe par côté, conforme au carambole et aux scoreboards coréens de référence : **joueur de gauche = bille blanche** (bloc blanc `#FFFFFF`, chiffres noirs), **joueur de droite = bille jaune** (bloc jaune plein `#FFC72C`, chiffres noirs). Un bouton d'interversion permet d'échanger les deux joueurs de côté avant la première reprise ; la bille reste attachée au côté, jamais au joueur. *(Révisé le 2026-09-08 : remplace la règle initiale d'attribution dynamique à 4 couleurs, qui ne correspondait ni au matériel réel ni aux références CUESCO/Billiboard.)*
 - UX-DR3 : Réserver la couleur d'accent système (bleu `#1E88E5`) exclusivement aux actions neutres/système (+1, Valider) — jamais réutilisée comme couleur joueur, pour ne jamais confondre "marquer un point" et "action système".
 - UX-DR4 : Implémenter la couleur d'alerte/urgence (rouge LED `#FF3B30` sur fond noir) pour l'affichage du chrono/décompte (périmètre V1b).
 - UX-DR5 : Implémenter l'habillage victoire/récompense (or `#FFD54A` + ruban rouge `#E63946`) pour la médaille/mise en avant de l'écran de fin de partie.
@@ -156,10 +156,10 @@ Ceci doit être la toute première story d'implémentation, suivie immédiatemen
 - UX-DR8 : Imposer une taille minimale de zone tactile de 90×90px sur tous les éléments interactifs (NFR9), plus stricte que le minimum WCAG 44×44px, pour l'accessibilité du public senior.
 - UX-DR9 : Construire le composant `PlayerPanel` (×2, strictement symétrique) — chaque panneau autonome avec ses propres contrôles de saisie (pavé numérique, bouton +1 le cas échéant) ; aucune action affectant le score centralisée dans `CenterPanel`.
 - UX-DR10 : Construire le composant `NumericPad` avec les états : vide, saisie active, valeur hors limites (> 999, refus de saisie avec retour haptique court distinct, sans bloquer l'écran par un message).
-- UX-DR11 : Construire le composant `CenterPanel` limité au contexte neutre/partagé uniquement (mode de jeu, numéro de reprise, alerte d'inactivité) — jamais une action affectant le score ou favorisant un joueur.
-- UX-DR12 : Construire la modale `ModeSelector` — plein écran ou quasi plein écran, zones tactiles aussi grandes que le reste de l'interface, pas de fermeture accidentelle par tap en dehors (étape volontaire, pas un panneau qu'on ferme par erreur).
+- UX-DR11 : Construire le composant `CenterPanel` limité au contexte neutre/partagé (mode de jeu, numéro de reprise, alerte d'inactivité) et aux actions **symétriques**, qui s'appliquent identiquement aux deux joueurs : annulation de la dernière série (ANNULER) et interversion des billes. Jamais une action qui favorise un joueur ni une saisie de score, qui restent portées par chaque `PlayerPanel`. *(Amendé en revue de la Story 1.3, 2026-09-08 : la console centrale façon Billiboard/CUESCO porte ANNULER et l'interversion — la symétrie exigée porte sur l'absence de biais entre joueurs, pas sur l'absence de toute action.)*
+- UX-DR12 : Construire l'écran d'accueil `HomeScreen` — plein écran, fusionnant veille et sélection de mode, zones tactiles aussi grandes que le reste de l'interface, navigation à deux niveaux (catégorie → mode) sans fermeture accidentelle possible. *(Révisé le 2026-09-08 : remplace la modale `ModeSelector` initiale.)*
 - UX-DR13 : Construire le composant `GameSummary` façon "battle" — bandeau VS, médaille winner/loser, stats comparées côte à côte, état de mise en avant explicite en cas de nouveau record personnel.
-- UX-DR14 : Implémenter un indicateur de tour actif non-dépendant de la seule couleur (daltonisme) — combiner intensité, icône ou position, pas uniquement la teinte.
+- UX-DR14 : Implémenter un indicateur de tour actif non-dépendant de la seule teinte (daltonisme) : le panneau du joueur qui doit jouer est encadré d'un liseré rouge épais (`--color-turn-active`, convention CUESCO/Billiboard). Le signal est la **présence du cadre**, perceptible indépendamment de la perception des couleurs et à distance.
 - UX-DR15 : Implémenter la validation hybride du score — tap explicite sur "Valider" OU validation automatique après 3 secondes d'inactivité suivant la dernière frappe ; les deux chemins doivent aboutir au même état résultant.
 - UX-DR16 : Implémenter la correction avec le même poids visuel que la validation — bouton Corriger/Annuler toujours visible avec la même prominence que le pavé de saisie, jamais dans un sous-menu, accessible pendant la saisie (efface la saisie en cours) et après validation (annule la dernière série validée).
 - UX-DR17 : Implémenter le retour haptique + visuel sur chaque tap, < 100ms (NFR1) — retour de succès affiché directement sur le bloc joueur concerné (flash bref), pas de toast/notification textuelle.
@@ -184,7 +184,7 @@ FR8: Epic 1 - Annuler la saisie en cours
 FR9: Epic 1 - Annuler la dernière série validée
 FR10: Epic 1 - Saisie d'un score négatif
 FR11: Epic 1 - Retour haptique/visuel de confirmation
-FR12: Epic 1 - Sélection d'un mode JDS (Libre/Cadre/Bande)
+FR12: Epic 1 - Sélection d'un mode JDS (Libre, Cadre 47/2, 47/1, 71/2, 1 Bande, 4 Billes)
 FR13: Epic 2 - Sélection du mode 3 Bandes avec timer
 FR14: Epic 2 - Incrémentation point par point ou score global en 3 Bandes
 FR15: Epic 1 - Configuration du format du match
@@ -223,7 +223,7 @@ FR46: Epic 1 - Installation comme application native
 ## Epic List
 
 ### Epic 1: Démarrer et Jouer une Partie JDS (V1a)
-Un joueur démarre une partie en moins de 30 secondes sans formation, saisit et corrige ses scores en modes JDS (Libre, Cadre, Bande) sans friction ni risque de perte de données, et voit ses statistiques calculées automatiquement à la fin du match.
+Un joueur démarre une partie en moins de 30 secondes sans formation, saisit et corrige ses scores en modes JDS (Libre, Cadre 47/2, 47/1, 71/2, 1 Bande, 4 Billes) sans friction ni risque de perte de données, et voit ses statistiques calculées automatiquement à la fin du match.
 **FRs couverts :** FR1, FR2, FR3, FR4, FR6, FR7, FR8, FR9, FR10, FR11, FR12, FR15, FR16, FR17, FR39, FR40, FR41, FR42, FR43, FR45, FR46
 **Notes d'implémentation :** Story 1.1 = initialisation du projet (starter `@vite-pwa/create-pwa`, template vue-ts — AR1). Story 1.2 = création de `CLAUDE.md` (AR2), avant tout code fonctionnel. Couvre les fondations architecturales transverses (types, stores Pinia, services storage, Pointer Events, conventions de nommage — AR3-AR19) et les patterns UX cœur (Bloc Plein, couleurs joueur dynamiques, validation hybride, correction à poids égal, feedback haptique, symétrie des panneaux — UX-DR1-3, UX-DR6-12, UX-DR14-19, UX-DR22-23). NFR1, NFR2, NFR3, NFR5, NFR6, NFR8, NFR9, NFR10, NFR12, NFR13 s'appliquent directement.
 
@@ -271,7 +271,7 @@ Le système exporte les résultats des parties dans un format compatible avec le
 
 ## Epic 1: Démarrer et Jouer une Partie JDS (V1a)
 
-Un joueur démarre une partie en moins de 30 secondes sans formation, saisit et corrige ses scores en modes JDS (Libre, Cadre, Bande) sans friction ni risque de perte de données, et voit ses statistiques calculées automatiquement à la fin du match.
+Un joueur démarre une partie en moins de 30 secondes sans formation, saisit et corrige ses scores en modes JDS (Libre, Cadre 47/2, 47/1, 71/2, 1 Bande, 4 Billes) sans friction ni risque de perte de données, et voit ses statistiques calculées automatiquement à la fin du match.
 
 ### Story 1.1: Initialisation du projet
 
@@ -295,7 +295,7 @@ So that chaque story suivante dispose d'une base fonctionnelle, buildable et ins
 
 **Given** la configuration Tailwind CSS v4
 **When** je définis les tokens de fondation visuelle (`tailwind.config`/CSS variables)
-**Then** elle inclut la palette couleur (fond sombre, 4 couleurs joueur, accent bleu système, alerte rouge, victoire or — UX-DR1, UX-DR3, UX-DR5), l'échelle typographique fluide `clamp()` (UX-DR6), l'unité de base d'espacement 8px (UX-DR7), la taille minimale de zone tactile 90×90px (UX-DR8) et les 3 breakpoints responsive (UX-DR21)
+**Then** elle inclut la palette couleur (fond sombre, couleurs de bille blanc/jaune, accent bleu système, alerte rouge, victoire or — UX-DR1, UX-DR3, UX-DR5), l'échelle typographique fluide `clamp()` (UX-DR6), l'unité de base d'espacement 8px (UX-DR7), la taille minimale de zone tactile 90×90px (UX-DR8) et les 3 breakpoints responsive (UX-DR21)
 
 **Given** la palette couleur définie
 **When** je la valide sur fond sombre
@@ -330,27 +330,35 @@ So that je peux démarrer une partie en moins de 30 secondes sans formation.
 **Acceptance Criteria:**
 
 **Given** je lance l'application sans partie en cours sauvegardée
-**When** j'appuie sur le bouton de démarrage
-**Then** la modale `ModeSelector` s'affiche en plein écran avec les modes Libre, Cadre, Bande en gros boutons tactiles (UX-DR12)
+**When** l'écran d'accueil s'affiche
+**Then** `HomeScreen` fait office d'écran de veille et présente directement les 4 catégories de jeu en grandes cartes tactiles, sans bouton de démarrage intermédiaire (UX-DR12)
 
-**Given** la modale `ModeSelector` ouverte
-**When** je sélectionne un mode JDS
-**Then** les zones de saisie du nom des deux joueurs s'affichent, éditables inline, majuscules automatiques, 20 caractères max (UX-DR19)
+**Given** l'écran d'accueil
+**When** je sélectionne une catégorie
+**Then** une catégorie à plusieurs modes ouvre un second niveau listant ses modes, une catégorie à mode unique passe directement à l'étape suivante, et les catégories sans mode disponible restent affichées mais inertes, marquées « BIENTÔT »
+
+**Given** un mode sélectionné
+**When** l'étape des joueurs s'affiche
+**Then** deux grands panneaux portant déjà la bille de leur côté présentent les noms éditables inline, majuscules automatiques, 20 caractères max (UX-DR19)
 
 **Given** les deux noms saisis (ou conservés par défaut)
 **When** je confirme
-**Then** la partie démarre, `GameView` affiche les deux `PlayerPanel` avec une couleur assignée dynamiquement par joueur (UX-DR2), reprise 1 active
+**Then** la partie démarre, `GameView` affiche deux blocs pleins à chiffres noirs — blanc à gauche, jaune à droite (UX-DR2) — avec le nom en haut à gauche et la distance de jeu en haut à droite, reprise 1 active
+
+**Given** une partie qui vient de démarrer, avant la première reprise
+**When** j'appuie sur le bouton d'interversion de la console centrale
+**Then** les deux joueurs échangent de côté, la bille restant attachée au côté ; le bouton disparaît dès la première reprise validée
 
 **Given** les deux `PlayerPanel` affichés
 **When** je compare leurs contrôles et leur disposition
-**Then** ils sont strictement symétriques — chacun porte ses propres contrôles de saisie, aucune fonction de score n'est centralisée dans `CenterPanel` (UX-DR9, UX-DR11)
+**Then** ils sont strictement symétriques — chacun porte ses propres contrôles de saisie, et `CenterPanel` ne porte que des actions symétriques s'appliquant identiquement aux deux joueurs (ANNULER, interversion) : aucune saisie de score ni action favorisant un joueur n'y est centralisée (UX-DR9, UX-DR11)
 
 **Given** un joueur dont c'est le tour
 **When** j'observe l'indicateur de tour actif
-**Then** il reste identifiable sans dépendre uniquement de la couleur (intensité, icône ou position) pour rester lisible en cas de daltonisme (UX-DR14)
+**Then** son panneau est encadré d'un liseré rouge épais : le signal porté est la présence du cadre, pas sa teinte, ce qui reste lisible en cas de daltonisme et à distance (UX-DR14)
 
 **Given** le critère de succès PRD "60 ans / 30 secondes"
-**When** un joueur non initié suit ce parcours complet (lancement → mode → noms → prêt à saisir)
+**When** un joueur non initié suit ce parcours complet (accueil → catégorie → mode → joueurs → prêt à saisir)
 **Then** l'ensemble prend moins de 30 secondes, sans lecture de texte explicatif requise (NFR12)
 
 ### Story 1.4: Configurer les paramètres du match avant de démarrer
@@ -361,13 +369,19 @@ So that le système peut ensuite détecter automatiquement la fin de la partie.
 
 **Acceptance Criteria:**
 
-**Given** la modale `ModeSelector` ouverte, mode JDS sélectionné
+**Given** l'écran d'accueil (`HomeScreen`), mode JDS sélectionné
 **When** j'accède aux options de format
 **Then** je peux définir un objectif de score et/ou un nombre de sets (FR15, FR41 — hors pattes Casin, hors scope V1a)
 
+**Given** un mode JDS sélectionné
+**When** j'accède aux options de format
+**Then** l'objectif de score est pré-rempli avec la distance de référence du mode choisi (portée par le catalogue `GAME_CATEGORIES` de `src/types/game.ts`), et reste librement modifiable
+
 **Given** aucun format explicitement configuré
 **When** je démarre la partie
-**Then** un format par défaut sans objectif automatique de fin est appliqué
+**Then** la distance par défaut du mode s'applique, sans objectif automatique de fin imposé
+
+**Note de périmètre :** le champ `targetScore` existe déjà dans `useGameStore` depuis la Story 1.3, câblé en dur à 20 et affiché en haut à droite de chaque `PlayerPanel`. Cette story le pilote réellement (défaut par mode + configuration), elle ne le crée pas.
 
 ### Story 1.5: Saisir le score d'une série au pavé numérique
 
@@ -444,6 +458,8 @@ So that je peux corriger une erreur sans recalcul manuel ni stress.
 **Given** une correction de série validée appliquée
 **When** je vérifie l'historique de la reprise en cours
 **Then** aucune série antérieure à la dernière n'est affectée
+
+**Note de périmètre :** le bouton ANNULER de la console centrale existe déjà depuis la Story 1.3, affiché et désactivé tant qu'aucune reprise n'est enregistrée, et son événement `undo` n'est écouté par personne. Cette story le **branche** (écoute de l'événement dans `GameView` + action d'annulation dans `useGameStore`), elle ne le crée pas.
 
 ### Story 1.9: Saisir un score négatif
 
@@ -567,6 +583,8 @@ So that je peux corriger rapidement une configuration de départ erronée sans q
 **When** elle s'applique
 **Then** l'historique des parties précédentes n'est jamais affecté
 
+**Note de périmètre :** le bouton QUITTER de la barre d'action et l'action `resetGame()` existent depuis la Story 1.3, mais s'exécutent **sans confirmation**. Cette story ajoute le garde-fou (confirmation avant abandon), elle ne crée ni le bouton ni l'action.
+
 ### Story 1.16: Activer/désactiver l'annonce vocale du score
 
 As a joueur,
@@ -613,8 +631,8 @@ So that je joue avec un chronomètre de série toujours actif, cohérent avec le
 
 **Acceptance Criteria:**
 
-**Given** la modale `ModeSelector` ouverte (Epic 1, Story 1.3)
-**When** je sélectionne le mode "3 Bandes"
+**Given** l'écran d'accueil `HomeScreen` (Epic 1, Story 1.3)
+**When** je sélectionne la catégorie "3 Bandes"
 **Then** la partie démarre avec le composable `useTimer.ts` actif dès la première reprise (FR13, AR14)
 
 **Given** le chronomètre de série actif
@@ -624,6 +642,8 @@ So that je joue avec un chronomètre de série toujours actif, cohérent avec le
 **Given** le chronomètre en cours
 **When** une action de pause est déclenchée (fondation pour l'arbitre déporté V2 — roadmap PRD V1b)
 **Then** le chronomètre peut être mis en pause puis repris sans perdre l'état de la reprise en cours
+
+**Note de périmètre :** l'écran de sélection existe déjà (Story 1.3). La catégorie "3 Bandes" y est affichée mais désactivée : cette story n'a **pas** à créer d'écran de sélection, il lui suffit de basculer `available: true` sur la catégorie dans `GAME_CATEGORIES`.
 
 ### Story 2.2: Incrémenter le score point par point (tap du joueur assis)
 

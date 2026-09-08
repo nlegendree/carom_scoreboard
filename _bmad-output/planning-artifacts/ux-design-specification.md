@@ -34,7 +34,7 @@ Scoreboard tablette pour billard carambole français — PWA offline-first, exp�
 
 - **Correction anxiety-free** : le risque UX #1 identifié par Nathan est la peur de l'erreur sans recours — un joueur senior qui se trompe de saisie doit immédiatement voir comment corriger, sans crainte de "casser" la partie. Le bouton d'annulation/correction doit être aussi visible et rassurant que le pavé de saisie lui-même, jamais traité comme une action "avancée" ou cachée.
 - **Distance de lecture vs esthétique saturée** : conserver la lisibilité à 2m (score) et 5m (vue salle V2+) tout en adoptant des couleurs vives pleine-surface façon coréenne, sans sacrifier le contraste WCAG AA (NFR10).
-- **Identité par couleur dynamique** : le système coréen de référence assigne la couleur au joueur (pas à une position fixe gauche/droite) — à documenter comme convention, avec un indicateur de tour clair (liseré actif autour du joueur qui doit jouer).
+- **Identité par la bille, fixée au côté** *(révisé le 2026-09-08 — l'observation initiale « couleur assignée au joueur, pas à la position » était une erreur de lecture des références)* : gauche = blanche, droite = jaune, comme sur CUESCO et Billiboard ; le tour actif se signale par un liseré autour du panneau du joueur qui doit jouer, jamais par la teinte du bloc.
 - **Décision de design system différée** : Nathan formalisera la palette/typo définitive plus tard à partir des captures d'écran coréennes (`explore/resources/`) ; en attendant, on travaille par patterns extraits de ces références (hiérarchie, couleur, feedback) plutôt que par tokens figés.
 
 ### Design Opportunities
@@ -51,7 +51,7 @@ Scoreboard tablette pour billard carambole français — PWA offline-first, exp�
 
 Il n'y a pas une action cœur unique, mais **deux patterns de saisie distincts selon le mode de jeu**, que le `PlayerPanel` doit supporter sans changer de composant :
 
-**1. Modes JDS (Libre/Cadre/Bande) — saisie différée au pavé numérique.** Peu d'alternances par reprise, scores élevés (10–100+). Le joueur saisit le score final de sa série au pavé après son tour.
+**1. Modes JDS (Libre, Cadre 47/2, 47/1, 71/2, 1 Bande, 4 Billes) — saisie différée au pavé numérique.** Peu d'alternances par reprise, scores élevés (10–100+). Le joueur saisit le score final de sa série au pavé après son tour.
 
 **2. Mode 3 Bandes — incrémentation tactile en temps réel.** Scores rares et unitaires (séries souvent < 10 points). Ce n'est pas le joueur qui tire qui saisit : c'est **le joueur assis (non-actif)** qui tape sur sa propre zone pour ajouter un point à l'adversaire en train de jouer. Ce tap a un double rôle : marqueur de synchronisation caméra (coupe le rush vidéo au moment du point — fondation pour l'indexation vidéo V4) et reset du chrono de tir (40s), utile aussi en entraînement solo. Le pavé numérique reste disponible en backup pour saisir directement une série complète si l'adversaire oublie de taper au fil de l'eau.
 
@@ -154,7 +154,7 @@ Design System **Custom**, construit en composants Vue + utilitaires Tailwind CSS
 
 - Cohérent avec la stack déjà actée en architecture (Tailwind CSS v4, sans librairie de composants).
 - Nécessaire pour reproduire l'esthétique "blocs pleine couleur + chiffre géant" (référence CUESCO/Billiboard), qui ne correspond à aucun design system établi — leurs composants par défaut tireraient vers un look générique de startup, à l'opposé de la direction visuelle retenue.
-- Le nombre de composants réels du produit est faible (`PlayerPanel`, `CenterPanel`, `NumericPad`, `ModeSelector`, `GameSummary`) — un système custom léger n'est pas un fardeau de maintenance dans ce contexte.
+- Le nombre de composants réels du produit est faible (`PlayerPanel`, `CenterPanel`, `NumericPad`, `HomeScreen`, `ActionBar`, `GameSummary`) — un système custom léger n'est pas un fardeau de maintenance dans ce contexte.
 
 ### Implementation Approach
 
@@ -189,7 +189,7 @@ Entièrement établi, aucune innovation d'interaction risquée : pavé numériqu
 
 ### 2.5 Experience Mechanics
 
-**Mode JDS (Libre/Cadre/Bande) :**
+**Modes JDS (les six variantes) :**
 1. **Initiation** : le pavé numérique est toujours visible/actif dans la zone du joueur — pas d'étape "commencer la saisie".
 2. **Interaction** : le joueur tape les chiffres de son score ; la valeur en cours s'affiche dans un overlay centré (repris de l'ancien prototype `explore/scoreboard_test`).
 3. **Feedback** : chaque tap déclenche un retour haptique + visuel immédiat ; un bouton "Valider" est visible dès la première frappe.
@@ -205,13 +205,13 @@ Entièrement établi, aucune innovation d'interaction risquée : pavé numériqu
 
 **Fond général :** noir/bleu-nuit très sombre (proche `#0D1117` à `#000000`) — fond dominant de la console centrale et des écrans de résultat "battle", pour un contraste maximal avec les blocs joueurs.
 
-**Couleurs joueur** (dynamiques, assignées par partie, pas fixes gauche/droite) :
-- Jaune doré `#FFC72C`
-- Blanc `#FFFFFF`
-- Orange vif `#FF7A1A`
-- Rose/magenta `#F0388B`
+**Couleurs joueur** (bille fixe par côté — révisé le 2026-09-08) :
+- **Gauche = bille blanche** : bloc plein blanc `#FFFFFF`, chiffres noirs.
+- **Droite = bille jaune** : bloc plein jaune doré `#FFC72C`, chiffres noirs.
 
-Chaque joueur reçoit un bloc plein d'une de ces couleurs ; texte noir sur les teintes claires (jaune, blanc), texte blanc sur les teintes saturées foncées si besoin de contraste.
+La couleur suit la bille, et la bille est attachée au côté de l'écran — comme sur CUESCO et Billiboard. Un bouton d'interversion (console centrale, disponible avant la première reprise) échange les deux joueurs de côté ; on ne repeint jamais un panneau.
+
+Le joueur dont c'est le tour est encadré d'un liseré rouge épais (`--color-turn-active`) : c'est la présence du cadre, et non sa teinte, qui porte l'information (UX-DR14).
 
 **Accent système** (bouton d'action neutre — "passer le tour", "+1") : bleu vif `#1E88E5`, volontairement distinct des couleurs joueur pour ne jamais créer de confusion entre "marquer un point" et "action système".
 
@@ -238,6 +238,16 @@ Unité de base 8px (standard Tailwind). Les blocs joueur occupent quasiment 100%
 - Contraste WCAG AA : texte noir sur jaune/blanc (excellent), texte blanc sur bleu-nuit/rose foncé (à valider précisément selon la teinte finale retenue).
 - Typographie fluide `clamp()` pour rester lisible à 2m (score, NFR10) et 5m en vue salle V2+ (NFR11).
 
+### Écran d'accueil et navigation *(ajouté le 2026-09-08)*
+
+**Accueil = veille + sélection, sur un seul écran.** Il n'y a pas de bouton de démarrage intermédiaire : l'écran au repos présente directement, dans un bandeau bas façon Billiboard, les catégories de jeu sous forme de grandes cartes (libellé + sous-titre énumérant les variantes). Le haut de l'écran reste disponible pour l'identité du club et, plus tard, les informations de veille.
+
+**Navigation à deux niveaux.** Une catégorie regroupant plusieurs modes ouvre un second niveau listant ses modes ; une catégorie à mode unique passe directement à l'étape suivante. Les catégories dont aucun mode n'est encore livrable restent **affichées mais inertes**, marquées « BIENTÔT » : l'écran donne à voir l'ambition du produit sans mentir sur ce qui fonctionne.
+
+**Sélection des joueurs.** Deux grands panneaux côte à côte portant déjà la bille de leur côté (blanc à gauche, jaune à droite), avec le nom éditable inline. Cette structure préfigure la sélection depuis la base joueurs du club (Epic 4) sans avoir à être redessinée.
+
+**Barre d'action permanente.** Une barre basse est présente sur **tous** les écrans, scoreboard compris. Le retour y occupe toujours la même position à gauche — un contrôle de navigation ne se déplace jamais d'un écran à l'autre. Sa partie droite accueille les actions contextuelles (démarrer, et plus tard les CTA de saisie). C'est aussi elle qui réduit légèrement la hauteur dévolue au score sur le scoreboard, comme sur les systèmes coréens de référence.
+
 ## Design Direction Decision
 
 ### Design Directions Explored
@@ -253,7 +263,7 @@ Unité de base 8px (standard Tailwind). Les blocs joueur occupent quasiment 100%
 ### Design Rationale
 
 - Fidèle à une référence déjà éprouvée en club, pas une invention à valider from scratch.
-- La symétrie garantit que les deux joueurs vivent exactement la même expérience quelle que soit leur position à l'écran — cohérent avec le principe "couleur par joueur, pas par position" acté à l'étape 2 (Compréhension du Projet).
+- La symétrie garantit que les deux joueurs vivent exactement la même expérience quelle que soit leur position à l'écran : les deux panneaux portent les mêmes contrôles. Seule la bille diffère (gauche blanche, droite jaune), et le bouton d'interversion permet de choisir son côté avant la première reprise.
 
 ### Implementation Approach
 
@@ -269,7 +279,7 @@ Trois flows critiques du scope V1a, issus des parcours PRD (Michel happy path, M
 flowchart TD
     A[Lancement app] --> B{Partie en cours\nsauvegardée ?}
     B -- Oui --> C[Reprendre la partie\nGameView restauré]
-    B -- Non --> D[Sélection du mode\nLibre / Cadre / Bande / 3 Bandes]
+    B -- Non --> D[Accueil : catégorie puis mode\nJeux de séries / 3 Bandes / Quilles / Casin]
     D --> E[Saisie noms joueurs\ntap inline, ou garder défaut]
     E --> F[Partie démarrée\nGameView, reprise 1]
     F --> G[< 30 secondes\ntest de succès]
@@ -321,9 +331,9 @@ flowchart TD
 
 ### Design System Components
 
-Aucun — le design system est **Custom** (étape 8). Aucun composant équivalent à `PlayerPanel`, `NumericPad`, `CenterPanel`, `ModeSelector` ou `GameSummary` n'existe dans une librairie établie ou headless : ce sont des composants entièrement spécifiques au scoreboard de billard.
+Aucun — le design system est **Custom** (étape 8). Aucun composant équivalent à `PlayerPanel`, `NumericPad`, `CenterPanel`, `HomeScreen` ou `GameSummary` n'existe dans une librairie établie ou headless : ce sont des composants entièrement spécifiques au scoreboard de billard.
 
-**Décision écartée en cours de route :** l'ajout d'une librairie de primitives headless (type Radix/reka-ui) pour la modale `ModeSelector` a été envisagé puis abandonné — son bénéfice principal (accessibilité clavier : piège de focus, navigation Tab, Échap) ne s'applique pas à un produit **100% tactile** sur tablette de club, et rien dans le PRD ne requiert de support lecteur d'écran. Ajouter cette dépendance serait allé à l'encontre du principe architecture "zéro abstraction complexe".
+**Décision écartée en cours de route :** l'ajout d'une librairie de primitives headless (type Radix/reka-ui) pour la sélection de mode a été envisagé puis abandonné — son bénéfice principal (accessibilité clavier : piège de focus, navigation Tab, Échap) ne s'applique pas à un produit **100% tactile** sur tablette de club, et rien dans le PRD ne requiert de support lecteur d'écran. Ajouter cette dépendance serait allé à l'encontre du principe architecture "zéro abstraction complexe".
 
 ### Custom Components
 
@@ -338,12 +348,16 @@ Aucun — le design system est **Custom** (étape 8). Aucun composant équivalen
 - *Accessibilité* : boutons ≥90×90px, retour haptique + visuel <100ms (NFR1).
 
 **CenterPanel**
-- *Rôle* : contexte neutre partagé (mode, numéro de reprise) — jamais d'action qui favorise un joueur (exigence de symétrie de l'étape 9).
+- *Rôle* : contexte neutre partagé (mode, numéro de reprise) et actions **symétriques** s'appliquant identiquement aux deux joueurs — annulation de la dernière série (ANNULER) et interversion des billes. Jamais d'action qui favorise un joueur, ni de saisie de score, qui restent portées par chaque `PlayerPanel` (exigence de symétrie de l'étape 9). *(Amendé en revue de la Story 1.3, 2026-09-08.)*
 - *États* : normal · alerte d'inactivité (FR43).
 
-**ModeSelector**
-- *Rôle* : modal de sélection du mode de jeu au démarrage (Flow 1).
-- *États* : par défaut · mode sélectionné.
+**HomeScreen**
+- *Rôle* : écran d'accueil plein écran (Flow 1) — fait office de veille et porte la sélection de catégorie, de mode puis la saisie des joueurs.
+- *États* : catégories · modes d'une catégorie · saisie des joueurs.
+
+**ActionBar**
+- *Rôle* : barre d'action basse commune à tous les écrans — retour à position fixe à gauche, actions contextuelles à droite.
+- *États* : retour seul · retour + action de démarrage · retour + CTA de saisie (Story 1.5).
 
 **GameSummary**
 - *Rôle* : écran de fin de partie façon "battle" (Flow 3) — total, moyenne, meilleure série, mise en avant si record personnel.
@@ -359,7 +373,7 @@ Aucun — le design system est **Custom** (étape 8). Aucun composant équivalen
 
 ### Implementation Roadmap
 
-- **Phase 1 (critique, Flow 1 & 2)** : `ModeSelector`, `PlayerPanel`, `NumericPad`, `CenterPanel`.
+- **Phase 1 (critique, Flow 1 & 2)** : `HomeScreen`, `ActionBar`, `PlayerPanel`, `NumericPad`, `CenterPanel`.
 - **Phase 2 (Flow 3)** : `GameSummary`.
 - **Phase 3** : `HistoryList`, `GameDetailView`.
 
@@ -389,7 +403,7 @@ Saisie de texte (nom joueur) : tap sur le nom → édition inline directement da
 
 ### Additional Patterns
 
-**Modale (ModeSelector)** : seule modale du produit V1a. Plein écran ou quasi plein écran — les choix de mode doivent être aussi gros et tactiles que le reste de l'interface. Pas de fermeture accidentelle par tap en dehors : le choix du mode est une étape volontaire, pas un panneau qu'on ferme par erreur.
+**Sélection de mode (HomeScreen)** *(révisé le 2026-09-08 — remplace la modale `ModeSelector`)* : la sélection n'est plus une modale mais l'écran d'accueil lui-même. Les choix de catégorie et de mode sont aussi gros et tactiles que le reste de l'interface. Aucune fermeture accidentelle n'est possible puisqu'il n'y a rien à fermer : le retour se fait par la barre d'action, toujours au même endroit.
 
 **États vides** : historique vide au premier lancement → message simple + invitation à jouer une première partie, jamais un écran vide non expliqué.
 

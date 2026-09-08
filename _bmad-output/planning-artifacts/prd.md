@@ -97,7 +97,7 @@ Le marché coréen, observé directement, valide cette trajectoire — les clubs
 **Parcours couverts :** Michel (happy path), Michel (correction/undo)
 
 **Capacités :**
-- Modes JDS : Libre, Cadre, Bande — interface de saisie unique (pavé numérique, score final de série)
+- Modes JDS : Libre, Cadre 47/2, Cadre 47/1, Cadre 71/2, 1 Bande, 4 Billes — interface de saisie unique (pavé numérique, score final de série), identique pour les six modes ; seule la distance de jeu par défaut les distingue
 - Gestion des reprises : saisie libre par joueur, ordre non contraint
 - Undo/correction : effacer saisie en cours + annuler dernière série validée
 - Stats automatiques en fin de match : total, moyenne, meilleure série
@@ -108,7 +108,9 @@ Le marché coréen, observé directement, valide cette trajectoire — les clubs
 - PWA installable, 100 % offline, localStorage
 - UX : démarrer une partie en < 30 secondes sans formation
 
-**Hors scope V1a :** timer, mode 3 Bandes, Casin, 5 Quilles, comptes cloud, vue TV, overlay stream
+**Hors scope V1a :** timer, mode 3 Bandes, Casin, Quilles, comptes cloud, vue TV, overlay stream.
+
+3 Bandes, Quilles et Casin apparaissent à l'écran d'accueil comme **emplacements vitrine désactivés** (marqués « BIENTÔT ») : ils donnent à voir l'ambition du produit sans engagement de livraison en V1a.
 
 ### V1b — V1 Complet
 
@@ -249,11 +251,17 @@ Ajoute uniquement :
 | Mode | Famille | Saisie | Timer | Séries typiques |
 |---|---|---|---|---|
 | Libre | JDS | Score final au pavé | Non | 10–100+ |
-| Cadre | JDS | Score final au pavé | Non | 10–100+ |
-| Bande | JDS | Score final au pavé | Non | 10–100+ |
+| Cadre 47/2 | JDS | Score final au pavé | Non | 10–100+ |
+| Cadre 47/1 | JDS | Score final au pavé | Non | 10–100+ |
+| Cadre 71/2 | JDS | Score final au pavé | Non | 10–100+ |
+| 1 Bande | JDS | Score final au pavé | Non | 10–100+ |
+| 4 Billes | JDS | Score final au pavé | Non | 10–100+ |
 | 3 Bandes | Bandes | Clic/point ou score final | Oui (obligatoire) | 3–15 |
 | 5 Quilles | À définir | À définir | À définir | À définir |
+| 9 Quilles | À définir | À définir | À définir | À définir |
 | Casin | À définir | Bouton par catégorie | Non (minuteur de partie) | Par catégorie |
+
+Les six modes de la famille JDS partagent exactement le même mécanisme de saisie : ils ne se distinguent que par leur distance de jeu par défaut et leurs règles de zone, sans incidence sur l'interface.
 
 **Règle timer 3 Bandes :** timer toujours actif. Saisie point par point (timer remis à zéro à chaque clic) ou score global en fin de série avec timer libre.
 
@@ -261,10 +269,12 @@ Ajoute uniquement :
 
 ### Règles en Attente de Validation
 
-- **5 Quilles** — mécanique complète inconnue
+- **5 et 9 Quilles** — mécanique complète inconnue
 - **Casin** — règles partielles documentées dans le prototype (9 catégories, pattes configurables), règles complètes à valider avec la fédération
 
-**Périmètre V1 :** JDS (Libre/Cadre/Bande) + 3 Bandes uniquement. 5 Quilles et Casin complet hors scope jusqu'à validation des règles officielles.
+**Périmètre V1 jouable :** les 6 modes JDS (V1a) + 3 Bandes (V1b).
+
+**Visible mais désactivé :** Quilles (5 et 9) et Casin, présentés en vitrine à l'accueil jusqu'à validation des règles officielles par la fédération. Aucune story n'est ouverte sur ces deux modes tant que leurs règles ne sont pas documentées — décision actée le 2026-09-08 (voir `sprint-change-proposal-2026-09-08.md`).
 
 ### Contraintes Techniques
 

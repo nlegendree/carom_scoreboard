@@ -118,7 +118,23 @@ src/components/
 ├── PlayerPanel.test.ts   ← co-localisé, pas de dossier __tests__/
 ```
 
-### 7. Breakpoints Tailwind mobile-first (AR19)
+### 7. Échelle d'espacement Tailwind — `--spacing` vaut 8px
+
+`main.css` fixe `--spacing: 8px`, alors que le défaut de Tailwind v4 est `0.25rem` (4px). **Tout utilitaire numérique vaut donc le double de sa lecture naïve** :
+
+| Classe écrite | Valeur réelle | Valeur si l'on suppose le défaut Tailwind |
+|---|---|---|
+| `p-4` | 32px | ~16px |
+| `p-6` | 48px | ~24px |
+| `gap-4` | 32px | ~16px |
+| `px-10` | 80px | ~40px |
+| `h-16 w-16` | 128×128px | ~64×64px |
+
+Dimensionner en gardant cette table en tête : une valeur choisie « à la Tailwind » produira un élément deux fois trop grand. C'est une convention assumée du projet (grille de 8px), pas un bug — ne pas « corriger » `--spacing` sans arbitrage produit.
+
+Les tokens typographiques suivent une échelle distincte, en `clamp()` fluide : `text-score` (score joueur), `text-reprise` (numéro de reprise, dimensionné pour la colonne centrale `w-1/5`), `text-label`, `text-stat`. Ne pas utiliser `text-score` hors d'un panneau joueur : son plancher de 120px déborde de la console centrale dès deux chiffres.
+
+### 8. Breakpoints Tailwind mobile-first (AR19)
 
 Mobile-first obligatoire, 3 breakpoints :
 - Défaut (< 768px) : smartphone / portrait
@@ -126,6 +142,13 @@ Mobile-first obligatoire, 3 breakpoints :
 - `lg:` (≥ 1280px) : signage 22" / desktop
 
 Ordre des classes Tailwind : Layout → Sizing → Spacing → Typography → Colors → Effects → Responsive modifiers.
+
+### 9. Stratégie de validation IA (unitaire en continu, visuel en fin de story)
+
+Pour toute session de développement assistée par IA (dev-story ou autre) :
+
+- **Pendant l'implémentation** : valider chaque élément de code (composant, store, composable) uniquement via les tests unitaires/`vue-tsc` au fur et à mesure — cycle red-green décrit dans la règle 6. **Ne pas** ouvrir de navigateur ni driver Chrome après chaque composant : ça consomme des tokens pour un gain marginal, les tests unitaires suffisent à valider la correction unitaire.
+- **En fin de story** : une fois toutes les tâches complètes et la suite de tests/`vue-tsc`/`build` au vert, faire **une seule** passe de validation visuelle/intégration dans un vrai navigateur (extension Claude for Chrome) pour parcourir les critères d'acceptation de bout en bout, avant de passer la story en statut "review". Cette passe doit couvrir **au moins deux formats tablette** — portrait 768×1024 et paysage 1024×768 — car happy-dom ne compile ni ne calcule le CSS Tailwind : aucun débordement de layout n'est détectable par les tests unitaires (le format téléphone est hors périmètre produit, la tablette est le plus petit format supporté).
 
 ## En cas de divergence
 
