@@ -50,8 +50,8 @@ development_status:
   1-4-configurer-les-parametres-du-match-avant-de-demarrer: done
   1-5-saisir-le-score-dune-serie-au-pave-numerique: done
   1-6-calcul-et-affichage-du-score-total-en-temps-reel: done
-  1-7-annuler-la-saisie-en-cours-avant-validation: backlog
-  1-8-annuler-la-derniere-serie-validee: backlog
+  1-7-annuler-la-saisie-en-cours-avant-validation: done
+  1-8-annuler-la-derniere-serie-validee: done # absorbée par 1-7 (décision de Nathan, 2026-09-09)
   1-9-saisir-un-score-negatif: backlog
   1-10-terminer-une-partie-et-consulter-le-recapitulatif-automatique: backlog
   1-11-detecter-automatiquement-la-fin-dun-set-ou-dun-match: backlog

@@ -94,6 +94,23 @@ export interface GameState {
   lastSaved: string
 }
 
+// Photographie de l'état de partie prise AVANT chaque action annulable (Story 1.7) :
+// tout ce que les trois actions (série, main rendue, correction) peuvent toucher, plus
+// la parité des côtés (`sidesSwapped`) qui permet de restaurer un snapshot pris avant un
+// `ÉCHANGER` sans défaire l'échange. Rien de plus : `mode`, `status`, `startedAt` ne
+// bougent jamais en cours de partie. Volontairement absent de `GameState` tant que la
+// Story 1.12 n'a pas tranché la persistance de la pile.
+export interface GameSnapshot {
+  player1: Player
+  player2: Player
+  activePlayer: 'player1' | 'player2'
+  reprises: Reprise[]
+  scoreAdjustments: { player1: number; player2: number }
+  currentInput: { player1: string; player2: string }
+  isNegative: { player1: boolean; player2: boolean }
+  sidesSwapped: boolean
+}
+
 // Exhaustif par construction : les clés proviennent du même catalogue que l'union `GameMode`.
 export const GAME_MODE_LABELS = Object.fromEntries(
   CATALOG.flatMap((category) => category.modes.map((mode) => [mode.id, mode.label])),

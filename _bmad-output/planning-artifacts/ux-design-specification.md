@@ -196,11 +196,11 @@ Entièrement établi, aucune innovation d'interaction risquée : pavé numériqu
 4. **Complétion** : validation par tap explicite sur `VALIDER` OU automatiquement après 3 secondes d'inactivité — les deux chemins aboutissent au même état et referment la pop-up. **La validation d'une série emporte la bascule du tour** (voir la règle d'alternance ci-dessous). Refermer sans valider n'enregistre rien et ne laisse aucun buffer résiduel.
 5. **Ce qui reste dans le panneau** : le **score, aussi grand que la carte le permet** (sa taille s'adapte au nombre de chiffres), un en-tête d'une seule ligne portant nom, moyenne, meilleure série et distance, et deux boutons `−` / `+` en pied qui corrigent le total **sans toucher au déroulé** — ni reprise, ni bascule de tour.
 
-**Une seule saisie à la fois.** Conséquence assumée du CTA unique : on ne peut plus saisir pour le joueur qui n'a pas la main. Le rattrapage d'une série oubliée passe par ANNULER (Story 1.8).
+**Une seule saisie à la fois.** Conséquence assumée du CTA unique : on ne peut plus saisir pour le joueur qui n'a pas la main. Le rattrapage d'une série oubliée passe par ANNULER (Story 1.8) *(absorbée par la Story 1.7, 2026-09-09 : `ANNULER` remonte d'une action par appui, on annule jusqu'avant la série oubliée puis on la ressaisit)*.
 
 **Règle d'alternance et de moyenne (portée générale, actée le 2026-09-09)** — elle conditionne les Stories 1.6, 1.10, 1.11 et tout l'Epic 2, et ne se limite pas à la Story 1.5 :
 - **Rentrer sa série, c'est rendre la main.** Dans les modes qui passent par le pavé numérique (JDS), valider une série bascule le joueur actif, sans aucun geste supplémentaire — par le bouton `VALIDER` comme par l'auto-validation à 3 s, qui devient donc aussi le *fallback* de bascule. **Rendre la main sans marquer** se fait au **tap sur la zone de l'adversaire** : le total ne bouge pas, mais une **série de 0 est bien enregistrée** — une reprise blanchie reste une reprise jouée, et l'ignorer ferait monter artificiellement la moyenne. En 3 Bandes (Epic 2), où la série ne passe pas par un pavé, la bascule reste un geste explicite.
-- **La reprise est ouverte par le joueur blanc.** C'est toujours le joueur de gauche qui « met les reprises » : le compteur avance quand il **reprend** la main, pas quand il la rend. Une série du seul joueur blanc laisse donc l'affichage sur « REPRISE 1 ».
+- **La reprise est ouverte par le joueur blanc.** C'est toujours le joueur de gauche qui « met les reprises » : le compteur avance quand il **reprend** la main, pas quand il la rend. Une série du seul joueur blanc laisse donc l'affichage sur « REPRISE 1 » *(libellé `REP` depuis la Story 1.7, 2026-09-09)*.
 - **La moyenne d'un joueur se fige quand il rend la main** : celle du blanc quand il rend la main, celle du jaune quand le blanc la reprend. Une reprise entamée mais non terminée par un joueur n'entre pas dans sa moyenne ; une reprise **blanchie**, en revanche, y compte.
 
 **Mode 3 Bandes** (rappel step 2.1 de l'étape 3) : le joueur assis tape sa propre zone pour incrémenter le score de l'adversaire en train de jouer, avec le pavé numérique disponible en backup pour saisir une série complète directement.
@@ -316,6 +316,8 @@ flowchart TD
     G -- Non --> I[Reprise suivante]
 ```
 
+*Note (Story 1.7, 2026-09-09)* : « Tap Corriger pendant saisie » est la touche `C` (ou `⌫`, ou la croix) de la pop-up — pas un bouton distinct. « Dernière série annulée, repasse à null » se lit désormais « **état d'avant la dernière action restauré** » : le bouton est `ANNULER` en console centrale, il remonte d'une action par appui, et ce chemin vaut aussi pour une main rendue sans marquer et pour une correction `−`/`+`. L'échange de côtés, lui, n'y passe jamais.
+
 ### Flow 3 — Terminer une partie & consulter l'historique
 
 ```mermaid
@@ -385,6 +387,7 @@ Aucun — le design system est **Custom** (étape 8). Aucun composant équivalen
 **CenterPanel**
 - *Rôle* : contexte neutre partagé (**numéro de reprise**) et actions **symétriques** s'appliquant identiquement aux deux joueurs — annulation de la dernière série (ANNULER) et interversion des billes (ÉCHANGER). Jamais d'action qui favorise un joueur. *(Amendé en revue de la Story 1.3, 2026-09-08 ; puis en Story 1.5, 2026-09-09.)*
 - *Modifié en Story 1.5* : le **mode de jeu n'y est plus affiché** — il est choisi au démarrage et n'évolue pas, la colonne est réservée à ce qui change en cours de partie. **ÉCHANGER reste disponible toute la partie**, et non plus jusqu'à la première série seulement.
+- *Modifié en Story 1.7 (2026-09-09)* : **`ANNULER` est un *undo* multi-niveaux** — chaque appui revient d'une action en arrière (série validée, main rendue, correction `−`/`+`), jusqu'au début de la partie ; **grisé à pile vide**, jamais inerte en silence. **`ÉCHANGER` est hors pile** : il est son propre inverse, on rappuie dessus pour revenir, et une annulation ne le défait jamais par effet de bord. Les deux boutons portent **un mot, pas de glyphe** (`↩` et `⇄` retirés) ; le libellé au-dessus du compteur est **`REP`**.
 - *États* : normal · alerte d'inactivité (FR43).
 
 **HomeScreen**

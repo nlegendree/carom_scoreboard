@@ -6,15 +6,16 @@ defineProps<{
   canUndo: boolean
 }>()
 
-// `undo` est émis mais volontairement non écouté jusqu'à la Story 1.8, qui branchera
-// l'annulation (note de périmètre correspondante ajoutée dans epics.md).
+// `undo` : `ANNULER` revient d'UNE action en arrière à chaque appui (Story 1.7) ; la vue
+// le branche sur `undoLastAction()`. Grisé (`disabled`) à pile vide, jamais inerte en
+// silence.
 const emit = defineEmits<{ undo: []; 'swap-players': [] }>()
 </script>
 
 <template>
   <div class="flex w-1/5 min-w-0 shrink-0 flex-col items-center justify-center gap-4 bg-bg p-2">
     <div class="flex w-full min-w-0 flex-col items-center">
-      <span class="text-stat text-white/60">REPRISE</span>
+      <span data-testid="reprise-label" class="text-stat text-white/60">REP</span>
       <!-- `text-reprise` est dimensionné pour la colonne (w-1/5) et non pour un panneau
            joueur : `text-score` (plancher 120px) déborde dès 2 chiffres sur tablette. -->
       <span
@@ -27,20 +28,22 @@ const emit = defineEmits<{ undo: []; 'swap-players': [] }>()
     <button
       data-testid="undo-button"
       :disabled="!canUndo"
-      class="flex min-h-[var(--size-touch-target)] w-full items-center justify-center gap-2 rounded-lg px-4 text-stat font-bold text-white bg-white/10 touch-manipulation select-none disabled:opacity-30"
+      class="flex min-h-[var(--size-touch-target)] w-full items-center justify-center rounded-lg px-4 text-stat font-bold text-white bg-white/10 touch-manipulation select-none disabled:opacity-30"
       @pointerdown="emit('undo')"
     >
-      ↩ ANNULER
+      ANNULER
     </button>
 
     <!-- Disponible pendant TOUTE la partie : il ne disparaît plus à la première série,
-         pour permettre de corriger un côté à tout moment. -->
+         pour permettre de corriger un côté à tout moment. Hors pile d'annulation : il est
+         son propre inverse, on rappuie dessus pour revenir (décision du 2026-09-09).
+         Un mot, pas de glyphe — comme ANNULER. -->
     <button
       data-testid="swap-players-button"
-      class="flex min-h-[var(--size-touch-target)] w-full items-center justify-center gap-2 rounded-lg px-4 text-stat font-bold text-on-accent bg-accent touch-manipulation select-none"
+      class="flex min-h-[var(--size-touch-target)] w-full items-center justify-center rounded-lg px-4 text-stat font-bold text-on-accent bg-accent touch-manipulation select-none"
       @pointerdown="emit('swap-players')"
     >
-      ⇄ ÉCHANGER
+      ÉCHANGER
     </button>
   </div>
 </template>

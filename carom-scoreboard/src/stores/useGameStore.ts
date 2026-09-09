@@ -1,6 +1,6 @@
 import { computed, ref, shallowRef } from 'vue'
 import { defineStore } from 'pinia'
-import type { GameMode, GameStatus, Player, Reprise } from '../types/game'
+import type { GameMode, GameSnapshot, GameStatus, Player, Reprise } from '../types/game'
 
 const DEFAULT_MODE: GameMode = 'libre'
 // Plafond de saisie repris de la contrainte de série (FR7) : une distance de 4 chiffres
@@ -10,6 +10,12 @@ const MAX_TARGET_SCORE = 999
 // Définition unique, exportée : `ScoreEntryModal` l'importe pour décider localement de
 // l'accusé de réception ou du refus, au lieu de réécrire la règle dans son template.
 export const MAX_SCORE_DIGITS = 3
+// Profondeur maximale de la pile d'annulation (Story 1.7) : hygiène mémoire pour les
+// sessions de 8 h (NFR3). Un snapshot ne porte que des références (joueurs, reprises) et
+// trois petits objets copiés : 1000 reste négligeable, et couvre toute partie réaliste
+// même à une action par point (corrections `+`, 3 Bandes de l'Epic 2) — relevé de 200 à
+// 1000 en revue du 2026-09-09. Le plus ancien snapshot est abandonné en silence.
+const MAX_UNDO_DEPTH = 1000
 
 export interface TargetScores {
   player1: number
@@ -35,6 +41,40 @@ function makePlayer(id: 'player1' | 'player2'): Player {
   }
 }
 
+// Ré-exprime un snapshot dans des coordonnées de côtés inversées (Story 1.7, Décision 7).
+// Sert à restaurer un snapshot pris AVANT un `ÉCHANGER` sans défaire l'échange : les
+// joueurs restent où ils sont, seul l'état de jeu recule. Même permutation que
+// `swapPlayers` (colonnes, joueurs restampés, buffers, corrections) — à une différence
+// près, voulue : `activePlayer` est inversé lui aussi, car c'est le MÊME joueur qui
+// retrouve la main, simplement de l'autre côté. Ne pas « harmoniser » les deux : l'échange
+// en direct déplace des joueurs sous un tour attaché au côté ; le miroir traduit un état.
+// Fonction pure, exportée pour être testée seule.
+export function mirrorSnapshot(snapshot: GameSnapshot): GameSnapshot {
+  return {
+    player1: { ...snapshot.player2, id: 'player1', color: 'white' },
+    player2: { ...snapshot.player1, id: 'player2', color: 'yellow' },
+    activePlayer: snapshot.activePlayer === 'player1' ? 'player2' : 'player1',
+    reprises: snapshot.reprises.map((reprise) => ({
+      player1: reprise.player2,
+      player2: reprise.player1,
+      timestamp: reprise.timestamp,
+    })),
+    scoreAdjustments: {
+      player1: snapshot.scoreAdjustments.player2,
+      player2: snapshot.scoreAdjustments.player1,
+    },
+    currentInput: {
+      player1: snapshot.currentInput.player2,
+      player2: snapshot.currentInput.player1,
+    },
+    isNegative: {
+      player1: snapshot.isNegative.player2,
+      player2: snapshot.isNegative.player1,
+    },
+    sidesSwapped: !snapshot.sidesSwapped,
+  }
+}
+
 export const useGameStore = defineStore('game', () => {
   const mode = ref<GameMode>(DEFAULT_MODE)
   const status = ref<GameStatus>('idle')
@@ -44,7 +84,7 @@ export const useGameStore = defineStore('game', () => {
   // AR9 : `shallowRef` évite la réactivité profonde sur les sessions longues.
   // Conséquence à respecter impérativement : toute évolution de `reprises` doit REMPLACER
   // le tableau (`reprises.value = [...reprises.value, r]`), jamais le muter — un `push`
-  // ne déclencherait aucun recalcul des `computed` qui en dépendent (Story 1.5/1.8).
+  // ne déclencherait aucun recalcul des `computed` qui en dépendent (Story 1.5/1.7).
   const reprises = shallowRef<Reprise[]>([])
   const currentInput = ref({ player1: '', player2: '' })
   const isNegative = ref({ player1: false, player2: false })
@@ -54,6 +94,45 @@ export const useGameStore = defineStore('game', () => {
   const scoreAdjustments = ref({ player1: 0, player2: 0 })
   const startedAt = ref<number | null>(null)
   const lastSaved = ref('')
+
+  // --- Annulation multi-niveaux (Story 1.7) ---
+  // Pile des états d'AVANT chaque action annulable ; `undoLastAction` en restaure le
+  // sommet. Décision 6 : undo par snapshots, pas par inverses — exact par construction.
+  // AR9 : `shallowRef` REMPLACÉ à chaque évolution, jamais `push` — un `push` figerait
+  // `canUndo` sans qu'aucun test naïf ne le voie.
+  const history = shallowRef<GameSnapshot[]>([])
+  // Parité des côtés, basculée par `swapPlayers`. C'est ce qui empêche `ANNULER` de défaire
+  // un échange par effet de bord (Décision 7) : un snapshot dont la parité diffère de la
+  // parité courante est mis en miroir avant restauration. Jamais restaurée par l'undo.
+  const sidesSwapped = ref(false)
+
+  // INVARIANTE à maintenir : `player1`, `player2` et `reprises` sont capturés PAR RÉFÉRENCE
+  // parce qu'ils sont toujours REMPLACÉS, jamais mutés en place (`recomputeScore`,
+  // `swapPlayers`, `addReprise`, `startGame`). Toute action future qui muterait un joueur
+  // ou une reprise en place (ex. renommage, Story 1.14) doit soit le remplacer, soit copier
+  // ici. `scoreAdjustments`, `currentInput`, `isNegative` sont mutés en place par
+  // `adjustScore` et `appendScoreDigit` : ils sont COPIÉS, à la prise comme à la restauration.
+  function takeSnapshot(): GameSnapshot {
+    return {
+      player1: player1.value,
+      player2: player2.value,
+      activePlayer: activePlayer.value,
+      reprises: reprises.value,
+      scoreAdjustments: { ...scoreAdjustments.value },
+      currentInput: { ...currentInput.value },
+      isNegative: { ...isNegative.value },
+      sidesSwapped: sidesSwapped.value,
+    }
+  }
+
+  // Appelée en tête de chacune des TROIS actions annulables (série validée, main rendue,
+  // correction), après leurs gardes — jamais dans `swapPlayers` (décision produit), ni
+  // dans `addReprise`/`switchTurn` (primitives : une action = un snapshot).
+  function pushHistory(): void {
+    history.value = [...history.value, takeSnapshot()].slice(-MAX_UNDO_DEPTH)
+  }
+
+  const canUndo = computed(() => history.value.length > 0)
 
   // Le 4e paramètre reste optionnel : sans réglage de format, le parcours de démarrage
   // de la Story 1.3 est strictement inchangé et les deux joueurs jouent en distance
@@ -82,6 +161,8 @@ export const useGameStore = defineStore('game', () => {
     currentInput.value = { player1: '', player2: '' }
     isNegative.value = { player1: false, player2: false }
     scoreAdjustments.value = { player1: 0, player2: 0 }
+    history.value = []
+    sidesSwapped.value = false
     lastSaved.value = new Date().toISOString()
   }
 
@@ -96,9 +177,13 @@ export const useGameStore = defineStore('game', () => {
   // par CÔTÉ et le score en est recalculé — sans permuter aussi les colonnes, chaque joueur
   // hériterait de l'historique de l'autre, et donc de son total, de sa moyenne et de sa
   // meilleure série.
+  // Hors pile d'annulation (Story 1.7, décision produit) : pour revenir, on rappuie. Seule
+  // la parité `sidesSwapped` est basculée, pour que les snapshots antérieurs restent
+  // restaurables sans défaire l'échange.
   function swapPlayers(): void {
     if (status.value !== 'playing') return
 
+    sidesSwapped.value = !sidesSwapped.value
     reprises.value = reprises.value.map((reprise) => ({
       player1: reprise.player2,
       player2: reprise.player1,
@@ -131,8 +216,8 @@ export const useGameStore = defineStore('game', () => {
   }
 
   // Décision 5 : `reprises` est la source de vérité unique du score. Le total est une
-  // SOMME recalculée, jamais un `score += value` — c'est ce qui rendra l'annulation
-  // (Story 1.8) exacte sans arithmétique inverse, et la saisie négative (1.9) sans cas
+  // SOMME recalculée, jamais un `score += value` — c'est ce qui rend l'annulation
+  // (Story 1.7) exacte sans arithmétique inverse, et la saisie négative (1.9) sans cas
   // particulier.
   function recomputeScore(playerId: 'player1' | 'player2'): void {
     const total = reprises.value.reduce((sum, reprise) => sum + (reprise[playerId] ?? 0), 0)
@@ -146,8 +231,10 @@ export const useGameStore = defineStore('game', () => {
   // un score peut légitimement descendre sous zéro au carambole (pénalités, Story 1.9).
   // Garde `playing` comme `swapPlayers` : hors partie, aucune action ne doit muter l'état
   // (revue de code du 2026-09-09, appliqué à toutes les actions de jeu ci-dessous).
+  // Un appui = une action annulable (Story 1.7, Décision 8) : cinq `+` = cinq `ANNULER`.
   function adjustScore(playerId: 'player1' | 'player2', delta: number): void {
     if (status.value !== 'playing') return
+    pushHistory()
     scoreAdjustments.value[playerId] += delta
     recomputeScore(playerId)
     lastSaved.value = new Date().toISOString()
@@ -225,8 +312,13 @@ export const useGameStore = defineStore('game', () => {
     // AC12 : no-op strict sur un buffer vide — ni série fantôme, ni bascule de tour.
     if (buffer === '') return
 
-    addReprise(playerId, Number(buffer))
+    // Le buffer est vidé AVANT la prise du snapshot : la saisie en cours n'est pas un
+    // état de partie, et un undo qui la restaurerait ferait réapparaître `5` sous le
+    // prochain chiffre tapé (`53`). Après la garde : un `VALIDER` à vide n'empile pas
+    // d'action fantôme (Story 1.7).
     currentInput.value[playerId] = ''
+    pushHistory()
+    addReprise(playerId, Number(buffer))
     switchTurn()
     lastSaved.value = new Date().toISOString()
   }
@@ -237,8 +329,35 @@ export const useGameStore = defineStore('game', () => {
   // moyenne. Ne rien enregistrer ferait monter artificiellement la moyenne du joueur.
   function passTurn(): void {
     if (status.value !== 'playing') return
+    pushHistory()
     addReprise(activePlayer.value, 0)
     switchTurn()
+    lastSaved.value = new Date().toISOString()
+  }
+
+  // `ANNULER` : revient d'UNE action en arrière à chaque appel (FR9, UX-DR16). Action
+  // nommée (AR15, UX-DR23) : un pilotage déporté produit le même état que le bouton.
+  // Pas de recalcul — le snapshot porte déjà des scores cohérents. Cas général de
+  // l'`undoLastSeries` cité par l'architecture (la Story 1.8 est absorbée ici).
+  function undoLastAction(): void {
+    if (status.value !== 'playing') return
+    const previous = history.value[history.value.length - 1]
+    if (previous === undefined) return
+
+    history.value = history.value.slice(0, -1)
+    const snapshot =
+      previous.sidesSwapped === sidesSwapped.value ? previous : mirrorSnapshot(previous)
+
+    player1.value = snapshot.player1
+    player2.value = snapshot.player2
+    activePlayer.value = snapshot.activePlayer
+    reprises.value = snapshot.reprises
+    // Copies défensives : l'état vivant ne doit jamais aliaser un objet de snapshot —
+    // `adjustScore` et `appendScoreDigit` mutent ces trois objets en place, et un miroir
+    // partage les siens avec le snapshot dépilé.
+    scoreAdjustments.value = { ...snapshot.scoreAdjustments }
+    currentInput.value = { ...snapshot.currentInput }
+    isNegative.value = { ...snapshot.isNegative }
     lastSaved.value = new Date().toISOString()
   }
 
@@ -290,6 +409,8 @@ export const useGameStore = defineStore('game', () => {
     currentInput.value = { player1: '', player2: '' }
     isNegative.value = { player1: false, player2: false }
     scoreAdjustments.value = { player1: 0, player2: 0 }
+    history.value = []
+    sidesSwapped.value = false
     startedAt.value = null
     lastSaved.value = ''
   }
@@ -305,6 +426,10 @@ export const useGameStore = defineStore('game', () => {
     isNegative,
     startedAt,
     lastSaved,
+    // Exposés en lecture (tests, pilotage déporté) — jamais à muter depuis un composant (AR17).
+    history,
+    sidesSwapped,
+    canUndo,
     completedReprises,
     averages,
     bestSeries,
@@ -319,5 +444,6 @@ export const useGameStore = defineStore('game', () => {
     passTurn,
     adjustScore,
     validateScoreInput,
+    undoLastAction,
   }
 })

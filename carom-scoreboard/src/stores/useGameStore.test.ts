@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { computed, defineComponent, h, nextTick, watchEffect } from 'vue'
 import { mount } from '@vue/test-utils'
-import { MAX_SCORE_DIGITS, useGameStore } from './useGameStore'
+import { MAX_SCORE_DIGITS, mirrorSnapshot, useGameStore } from './useGameStore'
 
 describe('useGameStore', () => {
   beforeEach(() => {
@@ -705,10 +705,320 @@ describe('useGameStore — correction du score', () => {
     store.passTurn()
     store.switchTurn()
     store.adjustScore('player1', 3)
+    store.undoLastAction()
 
     expect(store.currentInput.player1).toBe('')
     expect(store.reprises).toEqual([])
     expect(store.activePlayer).toBe('player1')
+    // Un `pushHistory` placé avant une garde `status` empilerait ici une action fantôme.
+    expect(store.history).toEqual([])
+    expect(store.canUndo).toBe(false)
     expect(store.player1.score).toBe(0)
+  })
+})
+
+// --- Story 1.7 : annulation multi-niveaux par snapshots ---
+
+describe('useGameStore — undo', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  function validate(store: ReturnType<typeof useGameStore>, playerId: 'player1' | 'player2', value: number) {
+    for (const digit of String(value)) store.appendScoreDigit(playerId, Number(digit))
+    store.validateScoreInput(playerId)
+  }
+
+  // AC1, AC4 : une série annulée rend le total, la moyenne, la meilleure série ET le tour.
+  // Le joueur peut ressaisir immédiatement : la seconde saisie prouve que les `computed`
+  // repartent d'un état sain, pas d'une valeur simplement transportée.
+  it('brings the game back to before a validated series', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    validate(store, 'player1', 5)
+    expect(store.canUndo).toBe(true)
+
+    store.undoLastAction()
+
+    expect(store.reprises).toEqual([])
+    expect(store.player1.score).toBe(0)
+    expect(store.activePlayer).toBe('player1')
+    expect(store.averages.player1).toBe(0)
+    expect(store.bestSeries.player1).toBe(0)
+    expect(store.canUndo).toBe(false)
+
+    validate(store, 'player1', 3)
+    expect(store.player1.score).toBe(3)
+    expect(store.reprises).toHaveLength(1)
+    expect(store.averages.player1).toBe(3)
+  })
+
+  it('brings the game back to before a hand given without scoring', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    store.passTurn()
+    expect(store.activePlayer).toBe('player2')
+
+    store.undoLastAction()
+
+    expect(store.reprises).toEqual([])
+    expect(store.player1.score).toBe(0)
+    expect(store.activePlayer).toBe('player1')
+    expect(store.averages.player1).toBe(0)
+    expect(store.canUndo).toBe(false)
+  })
+
+  // Un appui sur `+` = une action. Le score attendu est 1 et non 0, et la série ajoutée
+  // ensuite recalcule 4 + 1 = 5 : un snapshot qui ALIASERAIT `scoreAdjustments` (muté en
+  // place) laisserait la correction à 2 sous un total en apparence correct.
+  it('undoes one correction at a time, restoring a copy of the adjustments', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    store.adjustScore('player1', 1)
+    store.adjustScore('player1', 1)
+    expect(store.player1.score).toBe(2)
+
+    store.undoLastAction()
+
+    expect(store.player1.score).toBe(1)
+    expect(store.canUndo).toBe(true)
+
+    store.addReprise('player1', 4)
+    expect(store.player1.score).toBe(5)
+  })
+
+  // AC2 : chaque appui remonte d'une action, dans l'ordre inverse, jusqu'au début ; le
+  // quatrième appui est un no-op strict.
+  it('steps back one action per call, in reverse order, then stops', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    validate(store, 'player1', 5)
+    validate(store, 'player2', 3)
+    store.adjustScore('player1', 1)
+    expect(store.player1.score).toBe(6)
+    expect(store.completedReprises).toBe(1)
+
+    store.undoLastAction()
+    expect(store.player1.score).toBe(5)
+    expect(store.player2.score).toBe(3)
+    expect(store.completedReprises).toBe(1)
+    expect(store.activePlayer).toBe('player1')
+
+    store.undoLastAction()
+    expect(store.player1.score).toBe(5)
+    expect(store.player2.score).toBe(0)
+    expect(store.completedReprises).toBe(0)
+    expect(store.reprises).toEqual([{ player1: 5, player2: null, timestamp: expect.any(Number) }])
+    expect(store.activePlayer).toBe('player2')
+
+    store.undoLastAction()
+    expect(store.player1.score).toBe(0)
+    expect(store.reprises).toEqual([])
+    expect(store.activePlayer).toBe('player1')
+    expect(store.canUndo).toBe(false)
+
+    store.undoLastAction()
+    expect(store.player1.score).toBe(0)
+    expect(store.reprises).toEqual([])
+    expect(store.activePlayer).toBe('player1')
+    expect(store.canUndo).toBe(false)
+  })
+
+  // AC3 : `ÉCHANGER` n'est pas une action annulable — on rappuie dessus pour revenir.
+  it('pushes nothing on the history when players swap', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+
+    store.swapPlayers()
+
+    expect(store.canUndo).toBe(false)
+  })
+
+  // AC5 — le piège de la story : le snapshot a été pris quand MICHEL était à gauche ; le
+  // restaurer tel quel ramènerait l'échange. Il est mis en miroir : les joueurs restent
+  // où ils sont, la série disparaît et la main revient à MICHEL, désormais à droite.
+  it('keeps the sides as they are when undoing a series recorded before a swap', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    validate(store, 'player1', 5)
+    store.swapPlayers()
+    expect(store.player2.score).toBe(5)
+
+    store.undoLastAction()
+
+    expect(store.reprises).toEqual([])
+    expect(store.player1.name).toBe('ANDRE')
+    expect(store.player1.id).toBe('player1')
+    expect(store.player1.color).toBe('white')
+    expect(store.player2.name).toBe('MICHEL')
+    expect(store.player2.id).toBe('player2')
+    expect(store.player2.color).toBe('yellow')
+    expect(store.player2.score).toBe(0)
+    expect(store.activePlayer).toBe('player2')
+    expect(store.sidesSwapped).toBe(true)
+    expect(store.canUndo).toBe(false)
+  })
+
+  // Deux échanges ramènent la parité d'origine : aucun miroir, aucun effet de bord.
+  it('restores the snapshot as is after two swaps', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    validate(store, 'player1', 5)
+    store.swapPlayers()
+    store.swapPlayers()
+
+    store.undoLastAction()
+
+    expect(store.reprises).toEqual([])
+    expect(store.player1.name).toBe('MICHEL')
+    expect(store.player1.score).toBe(0)
+    expect(store.player2.name).toBe('ANDRE')
+    expect(store.activePlayer).toBe('player1')
+    expect(store.sidesSwapped).toBe(false)
+  })
+
+  // La correction doit disparaître du BON joueur : MICHEL, passé à droite entre-temps.
+  it('removes an undone correction from the player who received it, wherever he sits', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    store.addReprise('player1', 5)
+    store.addReprise('player2', 2)
+    store.adjustScore('player1', 3)
+    store.swapPlayers()
+    expect(store.player2.score).toBe(8)
+
+    store.undoLastAction()
+
+    expect(store.player1.name).toBe('ANDRE')
+    expect(store.player1.score).toBe(2)
+    expect(store.player2.name).toBe('MICHEL')
+    expect(store.player2.score).toBe(5)
+
+    // Le recalcul qui révélerait une correction résiduelle mal placée.
+    store.addReprise('player2', 1)
+    expect(store.player2.score).toBe(6)
+    expect(store.player1.score).toBe(2)
+  })
+
+  it('mirrors a snapshot: columns, players (restamped), adjustments and turn', () => {
+    const mirrored = mirrorSnapshot({
+      player1: { id: 'player1', name: 'MICHEL', score: 5, color: 'white', targetScore: 100 },
+      player2: { id: 'player2', name: 'ANDRE', score: 0, color: 'yellow', targetScore: 80 },
+      activePlayer: 'player2',
+      reprises: [{ player1: 5, player2: null, timestamp: 1 }],
+      scoreAdjustments: { player1: 2, player2: 0 },
+      currentInput: { player1: '7', player2: '' },
+      isNegative: { player1: true, player2: false },
+      sidesSwapped: false,
+    })
+
+    expect(mirrored.reprises).toEqual([{ player1: null, player2: 5, timestamp: 1 }])
+    expect(mirrored.activePlayer).toBe('player1')
+    expect(mirrored.player1).toEqual({
+      id: 'player1',
+      name: 'ANDRE',
+      score: 0,
+      color: 'white',
+      targetScore: 80,
+    })
+    expect(mirrored.player2).toEqual({
+      id: 'player2',
+      name: 'MICHEL',
+      score: 5,
+      color: 'yellow',
+      targetScore: 100,
+    })
+    expect(mirrored.scoreAdjustments).toEqual({ player1: 0, player2: 2 })
+    expect(mirrored.currentInput).toEqual({ player1: '', player2: '7' })
+    expect(mirrored.isNegative).toEqual({ player1: false, player2: true })
+    expect(mirrored.sidesSwapped).toBe(true)
+  })
+
+  // AC12 de la 1.5 : un `VALIDER` à vide ne fait rien — il n'empile donc rien non plus.
+  it('pushes nothing on the history when validating an empty buffer', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+
+    store.validateScoreInput('player1')
+
+    expect(store.canUndo).toBe(false)
+  })
+
+  // AC7 : la pile repart vide à chaque partie, la parité aussi.
+  it('starts a new game with an empty history and sides in their original parity', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    store.adjustScore('player1', 1)
+    store.swapPlayers()
+
+    store.startGame('libre', 'PAUL', 'JACQUES')
+
+    expect(store.canUndo).toBe(false)
+    expect(store.sidesSwapped).toBe(false)
+  })
+
+  it('carries no history nor swapped parity over on reset', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    store.adjustScore('player1', 1)
+    store.swapPlayers()
+
+    store.resetGame()
+
+    expect(store.history).toEqual([])
+    expect(store.sidesSwapped).toBe(false)
+  })
+
+  // Anti-régression `shallowRef` (AR9) : un `push` sur `history` figerait `canUndo`, un
+  // `push` sur `reprises` figerait le compteur — les deux sont observés depuis un composant.
+  it('notifies computeds derived from reprises and history after an undo', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+
+    const seen: string[] = []
+    const probe = defineComponent({
+      setup() {
+        const state = computed(() => `${store.completedReprises}/${store.canUndo}`)
+        watchEffect(() => seen.push(state.value))
+        return () => h('div', state.value)
+      },
+    })
+    const wrapper = mount(probe)
+
+    validate(store, 'player1', 5)
+    validate(store, 'player2', 3)
+    await nextTick()
+    expect(wrapper.text()).toBe('1/true')
+
+    store.undoLastAction()
+    await nextTick()
+    expect(wrapper.text()).toBe('0/true')
+
+    store.undoLastAction()
+    await nextTick()
+    expect(wrapper.text()).toBe('0/false')
+    expect(seen).toEqual(['0/false', '1/true', '0/true', '0/false'])
+  })
+
+  // Hygiène mémoire pour les sessions de 8 h (NFR3) : au-delà de 1000 actions, la plus
+  // ancienne est oubliée — et pas une autre : le sommet reste le dernier état d'avant,
+  // l'undo continue de remonter exactement, et s'arrête sur l'état `1` (le `0` initial
+  // est le seul abandonné).
+  it('keeps at most 1000 snapshots, dropping the oldest', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+
+    for (let i = 0; i < 1001; i++) store.adjustScore('player1', 1)
+
+    expect(store.history).toHaveLength(1000)
+    expect(store.history[0]!.scoreAdjustments.player1).toBe(1)
+    expect(store.history[999]!.scoreAdjustments.player1).toBe(1000)
+
+    store.undoLastAction()
+    expect(store.player1.score).toBe(1000)
+
+    for (let i = 0; i < 999; i++) store.undoLastAction()
+    expect(store.player1.score).toBe(1)
+    expect(store.canUndo).toBe(false)
   })
 })

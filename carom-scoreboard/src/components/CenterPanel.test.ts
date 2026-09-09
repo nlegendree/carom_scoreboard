@@ -58,7 +58,6 @@ describe('CenterPanel', () => {
     expect(wrapper.find('[data-testid="undo-button"]').attributes('disabled')).toBeDefined()
   })
 
-  // L'écoute de cet événement arrive avec la Story 1.8 ; l'émission, elle, est déjà contractuelle.
   it('emits undo when there is something to undo', async () => {
     const wrapper = mount(CenterPanel, { props: { ...baseProps, canUndo: true } })
     const undo = wrapper.find('[data-testid="undo-button"]')
@@ -67,5 +66,17 @@ describe('CenterPanel', () => {
     await undo.trigger('pointerdown')
 
     expect(wrapper.emitted('undo')).toHaveLength(1)
+  })
+
+  // Décision du 2026-09-09 (Story 1.7) : un mot, pas de glyphe — `↩` et `⇄` retirés —
+  // et `REPRISE` abrégé en `REP`. L'égalité STRICTE est voulue : un `toContain`
+  // laisserait passer un pictogramme résiduel.
+  it('labels ANNULER and ÉCHANGER with their word only, and REP above the counter', () => {
+    const wrapper = mount(CenterPanel, { props: baseProps })
+
+    expect(wrapper.find('[data-testid="undo-button"]').text()).toBe('ANNULER')
+    expect(wrapper.find('[data-testid="swap-players-button"]').text()).toBe('ÉCHANGER')
+    expect(wrapper.find('[data-testid="reprise-label"]').text()).toBe('REP')
+    expect(wrapper.text()).not.toContain('REPRISE')
   })
 })

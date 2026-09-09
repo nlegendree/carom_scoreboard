@@ -427,3 +427,213 @@ describe('GameView — saisie en popup et alternance', () => {
     expect(panels(wrapper)[1]!.props('player').score).toBe(5)
   })
 })
+
+// --- Story 1.7 : `ANNULER` revient d'une action en arrière ---
+
+describe('GameView — annulation', () => {
+  // Fake timers pour tout le describe : la console centrale partage la grâce anti-tap
+  // fantôme des panneaux (300 ms après toute fermeture de la pop-up), les helpers la
+  // font s'écouler explicitement.
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  async function startedGame() {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    await wrapper.vm.$nextTick()
+    return { wrapper, store }
+  }
+
+  function panels(wrapper: VueWrapper) {
+    return wrapper.findAllComponents({ name: 'PlayerPanel' })
+  }
+
+  function scoreOf(wrapper: VueWrapper, side: 0 | 1) {
+    return panels(wrapper)[side]!.find('[data-testid="score"]').text()
+  }
+
+  function undoButton(wrapper: VueWrapper) {
+    return wrapper.find('[data-testid="undo-button"]')
+  }
+
+  async function undo(wrapper: VueWrapper) {
+    await undoButton(wrapper).trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+  }
+
+  // Une série saisie au pavé et validée, comme au doigt — grâce écoulée ensuite.
+  async function validateSeries(wrapper: VueWrapper, digits: number[]) {
+    await wrapper.find('[data-testid="add-points-button"]').trigger('pointerdown')
+    for (const digit of digits) {
+      await wrapper.find(`[data-testid="digit-${digit}"]`).trigger('pointerdown')
+    }
+    await wrapper.find('[data-testid="entry-confirm-button"]').trigger('pointerdown')
+    vi.advanceTimersByTime(300)
+    await wrapper.vm.$nextTick()
+  }
+
+  // AC1, AC4 : lu dans le DOM — total, liseré, côté du CTA, compteur et grisage.
+  it('brings the game one action back on ANNULER', async () => {
+    const { wrapper } = await startedGame()
+    await validateSeries(wrapper, [1, 2])
+    expect(scoreOf(wrapper, 0)).toBe('12')
+    expect(undoButton(wrapper).attributes('disabled')).toBeUndefined()
+
+    await undo(wrapper)
+
+    expect(scoreOf(wrapper, 0)).toBe('0')
+    expect(panels(wrapper)[0]!.props('active')).toBe(true)
+    expect(panels(wrapper)[0]!.classes()).toContain('ring-turn-active')
+    expect(panels(wrapper)[1]!.props('active')).toBe(false)
+    expect(wrapper.find('[data-testid="add-points-button"]').attributes('data-side')).toBe('player2')
+    expect(wrapper.find('[data-testid="reprise-number"]').text()).toBe('1')
+    expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
+  })
+
+  // AC2 : série du blanc, série du jaune (REP 2), correction `+` — trois appuis, trois
+  // états intermédiaires distincts.
+  it('steps back one action per press', async () => {
+    const { wrapper } = await startedGame()
+    await validateSeries(wrapper, [5])
+    await validateSeries(wrapper, [3])
+    expect(wrapper.find('[data-testid="reprise-number"]').text()).toBe('2')
+    await panels(wrapper)[0]!.find('[data-testid="score-plus"]').trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+    expect(scoreOf(wrapper, 0)).toBe('6')
+
+    await undo(wrapper)
+    expect(scoreOf(wrapper, 0)).toBe('5')
+    expect(scoreOf(wrapper, 1)).toBe('3')
+    expect(wrapper.find('[data-testid="reprise-number"]').text()).toBe('2')
+    expect(panels(wrapper)[0]!.props('active')).toBe(true)
+
+    await undo(wrapper)
+    expect(scoreOf(wrapper, 0)).toBe('5')
+    expect(scoreOf(wrapper, 1)).toBe('0')
+    expect(wrapper.find('[data-testid="reprise-number"]').text()).toBe('1')
+    expect(panels(wrapper)[1]!.props('active')).toBe(true)
+    expect(wrapper.find('[data-testid="add-points-button"]').attributes('data-side')).toBe('player1')
+
+    await undo(wrapper)
+    expect(scoreOf(wrapper, 0)).toBe('0')
+    expect(scoreOf(wrapper, 1)).toBe('0')
+    expect(wrapper.find('[data-testid="reprise-number"]').text()).toBe('1')
+    expect(panels(wrapper)[0]!.props('active')).toBe(true)
+    expect(wrapper.find('[data-testid="add-points-button"]').attributes('data-side')).toBe('player2')
+    expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
+  })
+
+  // Ce que le `computed` local `reprises.length > 0` de la vue ratait : une correction
+  // seule doit rendre `ANNULER` actif, sans qu'aucune reprise n'existe.
+  it('enables ANNULER after a mere correction, with no reprise recorded', async () => {
+    const { wrapper, store } = await startedGame()
+    expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
+
+    await panels(wrapper)[0]!.find('[data-testid="score-plus"]').trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+
+    expect(store.reprises).toHaveLength(0)
+    expect(scoreOf(wrapper, 0)).toBe('1')
+    expect(undoButton(wrapper).attributes('disabled')).toBeUndefined()
+
+    await undo(wrapper)
+    expect(scoreOf(wrapper, 0)).toBe('0')
+    expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
+  })
+
+  // AC5 : l'annulation ne ramène jamais un échange ; la main revient à MICHEL, là où il est.
+  it('keeps the sides as they are when undoing a series recorded before a swap', async () => {
+    const { wrapper } = await startedGame()
+    await validateSeries(wrapper, [5])
+    await wrapper.find('[data-testid="swap-players-button"]').trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+    expect(scoreOf(wrapper, 1)).toBe('5')
+
+    await undo(wrapper)
+
+    expect(panels(wrapper)[0]!.props('player').name).toBe('ANDRE')
+    expect(panels(wrapper)[0]!.props('player').color).toBe('white')
+    expect(scoreOf(wrapper, 0)).toBe('0')
+    expect(panels(wrapper)[1]!.props('player').name).toBe('MICHEL')
+    expect(scoreOf(wrapper, 1)).toBe('0')
+    expect(panels(wrapper)[1]!.props('active')).toBe(true)
+    expect(panels(wrapper)[0]!.props('active')).toBe(false)
+    expect(wrapper.find('[data-testid="add-points-button"]').attributes('data-side')).toBe('player1')
+    expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
+  })
+
+  // AC3 : ouvrir la pop-up, taper, puis la refermer par la croix ou par un tap en dehors
+  // ne modifie pas la partie — rien n'est empilé (revue de la 1.7 : une mutation
+  // « `pushHistory` dans `clearScoreInput` » resterait verte sans ce test).
+  it('leaves nothing to undo after an entry is typed then closed without validating', async () => {
+    const { wrapper, store } = await startedGame()
+
+    await wrapper.find('[data-testid="add-points-button"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="digit-9"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="modal-close-button"]').trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-testid="modal-backdrop"]').exists()).toBe(false)
+    expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
+
+    await wrapper.find('[data-testid="add-points-button"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="digit-9"]').trigger('pointerdown')
+    // Le voile ferme sur un geste complet : appui ET relâchement.
+    await wrapper.find('[data-testid="modal-backdrop"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="modal-backdrop"]').trigger('pointerup')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-testid="modal-backdrop"]').exists()).toBe(false)
+    expect(store.canUndo).toBe(false)
+    expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
+  })
+
+  // ⚠️ Tap fantôme (revue de la 1.7) : la carte de la pop-up recouvre la colonne centrale.
+  // À l'auto-validation, un doigt qui arrive sur l'emplacement d'une touche peut tomber sur
+  // ANNULER et défaire la série qui vient d'être validée — ou sur ÉCHANGER. Même grâce
+  // que les panneaux.
+  it('ignores a tap on ANNULER or ÉCHANGER right after the popup closed by itself', async () => {
+    const { wrapper, store } = await startedGame()
+
+    await wrapper.find('[data-testid="add-points-button"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="digit-1"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="digit-2"]').trigger('pointerdown')
+    vi.advanceTimersByTime(3000)
+    await wrapper.vm.$nextTick()
+    expect(scoreOf(wrapper, 0)).toBe('12')
+    expect(undoButton(wrapper).attributes('disabled')).toBeUndefined()
+
+    await undo(wrapper)
+    expect(scoreOf(wrapper, 0)).toBe('12')
+    expect(store.canUndo).toBe(true)
+
+    await wrapper.find('[data-testid="swap-players-button"]').trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+    expect(panels(wrapper)[0]!.props('player').name).toBe('MICHEL')
+
+    // Grâce écoulée : les mêmes gestes agissent.
+    vi.advanceTimersByTime(300)
+    await undo(wrapper)
+    expect(scoreOf(wrapper, 0)).toBe('0')
+    expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
+    await wrapper.find('[data-testid="swap-players-button"]').trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+    expect(panels(wrapper)[0]!.props('player').name).toBe('ANDRE')
+  })
+
+  // AC3 : `ÉCHANGER` n'entre pas dans la pile.
+  it('leaves nothing to undo after a swap alone', async () => {
+    const { wrapper } = await startedGame()
+
+    await wrapper.find('[data-testid="swap-players-button"]').trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+
+    expect(panels(wrapper)[0]!.props('player').name).toBe('ANDRE')
+    expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
+  })
+})

@@ -14,11 +14,11 @@ const {
   player1,
   player2,
   activePlayer,
-  reprises,
   currentInput,
   completedReprises,
   averages,
   bestSeries,
+  canUndo,
 } = storeToRefs(gameStore)
 
 // AC15 : la reprise est OUVERTE par le joueur blanc. Le numéro affiché compte donc les
@@ -26,7 +26,8 @@ const {
 // laisse l'affichage sur « REPRISE 1 », c'est la validation du jaune — qui rend la main
 // au blanc — qui ouvre la suivante.
 const repriseNumber = computed(() => completedReprises.value + 1)
-const canUndo = computed(() => reprises.value.length > 0)
+// `canUndo` vient du store, pas d'un `computed` local sur `reprises` : celui-ci resterait
+// actif après avoir tout annulé, et inactif après une simple correction (Story 1.7).
 
 // État purement d'interface : l'ouverture de la popup ne fait pas partie de l'état de la
 // partie, elle n'a donc rien à faire dans le store.
@@ -43,9 +44,11 @@ const entrySide = computed(() => (activePlayer.value === 'player1' ? 'player2' :
 // ⚠️ Tap fantôme (revue de code du 2026-09-09) : quand la pop-up se referme d'elle-même
 // à l'auto-validation, le tour a basculé et un doigt qui arrive juste après sur
 // l'emplacement d'une touche atterrit sur le panneau adverse, qui enregistrerait une
-// série de 0 et rebasculerait le tour — irrattrapable tant qu'`ANNULER` (1.8) n'existe
-// pas. Après TOUTE fermeture de la pop-up, les panneaux ignorent donc les appuis pendant
-// une courte grâce, invisible pour l'utilisateur.
+// série de 0 et rebasculerait le tour — rattrapable par `ANNULER` depuis la 1.7, mais
+// autant l'éviter. La carte de la pop-up recouvre aussi la colonne centrale : le même
+// doigt peut tomber sur `ANNULER` et défaire la série qui vient d'être validée (revue de
+// la 1.7). Après TOUTE fermeture de la pop-up, panneaux ET console centrale ignorent
+// donc les appuis pendant une courte grâce, invisible pour l'utilisateur.
 const PANEL_GRACE_MS = 300
 let panelsLockedUntil = 0
 
@@ -66,6 +69,16 @@ function passTurn(): void {
 function adjustScore(playerId: 'player1' | 'player2', delta: number): void {
   if (!panelsAcceptInput()) return
   gameStore.adjustScore(playerId, delta)
+}
+
+function undoLastAction(): void {
+  if (!panelsAcceptInput()) return
+  gameStore.undoLastAction()
+}
+
+function swapPlayers(): void {
+  if (!panelsAcceptInput()) return
+  gameStore.swapPlayers()
 }
 
 function openEntry(): void {
@@ -117,7 +130,8 @@ function leaveGame(): void {
         <CenterPanel
           :repriseNumber="repriseNumber"
           :canUndo="canUndo"
-          @swap-players="gameStore.swapPlayers()"
+          @undo="undoLastAction"
+          @swap-players="swapPlayers"
         />
         <PlayerPanel
           :player="player2"
