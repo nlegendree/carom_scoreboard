@@ -69,6 +69,10 @@ export interface Player {
   name: string
   score: number
   color: PlayerColor
+  // Distance de jeu du joueur (0 = aucun objectif / distance libre), configurable par la
+  // Story 1.4. Portée par le joueur et non la partie pour supporter le handicap (deux
+  // joueurs peuvent jouer des distances différentes, convention coréenne en 3 Bandes).
+  targetScore: number
 }
 
 export interface Reprise {
@@ -86,8 +90,6 @@ export interface GameState {
   reprises: Reprise[]
   currentInput: { player1: string; player2: string }
   isNegative: { player1: boolean; player2: boolean }
-  // Distance de jeu, pilotée par la Story 1.4 (présente dans le snippet d'architecture.md).
-  targetScore: number
   startedAt: number | null
   lastSaved: string
 }

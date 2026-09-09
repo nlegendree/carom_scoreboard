@@ -183,7 +183,17 @@ type GameStatus = 'idle' | 'playing' | 'finished'
 // La bille est attachée au côté : gauche blanche, droite jaune (UX-DR2).
 type PlayerColor = 'white' | 'yellow'
 
-interface Player { id: 'player1' | 'player2'; name: string; score: number; color: PlayerColor }
+// `targetScore` est porté par le JOUEUR et non par la partie : deux joueurs peuvent jouer
+// des distances différentes (handicap, convention coréenne observée en 3 Bandes).
+// 0 = distance libre, aucun objectif — c'est la valeur par défaut, aucun mode n'en impose
+// d'autre (décision produit du 2026-09-08, Story 1.4).
+interface Player {
+  id: 'player1' | 'player2'
+  name: string
+  score: number
+  color: PlayerColor
+  targetScore: number
+}
 interface Reprise { player1: number | null; player2: number | null; timestamp: number }
 
 interface GameState {
@@ -195,13 +205,12 @@ interface GameState {
   reprises: Reprise[]
   currentInput: { player1: string; player2: string }
   isNegative: { player1: boolean; player2: boolean }
-  targetScore: number
   startedAt: number | null
   lastSaved: string
 }
 ```
 
-Le catalogue des modes (`GAME_CATEGORIES`) vit dans ce même fichier : il décrit les catégories, leurs modes et leur disponibilité, et sert de source unique à l'écran d'accueil. Il ne porte **pas** les règles de score propres à chaque mode, qui arrivent avec la story de chaque mode.
+Le catalogue des modes (`GAME_CATEGORIES`) vit dans ce même fichier : il décrit les catégories, leurs modes et leur disponibilité, et sert de source unique à l'écran d'accueil. Il ne porte **pas** les règles de score propres à chaque mode, qui arrivent avec la story de chaque mode. Il ne porte **aucune distance de jeu** non plus : la distance est saisie par l'utilisateur dans `PlayerSetupModal` et vit sur `Player.targetScore` (décision produit du 2026-09-08 — aucune distance de référence par mode, aucune donnée fédérale codée en dur).
 
 **Historique — IndexedDB via Dexie.js (async, quota safe iOS Safari)**
 
@@ -252,8 +261,10 @@ Réglages en V1 : modales inline sur `GameView`, pas de route dédiée.
 **Composants principaux V1a :**
 - `PlayerPanel.vue` (×2) — zone joueur avec pavé numérique
 - `CenterPanel.vue` — reprises, stats, contrôles
-- `NumericPad.vue` — saisie tactile
-- `HomeScreen.vue` — écran d'accueil : veille, sélection catégorie → mode, saisie des joueurs
+- `NumericPad.vue` — pavé numérique tactile, purement présentationnel (emits `digit`/`clear`/`backspace`)
+- `AlphaKeyboard.vue` — clavier AZERTY intégré, purement présentationnel (emits `input`/`backspace`). L'écran cible étant une **borne fixe**, la saisie de texte ne doit jamais dépendre du clavier du système
+- `PlayerSetupModal.vue` — réglage optionnel du **nom et de la distance d'un joueur**, ouvert en tapant sa zone : pop-up centrée sur arrière-plan flouté (AR6), sans aucun champ natif, avec bascule de clavier selon le champ visé
+- `HomeScreen.vue` — écran d'accueil : veille, sélection catégorie → mode, zones joueur ouvrant leur réglage
 - `ActionBar.vue` — barre d'action basse commune à tous les écrans (retour, CTA contextuels)
 - `GameSummary.vue` — récapitulatif fin de partie
 
@@ -483,6 +494,11 @@ carom-scoreboard/               ← sous-dossier applicatif, PAS la racine du d�
     │   ├── CenterPanel.test.ts
     │   ├── NumericPad.vue       ← Pavé numérique tactile
     │   ├── NumericPad.test.ts
+    │   ├── AlphaKeyboard.vue    ← Clavier AZERTY intégré (borne fixe, pas de clavier système)
+    │   ├── AlphaKeyboard.test.ts
+    │   ├── PlayerSetupModal.vue ← Nom + distance d'un joueur (pop-up, AR6)
+    │   ├── PlayerSetupModal.test.ts
+    │   ├── keyClasses.ts        ← Style de touche partagé par les deux claviers
     │   ├── HomeScreen.vue       ← Écran d'accueil (veille + sélection catégorie/mode + joueurs)
     │   ├── HomeScreen.test.ts
     │   ├── GameSummary.vue      ← Récapitulatif fin de partie

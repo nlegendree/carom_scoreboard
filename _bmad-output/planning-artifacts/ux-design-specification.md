@@ -244,7 +244,11 @@ Unité de base 8px (standard Tailwind). Les blocs joueur occupent quasiment 100%
 
 **Navigation à deux niveaux.** Une catégorie regroupant plusieurs modes ouvre un second niveau listant ses modes ; une catégorie à mode unique passe directement à l'étape suivante. Les catégories dont aucun mode n'est encore livrable restent **affichées mais inertes**, marquées « BIENTÔT » : l'écran donne à voir l'ambition du produit sans mentir sur ce qui fonctionne.
 
-**Sélection des joueurs.** Deux grands panneaux côte à côte portant déjà la bille de leur côté (blanc à gauche, jaune à droite), avec le nom éditable inline. Cette structure préfigure la sélection depuis la base joueurs du club (Epic 4) sans avoir à être redessinée.
+**Sélection des joueurs.** Deux grands panneaux côte à côte portant déjà la bille de leur côté (blanc à gauche, jaune à droite). Taper une zone ouvre la pop-up de réglage de **ce joueur-là** (nom + distance) : la zone du joueur *est* le point d'entrée, il n'y a pas de bouton de réglage dans la barre d'action. Cette structure préfigure la sélection depuis la base joueurs du club (Epic 4) sans avoir à être redessinée.
+
+**Réglage par joueur, optionnel et sans écran supplémentaire** *(ajouté le 2026-09-08, réécrit le 2026-09-09, Story 1.4)*. Le nom et la distance d'un joueur se règlent en tapant **sa propre zone** à l'étape joueurs, qui ouvre une pop-up dédiée. Aucun bouton de réglage n'encombre la barre d'action : le parcours par défaut reste `catégorie → mode → joueurs → jeu`, et ignorer les réglages ne coûte aucun geste. **Aucun mode ne porte de distance par défaut** — le libellé d'attente est `0`, aucun objectif — et la distance appartient au **joueur**, pas à la partie : le handicap est simplement la conséquence de deux saisies indépendantes, sans mode « lié » ni action de dissociation. Sur le scoreboard, un joueur sans distance n'affiche rien à cet emplacement.
+
+**Saisie sur borne fixe : claviers intégrés, clavier système exclu** *(ajouté le 2026-09-09)*. L'écran cible est **fixé**, pas pris en main. Le clavier du système, dont ni la taille ni l'apparence ne sont contrôlables et qui recouvre 40 à 50 % de l'écran, est donc proscrit : toute saisie passe par des claviers dessinés dans l'application. La garantie est **structurelle** — les modales de saisie ne contiennent aucun champ natif, les valeurs sont du texte affiché alimenté par nos claviers — et non un simple attribut `inputmode`. Conséquence assumée : un clavier alphabétique à 10 colonnes ne peut pas tenir la cible de 90×90 px dans une pop-up à 768 px de large (touches ≈ 57 px, comme le clavier natif de l'iPad) ; la règle des 90 px reste entière pour les commandes de jeu.
 
 **Barre d'action permanente.** Une barre basse est présente sur **tous** les écrans, scoreboard compris. Le retour y occupe toujours la même position à gauche — un contrôle de navigation ne se déplace jamais d'un écran à l'autre. Sa partie droite accueille les actions contextuelles (démarrer, et plus tard les CTA de saisie). C'est aussi elle qui réduit légèrement la hauteur dévolue au score sur le scoreboard, comme sur les systèmes coréens de référence.
 
@@ -280,7 +284,7 @@ flowchart TD
     A[Lancement app] --> B{Partie en cours\nsauvegardée ?}
     B -- Oui --> C[Reprendre la partie\nGameView restauré]
     B -- Non --> D[Accueil : catégorie puis mode\nJeux de séries / 3 Bandes / Quilles / Casin]
-    D --> E[Saisie noms joueurs\ntap inline, ou garder défaut]
+    D --> E[Réglage joueurs\ntap sur une zone → pop-up, ou garder défaut]
     E --> F[Partie démarrée\nGameView, reprise 1]
     F --> G[< 30 secondes\ntest de succès]
 ```
@@ -343,9 +347,21 @@ Aucun — le design system est **Custom** (étape 8). Aucun composant équivalen
 - *Accessibilité* : zones tactiles ≥90×90px ; le tour actif ne doit pas reposer uniquement sur la couleur du liseré — un joueur daltonien doit pouvoir distinguer "actif/inactif" autrement (intensité, icône, position), pas seulement sa teinte.
 
 **NumericPad**
-- *Rôle* : saisie du score d'une série.
-- *États* : vide · saisie active · valeur hors limites (>999, FR7).
-- *Accessibilité* : boutons ≥90×90px, retour haptique + visuel <100ms (NFR1).
+- *Rôle* : saisie d'un nombre — score d'une série (Story 1.5), distance d'un joueur (Story 1.4).
+- *États* : vide (touche d'effacement libellée `AC`) · saisie active (libellée `C`) · valeur hors limites (>999, FR7).
+- *Disposition* : `1`-`9`, puis `AC`/`C` · `0` · `⌫` sur le rang du bas — plein, avec le `0` sous le `8`, là où le doigt le cherche.
+- *Accessibilité* : boutons ≥90×90px partout où la place le permet, retour haptique + visuel <100ms (NFR1).
+
+**PlayerSetupModal** *(ajouté le 2026-09-09, Story 1.4)*
+- *Rôle* : régler le **nom et la distance d'un seul joueur**, en tapant sa zone à l'étape joueurs. Vraie pop-up (AR6) : carte centrée, page visible mais floutée derrière. Trois issues : la **croix en haut à gauche** et le **tap en dehors de la carte** abandonnent, `VALIDER` — sur toute la largeur de la carte — applique.
+- *États* : champ `NOM` visé (clavier alphabétique affiché) · champ `DISTANCE` visé (pavé numérique affiché) · libellés d'attente grisés (`JOUEUR`, `0`) tant que rien n'est saisi · plafonds atteints (20 caractères, 3 chiffres — la frappe suivante est ignorée sans message bloquant).
+- *Règles de mise en page* : un **seul emplacement de clavier**, pour que rien ne se déplace lors de la bascule ; en-tête, champs et `VALIDER` fixes, les touches se partageant la place restante — `VALIDER` reste visible quel que soit le clavier, sans jamais exiger de défilement.
+- *Accessibilité* : le champ visé se distingue par la **présence** d'un liseré (`border-turn-active`), signal non-chromatique identique à celui du tour actif — jamais par la seule teinte. `@pointerdown` partout.
+
+**AlphaKeyboard** *(ajouté le 2026-09-09, Story 1.4)*
+- *Rôle* : saisir du texte sans jamais appeler le clavier du système (voir « Saisie sur borne fixe »). AZERTY sur 10 colonnes, rangée de chiffres en haut, accents `É È À Ç` des prénoms français, barre d'espace et retour arrière.
+- *États* : normal · désactivé.
+- *Cohérence* : partage son style de touche avec `NumericPad` (`keyClasses.ts`), pour que la bascule d'un clavier à l'autre au même emplacement soit invisible.
 
 **CenterPanel**
 - *Rôle* : contexte neutre partagé (mode, numéro de reprise) et actions **symétriques** s'appliquant identiquement aux deux joueurs — annulation de la dernière série (ANNULER) et interversion des billes. Jamais d'action qui favorise un joueur, ni de saisie de score, qui restent portées par chaque `PlayerPanel` (exigence de symétrie de l'étape 9). *(Amendé en revue de la Story 1.3, 2026-09-08.)*
@@ -373,7 +389,7 @@ Aucun — le design system est **Custom** (étape 8). Aucun composant équivalen
 
 ### Implementation Roadmap
 
-- **Phase 1 (critique, Flow 1 & 2)** : `HomeScreen`, `ActionBar`, `PlayerPanel`, `NumericPad`, `CenterPanel`.
+- **Phase 1 (critique, Flow 1 & 2)** : `HomeScreen`, `ActionBar`, `PlayerPanel`, `NumericPad`, `AlphaKeyboard`, `PlayerSetupModal`, `CenterPanel`.
 - **Phase 2 (Flow 3)** : `GameSummary`.
 - **Phase 3** : `HistoryList`, `GameDetailView`.
 
@@ -395,7 +411,7 @@ Catégories retenues pour ce produit (recherche/filtrage non pertinents, formula
 
 ### Form Patterns
 
-Saisie de texte (nom joueur) : tap sur le nom → édition inline directement dans le bloc joueur (pas de modale séparée), cohérent avec "aucune lecture de texte requise" (NFR12). Sauvegarde automatique à la confirmation, affichage en majuscules, limite 20 caractères (repris de l'ancien prototype).
+Saisie de texte (nom joueur) : tap sur la zone du joueur → pop-up `PlayerSetupModal` alimentée par le clavier applicatif `AlphaKeyboard`. **Aucun champ natif** : l'écran cible est une borne fixe (décision produit du 2026-09-09), le clavier du système ne doit structurellement pas pouvoir monter par-dessus l'interface. Sauvegarde automatique à la confirmation, affichage en majuscules, limite 20 caractères (repris de l'ancien prototype).
 
 ### Navigation Patterns
 

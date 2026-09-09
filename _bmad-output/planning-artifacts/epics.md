@@ -153,7 +153,7 @@ Ceci doit être la toute première story d'implémentation, suivie immédiatemen
 - UX-DR5 : Implémenter l'habillage victoire/récompense (or `#FFD54A` + ruban rouge `#E63946`) pour la médaille/mise en avant de l'écran de fin de partie.
 - UX-DR6 : Implémenter le système typographique — sans-serif très grasse (800-900, ex. Barlow Condensed Black ou Rajdhani Bold) pour le chiffre de score géant ; sans-serif medium/bold (600-700, ex. Inter ou Manrope) pour les labels (nom joueur, AVG, HR, score restant) ; échelle fluide `clamp()` (score ~120-200px+, labels ~16-24px, stats secondaires ~14-18px).
 - UX-DR7 : Appliquer une unité de base d'espacement de 8px ; les blocs joueur occupent quasiment 100% de leur colonne sans marge décorative — la densité vient de la taille des éléments, pas de leur nombre.
-- UX-DR8 : Imposer une taille minimale de zone tactile de 90×90px sur tous les éléments interactifs (NFR9), plus stricte que le minimum WCAG 44×44px, pour l'accessibilité du public senior.
+- UX-DR8 : Imposer une taille minimale de zone tactile de 90×90px sur tous les éléments interactifs (NFR9), plus stricte que le minimum WCAG 44×44px, pour l'accessibilité du public senior. **Exception unique, arbitrée le 2026-09-09 (Story 1.4) : les touches des claviers intégrés** (`AlphaKeyboard`, `NumericPad`). Aucun clavier alphabétique ne peut tenir 10 colonnes à 90px dans une pop-up — celui de l'iPad tourne autour de 65px. Plancher retenu : 44px pour les lettres, 60px pour les chiffres. La règle reste entière pour **toutes** les commandes de jeu, qui la respectent.
 - UX-DR9 : Construire le composant `PlayerPanel` (×2, strictement symétrique) — chaque panneau autonome avec ses propres contrôles de saisie (pavé numérique, bouton +1 le cas échéant) ; aucune action affectant le score centralisée dans `CenterPanel`.
 - UX-DR10 : Construire le composant `NumericPad` avec les états : vide, saisie active, valeur hors limites (> 999, refus de saisie avec retour haptique court distinct, sans bloquer l'écran par un message).
 - UX-DR11 : Construire le composant `CenterPanel` limité au contexte neutre/partagé (mode de jeu, numéro de reprise, alerte d'inactivité) et aux actions **symétriques**, qui s'appliquent identiquement aux deux joueurs : annulation de la dernière série (ANNULER) et interversion des billes. Jamais une action qui favorise un joueur ni une saisie de score, qui restent portées par chaque `PlayerPanel`. *(Amendé en revue de la Story 1.3, 2026-09-08 : la console centrale façon Billiboard/CUESCO porte ANNULER et l'interversion — la symétrie exigée porte sur l'absence de biais entre joueurs, pas sur l'absence de toute action.)*
@@ -164,7 +164,7 @@ Ceci doit être la toute première story d'implémentation, suivie immédiatemen
 - UX-DR16 : Implémenter la correction avec le même poids visuel que la validation — bouton Corriger/Annuler toujours visible avec la même prominence que le pavé de saisie, jamais dans un sous-menu, accessible pendant la saisie (efface la saisie en cours) et après validation (annule la dernière série validée).
 - UX-DR17 : Implémenter le retour haptique + visuel sur chaque tap, < 100ms (NFR1) — retour de succès affiché directement sur le bloc joueur concerné (flash bref), pas de toast/notification textuelle.
 - UX-DR18 : Implémenter l'alerte d'inactivité (FR43) comme une notification douce et non-intrusive dans `CenterPanel` — jamais en plein écran, jamais une interruption brutale de la partie en cours.
-- UX-DR19 : Implémenter l'édition inline du nom du joueur — tap sur le nom pour éditer directement dans le bloc joueur (pas de modale séparée), majuscules automatiques, limite 20 caractères, sauvegarde automatique à la confirmation.
+- UX-DR19 : Implémenter la saisie du nom du joueur par **pop-up et claviers intégrés** — tap sur la zone du joueur pour ouvrir sa modale (`PlayerSetupModal`), saisie exclusivement au clavier applicatif (`AlphaKeyboard`), majuscules automatiques, limite 20 caractères, application à la validation. *Réécrit le 2026-09-09 (Story 1.4) : la version antérieure imposait une édition **inline sans modale séparée**. L'écran cible étant une **borne fixe** (décision produit du 2026-09-09), aucun champ natif ne doit exister — c'est ce qui empêche structurellement le clavier du système de monter par-dessus l'interface. L'édition inline supposait un `<input>` natif, donc exactement ce que la décision proscrit.*
 - UX-DR20 : Implémenter l'état vide de la liste d'historique au premier lancement — message simple + invitation explicite à jouer une première partie (jamais un écran vide non expliqué).
 - UX-DR21 : Implémenter le layout responsive selon 3 breakpoints — signage/desktop ≥1280px et tablette 768-1279px : layout 3 colonnes paysage identique (tablette = cible primaire) ; smartphone <768px : layout empilé vertical (fallback).
 - UX-DR22 : Assurer un contraste couleur WCAG AA (4.5:1 minimum) sur tous les blocs joueur et la console centrale, validé sur la palette finale (jaune/blanc/orange/rose sur fond sombre).
@@ -339,7 +339,7 @@ So that je peux démarrer une partie en moins de 30 secondes sans formation.
 
 **Given** un mode sélectionné
 **When** l'étape des joueurs s'affiche
-**Then** deux grands panneaux portant déjà la bille de leur côté présentent les noms éditables inline, majuscules automatiques, 20 caractères max (UX-DR19)
+**Then** deux grands panneaux portant déjà la bille de leur côté présentent chacun le nom de son joueur ; taper une zone ouvre la pop-up de réglage de ce joueur (nom + distance), majuscules automatiques, 20 caractères max (UX-DR19) — *saisie inline remplacée par la pop-up en Story 1.4, cf. UX-DR19*
 
 **Given** les deux noms saisis (ou conservés par défaut)
 **When** je confirme
@@ -361,27 +361,53 @@ So that je peux démarrer une partie en moins de 30 secondes sans formation.
 **When** un joueur non initié suit ce parcours complet (accueil → catégorie → mode → joueurs → prêt à saisir)
 **Then** l'ensemble prend moins de 30 secondes, sans lecture de texte explicatif requise (NFR12)
 
-### Story 1.4: Configurer les paramètres du match avant de démarrer
+### Story 1.4: Nommer chaque joueur et fixer sa distance avant de démarrer
 
 As a joueur,
-I want configurer le format du match (objectif de score, nombre de sets) avant de démarrer,
-So that le système peut ensuite détecter automatiquement la fin de la partie.
+I want me nommer et fixer ma distance de jeu depuis ma propre zone, avant de démarrer,
+So that le match a un objectif clair, y compris quand les deux joueurs ne jouent pas la même distance.
 
 **Acceptance Criteria:**
 
-**Given** l'écran d'accueil (`HomeScreen`), mode JDS sélectionné
-**When** j'accède aux options de format
-**Then** je peux définir un objectif de score et/ou un nombre de sets (FR15, FR41 — hors pattes Casin, hors scope V1a)
+**Given** l'étape joueurs de `HomeScreen`
+**When** je tape la zone blanche ou la zone jaune
+**Then** une pop-up s'ouvre pour **ce joueur-là**, portant sa bille, son nom et sa distance. Aucun bouton de réglage ne s'ajoute à la barre d'action : la zone du joueur **est** le point d'entrée (FR15, FR41 — hors pattes Casin, hors scope V1a)
 
-**Given** un mode JDS sélectionné
-**When** j'accède aux options de format
-**Then** l'objectif de score est pré-rempli avec la distance de référence du mode choisi (portée par le catalogue `GAME_CATEGORIES` de `src/types/game.ts`), et reste librement modifiable
+**Given** la pop-up ouverte
+**When** je l'observe
+**Then** c'est une **vraie modale** — carte centrée, arrière-plan de la page visible mais **flouté**, et non un écran plein. Elle se ferme par la **croix en haut à gauche** ou par un **tap en dehors de la carte**, les deux abandonnant les modifications ; `VALIDER`, sur toute la largeur de la carte, les applique. Pas de route dédiée (AR6)
 
-**Given** aucun format explicitement configuré
+**Given** la pop-up
+**When** je tape le champ `NOM` puis le champ `DISTANCE`
+**Then** le clavier du bas **s'adapte au champ visé, au même emplacement** : clavier alphabétique pour le nom, pavé numérique pour la distance. Le champ visé porte un liseré ; rien ne se déplace à l'écran lors de la bascule
+
+**Given** que l'écran cible est une **borne fixe** et non une tablette prise en main
+**When** je saisis quoi que ce soit
+**Then** la saisie passe exclusivement par les claviers de l'application : la modale **ne contient aucun champ natif**, donc le clavier du système ne peut ni se déclencher ni recouvrir l'interface
+
+**Given** le champ `NOM`
+**When** je tape
+**Then** je dispose de l'AZERTY, d'une rangée de chiffres (« MICHEL 2 »), des accents `É È À Ç` des prénoms français, d'une barre d'espace et d'un retour arrière ; le nom est limité à 20 caractères et `JOUEUR` n'est qu'un libellé d'attente, jamais une valeur saisie
+
+**Given** le champ `DISTANCE`
+**When** je tape
+**Then** **aucune distance n'est pré-remplie et aucun mode ne porte de distance par défaut** : le libellé d'attente est `0` (aucun objectif), la saisie est limitée à 3 chiffres (0-999), et le pavé offre `AC` — qui devient `C` dès qu'un chiffre est entré, convention calculatrice iOS — ainsi qu'un retour arrière
+
+**Given** le besoin de handicap (convention coréenne : deux joueurs peuvent jouer des distances différentes)
+**When** je règle chaque joueur depuis sa propre zone
+**Then** les deux distances sont conservées séparément — il n'existe ni mode « lié » ni action de dissociation, chaque joueur saisit la sienne. La distance est un attribut du **joueur**, pas de la partie
+
+**Given** aucun réglage explicite
 **When** je démarre la partie
-**Then** la distance par défaut du mode s'applique, sans objectif automatique de fin imposé
+**Then** les deux joueurs s'appellent `JOUEUR 1` et `JOUEUR 2` et jouent sans distance (0) ; le parcours de démarrage est strictement identique à celui de la Story 1.3 et aucune fin de partie automatique n'est induite
 
-**Note de périmètre :** le champ `targetScore` existe déjà dans `useGameStore` depuis la Story 1.3, câblé en dur à 20 et affiché en haut à droite de chaque `PlayerPanel`. Cette story le pilote réellement (défaut par mode + configuration), elle ne le crée pas.
+**Note de périmètre :** le champ `targetScore` existe depuis la Story 1.3 sur `GameState`, câblé en dur à 20. Cette story le **déplace sur `Player`** (handicap), supprime toute valeur par défaut et le pilote depuis la pop-up. Elle ne fait que *stocker* et *afficher* la distance : la détection de fin relève de la Story 1.11.
+
+**Note de périmètre — sets :** le **nombre de sets** est retiré du périmètre de cette story. C'est une notion propre au 3 Bandes, traitée dans l'**Epic 2** (voir Story 2.1). FR15 n'est donc couvert en V1a que sur son volet « objectif de score ».
+
+**Note de révision (2026-09-08) :** les AC de pré-remplissage par mode (« l'objectif de score est pré-rempli avec la distance de référence du mode choisi, portée par le catalogue `GAME_CATEGORIES` ») et de « distance par défaut du mode » sont **supprimés** par décision produit de Nathan : aucun mode ne porte de distance de référence, et aucune donnée fédérale ne doit être inventée. Cette décision supersede l'AC ajouté par `sprint-change-proposal-2026-09-08.md` §4.2(b).
+
+**Note de révision (2026-09-09) :** une première implémentation plaçait un bouton `FORMAT` dans la barre d'action, ouvrant une modale plein écran unique avec un mode « lié » et un bouton `HANDICAP` pour dissocier les distances. Elle a été **rejetée à la revue de rendu** et entièrement remplacée par l'UX ci-dessus : une pop-up par joueur, ouverte depuis sa zone, avec le nom saisi dedans et des claviers intégrés. Le composant `MatchFormatModal.vue` a été supprimé.
 
 ### Story 1.5: Saisir le score d'une série au pavé numérique
 
@@ -406,6 +432,8 @@ So that j'enregistre mon résultat sans calcul mental ni ambiguïté sur la vali
 **Given** le pavé numérique
 **When** j'interagis avec ses boutons
 **Then** tous les événements utilisent `@pointerdown` — aucun délai tactile de 300ms perceptible sur iPad et Android (AR8)
+
+**Note de périmètre :** `NumericPad.vue` existe depuis la Story 1.4 (composant purement présentationnel, emits `digit`/`clear`/`backspace`, prop `hasInput` pilotant le seul libellé `AC`/`C`, sans état ni logique de score). Cette story le **branche** sur la saisie de série et lui ajoute le retour haptique, le retour distinct au plafond de 999 et la validation hybride — elle ne le crée pas. La Story 1.4 livre également `AlphaKeyboard.vue` (clavier AZERTY intégré) et `keyClasses.ts`, qui partage le style de touche entre les deux claviers.
 
 ### Story 1.6: Calcul et affichage du score total en temps réel
 
@@ -507,9 +535,11 @@ So that je n'ai jamais besoin d'une action manuelle "terminer le match".
 **When** l'objectif est atteint après validation d'une série
 **Then** le système bascule automatiquement vers l'écran `GameSummary` (Story 1.10) sans action manuelle supplémentaire (FR16)
 
-**Given** aucun objectif configuré
+**Given** aucun objectif configuré (les deux joueurs en distance libre, cas par défaut depuis la Story 1.4)
 **When** la partie est en cours
 **Then** le joueur termine manuellement via l'action explicite de la Story 1.10
+
+**Note de périmètre :** la détection de fin de **set** dépend de la notion de set, introduite par l'**Epic 2** (3 Bandes) — elle n'est donc **pas** réalisable en V1a. Seule la détection sur **objectif de score** l'est. Cette détection doit par ailleurs se faire **par joueur** : depuis la Story 1.4 la distance est un attribut de `Player` et les deux joueurs peuvent en avoir de différentes (handicap) ; un joueur en distance libre (0) n'induit aucune fin automatique.
 
 ### Story 1.12: Préserver l'état de la partie en cas de fermeture accidentelle
 
@@ -561,7 +591,9 @@ So that je peux corriger une faute de frappe ou échanger les noms sans redémar
 
 **Given** une partie en cours
 **When** je tape sur le nom d'un joueur dans son `PlayerPanel`
-**Then** le nom devient éditable inline directement dans le bloc joueur, sans modale séparée (FR39, UX-DR19)
+**Then** le nom devient modifiable via la pop-up de réglage du joueur, alimentée par `AlphaKeyboard` (FR39, UX-DR19)
+
+> **Note de périmètre (Story 1.4, 2026-09-09).** L'énoncé antérieur — « éditable inline […] sans modale séparée » — est **inapplicable** depuis la décision « borne fixe » : l'édition inline suppose un champ natif, et aucun ne doit exister. Cette story réutilise `PlayerSetupModal` plutôt que d'introduire un `<input>`.
 
 **Given** un nouveau nom saisi
 **When** je confirme
@@ -644,6 +676,8 @@ So that je joue avec un chronomètre de série toujours actif, cohérent avec le
 **Then** le chronomètre peut être mis en pause puis repris sans perdre l'état de la reprise en cours
 
 **Note de périmètre :** l'écran de sélection existe déjà (Story 1.3). La catégorie "3 Bandes" y est affichée mais désactivée : cette story n'a **pas** à créer d'écran de sélection, il lui suffit de basculer `available: true` sur la catégorie dans `GAME_CATEGORIES`.
+
+**Note de périmètre — sets :** la configuration du **nombre de sets** est rattachée à cet Epic, le set étant une notion propre au 3 Bandes. Elle a été explicitement retirée du périmètre de la Story 1.4, qui ne couvre FR15 que sur son volet « objectif de score ». Le réglage relevant du match et non d'un joueur, il ne se branchera pas sur la `PlayerSetupModal` de la Story 1.4 — qui est propre à un joueur — et demandera son propre point d'entrée, à définir avec cet Epic.
 
 ### Story 2.2: Incrémenter le score point par point (tap du joueur assis)
 

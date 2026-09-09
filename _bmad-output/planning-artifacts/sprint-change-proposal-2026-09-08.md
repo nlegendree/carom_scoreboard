@@ -139,6 +139,8 @@ Effort : faible. Risque : faible. Impact calendaire : nul.
 
 *Rationale :* décision PO — éviter une story supplémentaire, et servir l'objectif « démarrer en moins de 30 secondes » en évitant une saisie systématique.
 
+> ⚠️ **SUPERSEDED — 2026-09-08 (décision produit de Nathan, à l'ouverture de la Story 1.4).** Cet ajout d'AC **n'est pas implémenté** et a été retiré d'`epics.md`. Aucun mode ne porte de distance de référence : aucune donnée fédérale ne doit être inventée ni codée en dur, et `GAME_CATEGORIES` ne portera pas de distance. La modale de format s'ouvre sur `LIBRE` (0 = aucun objectif) pour les deux joueurs, et la distance est un attribut du **joueur** (`Player.targetScore`) et non de la partie, pour supporter le handicap façon coréenne. L'objectif « démarrer en moins de 30 secondes » est préservé autrement : le réglage est **optionnel** et ne rajoute aucune étape au parcours (le format ignoré, le parcours de la Story 1.3 est inchangé). Voir `epics.md#Story 1.4` (Note de révision) et la story `1-4-configurer-les-parametres-du-match-avant-de-demarrer.md` § Décisions produit.
+
 **(c) Story 1.15 — précision de périmètre**
 
 > **AJOUT en note :** `Le bouton QUITTER de la barre d'action existe depuis la Story 1.3 et réinitialise la partie sans confirmation. Cette story ajoute le garde-fou (confirmation avant abandon), elle ne crée pas le bouton.`
@@ -186,7 +188,7 @@ Effort : faible. Risque : faible. Impact calendaire : nul.
 ### Critères de succès
 
 1. Aucune contradiction restante entre le PRD, `epics.md` et le comportement réel de l'application.
-2. La Story 1.4 porte explicitement la distance par défaut par mode avant d'être développée.
+2. ~~La Story 1.4 porte explicitement la distance par défaut par mode avant d'être développée.~~ — **caduc au 2026-09-08** : ce critère découlait du §4.2(b), superseded. Critère de remplacement : la Story 1.4 porte explicitement l'**absence** de distance par défaut et la distance **par joueur**, avant d'être développée. ✅ atteint.
 3. Un futur code-review de la Story 1.3 ne peut plus conclure à une violation d'UX-DR2 ou du périmètre des modes.
 4. Le statut « vitrine » de Quilles et Casin est écrit noir sur blanc, pour qu'aucune session future ne les prenne pour un engagement de livraison.
 

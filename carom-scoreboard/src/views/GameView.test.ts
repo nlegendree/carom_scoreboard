@@ -57,4 +57,34 @@ describe('GameView', () => {
     expect(panels[0]!.props('player').color).toBe('white')
     expect(panels[1]!.props('player').name).toBe('MICHEL')
   })
+
+  // AC#7 : avec des distances dissociées, la distance affichée suit le joueur d'un côté
+  // à l'autre — la bille, elle, reste attachée au côté.
+  it('carries each displayed distance with its player when sides are swapped', async () => {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 100, player2: 80 })
+    await wrapper.vm.$nextTick()
+
+    const shown = () =>
+      wrapper.findAllComponents({ name: 'PlayerPanel' }).map((panel) =>
+        panel.find('[data-testid="target-score"]').text(),
+      )
+
+    expect(shown()).toEqual(['100', '80'])
+
+    await wrapper.find('[data-testid="swap-players-button"]').trigger('pointerdown')
+
+    expect(shown()).toEqual(['80', '100'])
+  })
+
+  // Distance libre : aucun emplacement de distance sur les panneaux (NFR12).
+  it('shows no distance at all when the game was started without a format', async () => {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.findAll('[data-testid="target-score"]')).toHaveLength(0)
+  })
 })

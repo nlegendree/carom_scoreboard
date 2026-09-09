@@ -2,10 +2,11 @@
 import { computed } from 'vue'
 import type { Player, PlayerColor } from '../types/game'
 
+// La distance appartient au joueur, pas à la partie : le panneau la lit sur `player`
+// et la transporte donc automatiquement lors d'une interversion des billes (AC#7).
 const props = defineProps<{
   player: Player
   active: boolean
-  targetScore: number
 }>()
 
 // Classes écrites en toutes lettres (et non construites dynamiquement) pour que
@@ -25,7 +26,14 @@ const colorClasses = computed(() => PLAYER_COLOR_CLASSES[props.player.color])
   >
     <div class="flex shrink-0 items-start justify-between gap-4">
       <span class="text-label font-bold">{{ player.name }}</span>
-      <span data-testid="target-score" class="text-label font-bold">{{ targetScore }}</span>
+      <!-- Distance libre (0) : l'emplacement disparaît entièrement, pas de tiret ni de
+           zéro à interpréter (NFR12). -->
+      <span
+        v-if="player.targetScore > 0"
+        data-testid="target-score"
+        class="text-label font-bold"
+        >{{ player.targetScore }}</span
+      >
     </div>
 
     <div class="flex flex-1 items-center justify-center">
