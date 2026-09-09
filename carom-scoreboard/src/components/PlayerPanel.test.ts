@@ -41,6 +41,18 @@ describe('PlayerPanel', () => {
     expect(yellow.find('[data-testid="target-score"]').text()).toBe('80')
   })
 
+  // Story 1.6, décision produit (2026-09-09) : PAS de score restant en jeux de série.
+  // L'annonce « Pour n » suppose un score qui avance point par point ; elle est réservée
+  // au 3 Bandes (Epic 2, Story 2.2). Ce test verrouille la règle pour qu'un futur dev ne
+  // réintroduise pas le restant en JDS par réflexe.
+  it('shows the distance but never a remaining count in series games', () => {
+    const wrapper = mountPanel(makePlayer({ score: 37, targetScore: 100 }))
+
+    expect(wrapper.find('[data-testid="target-score"]').text()).toBe('100')
+    expect(wrapper.text()).not.toContain('63')
+    expect(wrapper.text()).not.toMatch(/RESTE|POUR/)
+  })
+
   it('renders each ball as a full colour block with readable text', () => {
     const white = mountPanel(makePlayer({ color: 'white' }))
     expect(white.classes()).toContain('bg-player-white')

@@ -118,14 +118,14 @@ Trois systèmes coréens réels servent de référence, avec des rôles différe
 
 **Billiboard** — même famille visuelle épurée que CUESCO, confirme le pattern de console centrale simple (inning, chrono, bouton d'action unique).
 
-**Billizone** — référence **fonctionnelle uniquement**, pas visuelle (son interface est plus chargée, thème sombre dense, jugée trop chargée). En retenir seulement deux idées : afficher le score restant vers l'objectif en plus du score courant, et nommer explicitement un bouton d'annulation de tour plutôt que de cacher cette action.
+**Billizone** — référence **fonctionnelle uniquement**, pas visuelle (son interface est plus chargée, thème sombre dense, jugée trop chargée). En retenir seulement deux idées : afficher le score restant vers l'objectif en plus du score courant, et nommer explicitement un bouton d'annulation de tour plutôt que de cacher cette action. *(Précision du 2026-09-09, Story 1.6 : le score restant est **propre au 3 Bandes** — il n'est pas affiché en jeux de série, où la série se rentre en bloc au pavé et où l'annonce « Pour n » n'a pas de sens.)*
 
 ### Transferable UX Patterns
 
 - **Shell unique multi-modes** — 2 panneaux joueur + console centrale identiques quel que soit le mode de jeu ; seul le widget central et le bouton d'action rapide changent. Validé par 6 déclinaisons réelles chez CUESCO.
 - **Chiffre de score géant, seul élément dominant** — confirmé sur l'ensemble des modes observés, pas une exception.
 - **Saisie rapide simple** : un bouton **+1** unique (pas une rangée de boutons +2/+3/+5/+10) accompagné d'une affordance claire (icône pavé numérique) pour ouvrir la saisie complète quand la série vaut plus qu'un point. Le détail exact sera affiné en développement.
-- **Score restant vers l'objectif** affiché à côté du score courant, dès qu'un format de match a un objectif (FR15).
+- **Score restant vers l'objectif** affiché à côté du score courant, dès qu'un format de match a un objectif (FR15). *Périmètre précisé le 2026-09-09 (Story 1.6) : **3 Bandes uniquement**, sous la forme de l'annonce d'arbitre `POUR 3` / `POUR 2` / `POUR 1` quand le restant vaut 3 ou moins — absent des jeux de série, où seule la distance brute reste en en-tête (Epic 2, Story 2.2).*
 - **Bouton d'annulation nommé et visible** dans la console centrale, jamais un geste implicite.
 - **Fin de partie façon "battle"** — bandeau VS, médaille, tableau comparatif.
 
@@ -138,7 +138,7 @@ Trois systèmes coréens réels servent de référence, avec des rôles différe
 
 ### Design Inspiration Strategy
 
-**À adopter :** shell unique multi-modes en 3 blocs (CUESCO/Billiboard) ; chiffre de score géant dominant ; bouton +1 simple + affordance pavé numérique ; score restant vers l'objectif (idée Billizone, habillage épuré) ; bouton d'annulation nommé et visible ; écran de fin façon "battle".
+**À adopter :** shell unique multi-modes en 3 blocs (CUESCO/Billiboard) ; chiffre de score géant dominant ; bouton +1 simple + affordance pavé numérique ; score restant vers l'objectif (idée Billizone, habillage épuré — **3 Bandes uniquement**, voir ci-dessus) ; bouton d'annulation nommé et visible ; écran de fin façon "battle".
 
 **À adapter :** simplifier la densité de la console centrale en V1 (pas de caméra, pas de pari social) ; garder le pavé numérique complet comme option universelle sur tous les modes.
 
@@ -353,6 +353,7 @@ Aucun — le design system est **Custom** (étape 8). Aucun composant équivalen
 
 **PlayerPanel** (×2, symétriques) *(fiche réécrite le 2026-09-09, Story 1.5)*
 - *Rôle* : **lire** l'état du joueur. Le score y est aussi grand que la carte le permet — c'est l'information à voir depuis la table. En-tête d'une **seule ligne** : nom, moyenne de la partie en cours, meilleure série, distance. En pied, deux boutons `−` / `+` corrigeant le total sans toucher au déroulé de la partie.
+- *Score restant* *(précisé le 2026-09-09, Story 1.6)* : **aucun** en jeux de série — la distance brute de l'en-tête suffit, la série se rentrant en bloc au pavé. Le compte à rebours est **propre au 3 Bandes** (Epic 2, Story 2.2) : `POUR 3` / `POUR 2` / `POUR 1` dès que `distance − score` vaut 3 ou moins, placé **sous le score, entre `−` et `+`** ; masqué en distance libre. Convention d'annonce de l'arbitre, qui suppose un score avançant point par point.
 - *Ce que le panneau ne porte plus* : le pavé numérique et l'overlay de saisie, partis en pop-up (voir §2.5). Un panneau qui n'a pas la main est **tapable** : il rend la main au joueur adverse.
 - *États* : au repos · actif (c'est son tour) · tapable pour rendre la main (panneau inactif).
 - *Règles de mise en page* : la taille du score suit le **nombre de chiffres** (1 à 4 — le plafond de 999 porte sur une série, pas sur le total), chaque palier bornant largeur, hauteur et plafond absolu. La densité de l'en-tête est réglée par la largeur du **panneau** (container query) et non de l'écran : il fait 410px en paysage, 307px en portrait. Si la ligne ne tient pas, seul le **nom** est tronqué — jamais une valeur chiffrée, qui deviendrait fausse à la lecture.

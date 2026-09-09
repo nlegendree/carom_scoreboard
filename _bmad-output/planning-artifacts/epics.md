@@ -508,11 +508,11 @@ So that je n'ai jamais besoin de calculer quoi que ce soit moi-même.
 **When** j'observe les deux `PlayerPanel`
 **Then** chaque total reflète exactement la somme des séries validées de ce joueur, sans divergence
 
-**Given** un format configuré avec objectif de score (Story 1.4)
-**When** le total d'un joueur est mis à jour
-**Then** le score restant vers l'objectif est affiché à côté du score courant sur son `PlayerPanel`
+**Given** un joueur en jeux de série avec une distance configurée (Story 1.4)
+**When** j'observe son `PlayerPanel`
+**Then** seule la **distance brute** est affichée en en-tête — **aucun score restant** n'apparaît en jeux de série
 
-**⚠️ Impact de la Story 1.5 (2026-09-09) — périmètre à réduire avant développement.** Les deux premiers AC sont **déjà satisfaits** : le total est recalculé comme somme des séries et affiché en temps réel sur chaque panneau. La **moyenne** de la partie en cours et la **meilleure série** ont également été livrées en 1.5, en tête de carte — la refonte de l'écran les rendait nécessaires. Il ne reste donc à cette story que le **score restant vers l'objectif**, et le soin de vérifier qu'il trouve sa place : l'en-tête tient déjà sur une seule ligne serrée (nom, moyenne, série, distance), et en portrait le panneau ne fait que 307px. Ne pas y ajouter un cinquième élément sans repasser par une mesure au navigateur.
+**⚠️ Note de périmètre (2026-09-09) — score restant retiré des JDS, reporté au 3 Bandes.** Les deux premiers AC sont **déjà satisfaits** par la Story 1.5 : le total est recalculé comme somme des séries (`recomputeScore`) et affiché en temps réel sur chaque panneau ; la **moyenne** de la partie en cours et la **meilleure série** y ont aussi été livrées, en tête de carte. L'AC d'origine « score restant vers l'objectif affiché à côté du score courant » (FR15, idée Billizone) est **retiré des jeux de série** sur décision produit de Nathan : au billard, on annonce « Pour 5 », « Pour 4 »… à mesure que le joueur **approche** de sa distance, ce qui suppose un score qui avance **point par point**. En JDS, la série se rentre en bloc au pavé — l'annonce n'a pas de sens, on n'affiche rien. Le compte à rebours est donc **propre au 3 Bandes** (saisie au tap `+1`) : `POUR 3` / `POUR 2` / `POUR 1` dès que le restant vaut 3 ou moins, affiché **sous le score, entre les boutons `−` et `+`** du pied de carte — voir la note de périmètre de la Story 2.2. La Story 1.6 ne contient plus que des tests de verrouillage (total lu dans le DOM du panneau, absence de restant en JDS) et cette synchronisation des specs : aucun code de production.
 
 ### Story 1.7: Annuler la saisie en cours avant validation
 
@@ -765,6 +765,8 @@ So that le score de mon adversaire progresse en temps réel sans qu'il touche lu
 **Given** le score du joueur actif
 **When** plusieurs points sont ajoutés au fil de la reprise
 **Then** le total affiché reflète exactement le cumul des taps enregistrés pour cette reprise
+
+**Note de périmètre (2026-09-09, reportée depuis la Story 1.6) — compte à rebours `POUR n`.** Le score restant vers l'objectif (FR15, idée Billizone) est **propre au 3 Bandes** et n'existe pas en jeux de série (décision produit de Nathan, voir Story 1.6). Il reprend la convention d'annonce de l'arbitre : `POUR 3` / `POUR 2` / `POUR 1`, avec `n = distance − score`, affiché **uniquement en mode `3bandes`**, **uniquement quand `1 ≤ n ≤ 3`** (à confirmer à la création de la story : afficher aussi au-dessus de 3 ?), et masqué en distance libre. Emplacement retenu : **sous le score, entre les boutons `−` et `+`** du pied du `PlayerPanel`. Il se met à jour au tap `+1` comme à la saisie de secours au pavé (Story 2.3) et à la correction manuelle `−`/`+`. Le calcul appartient au panneau (les deux termes sont sur `player`, transportés par l'interversion des billes) ; la détection de fin de partie (`score >= distance`) reste dans le store (Story 1.11). Ce point s'ajoute à la question **déjà ouverte** sur cette story (Story 1.5, décision 1) : distinguer le geste « créditer `+1` » du geste « rendre la main », qui visent la même zone.
 
 ### Story 2.3: Saisir un score global en fin de série (backup pavé numérique)
 

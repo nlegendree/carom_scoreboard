@@ -150,6 +150,22 @@ describe('GameView — saisie en popup et alternance', () => {
     expect(panels(wrapper)[1]!.props('active')).toBe(true)
   })
 
+  // Story 1.6 (AC1) : le total doit être VISIBLE, pas seulement juste dans le store.
+  // Les autres tests lisent `store.player1.score` ou les props ; celui-ci lit le texte
+  // rendu du panneau GAUCHE — `wrapper.find` renverrait le premier `score` trouvé et
+  // deviendrait faux dès qu'on cible le panneau droit.
+  it('shows the updated total on the panel once a series is validated', async () => {
+    const { wrapper } = await startedGame()
+
+    await openEntry(wrapper)
+    await type(wrapper, [1, 2])
+    await wrapper.find('[data-testid="entry-confirm-button"]').trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+
+    expect(panels(wrapper)[0]!.find('[data-testid="score"]').text()).toBe('12')
+    expect(panels(wrapper)[1]!.find('[data-testid="score"]').text()).toBe('0')
+  })
+
   // La popup se referme d'elle-même à la validation, sinon elle masquerait le score
   // qu'elle vient de mettre à jour.
   it('closes the popup once the series is validated', async () => {
