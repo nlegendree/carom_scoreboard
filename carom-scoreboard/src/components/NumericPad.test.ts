@@ -64,9 +64,13 @@ describe('NumericPad', () => {
 
     for (const testid of [...DIGITS.map((d) => `digit-${d}`), 'clear-button', 'backspace-button']) {
       const key = wrapper.find(`[data-testid="${testid}"]`)
-      // Les touches remplissent la hauteur offerte par la modale ; seule la largeur est
-      // garantie en dur, la hauteur ayant un plancher plus bas pour tenir en 768 px.
-      expect(key.classes()).toContain('min-w-[var(--size-touch-target)]')
+      // Les touches remplissent l'espace offert par leur parent, avec un plancher de 60px
+      // sur les deux axes — l'exception UX-DR8 des claviers intégrés, et non les 90px de
+      // `--size-touch-target`. Vérifié à la passe visuelle de la Story 1.5 : un plancher
+      // de 90px en largeur exige 302px pour trois colonnes, et rognait la 3e colonne dans
+      // un panneau joueur en portrait 768x1024.
+      expect(key.classes()).toContain('min-w-[60px]')
+      expect(key.classes()).toContain('min-h-[60px]')
       expect(key.classes()).toContain('h-full')
     }
   })

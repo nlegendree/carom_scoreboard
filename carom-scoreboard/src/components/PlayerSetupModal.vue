@@ -91,6 +91,32 @@ function backspaceDistance(): void {
 function confirm(): void {
   emit('confirm', { name: nameBuffer.value, targetScore: Number(distance.value || 0) })
 }
+
+// Un « tap en dehors » est un geste COMPLET sur le voile : appui ET relâchement.
+// Se contenter du relâchement referme la modale dès son ouverture — le `pointerup` du
+// geste qui a pressé la zone joueur retombe sur le voile qui vient d'apparaître sous le
+// doigt. La modale y échappait par chance, sa carte étant assez large pour intercepter ce
+// relâchement ; un simple changement de layout aurait suffi à révéler le défaut, déjà
+// observé sur `ScoreEntryModal`. Cette condition règle du même coup le doigt qui glisse
+// de la carte vers le voile.
+// Même mécanique que `ScoreEntryModal` : `pointerId` mémorisé (pas un booléen, pour
+// qu'une paume sur le voile n'arme pas la fermeture au profit d'un autre doigt) et
+// `pointercancel` qui désarme (revue de code du 2026-09-09).
+let backdropPointerId: number | null = null
+
+function armBackdropClose(event: PointerEvent): void {
+  backdropPointerId = event.pointerId
+}
+
+function disarmBackdropClose(): void {
+  backdropPointerId = null
+}
+
+function closeFromBackdrop(event: PointerEvent): void {
+  if (backdropPointerId === null || backdropPointerId !== event.pointerId) return
+  backdropPointerId = null
+  emit('cancel')
+}
 </script>
 
 <template>
@@ -98,12 +124,16 @@ function confirm(): void {
        referme, comme la croix. Aucun champ natif dans cette modale — l'écran est une borne
        fixe et toute la saisie passe par nos claviers, donc le clavier du système ne peut
        structurellement pas monter par-dessus l'interface.
-       Seule exception à `@pointerdown` (AR8) : le voile ferme au RELÂCHEMENT. Fermer au
-       contact jetait toute la saisie dès qu'une paume d'appui touchait le fond. -->
+       Seule exception à `@pointerdown` (AR8) : le voile ferme sur un geste COMPLET
+       (appui ET relâchement sur le voile). Fermer au seul contact jetait toute la saisie
+       dès qu'une paume d'appui touchait le fond ; fermer au seul relâchement refermait la
+       modale à son ouverture même. -->
   <div
     data-testid="modal-backdrop"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md"
-    @pointerup="emit('cancel')"
+    @pointerdown="armBackdropClose"
+    @pointerup="closeFromBackdrop"
+    @pointercancel="disarmBackdropClose"
   >
     <div
       data-testid="modal-card"

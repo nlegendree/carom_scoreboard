@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { GAME_MODE_LABELS, type GameMode } from '../types/game'
-
+// Le mode de jeu n'est plus affiché ici (décision du 2026-09-09) : la colonne est
+// réservée à ce qui change en cours de partie.
 defineProps<{
-  mode: GameMode
   repriseNumber: number
   canUndo: boolean
-  canSwapPlayers: boolean
 }>()
 
 // `undo` est émis mais volontairement non écouté jusqu'à la Story 1.8, qui branchera
@@ -15,8 +13,6 @@ const emit = defineEmits<{ undo: []; 'swap-players': [] }>()
 
 <template>
   <div class="flex w-1/5 min-w-0 shrink-0 flex-col items-center justify-center gap-4 bg-bg p-2">
-    <span class="text-stat font-bold text-white">{{ GAME_MODE_LABELS[mode] }}</span>
-
     <div class="flex w-full min-w-0 flex-col items-center">
       <span class="text-stat text-white/60">REPRISE</span>
       <!-- `text-reprise` est dimensionné pour la colonne (w-1/5) et non pour un panneau
@@ -37,13 +33,14 @@ const emit = defineEmits<{ undo: []; 'swap-players': [] }>()
       ↩ ANNULER
     </button>
 
+    <!-- Disponible pendant TOUTE la partie : il ne disparaît plus à la première série,
+         pour permettre de corriger un côté à tout moment. -->
     <button
-      v-if="canSwapPlayers"
       data-testid="swap-players-button"
       class="flex min-h-[var(--size-touch-target)] w-full items-center justify-center gap-2 rounded-lg px-4 text-stat font-bold text-on-accent bg-accent touch-manipulation select-none"
       @pointerdown="emit('swap-players')"
     >
-      ⇄ BLANC / JAUNE
+      ⇄ ÉCHANGER
     </button>
   </div>
 </template>

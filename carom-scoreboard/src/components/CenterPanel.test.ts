@@ -3,20 +3,24 @@ import { mount } from '@vue/test-utils'
 import CenterPanel from './CenterPanel.vue'
 
 const baseProps = {
-  mode: 'libre',
   repriseNumber: 1,
   canUndo: false,
-  canSwapPlayers: true,
 } as const
 
 describe('CenterPanel', () => {
-  it('displays the mode label and the reprise number', () => {
-    const wrapper = mount(CenterPanel, {
-      props: { ...baseProps, mode: 'cadre-47-2', repriseNumber: 3 },
-    })
+  it('displays the reprise number', () => {
+    const wrapper = mount(CenterPanel, { props: { ...baseProps, repriseNumber: 3 } })
 
-    expect(wrapper.text()).toContain('CADRE 47/2')
     expect(wrapper.find('[data-testid="reprise-number"]').text()).toBe('3')
+  })
+
+  // Le mode de jeu a quitté la colonne centrale le 2026-09-09 : il est choisi au
+  // démarrage et n'évolue pas, la colonne est réservée à ce qui change en cours de partie.
+  it('no longer displays the game mode', () => {
+    const wrapper = mount(CenterPanel, { props: baseProps })
+
+    expect(wrapper.text()).not.toContain('LIBRE')
+    expect(wrapper.text()).not.toContain('CADRE')
   })
 
   // Le compteur doit rester dans sa colonne : il utilise `text-reprise`, dimensionné pour
@@ -39,10 +43,13 @@ describe('CenterPanel', () => {
     expect(wrapper.emitted('swap-players')).toHaveLength(1)
   })
 
-  it('hides the swap button once swapping is no longer allowed', () => {
-    const wrapper = mount(CenterPanel, { props: { ...baseProps, canSwapPlayers: false } })
+  // Règle changée le 2026-09-09 : le bouton reste disponible TOUTE la partie, y compris
+  // une fois des séries enregistrées, pour pouvoir corriger un côté à tout moment.
+  it('keeps the swap button available once series have been recorded', () => {
+    const wrapper = mount(CenterPanel, { props: { ...baseProps, repriseNumber: 4, canUndo: true } })
 
-    expect(wrapper.find('[data-testid="swap-players-button"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="swap-players-button"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="swap-players-button"]').text()).toContain('ÉCHANGER')
   })
 
   it('disables the undo button while there is nothing to undo', () => {

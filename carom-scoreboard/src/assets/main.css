@@ -45,6 +45,38 @@
 
   /* Breakpoints responsive (mobile-first) : md reste au défaut Tailwind (768px) */
   --breakpoint-lg: 1280px;
+
+  /* Retours visuels de la saisie au pavé (Story 1.5). Portés par des animations CSS et
+     non par des timers JS : le navigateur les compose hors du thread principal, ce qui
+     tient la contrainte NFR1 (< 100 ms perçues) sans dépendre de la boucle Vue.
+     Chaque animation est relancée en changeant la `key` de l'élément qui la porte. */
+
+  /* Accusé de réception d'une frappe prise en compte (AC6, UX-DR17) : voile blanc bref
+     sur la zone de valeur de la pop-up de saisie, dont le fond est sombre. */
+  --animate-input-flash: input-flash 120ms ease-out forwards;
+  @keyframes input-flash {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  /* Refus d'une frappe au-delà du plafond (AC7, UX-DR10) : pulsation brève de la
+     valeur en cours. Aucun message, aucun blocage d'écran. */
+  --animate-input-reject: input-reject 180ms ease-out;
+  @keyframes input-reject {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+  }
+
+  /* Compte à rebours de l'auto-validation : l'échéance ne doit pas être silencieuse,
+     d'autant qu'elle fait aussi changer le tour (AC9, AC13). La durée réelle est posée
+     par `ScoreEntryModal` (`animation-duration` liée à `AUTO_VALIDATE_DELAY_MS`) : le
+     3000ms ci-dessous n'est qu'un repli. */
+  --animate-input-countdown: input-countdown 3000ms linear forwards;
+  @keyframes input-countdown {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
 }
 
 * {

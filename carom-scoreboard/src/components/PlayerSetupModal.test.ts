@@ -200,9 +200,33 @@ describe('PlayerSetupModal', () => {
 
   // Le voile est la SEULE exception à AR8 : il ferme au relâchement. Fermer au contact
   // jetait toute la saisie dès qu'une paume d'appui effleurait le fond.
+  // ⚠️ Régression corrigée le 2026-09-09, à l'identique de `ScoreEntryModal` : la modale
+  // s'ouvre au `pointerdown` d'une zone joueur, et le `pointerup` du MÊME geste retombe
+  // sur le voile qui vient d'apparaître sous le doigt. Sans exiger un appui préalable sur
+  // le voile, la modale se refermait dès qu'on relâchait. Elle y échappait par chance :
+  // sa carte, très large, interceptait le relâchement — un simple changement de layout
+  // aurait suffi à faire apparaître le bug.
+  it('survives the release of the gesture that opened it', async () => {
+    const wrapper = mountModal()
+
+    await wrapper.find('[data-testid="modal-backdrop"]').trigger('pointerup')
+
+    expect(wrapper.emitted('cancel')).toBeUndefined()
+  })
+
+  it('does not close when the gesture started inside the card', async () => {
+    const wrapper = mountModal()
+
+    await wrapper.find('[data-testid="modal-card"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="modal-backdrop"]').trigger('pointerup')
+
+    expect(wrapper.emitted('cancel')).toBeUndefined()
+  })
+
   it('closes when the backdrop around the card is released', async () => {
     const wrapper = mountModal()
 
+    await wrapper.find('[data-testid="modal-backdrop"]').trigger('pointerdown')
     await wrapper.find('[data-testid="modal-backdrop"]').trigger('pointerup')
 
     expect(wrapper.emitted('cancel')).toHaveLength(1)
@@ -212,6 +236,27 @@ describe('PlayerSetupModal', () => {
     const wrapper = mountModal()
 
     await wrapper.find('[data-testid="modal-backdrop"]').trigger('pointerdown')
+
+    expect(wrapper.emitted('cancel')).toBeUndefined()
+  })
+
+  it('disarms the backdrop on pointercancel', async () => {
+    const wrapper = mountModal()
+    const backdrop = wrapper.find('[data-testid="modal-backdrop"]')
+
+    await backdrop.trigger('pointerdown')
+    await backdrop.trigger('pointercancel')
+    await backdrop.trigger('pointerup')
+
+    expect(wrapper.emitted('cancel')).toBeUndefined()
+  })
+
+  it('only closes on the release of the pointer that armed it', async () => {
+    const wrapper = mountModal()
+    const backdrop = wrapper.find('[data-testid="modal-backdrop"]')
+
+    await backdrop.trigger('pointerdown', { pointerId: 1 })
+    await backdrop.trigger('pointerup', { pointerId: 2 })
 
     expect(wrapper.emitted('cancel')).toBeUndefined()
   })

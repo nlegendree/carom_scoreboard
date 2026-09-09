@@ -415,25 +415,82 @@ As a joueur,
 I want saisir le score de ma série sur un pavé tactile,
 So that j'enregistre mon résultat sans calcul mental ni ambiguïté sur la validation.
 
+> **AC réécrits le 2026-09-09** après trois passes de refonte produit menées avec Nathan pendant l'implémentation. Ils décrivent l'écran tel qu'il est livré. La version d'origine — pavé permanent dans le panneau, overlay sur le bloc joueur, emplacement réservé de `VALIDER` — est **caduque**.
+
 **Acceptance Criteria:**
 
-**Given** une reprise en cours et mon `PlayerPanel` actif
-**When** je tape des chiffres sur mon pavé numérique
-**Then** chaque tap déclenche un retour haptique + visuel affiché directement sur le bloc joueur (flash bref, jamais de toast/notification textuelle), en moins de 100ms (NFR1, FR11, UX-DR17), et la valeur en cours s'affiche dans un overlay centré
+**Given** une partie en cours
+**When** j'observe un panneau joueur
+**Then** il ne porte que l'essentiel — en-tête, **score aussi grand que la carte le permet**, deux boutons de correction — et aucun pavé numérique. La taille du score s'adapte au nombre de chiffres (1 à 4) pour rester maximale sans jamais déborder, en paysage comme en portrait
 
-**Given** une saisie dépassant 999 (FR7)
+**Given** un panneau joueur
+**When** je lis son en-tête
+**Then** le **nom**, la **moyenne** de la partie en cours, la **meilleure série** et la **distance** tiennent sur une seule ligne ; si la place manque, seul le nom est tronqué, jamais une valeur chiffrée
+
+**Given** une partie en cours
+**When** j'observe la barre basse
+**Then** un bouton **`AJOUTER LES POINTS`** occupe toute la largeur du bloc joueur sous lequel il se trouve, placé du côté du joueur qui **n'a pas** la main — c'est l'adversaire assis qui compte les points de celui qui joue. Le picto de sortie occupe la colonne opposée, et les deux échangent de place à chaque bascule
+
+**Given** que j'appuie sur `AJOUTER LES POINTS`
+**When** la pop-up de saisie s'ouvre
+**Then** elle reprend la coquille de la modale de configuration (voile flouté, carte centrée, croix, CTA en pied) et **reste ouverte quand je relâche le doigt**
+
+**Given** la pop-up ouverte
+**When** je tape un chiffre
+**Then** la valeur en cours s'affiche en grand dans la couleur du joueur, avec un retour haptique + visuel en moins de 100ms (NFR1, FR11, UX-DR17)
+
+**Given** une saisie déjà à 3 chiffres (plafond FR7 : 999)
 **When** je tape un 4e chiffre
-**Then** le pavé refuse la saisie au-delà de 3 chiffres avec un retour haptique distinct (plus court/sec), sans bloquer l'écran par un message (UX-DR10)
+**Then** la frappe est ignorée, avec un retour haptique distinct (plus court/sec) et une pulsation brève de la valeur, sans message bloquant (UX-DR10)
 
-**Given** une saisie en cours affichée
-**When** je tape sur "Valider" OU que 3 secondes s'écoulent sans interaction
-**Then** le score est validé, le total est mis à jour, et les deux chemins aboutissent au même état (UX-DR15, FR2, FR7)
+**Given** une saisie en cours
+**When** je tape sur "Valider" OU que 3 secondes s'écoulent sans frappe
+**Then** la série est enregistrée sur le joueur **qui a la main**, la pop-up se referme, le total est mis à jour — les deux chemins aboutissent au même état (UX-DR15, FR2, FR7)
 
-**Given** le pavé numérique
-**When** j'interagis avec ses boutons
-**Then** tous les événements utilisent `@pointerdown` — aucun délai tactile de 300ms perceptible sur iPad et Android (AR8)
+**Given** une saisie en cours
+**When** je referme la pop-up par la croix ou par un tap complet en dehors
+**Then** rien n'est enregistré, le tour ne bascule pas, et la saisie abandonnée ne réapparaît pas à l'ouverture suivante
 
-**Note de périmètre :** `NumericPad.vue` existe depuis la Story 1.4 (composant purement présentationnel, emits `digit`/`clear`/`backspace`, prop `hasInput` pilotant le seul libellé `AC`/`C`, sans état ni logique de score). Cette story le **branche** sur la saisie de série et lui ajoute le retour haptique, le retour distinct au plafond de 999 et la validation hybride — elle ne le crée pas. La Story 1.4 livre également `AlphaKeyboard.vue` (clavier AZERTY intégré) et `keyClasses.ts`, qui partage le style de touche entre les deux claviers.
+**Given** un pavé vide
+**When** je tape `0` puis "Valider"
+**Then** une série de **0** est enregistrée (c'est le score de série le plus courant au carambole) ; un chiffre tapé sur un buffer valant `0` **remplace** le zéro (`0` puis `7` donne `7`, jamais `07`)
+
+**Given** une saisie vide
+**When** je tape sur "Valider"
+**Then** rien ne se passe — aucune série fantôme, aucun compteur, et le tour ne bascule pas
+
+**Given** ma série validée, par le bouton ou par l'auto-validation à 3s
+**When** elle est enregistrée
+**Then** le tour passe **automatiquement** à l'autre joueur et le liseré rouge se déplace sur son panneau (UX-DR14) — rentrer sa série **est** l'acte de rendre la main
+
+**Given** que je n'ai pas marqué
+**When** je tape la **zone de l'adversaire**
+**Then** le tour bascule sans que mon total change, mais une **série de 0 est bien enregistrée** : une reprise blanchie reste une reprise jouée et compte dans ma moyenne. Taper sa propre zone ne fait rien
+
+**Given** que c'est le joueur **blanc** (gauche) qui ouvre chaque reprise
+**When** j'observe la console centrale
+**Then** le numéro de REPRISE n'avance que lorsque le blanc **reprend** la main : la série du seul joueur blanc laisse l'affichage sur « REPRISE 1 »
+
+**Given** les boutons `−` et `+` en pied de carte
+**When** j'en presse un
+**Then** le total est corrigé de ±1 **sans toucher au déroulé** : aucune reprise créée, aucune bascule de tour, aucun effet sur la meilleure série. La correction entre dans le total, donc dans la moyenne
+
+**Given** le bouton "Échanger" de la console centrale
+**When** je l'utilise
+**Then** il reste disponible **pendant toute la partie**, et chaque joueur emporte de l'autre côté tout son historique — séries, total, moyenne, meilleure série et corrections
+
+**Given** l'écran de partie
+**When** j'interagis avec ses commandes
+**Then** tous les événements passent par `@pointerdown` (AR8) — seule exception documentée, le voile des pop-ups ferme sur un geste **complet** ; toute zone de commande fait au moins 90×90px (touches de clavier exceptées, UX-DR8) ; les contrastes respectent WCAG AA sur le bloc blanc comme sur le jaune (UX-DR22, NFR10) ; la console centrale n'affiche plus le mode de jeu
+
+**Note de périmètre :** `NumericPad.vue` existe depuis la Story 1.4 (composant purement présentationnel, emits `digit`/`clear`/`backspace`, prop `hasInput` pilotant le seul libellé `AC`/`C`). Cette story le **branche** sur la saisie de série, dans une pop-up dédiée (`ScoreEntryModal.vue`), et lui ajoute le retour haptique, le refus au plafond et la validation hybride — elle ne le crée pas. La Story 1.4 livre également `AlphaKeyboard.vue` et `keyClasses.ts`, qui partage le style de touche entre les deux claviers.
+
+**⚠️ Risque résiduel ouvert :** un seul CTA de saisie signifie qu'on ne peut plus saisir pour le joueur qui n'a pas la main. Le rattrapage d'une série oubliée passe donc par ANNULER — **Story 1.8, pas encore branchée**. Tant qu'elle ne l'est pas, un oubli n'est pas récupérable en partie.
+
+**Règle produit de portée générale — alternance et moyenne** *(décision de Nathan, 2026-09-09 ; consignée ici et dans `ux-design-specification.md` §2.5)*. Elle **dépasse le cadre de la Story 1.5** et conditionne les Stories 1.6, 1.10, 1.11 et tout l'Epic 2 :
+1. **Rentrer sa série, c'est rendre la main.** Dans les modes qui passent par le pavé (JDS), valider une série bascule le joueur actif — par le bouton comme par l'auto-validation à 3 s, qui devient donc aussi le *fallback* de bascule. Rendre la main **sans marquer** se fait au tap sur la zone de l'adversaire, ce qui enregistre une série de 0. En 3 Bandes, où la série ne passe pas par un pavé, la bascule reste un geste explicite — **les AC de l'Epic 2 ne la décrivent pas encore** et ne distinguent pas le geste « créditer +1 » du geste « rendre la main », qui visent la même zone (à préciser avant la Story 2.2).
+2. **La reprise est ouverte par le joueur blanc.** Le compteur de reprise avance quand le joueur de gauche **reprend** la main, pas quand il la rend.
+3. **La moyenne d'un joueur se fige quand il rend la main** : celle du blanc quand il rend la main, celle du jaune quand le blanc la reprend. Une reprise entamée mais non terminée par un joueur n'entre pas dans sa moyenne. **Une reprise blanchie, elle, compte** — sans quoi la moyenne monterait artificiellement.
 
 ### Story 1.6: Calcul et affichage du score total en temps réel
 
@@ -455,6 +512,8 @@ So that je n'ai jamais besoin de calculer quoi que ce soit moi-même.
 **When** le total d'un joueur est mis à jour
 **Then** le score restant vers l'objectif est affiché à côté du score courant sur son `PlayerPanel`
 
+**⚠️ Impact de la Story 1.5 (2026-09-09) — périmètre à réduire avant développement.** Les deux premiers AC sont **déjà satisfaits** : le total est recalculé comme somme des séries et affiché en temps réel sur chaque panneau. La **moyenne** de la partie en cours et la **meilleure série** ont également été livrées en 1.5, en tête de carte — la refonte de l'écran les rendait nécessaires. Il ne reste donc à cette story que le **score restant vers l'objectif**, et le soin de vérifier qu'il trouve sa place : l'en-tête tient déjà sur une seule ligne serrée (nom, moyenne, série, distance), et en portrait le panneau ne fait que 307px. Ne pas y ajouter un cinquième élément sans repasser par une mesure au navigateur.
+
 ### Story 1.7: Annuler la saisie en cours avant validation
 
 As a joueur (Michel qui se trompe de touche),
@@ -463,13 +522,15 @@ So that une erreur de frappe ne devient jamais un score faux.
 
 **Acceptance Criteria:**
 
-**Given** une saisie en cours dans l'overlay (avant validation)
+**Given** une saisie en cours dans la pop-up de saisie (avant validation)
 **When** j'appuie sur "Corriger"
 **Then** la saisie s'efface, je reviens à un état de saisie vide, sans impact sur le total (FR8)
 
 **Given** le bouton "Corriger" affiché pendant une saisie
 **When** je le compare visuellement au bouton "Valider"
 **Then** il a le même poids visuel, jamais relégué à un sous-menu (UX-DR16)
+
+**⚠️ Impact de la Story 1.5 (2026-09-09) — story à réexaminer, elle est peut-être sans objet.** La saisie ayant quitté le panneau pour une pop-up, trois chemins d'annulation existent déjà et sont testés : la touche `C` (vide la saisie), la touche `⌫` (efface le dernier chiffre) et la **fermeture de la pop-up** par la croix ou par un tap en dehors, qui n'enregistre rien et ne laisse aucun buffer résiduel. Le besoin d'origine — « une erreur de frappe ne devient jamais un score faux » — est donc couvert. Reste à arbitrer avec Nathan : faut-il encore un bouton `CORRIGER` distinct dans la pop-up, et que ferait-il de plus que `C` ? Le second AC (poids visuel égal à `VALIDER`, UX-DR16) n'a plus de sujet tant que ce bouton n'existe pas.
 
 ### Story 1.8: Annuler la dernière série validée
 
@@ -489,6 +550,10 @@ So that je peux corriger une erreur sans recalcul manuel ni stress.
 
 **Note de périmètre :** le bouton ANNULER de la console centrale existe déjà depuis la Story 1.3, affiché et désactivé tant qu'aucune reprise n'est enregistrée, et son événement `undo` n'est écouté par personne. Cette story le **branche** (écoute de l'événement dans `GameView` + action d'annulation dans `useGameStore`), elle ne le crée pas.
 
+**⚠️ Impact de la Story 1.5 (2026-09-09) — priorité à relever.** Cette story est devenue le **seul chemin de rattrapage** d'une série oubliée ou attribuée au mauvais joueur : la 1.5 n'expose qu'un CTA de saisie, du côté du joueur assis, et on ne peut donc plus saisir pour celui qui n'a pas la main. Tant que la 1.8 n'est pas livrée, un oubli n'est pas récupérable en cours de partie. À considérer avant la 1.6 et la 1.7.
+
+**Le terrain est prêt :** `reprises` est la source de vérité unique et `player.score` en est **recalculé** par somme (jamais incrémenté), ce qui rend l'annulation exacte sans arithmétique inverse — il suffit de remettre la dernière série à `null` et de recalculer. ⚠️ Trois pièges vérifiés en 1.5 : `reprises` est un `shallowRef`, le tableau doit être **remplacé** et jamais muté ; l'annulation doit décider si elle **remonte aussi le tour** (la validation le fait basculer) ; et le total porte un terme de **correction manuelle** (`scoreAdjustments`) tenu à part des reprises, qu'une annulation de série ne doit pas toucher.
+
 ### Story 1.9: Saisir un score négatif
 
 As a joueur,
@@ -504,6 +569,8 @@ So that je peux enregistrer une pénalité ou déduction selon les règles du je
 **Given** une valeur négative validée
 **When** le total est recalculé
 **Then** il reflète correctement la soustraction, sans jamais afficher un état incohérent (score affiché toujours cohérent avec l'historique des reprises)
+
+**⚠️ Impact de la Story 1.5 (2026-09-09).** Le second AC est **déjà satisfait** : `addReprise` accepte une valeur négative sans cas particulier (testé), et le total étant recalculé comme somme des séries, la soustraction est exacte par construction. Il ne reste que la **bascule de signe dans la pop-up de saisie** et le champ `isNegative`. ⚠️ **Ne pas confondre avec les boutons `−` / `+`** livrés en 1.5 : ceux-là corrigent le **total** sans créer de reprise ; ils n'enregistrent pas une série négative. Noter aussi que la taille du score gère déjà le caractère `−` supplémentaire (le calcul porte sur la longueur de la chaîne affichée), et que la correction manuelle n'est volontairement pas bornée à zéro.
 
 ### Story 1.10: Terminer une partie et consulter le récapitulatif automatique
 

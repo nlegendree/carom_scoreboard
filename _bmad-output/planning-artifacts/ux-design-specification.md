@@ -189,11 +189,19 @@ Entièrement établi, aucune innovation d'interaction risquée : pavé numériqu
 
 ### 2.5 Experience Mechanics
 
-**Modes JDS (les six variantes) :**
-1. **Initiation** : le pavé numérique est toujours visible/actif dans la zone du joueur — pas d'étape "commencer la saisie".
-2. **Interaction** : le joueur tape les chiffres de son score ; la valeur en cours s'affiche dans un overlay centré (repris de l'ancien prototype `explore/scoreboard_test`).
-3. **Feedback** : chaque tap déclenche un retour haptique + visuel immédiat ; un bouton "Valider" est visible dès la première frappe.
-4. **Complétion** : validation par tap explicite sur "Valider" OU automatiquement après 3 secondes d'inactivité — les deux chemins aboutissent au même état, sans différence visible pour la suite du jeu.
+**Modes JDS (les six variantes)** — *réécrit le 2026-09-09 (Story 1.5). La version précédente plaçait le pavé en permanence dans le panneau joueur et la valeur en cours dans un overlay sur son bloc : les deux sont **caducs**, le pavé mangeait la place du score, qui est l'information à lire à distance.*
+1. **Initiation** : le panneau joueur ne porte **aucun pavé**. La saisie s'ouvre par un bouton **`AJOUTER LES POINTS`** dans la barre basse, large comme le bloc joueur et placé du côté du joueur qui **n'a pas** la main — au billard, c'est l'adversaire assis qui compte les points de celui qui joue. Le picto de sortie occupe la colonne opposée ; les deux échangent de place à chaque bascule de tour.
+2. **Interaction** : le pavé vit dans une **pop-up** (`ScoreEntryModal`), qui reprend la coquille de `PlayerSetupModal` pour que les deux pop-ups du produit se ressemblent. La valeur en cours s'y affiche en grand, dans la couleur du joueur.
+3. **Feedback** : chaque tap déclenche un retour haptique + visuel immédiat ; `VALIDER` porte un compte à rebours visible, l'auto-validation ne devant pas être silencieuse — d'autant qu'elle fait aussi changer le tour.
+4. **Complétion** : validation par tap explicite sur `VALIDER` OU automatiquement après 3 secondes d'inactivité — les deux chemins aboutissent au même état et referment la pop-up. **La validation d'une série emporte la bascule du tour** (voir la règle d'alternance ci-dessous). Refermer sans valider n'enregistre rien et ne laisse aucun buffer résiduel.
+5. **Ce qui reste dans le panneau** : le **score, aussi grand que la carte le permet** (sa taille s'adapte au nombre de chiffres), un en-tête d'une seule ligne portant nom, moyenne, meilleure série et distance, et deux boutons `−` / `+` en pied qui corrigent le total **sans toucher au déroulé** — ni reprise, ni bascule de tour.
+
+**Une seule saisie à la fois.** Conséquence assumée du CTA unique : on ne peut plus saisir pour le joueur qui n'a pas la main. Le rattrapage d'une série oubliée passe par ANNULER (Story 1.8).
+
+**Règle d'alternance et de moyenne (portée générale, actée le 2026-09-09)** — elle conditionne les Stories 1.6, 1.10, 1.11 et tout l'Epic 2, et ne se limite pas à la Story 1.5 :
+- **Rentrer sa série, c'est rendre la main.** Dans les modes qui passent par le pavé numérique (JDS), valider une série bascule le joueur actif, sans aucun geste supplémentaire — par le bouton `VALIDER` comme par l'auto-validation à 3 s, qui devient donc aussi le *fallback* de bascule. **Rendre la main sans marquer** se fait au **tap sur la zone de l'adversaire** : le total ne bouge pas, mais une **série de 0 est bien enregistrée** — une reprise blanchie reste une reprise jouée, et l'ignorer ferait monter artificiellement la moyenne. En 3 Bandes (Epic 2), où la série ne passe pas par un pavé, la bascule reste un geste explicite.
+- **La reprise est ouverte par le joueur blanc.** C'est toujours le joueur de gauche qui « met les reprises » : le compteur avance quand il **reprend** la main, pas quand il la rend. Une série du seul joueur blanc laisse donc l'affichage sur « REPRISE 1 ».
+- **La moyenne d'un joueur se fige quand il rend la main** : celle du blanc quand il rend la main, celle du jaune quand le blanc la reprend. Une reprise entamée mais non terminée par un joueur n'entre pas dans sa moyenne ; une reprise **blanchie**, en revanche, y compte.
 
 **Mode 3 Bandes** (rappel step 2.1 de l'étape 3) : le joueur assis tape sa propre zone pour incrémenter le score de l'adversaire en train de jouer, avec le pavé numérique disponible en backup pour saisir une série complète directement.
 
@@ -250,7 +258,9 @@ Unité de base 8px (standard Tailwind). Les blocs joueur occupent quasiment 100%
 
 **Saisie sur borne fixe : claviers intégrés, clavier système exclu** *(ajouté le 2026-09-09)*. L'écran cible est **fixé**, pas pris en main. Le clavier du système, dont ni la taille ni l'apparence ne sont contrôlables et qui recouvre 40 à 50 % de l'écran, est donc proscrit : toute saisie passe par des claviers dessinés dans l'application. La garantie est **structurelle** — les modales de saisie ne contiennent aucun champ natif, les valeurs sont du texte affiché alimenté par nos claviers — et non un simple attribut `inputmode`. Conséquence assumée : un clavier alphabétique à 10 colonnes ne peut pas tenir la cible de 90×90 px dans une pop-up à 768 px de large (touches ≈ 57 px, comme le clavier natif de l'iPad) ; la règle des 90 px reste entière pour les commandes de jeu.
 
-**Barre d'action permanente.** Une barre basse est présente sur **tous** les écrans, scoreboard compris. Le retour y occupe toujours la même position à gauche — un contrôle de navigation ne se déplace jamais d'un écran à l'autre. Sa partie droite accueille les actions contextuelles (démarrer, et plus tard les CTA de saisie). C'est aussi elle qui réduit légèrement la hauteur dévolue au score sur le scoreboard, comme sur les systèmes coréens de référence.
+**Barre d'action permanente.** Une barre basse est présente sur **tous** les écrans, scoreboard compris. Sur les écrans de navigation, le retour occupe toujours la même position à gauche et la partie droite accueille les actions contextuelles (démarrer). C'est aussi elle qui réduit légèrement la hauteur dévolue au score sur le scoreboard, comme sur les systèmes coréens de référence.
+
+*Exception assumée sur l'écran de partie (Story 1.5, 2026-09-09)* : la barre y est calée sur les colonnes des panneaux, et **le CTA de saisie comme la sortie changent de côté** à chaque bascule de tour — le CTA suivant le joueur assis, la sortie occupant la colonne opposée. La règle « un contrôle de navigation ne se déplace jamais » cède ici devant une règle plus forte : le CTA doit se trouver sous la main de celui qui compte les points. La sortie y est réduite à un picto, sans libellé, pour ne pas concurrencer le CTA.
 
 ## Design Direction Decision
 
@@ -341,16 +351,18 @@ Aucun — le design system est **Custom** (étape 8). Aucun composant équivalen
 
 ### Custom Components
 
-**PlayerPanel** (×2, symétriques)
-- *Rôle* : afficher l'état du joueur (nom, score, AVG, HR, score restant) + ses propres contrôles de saisie.
-- *États* : au repos · actif (c'est son tour) · saisie en cours (overlay valeur) · en attente de validation (fenêtre 3s).
+**PlayerPanel** (×2, symétriques) *(fiche réécrite le 2026-09-09, Story 1.5)*
+- *Rôle* : **lire** l'état du joueur. Le score y est aussi grand que la carte le permet — c'est l'information à voir depuis la table. En-tête d'une **seule ligne** : nom, moyenne de la partie en cours, meilleure série, distance. En pied, deux boutons `−` / `+` corrigeant le total sans toucher au déroulé de la partie.
+- *Ce que le panneau ne porte plus* : le pavé numérique et l'overlay de saisie, partis en pop-up (voir §2.5). Un panneau qui n'a pas la main est **tapable** : il rend la main au joueur adverse.
+- *États* : au repos · actif (c'est son tour) · tapable pour rendre la main (panneau inactif).
+- *Règles de mise en page* : la taille du score suit le **nombre de chiffres** (1 à 4 — le plafond de 999 porte sur une série, pas sur le total), chaque palier bornant largeur, hauteur et plafond absolu. La densité de l'en-tête est réglée par la largeur du **panneau** (container query) et non de l'écran : il fait 410px en paysage, 307px en portrait. Si la ligne ne tient pas, seul le **nom** est tronqué — jamais une valeur chiffrée, qui deviendrait fausse à la lecture.
 - *Accessibilité* : zones tactiles ≥90×90px ; le tour actif ne doit pas reposer uniquement sur la couleur du liseré — un joueur daltonien doit pouvoir distinguer "actif/inactif" autrement (intensité, icône, position), pas seulement sa teinte.
 
 **NumericPad**
-- *Rôle* : saisie d'un nombre — score d'une série (Story 1.5), distance d'un joueur (Story 1.4).
+- *Rôle* : saisie d'un nombre — score d'une série dans `ScoreEntryModal` (Story 1.5), distance d'un joueur dans `PlayerSetupModal` (Story 1.4). Composant **muet** : ni buffer, ni plafond, ni timer, ni haptique — ce sont ses hôtes qui les portent.
 - *États* : vide (touche d'effacement libellée `AC`) · saisie active (libellée `C`) · valeur hors limites (>999, FR7).
 - *Disposition* : `1`-`9`, puis `AC`/`C` · `0` · `⌫` sur le rang du bas — plein, avec le `0` sous le `8`, là où le doigt le cherche.
-- *Accessibilité* : boutons ≥90×90px partout où la place le permet, retour haptique + visuel <100ms (NFR1).
+- *Accessibilité* : plancher de **60px sur les deux axes** — l'exception UX-DR8 des claviers intégrés, et non les 90px des zones de commande : trois colonnes à 90px exigent 302px de large, que le panneau ne peut pas offrir en portrait. Retour haptique + visuel <100ms (NFR1), porté par le composant hôte.
 
 **PlayerSetupModal** *(ajouté le 2026-09-09, Story 1.4)*
 - *Rôle* : régler le **nom et la distance d'un seul joueur**, en tapant sa zone à l'étape joueurs. Vraie pop-up (AR6) : carte centrée, page visible mais floutée derrière. Trois issues : la **croix en haut à gauche** et le **tap en dehors de la carte** abandonnent, `VALIDER` — sur toute la largeur de la carte — applique.
@@ -358,13 +370,20 @@ Aucun — le design system est **Custom** (étape 8). Aucun composant équivalen
 - *Règles de mise en page* : un **seul emplacement de clavier**, pour que rien ne se déplace lors de la bascule ; en-tête, champs et `VALIDER` fixes, les touches se partageant la place restante — `VALIDER` reste visible quel que soit le clavier, sans jamais exiger de défilement.
 - *Accessibilité* : le champ visé se distingue par la **présence** d'un liseré (`border-turn-active`), signal non-chromatique identique à celui du tour actif — jamais par la seule teinte. `@pointerdown` partout.
 
+**ScoreEntryModal** *(ajouté le 2026-09-09, Story 1.5)*
+- *Rôle* : saisir la **série du joueur qui a la main**, ouverte par `AJOUTER LES POINTS`. Même coquille que `PlayerSetupModal` — voile flouté, carte centrée, croix en haut à gauche, CTA en pied — pour que les deux pop-ups du produit se ressemblent.
+- *États* : saisie vide (touche d'effacement `AC`, `VALIDER` inerte) · saisie en cours (`C`, compte à rebours de 3s sur `VALIDER`) · frappe refusée au plafond (pulsation de la valeur, haptique distincte).
+- *Trois issues* : `VALIDER`, l'**auto-validation à 3s** (même état exactement), et l'abandon par la croix ou par un tap en dehors — qui n'enregistre rien.
+- ⚠️ *Règle de fermeture par le voile* : le tap en dehors exige un geste **complet**, appui **et** relâchement sur le voile. Fermer au seul relâchement referme la pop-up à son ouverture même — le `pointerup` du geste qui a pressé le CTA retombe sur le voile fraîchement monté. Fermer au seul contact jette la saisie dès qu'une paume touche le fond. **La même règle s'applique à `PlayerSetupModal`.**
+
 **AlphaKeyboard** *(ajouté le 2026-09-09, Story 1.4)*
 - *Rôle* : saisir du texte sans jamais appeler le clavier du système (voir « Saisie sur borne fixe »). AZERTY sur 10 colonnes, rangée de chiffres en haut, accents `É È À Ç` des prénoms français, barre d'espace et retour arrière.
 - *États* : normal · désactivé.
 - *Cohérence* : partage son style de touche avec `NumericPad` (`keyClasses.ts`), pour que la bascule d'un clavier à l'autre au même emplacement soit invisible.
 
 **CenterPanel**
-- *Rôle* : contexte neutre partagé (mode, numéro de reprise) et actions **symétriques** s'appliquant identiquement aux deux joueurs — annulation de la dernière série (ANNULER) et interversion des billes. Jamais d'action qui favorise un joueur, ni de saisie de score, qui restent portées par chaque `PlayerPanel` (exigence de symétrie de l'étape 9). *(Amendé en revue de la Story 1.3, 2026-09-08.)*
+- *Rôle* : contexte neutre partagé (**numéro de reprise**) et actions **symétriques** s'appliquant identiquement aux deux joueurs — annulation de la dernière série (ANNULER) et interversion des billes (ÉCHANGER). Jamais d'action qui favorise un joueur. *(Amendé en revue de la Story 1.3, 2026-09-08 ; puis en Story 1.5, 2026-09-09.)*
+- *Modifié en Story 1.5* : le **mode de jeu n'y est plus affiché** — il est choisi au démarrage et n'évolue pas, la colonne est réservée à ce qui change en cours de partie. **ÉCHANGER reste disponible toute la partie**, et non plus jusqu'à la première série seulement.
 - *États* : normal · alerte d'inactivité (FR43).
 
 **HomeScreen**
@@ -373,7 +392,9 @@ Aucun — le design system est **Custom** (étape 8). Aucun composant équivalen
 
 **ActionBar**
 - *Rôle* : barre d'action basse commune à tous les écrans — retour à position fixe à gauche, actions contextuelles à droite.
-- *États* : retour seul · retour + action de démarrage · retour + CTA de saisie (Story 1.5).
+- *États* : retour seul · retour + action de démarrage.
+- *Note (Story 1.5, 2026-09-09, état final)* : en partie, la barre porte **`AJOUTER LES POINTS`** — large comme le bloc joueur, du côté du joueur **assis** — et le **picto de sortie** sur la colonne opposée, les deux échangeant de place à chaque bascule de tour. Le retour à place fixe d'`ActionBar` est donc désactivé sur cet écran (`showBack: false`) : une place fixe ne peut pas alterner. Les colonnes de la barre sont calées sur celles des panneaux (2/5 · 1/5 · 2/5), marges négatives comprises, sans quoi le CTA ne s'aligne pas sur le bloc.
+- *Amende UX-DR11* : « aucune action de score hors des panneaux » se lit désormais comme « aucune action qui **modifie** un score hors des panneaux ». Le CTA n'écrit rien : il **ouvre** la pop-up de saisie. Les corrections `−` / `+`, elles, sont bien restées dans les panneaux.
 
 **GameSummary**
 - *Rôle* : écran de fin de partie façon "battle" (Flow 3) — total, moyenne, meilleure série, mise en avant si record personnel.

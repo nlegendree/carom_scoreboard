@@ -16,13 +16,19 @@ const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const
 
 const clearLabel = computed(() => (props.hasInput ? 'C' : 'AC'))
 
-// 3 colonnes seulement : les touches restent très larges. En hauteur elles se partagent
-// l'espace laissé par le parent (`auto-rows-fr`), donc elles grandissent sur un grand écran.
+// 3 colonnes seulement : les touches restent très larges. En hauteur comme en largeur elles
+// se partagent l'espace laissé par le parent (`auto-rows-fr`, `grid-cols-3`), donc elles
+// grandissent sur un grand écran.
+// Plancher à 60px sur LES DEUX axes, et non `--size-touch-target` (90px) : c'est
+// l'exception UX-DR8 des claviers intégrés. Un plancher de 90px en largeur exige 302px pour
+// trois colonnes, ce qu'un panneau joueur en portrait 768x1024 (227px utiles) ne peut pas
+// donner — la 3e colonne se retrouvait rognée. Dans la modale, où la place ne manque pas,
+// les colonnes restent bien plus larges que ce plancher : rien n'y change.
 const KEY_SIZE =
-  'h-full min-h-[60px] min-w-[var(--size-touch-target)] text-[clamp(30px,3.4vw,42px)] leading-none font-semibold tracking-tight text-white'
+  'h-full min-h-[60px] min-w-[60px] text-[clamp(30px,3.4vw,42px)] leading-none font-semibold tracking-tight text-white'
 // Effacement et retour arrière encadrent le `0` : le rang du bas est plein et le zéro reste
 // sous le 8, là où le doigt le cherche.
-const ACTION_SIZE = 'h-full min-h-[60px] min-w-[var(--size-touch-target)] text-label font-bold text-white/55'
+const ACTION_SIZE = 'h-full min-h-[60px] min-w-[60px] text-label font-bold text-white/55'
 </script>
 
 <template>
