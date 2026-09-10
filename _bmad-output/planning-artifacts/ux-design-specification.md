@@ -402,7 +402,7 @@ Aucun — le design system est **Custom** (étape 8). Aucun composant équivalen
 - *Rôle* : contexte neutre partagé (**numéro de reprise**) et actions **symétriques** s'appliquant identiquement aux deux joueurs — annulation de la dernière série (ANNULER) et interversion des billes (ÉCHANGER). Jamais d'action qui favorise un joueur. *(Amendé en revue de la Story 1.3, 2026-09-08 ; puis en Story 1.5, 2026-09-09.)*
 - *Modifié en Story 1.5* : le **mode de jeu n'y est plus affiché** — il est choisi au démarrage et n'évolue pas, la colonne est réservée à ce qui change en cours de partie. **ÉCHANGER reste disponible toute la partie**, et non plus jusqu'à la première série seulement.
 - *Modifié en Story 1.7 (2026-09-09)* : **`ANNULER` est un *undo* multi-niveaux** — chaque appui revient d'une action en arrière (série validée, main rendue, correction `−`/`+`), jusqu'au début de la partie ; **grisé à pile vide**, jamais inerte en silence. **`ÉCHANGER` est hors pile** : il est son propre inverse, on rappuie dessus pour revenir, et une annulation ne le défait jamais par effet de bord. Les deux boutons portent **un mot, pas de glyphe** (`↩` et `⇄` retirés) ; le libellé au-dessus du compteur est **`REP`**.
-- *États* : normal · alerte d'inactivité (FR43).
+- *États* : normal · alerte d'inactivité (FR43). *(Story 1.17 **annulée** le 2026-09-10 : une série de JDS peut durer plus d'une heure, l'inactivité de partie n'est pas un signal — l'état « alerte d'inactivité » ne sera pas construit ; la veille de la tablette, hors partie, relève de `HomeScreen`.)*
 
 **HomeScreen**
 - *Rôle* : écran d'accueil plein écran (Flow 1) — fait office de veille et porte la sélection de catégorie, de mode puis la saisie des joueurs.
@@ -452,7 +452,7 @@ Catégories retenues pour ce produit (recherche/filtrage non pertinents, formula
 
 - **Succès (score validé)** : retour haptique + flash visuel bref sur le bloc joueur concerné, <100ms (NFR1). Pas de toast/notification textuelle — tout passe par le bloc lui-même.
 - **Erreur/limite** (score >999, FR7) : le pavé refuse la saisie au-delà de 3 chiffres, retour haptique différent (plus court/sec) pour signaler le refus sans bloquer l'écran par un message.
-- **Alerte d'inactivité** (FR43) : notification douce non-intrusive dans la console centrale, jamais en plein écran — le produit ne doit jamais interrompre brutalement une partie en cours.
+- **Alerte d'inactivité** (FR43) : notification douce non-intrusive dans la console centrale, jamais en plein écran — le produit ne doit jamais interrompre brutalement une partie en cours. *(**Sans objet** depuis le 2026-09-10 — Story 1.17 annulée : aucune alerte pendant une partie, quelle que soit la durée sans saisie. Le principe « ne jamais interrompre une partie » reste entier.)*
 
 ### Form Patterns
 

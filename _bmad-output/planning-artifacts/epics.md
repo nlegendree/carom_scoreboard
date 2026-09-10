@@ -216,7 +216,7 @@ FR39: Epic 1 - Modifier les noms des joueurs en cours de partie
 FR40: Epic 1 - Réinitialiser une partie en cours
 FR41: Epic 1 - Configurer les paramètres d'une partie
 FR42: Epic 1 - Activer/désactiver l'annonce vocale
-FR43: Epic 1 - Détection et alerte d'inactivité
+FR43: Epic 1 - Détection et alerte d'inactivité *(story 1.17 **annulée** le 2026-09-10 : une série de JDS peut durer plus d'une heure, l'inactivité de partie n'est pas un signal ; la veille de la tablette, hors partie, est un sujet d'accueil)*
 FR44: Epic 6 - Signalisation visuelle des moments clés
 FR45: Epic 1 - Fonctionnement sans connexion réseau
 FR46: Epic 1 - Installation comme application native
@@ -751,6 +751,8 @@ So that une table ne reste jamais bloquée silencieusement en plein match.
 **Given** l'alerte affichée
 **When** une nouvelle saisie est effectuée
 **Then** l'alerte se referme automatiquement, sans action supplémentaire de l'utilisateur
+
+**❌ Annulée (décision de Nathan, 2026-09-10) — aucun code.** Au JDS (Libre, Cadre), une **seule série peut durer une heure ou plus** : aucune durée « sans saisie » ne distingue une table oubliée d'un joueur en pleine série, l'alerte serait fausse précisément quand la partie est la plus belle. Le besoin réel que ce FR croyait couvrir est **l'inactivité globale de la tablette**, pas celle de la partie : en Corée du Sud (CUESCO/Billiboard), les écrans ne s'éteignent **jamais** ; au plus, un **écran de veille** après une longue absence d'usage — et **jamais** pendant qu'un scoreboard est en cours. Cette veille relève de l'**accueil** (`HomeScreen`, qui fait déjà office de veille, UX-DR12), pas de la console centrale : si elle devient nécessaire, c'est une story d'accueil (écran de veille, identité du club) à écrire le jour venu, sans reprendre FR43. `1-17` passe `done` sans fichier de story ; UX-DR18 devient sans objet.
 
 ---
 

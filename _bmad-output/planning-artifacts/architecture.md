@@ -566,7 +566,7 @@ Utilisateur (touch/pointer)
 | FR7-FR11 — Saisie & Correction | `NumericPad.vue`, `useGameStore.ts` |
 | FR12-FR16 — Modes de jeu | `HomeScreen.vue`, `types/game.ts` (catalogue `GAME_CATEGORIES`) |
 | FR17-FR20 — Stats & Historique | `GameSummary.vue`, `useHistoryStore.ts`, `databaseService.ts`, `HistoryView.vue`, `GameDetailView.vue` |
-| FR39-FR43 — Admin & Config | `HomeScreen.vue`, `PlayerPanel.vue` (noms éditables inline), `CenterPanel.vue` (FR43 — alerte d'inactivité) |
+| FR39-FR43 — Admin & Config | `HomeScreen.vue`, `PlayerPanel.vue` (noms éditables inline), `CenterPanel.vue` (FR43 — alerte d'inactivité : **story 1.17 annulée** le 2026-09-10, rien à construire) |
 | NFR1-NFR4 — Performance tactile | `usePointerEvents.ts`, `assets/main.css` |
 | NFR5-NFR8 — Fiabilité offline | `storageService.ts`, `databaseService.ts` |
 
