@@ -1,6 +1,6 @@
 # Story 1.13: Fonctionner offline et s'installer comme application native
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -131,6 +131,7 @@ Nouveaux : `carom-scoreboard/src/composables/usePwaUpdate.ts`, `carom-scoreboard
 |---|---|
 | 2026-09-10 | Création de la story (bmad-create-story) : cadrage en quatre décisions (précache atomique, mise à jour différée à l'accueil, Netlify inclus, pas de verrou d'orientation), recette Vitest pour le module virtuel vérifiée par sonde. |
 | 2026-09-10 | Implémentation (bmad-dev-story) : manifest et `index.html` finalisés, Workbox en précache intégral (`woff2`, `navigateFallback`), `usePwaUpdate.ts` + 14 tests (mise à jour différée à l'accueil, rechargement sur `controllerchange`), garde « aucune ressource réseau » (24 sources), `PWABadge.vue` supprimé, `netlify.toml` à la racine, specs annotées. Passe Chrome : hors ligne (serveur coupé) sur tout le parcours V1a et les deux formats tablette, mise à jour à l'accueil et jamais en partie. 380 → 418 tests. Statut → review. |
+| 2026-09-10 | Validation par Nathan : déploiement Netlify et AC5 testés à la main sur appareil, sans revue de code adversariale (choix de Nathan). Statut → done. |
 
 ## Dev Agent Record
 
@@ -153,7 +154,7 @@ Claude Fable 5.1 (claude-fable-5-1) — session bmad-dev-story du 2026-09-10.
 - **Task 4 — Garde « aucune ressource réseau »** : `describe('offline — aucune ressource réseau')` scanne **24 sources** (`src/**/*.{ts,vue,css}` hors `*.test.ts` + `index.html`) — aucune `http(s)://`, aucun `fetch(`. CLAUDE.md › Stack technique : ligne **Offline** ajoutée.
 - **Task 5 — Netlify** : `netlify.toml` à la racine du dépôt (`base`, `publish`, `command`, redirection SPA 200), sans `Cache-Control`. Pas de `NODE_VERSION` forcé (`.nvmrc` 26.8.1 inchangé ; le poste tourne en 24.13.0, les deux passent le build). **Rattachement du site GitHub → Netlify : action manuelle de Nathan.**
 - **Task 6 — Passe Chrome unique** (preview du build, SW `activated and is running`, précache 12 entrées) : test hors ligne fait **serveur de preview coupé** — accueil, `JEUX DE SÉRIES` › `LIBRE`, réglage des joueurs (noms + distance), `+`, `ANNULER`, `ÉCHANGER`, `⌘R` en pleine partie → « PARTIE EN COURS » › `REPRENDRE LA PARTIE`, saisie au pavé, offre d'égalisatrice › `ANA JOUE`, « PARTIE TERMINÉE » › récap, `UNE PARTIE DE PLUS`, sortie → accueil ; 7 requêtes toutes servies en 200 par le SW, console vide, formats 1024×768 et 768×1024 (iframe) sans changement visuel. Mise à jour : à l'accueil → rechargement automatique avec le texte modifié ; en partie → SW `waiting`, aucun rechargement, ni au récap ; `FIN DE PARTIE` → rechargement sur l'accueil (re-vérifié après le correctif `controllerchange`, avec une mise à jour trouvée 72 s après le chargement). Texte remis, rebuild.
-- **AC5 — à vérifier par Nathan sur iPad et Android après déploiement Netlify** (installation « Sur l'écran d'accueil » / « Installer l'application », lancement standalone, fond sombre, hors ligne). Non coché ici. Check-list détaillée : `1-13-actions-manuelles-nathan.md` (même dossier), référencée dans `deferred-work.md`.
+- **AC5 — à vérifier par Nathan sur iPad et Android après déploiement Netlify** (installation « Sur l'écran d'accueil » / « Installer l'application », lancement standalone, fond sombre, hors ligne). Non coché ici. Check-list détaillée : `1-13-actions-manuelles-nathan.md` (même dossier), référencée dans `deferred-work.md`. **✅ Vérifié manuellement par Nathan le 2026-09-10** (déploiement Netlify, installation et test sur appareil) — story passée en `done`.
 - **Task 7 — Specs** : `architecture.md` (Touch & Performance, Compatibilité, Infrastructure, Arborescence ×2, tableau de couverture FR45-46/NFR2, Note workbox), `epics.md` (AR10, AR11, note de cadrage Story 1.13), `ux-design-specification.md` (Journey Patterns), `deferred-work.md` (trois entrées de la revue 1.1 closes), Story 1.1 Dev Notes (Netlify livré).
 - **Task 8 — Qualité** : `npm test` 418/418, `npx vue-tsc -b` vert, `npm run build` vert, aucune dépendance ajoutée, aucun harnais résiduel (`__marker`/`__loadedAt` n'existaient qu'en console Chrome).
 - **Hors périmètre, non fait volontairement** : pas de pop-up de mise à jour, pas d'`orientation`/`screenshots`/`shortcuts`, pas de `runtimeCaching`, pas de page hors ligne dédiée, `main.ts` inchangé, `.nvmrc` inchangé.

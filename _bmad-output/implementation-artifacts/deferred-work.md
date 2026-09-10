@@ -65,7 +65,7 @@
 
 ## Deferred from: dev-story 1-13-fonctionner-offline-et-sinstaller-comme-application-native (2026-09-10)
 
-- **AC5 non vérifié — actions manuelles de Nathan** : rattachement du dépôt GitHub au site Netlify (AR11), puis installation et test hors ligne sur iPad et Android, et observation d'une mise à jour automatique réelle. Check-list détaillée dans [1-13-actions-manuelles-nathan.md](1-13-actions-manuelles-nathan.md). La story ne passe pas en `done` avant.
+- **AC5 non vérifié — actions manuelles de Nathan** : rattachement du dépôt GitHub au site Netlify (AR11), puis installation et test hors ligne sur iPad et Android, et observation d'une mise à jour automatique réelle. Check-list détaillée dans [1-13-actions-manuelles-nathan.md](1-13-actions-manuelles-nathan.md). La story ne passe pas en `done` avant. **✅ Traité (2026-09-10)** : testé à la main par Nathan, story 1.13 passée en `done`.
 
 ## Deferred from: code review of 1-15-reinitialiser-une-partie-en-cours (2026-09-10)
 

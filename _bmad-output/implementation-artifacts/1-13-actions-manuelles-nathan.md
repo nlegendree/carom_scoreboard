@@ -1,5 +1,7 @@
 # Story 1.13 — Actions manuelles à faire par Nathan
 
+> **✅ Terminé le 2026-09-10** : Nathan a déployé et testé lui-même ; la story 1.13 est passée en `done` (`sprint-status.yaml`, Dev Agent Record). Les cases ci-dessous ne sont pas cochées une à une : c'est la check-list d'origine, conservée pour mémoire.
+
 Créé le 2026-09-10 en fin de dev-story. À traiter au moment de la code-review de la 1.13 (ou après). Tant que ces points ne sont pas cochés, l'AC5 de la story reste non vérifié et la story ne doit pas passer en `done`.
 
 ## 1. Rattacher le dépôt GitHub au site Netlify (AR11)
