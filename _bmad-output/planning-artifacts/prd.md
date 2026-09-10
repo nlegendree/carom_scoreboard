@@ -431,7 +431,7 @@ Le club adopte un scoreboard simple — l'usage quotidien construit progressivem
 
 ### 8. Administration & Configuration
 
-- **FR39 :** Un utilisateur peut modifier les noms des joueurs en cours de partie
+- **FR39 :** Un utilisateur peut modifier les noms des joueurs en cours de partie *(non retenu en V1 — décision du 2026-09-10, cf. Story 1.14 ; à réévaluer avec les comptes joueurs sous la forme « réassocier un joueur en cours de partie »)*
 - **FR40 :** Un utilisateur peut réinitialiser une partie en cours et en démarrer une nouvelle
 - **FR41 :** Un utilisateur peut configurer les paramètres d'une partie (format sets, objectif de score, pattes Casin)
 - **FR42 :** Un utilisateur peut activer ou désactiver l'annonce vocale du score après chaque série validée

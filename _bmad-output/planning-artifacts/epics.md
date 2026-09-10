@@ -696,6 +696,8 @@ So that je peux corriger une faute de frappe ou échanger les noms sans redémar
 **When** je confirme
 **Then** il est sauvegardé automatiquement, affiché en majuscules, limité à 20 caractères
 
+**❌ Annulée (décision de Nathan, 2026-09-10) — aucun code.** La seule justification de FR39 est « corriger une faute de frappe ou échanger les noms ». L'échange est déjà couvert par `swapPlayers` (1.3/1.4), et la faute de frappe se corrige à l'accueil avant la première série via `PlayerSetupModal`. En partie, une faute dans un nom n'a **aucun effet durable** : pas d'historique en V1a, et à terme (Epic 4) le nom fiable viendra du **compte joueur** — un nom saisi à la main désigne un **invité**, hors suivi de carrière, dont l'orthographe n'importe pas. Côté implémentation, la story entrait en conflit avec le geste principal du `PlayerPanel` (tout tap sur la carte adverse rend la main) et aurait obligé à verrouiller la distance dans la pop-up de réglage. **Ne pas recréer par réflexe à l'Epic 4** : le vrai besoin sera « réassocier un compte joueur en cours de partie » (mauvais compte sélectionné, invité qui a en fait un compte), un périmètre différent à écrire le jour venu. `1-14` passe `done` sans fichier de story.
+
 ### Story 1.15: Réinitialiser une partie en cours
 
 As a joueur,
