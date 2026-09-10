@@ -133,8 +133,8 @@ Ceci doit être la toute première story d'implémentation, suivie immédiatemen
 - AR7 : Implémenter les stores Pinia `useGameStore` (état de partie + persistance localStorage) et `useHistoryStore` (historique + Dexie.js), structure plate un store par domaine.
 - AR8 : Utiliser exclusivement l'API Pointer Events (`@pointerdown`) sur tous les éléments tactiles interactifs — jamais `@touchstart` ni `@click` seul — pour éliminer le délai tactile 300ms sur iPad/Android ; appliquer le CSS global (`touch-action: manipulation`, `user-select: none`, `-webkit-tap-highlight-color: transparent`).
 - AR9 : Utiliser `shallowRef` pour le tableau `reprises: Reprise[]` dans `useGameStore` afin d'éviter la réactivité profonde sur de longues sessions (NFR3 — 8h continu).
-- AR10 : Configurer la stratégie de cache du Service Worker via vite-plugin-pwa : `cache-first` pour les assets JS/CSS, `StaleWhileRevalidate` pour le HTML.
-- AR11 : Déployer sur Netlify avec auto-deploy GitHub sur push `main` — CI/CD zéro configuration, HTTPS + CDN mondial inclus.
+- AR10 : Configurer la stratégie de cache du Service Worker via vite-plugin-pwa : `cache-first` pour les assets JS/CSS, `StaleWhileRevalidate` pour le HTML. *(précisé en 1.13 : précache atomique, le HTML n'est pas `StaleWhileRevalidate` — cohérence HTML/assets hachés)*
+- AR11 : Déployer sur Netlify avec auto-deploy GitHub sur push `main` — CI/CD zéro configuration, HTTPS + CDN mondial inclus. *(livré en 1.13 : `netlify.toml` à la racine du dépôt, rattachement du site manuel)*
 - AR12 : Implémenter la gestion d'erreurs de toutes les opérations de stockage dans la couche service (`try/catch` + `console.error`) — jamais dans les composants (niveau de monitoring V1 ; Sentry/Plausible différés en V2+).
 - AR13 : Implémenter le composable `useSpeech.ts` (Web Speech API) pour l'annonce vocale du score (FR42).
 - AR14 : Implémenter le composable `useTimer.ts` pour le timer 3 Bandes, isolé du périmètre V1a (V1b uniquement).
@@ -675,6 +675,8 @@ So that le scoreboard soit toujours disponible sur les tablettes de club sans na
 **Given** le manifest PWA configuré
 **When** j'utilise "ajouter à l'écran d'accueil" sur Android 10+ ou iPadOS 15+
 **Then** l'application s'installe et se lance en mode standalone, sans barre de navigateur (FR46)
+
+> **Note de cadrage (Story 1.13, 2026-09-10)** — quatre décisions : **(1)** cache = précache atomique de tout le build, pas de `StaleWhileRevalidate` pour le HTML (AR10 précisé : le HTML référence des assets hachés, un HTML « stale » casserait la page hors ligne) ; **(2)** mise à jour automatique vérifiée toutes les 60 min et appliquée **uniquement à l'accueil** (`status === 'idle'`), jamais pendant une partie, sans pop-up ni toast (`usePwaUpdate.ts`, `PWABadge.vue` supprimé) ; **(3)** déploiement Netlify inclus (`netlify.toml` à la racine du dépôt, rattachement du site manuel — AR11) ; **(4)** pas de verrouillage d'`orientation` dans le manifest, les deux formats tablette restent supportés.
 
 ### Story 1.14: Modifier les noms des joueurs en cours de partie
 

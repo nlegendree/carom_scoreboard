@@ -78,7 +78,7 @@ so that chaque story suivante dispose d'une base fonctionnelle, buildable et ins
 - Types TypeScript (`game.ts`, `history.ts`) — dossier vide uniquement.
 - `CLAUDE.md` — c'est la **Story 1.2**, immédiatement après celle-ci, avant tout code fonctionnel. Emplacement exact (racine du dépôt vs racine de `carom-scoreboard/`) à trancher dans cette story 1.2, pas ici.
 - Tout composant Vue au-delà de ceux générés par le starter (`PlayerPanel`, `NumericPad`, etc.) — stories ultérieures.
-- Déploiement Netlify (`netlify.toml`) — non couvert explicitement par une story d'Epic 1 identifiée ; à signaler au PM si besoin, ne pas l'ajouter ici de sa propre initiative.
+- Déploiement Netlify (`netlify.toml`) — non couvert explicitement par une story d'Epic 1 identifiée ; à signaler au PM si besoin, ne pas l'ajouter ici de sa propre initiative. *Livré en Story 1.13 (2026-09-10) : `netlify.toml` à la racine du dépôt.*
 
 ### Relevant architecture patterns and constraints
 

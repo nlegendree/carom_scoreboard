@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import PWABadge from './components/PWABadge.vue'
+import { usePwaUpdate } from './composables/usePwaUpdate'
+
+usePwaUpdate()
 </script>
 
 <template>
   <router-view />
-  <PWABadge />
 </template>

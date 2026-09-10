@@ -348,6 +348,7 @@ flowchart TD
 - **Reprise après interruption** : toute fermeture accidentelle doit retomber sur "Reprendre la partie", jamais sur une perte silencieuse (NFR5, NFR6).
 - **Boucle de correction symétrique** : le chemin "Corriger" est toujours accessible depuis n'importe quel état de saisie, jamais un cul-de-sac.
 - **Détection automatique de fin** : aucune action manuelle "terminer le match" n'est nécessaire quand l'objectif est atteint — le système bascule seul vers le récapitulatif.
+- **Mise à jour de l'application** : appliquée à l'accueil (écran de veille), jamais pendant une partie, sans pop-up ni toast (Story 1.13, 2026-09-10).
 
 ### Flow Optimization Principles
 

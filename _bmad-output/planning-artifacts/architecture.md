@@ -132,6 +132,7 @@ src/
 - **Pointer Events API** (standard 2026) — élimine le délai 300ms sur iPad et Android signage
 - `touch-action: manipulation` sur tous les éléments interactifs
 - `user-select: none` + `-webkit-tap-highlight-color: transparent` globalement
+- *Note (Story 1.13, 2026-09-10)* : **mise à jour de la PWA différée à l'accueil** — `registerType: 'prompt'` + `src/composables/usePwaUpdate.ts` (vérification toutes les 60 min si en ligne via `registration.update()`, application par `updateServiceWorker(true)` **uniquement** quand `status === 'idle'`, jamais pendant `playing`/`finished`, sans pop-up ni toast). Le rechargement est fait **par le composable** sur `controllerchange` : le module `virtual:pwa-register` ne recharge que si `isUpdate` est vrai, et `workbox-window` classe comme externe (`isUpdate: false`) toute mise à jour trouvée plus de 60 s après l'enregistrement — le cas de la vérification horaire. `PWABadge.vue` du starter est **supprimé**.
 
 ### Compatibilité Multi-Plateforme
 
@@ -139,6 +140,7 @@ src/
 - **Android signage 22"** : Chrome Android, PWA installable, touch natif ✅
 - **Desktop** : souris + clavier, Pointer Events unifient les deux ✅
 - **iOS 26** : standalone PWA universel par défaut (à venir)
+- *Note (Story 1.13, 2026-09-10)* : manifest `Carom Scoreboard` / `Carom`, `lang: 'fr'`, `id: '/'`, `display: 'standalone'`, **sans `orientation`** (les deux formats tablette sont supportés) ; `index.html` en `lang="fr"` avec `apple-mobile-web-app-capable` / `apple-mobile-web-app-status-bar-style="black"`. Installabilité sur iPad et Android à vérifier sur appareil réel après déploiement Netlify.
 
 ### Note d'Initialisation
 
@@ -298,6 +300,8 @@ Réglages en V1 : modales inline sur `GameView`, pas de route dédiée.
 - 300 build minutes/mois — suffisant pour dev solo
 
 **CI/CD :** Netlify built-in — pas de GitHub Actions nécessaire pour V1.
+
+*Note (Story 1.13, 2026-09-10)* : livré — `netlify.toml` **à la racine du dépôt** (`base = "carom-scoreboard"`, `publish = "dist"`, `command = "npm run build"`, redirection SPA `/* → /index.html 200`). Le rattachement du dépôt GitHub `nlegendree/carom_scoreboard` au site Netlify est une action manuelle, hors code.
 
 **Monitoring V1 :** `try/catch` sur opérations storage + `console.error`.
 **Monitoring V2+ (différé) :** Sentry (erreurs) + Plausible (analytics RGPD-friendly, sans cookie).
@@ -473,7 +477,7 @@ carom-scoreboard/               ← sous-dossier applicatif, PAS la racine du d�
 ├── vitest.config.ts
 ├── .gitignore
 ├── .nvmrc                       ← Node version fixée
-├── netlify.toml                 ← Config déploiement Netlify
+├── netlify.toml                 ← Config déploiement Netlify (Story 1.13 : remonté à la RACINE du dépôt, `base` désigne carom-scoreboard/)
 │
 ├── public/
 │   ├── manifest.json            ← PWA manifest (icônes, nom, display standalone)
@@ -501,7 +505,8 @@ carom-scoreboard/               ← sous-dossier applicatif, PAS la racine du d�
     │   └── useHistoryStore.ts   ← Historique + Dexie.js
     │
     ├── composables/             ← Logique réutilisable
-    │   └── usePointerEvents.ts  ← Pointer Events (long press, tap)
+    │   ├── usePointerEvents.ts  ← Pointer Events (long press, tap)
+    │   └── usePwaUpdate.ts      ← Mise à jour PWA différée à l'accueil (Story 1.13)
     │
     ├── views/                   ← Pages (une par route)
     │   ├── GameView.vue         ← Route / — scoreboard principal
@@ -596,9 +601,9 @@ Toutes les décisions sont compatibles. Aucune contradiction détectée. Écosys
 | FR12-FR16 Modes de jeu | ✅ | `HomeScreen`, `types/game.ts` |
 | FR17-FR20 Stats/Historique | ✅ | `GameSummary`, `useHistoryStore`, vues history |
 | FR39-FR43 Admin/Config | ✅ | `PlayerPanel`, `HomeScreen`, `CenterPanel` |
-| FR45-FR46 Offline + PWA | ✅ | vite-plugin-pwa + `manifest.json` |
+| FR45-FR46 Offline + PWA | ✅ | vite-plugin-pwa + manifest (`vite.config.ts`) — livré en Story 1.13 (précache intégral, `usePwaUpdate.ts`, `netlify.toml`) |
 | NFR1 < 100ms tactile | ✅ | Pointer Events + touch-action |
-| NFR2 < 2s chargement | ✅ | Vite build + cache Service Worker |
+| NFR2 < 2s chargement | ✅ | Vite build + cache Service Worker — livré en Story 1.13 (précache de 12 entrées, ~292 Ko) |
 | NFR5 Sauvegarde chaque action | ✅ | `storageService` dans watchers store — livré en Story 1.12 (`watch` sur `persistedState`, une écriture par action) |
 | NFR13 Aucune donnée externe V1 | ✅ | Pas d'API externe |
 
@@ -613,6 +618,7 @@ src/composables/
 ```
 
 **Note workbox (vite.config.ts) :** stratégie `cache-first` pour assets JS/CSS, `StaleWhileRevalidate` pour HTML → à configurer lors de l'init projet.
+*Précisé en Story 1.13 (2026-09-10)* : **précache atomique, pas de `StaleWhileRevalidate` pour le HTML.** Le HTML référence des assets hachés ; un `index.html` servi « stale » pointerait vers des fichiers que `cleanupOutdatedCaches` a supprimés → page cassée hors ligne. `generateSW` précache tout le build (`globPatterns` avec `woff2`, `navigateFallback: 'index.html'`, `cleanupOutdatedCaches`, `clientsClaim`), ce qui satisfait l'intention d'AR10 (JS/CSS depuis le cache, HTML renouvelé à chaque déploiement) en gardant HTML et assets cohérents. Pas de `runtimeCaching` : aucune ressource réseau au runtime.
 
 **Note performance (CLAUDE.md) :** utiliser `shallowRef` pour `reprises: Reprise[]` dans `useGameStore` — évite la réactivité profonde sur grande liste (NFR3 — 8h continu).
 

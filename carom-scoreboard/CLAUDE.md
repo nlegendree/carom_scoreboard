@@ -6,6 +6,8 @@ Ce fichier documente les conventions obligatoires du projet pour toute session d
 
 Vue 3 (Composition API + `<script setup>` uniquement, pas d'Options API) + TypeScript strict + Vite + Pinia + Vue Router + Dexie.js (IndexedDB) + Tailwind CSS. PWA via `vite-plugin-pwa`.
 
+**Offline** : aucune ressource réseau au runtime — polices auto-hébergées (`.woff2` dans `src/assets/`), jamais de CDN ni Google Fonts (FR45, NFR13). Le SW précache tout le build ; la mise à jour s'applique à l'accueil via `usePwaUpdate.ts`.
+
 Commandes (depuis `carom-scoreboard/`) :
 - `npm run dev` — serveur de développement
 - `npm run build` — build de production
