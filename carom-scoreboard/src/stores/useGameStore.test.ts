@@ -3,6 +3,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { computed, defineComponent, h, nextTick, watchEffect } from 'vue'
 import { mount } from '@vue/test-utils'
 import { MAX_SCORE_DIGITS, mirrorSnapshot, useGameStore } from './useGameStore'
+import type { PlayerId } from '../types/game'
 
 describe('useGameStore', () => {
   beforeEach(() => {
@@ -155,6 +156,40 @@ describe('useGameStore', () => {
     expect(store.reprises).toEqual([])
     expect(store.startedAt).toBeNull()
     expect(store.lastSaved).toBe('')
+  })
+
+  // Story 1.10 : l'état de fin de partie ne survit ni à `resetGame` ni à `startGame`.
+  it('carries no end-of-game state over on reset nor on a new game', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })
+    for (const digit of '10') store.appendScoreDigit('player1', Number(digit))
+    store.validateScoreInput('player1')
+    store.acceptEqualizingReprise()
+    store.finishGame()
+    expect(store.status).toBe('finished')
+    expect(store.winner).toBe('player1')
+
+    store.resetGame()
+
+    expect(store.status).toBe('idle')
+    expect(store.winner).toBeNull()
+    expect(store.finishedAt).toBeNull()
+    expect(store.equalizingReprise).toBe(false)
+    expect(store.endPrompt).toBeNull()
+
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })
+    for (const digit of '10') store.appendScoreDigit('player1', Number(digit))
+    store.validateScoreInput('player1')
+    store.acceptEqualizingReprise()
+    store.finishGame()
+
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+
+    expect(store.status).toBe('playing')
+    expect(store.winner).toBeNull()
+    expect(store.finishedAt).toBeNull()
+    expect(store.equalizingReprise).toBe(false)
+    expect(store.endPrompt).toBeNull()
   })
 })
 
@@ -706,6 +741,7 @@ describe('useGameStore — correction du score', () => {
     store.switchTurn()
     store.adjustScore('player1', 3)
     store.undoLastAction()
+    store.swapPlayers()
 
     expect(store.currentInput.player1).toBe('')
     expect(store.reprises).toEqual([])
@@ -714,6 +750,36 @@ describe('useGameStore — correction du score', () => {
     expect(store.history).toEqual([])
     expect(store.canUndo).toBe(false)
     expect(store.player1.score).toBe(0)
+  })
+
+  // Story 1.10 : `finished` existe enfin — le récap est TERMINAL (décision du
+  // 2026-09-10). C'est ce cas, et non `idle`, qui rend la garde d'`undoLastAction`
+  // discriminante (revue de la 1.7) : la pile n'est pas vide, l'action doit la laisser.
+  it('ignores every game gesture once the game is finished, undo included', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })
+    for (const digit of '10') store.appendScoreDigit('player1', Number(digit))
+    store.validateScoreInput('player1')
+    store.finishGame()
+    expect(store.status).toBe('finished')
+    expect(store.history).toHaveLength(1)
+
+    expect(store.appendScoreDigit('player1', 4)).toBe(false)
+    store.validateScoreInput('player1')
+    store.passTurn()
+    store.switchTurn()
+    store.adjustScore('player1', 3)
+    store.undoLastAction()
+    store.swapPlayers()
+
+    expect(store.status).toBe('finished')
+    expect(store.player1.score).toBe(10)
+    expect(store.player2.score).toBe(0)
+    expect(store.reprises).toHaveLength(1)
+    expect(store.activePlayer).toBe('player2')
+    expect(store.player1.name).toBe('MICHEL')
+    expect(store.history).toHaveLength(1)
+    expect(store.currentInput.player1).toBe('')
   })
 })
 
@@ -910,6 +976,7 @@ describe('useGameStore — undo', () => {
       currentInput: { player1: '7', player2: '' },
       isNegative: { player1: true, player2: false },
       sidesSwapped: false,
+      equalizingReprise: true,
     })
 
     expect(mirrored.reprises).toEqual([{ player1: null, player2: 5, timestamp: 1 }])
@@ -932,6 +999,9 @@ describe('useGameStore — undo', () => {
     expect(mirrored.currentInput).toEqual({ player1: '', player2: '7' })
     expect(mirrored.isNegative).toEqual({ player1: false, player2: true })
     expect(mirrored.sidesSwapped).toBe(true)
+    // Story 1.10 : la reprise égalisatrice est un fait de jeu attaché au côté droit,
+    // recopié tel quel — la parité des côtés ne le change pas.
+    expect(mirrored.equalizingReprise).toBe(true)
   })
 
   // AC12 de la 1.5 : un `VALIDER` à vide ne fait rien — il n'empile donc rien non plus.
@@ -1020,5 +1090,439 @@ describe('useGameStore — undo', () => {
     for (let i = 0; i < 999; i++) store.undoLastAction()
     expect(store.player1.score).toBe(1)
     expect(store.canUndo).toBe(false)
+  })
+})
+
+// --- Story 1.10 : fin de partie, reprise égalisatrice, vainqueur, revanche ---
+
+describe('useGameStore — fin de partie', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  type Store = ReturnType<typeof useGameStore>
+
+  function validate(store: Store, playerId: PlayerId, value: number) {
+    for (const digit of String(value)) store.appendScoreDigit(playerId, Number(digit))
+    store.validateScoreInput(playerId)
+  }
+
+  // Distances courtes pour des scénarios lisibles : blanc 10, jaune 8.
+  function startedGame() {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })
+    return store
+  }
+
+  // AC3 : le blanc atteint sa distance → offre d'égalisatrice, partie toujours en cours,
+  // tour basculé sur le jaune comme d'habitude.
+  it('offers the equalizing reprise when the white player reaches his distance', () => {
+    const store = startedGame()
+
+    validate(store, 'player1', 10)
+
+    expect(store.endPrompt).toEqual({ kind: 'equalizing-offer' })
+    expect(store.status).toBe('playing')
+    expect(store.activePlayer).toBe('player2')
+  })
+
+  it('offers nothing while the distance is not reached', () => {
+    const store = startedGame()
+
+    validate(store, 'player1', 9)
+
+    expect(store.endPrompt).toBeNull()
+  })
+
+  // AC7 : la série est plafonnée au restant — au billard on s'arrête à la distance.
+  it('caps a series at the remaining distance and still detects the end', () => {
+    const store = startedGame()
+
+    validate(store, 'player1', 12)
+
+    expect(store.endPrompt).toEqual({ kind: 'equalizing-offer' })
+    expect(store.player1.score).toBe(10)
+    expect(store.reprises[0]!.player1).toBe(10)
+    expect(store.bestSeries.player1).toBe(10)
+    expect(store.averages.player1).toBe(10)
+  })
+
+  it('caps the series that closes the distance, not the earlier ones', () => {
+    const store = startedGame()
+
+    validate(store, 'player1', 4)
+    validate(store, 'player2', 0)
+    validate(store, 'player1', 9)
+
+    expect(store.player1.score).toBe(10)
+    expect(store.reprises[1]!.player1).toBe(6)
+  })
+
+  it('never caps a series when the distance is free', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+
+    validate(store, 'player1', 12)
+
+    expect(store.player1.score).toBe(12)
+    expect(store.reprises[0]!.player1).toBe(12)
+  })
+
+  // Le snapshot est pris avant le plafonnement : l'undo restaure l'état d'avant.
+  it('undoes a capped series back to the previous score', () => {
+    const store = startedGame()
+
+    validate(store, 'player1', 12)
+    expect(store.player1.score).toBe(10)
+    store.undoLastAction()
+    expect(store.player1.score).toBe(0)
+
+    validate(store, 'player1', 3)
+    expect(store.player1.score).toBe(3)
+    expect(store.reprises[0]!.player1).toBe(3)
+  })
+
+  // AC4, AC5 : l'égalisatrice acceptée, la série du jaune termine la partie quoi qu'il
+  // arrive — égalité s'il atteint, victoire du blanc sinon.
+  it('ends in a tie when the yellow player equalizes', () => {
+    const store = startedGame()
+    validate(store, 'player1', 10)
+
+    store.acceptEqualizingReprise()
+    expect(store.equalizingReprise).toBe(true)
+    expect(store.endPrompt).toBeNull()
+    expect(store.status).toBe('playing')
+
+    validate(store, 'player2', 8)
+
+    expect(store.endPrompt).toEqual({ kind: 'over', winner: null })
+    expect(store.status).toBe('playing')
+  })
+
+  it('gives the white player the win when the yellow player falls short', () => {
+    const store = startedGame()
+    validate(store, 'player1', 10)
+    store.acceptEqualizingReprise()
+
+    validate(store, 'player2', 3)
+
+    expect(store.endPrompt).toEqual({ kind: 'over', winner: 'player1' })
+  })
+
+  it('gives the white player the win when the yellow player hands over without scoring', () => {
+    const store = startedGame()
+    validate(store, 'player1', 10)
+    store.acceptEqualizingReprise()
+
+    store.passTurn()
+
+    expect(store.endPrompt).toEqual({ kind: 'over', winner: 'player1' })
+    expect(store.reprises[0]!.player2).toBe(0)
+  })
+
+  // AC4 : refuser l'égalisatrice = le blanc gagne.
+  it('finishes with the white player as winner when the equalizing reprise is declined', () => {
+    const store = startedGame()
+    validate(store, 'player1', 10)
+
+    store.finishGame()
+
+    expect(store.status).toBe('finished')
+    expect(store.winner).toBe('player1')
+    expect(store.finishedAt).not.toBeNull()
+    expect(store.endPrompt).toBeNull()
+  })
+
+  // Revue 1.10 : le drapeau survit à `finishGame` — en `finished`, il dit si la partie
+  // s'est jouée jusqu'à l'égalisatrice (historique 3.1, persistance 1.12).
+  it('keeps the equalizing reprise flag once the game is finished', () => {
+    const store = startedGame()
+    validate(store, 'player1', 10)
+    store.acceptEqualizingReprise()
+    validate(store, 'player2', 3)
+
+    store.finishGame()
+
+    expect(store.status).toBe('finished')
+    expect(store.equalizingReprise).toBe(true)
+  })
+
+  // Revue 1.10 (décision de Nathan, 2026-09-10) : `ÉCHANGER` est bloqué pendant la
+  // reprise égalisatrice — le drapeau est attaché au côté droit, un échange ferait jouer
+  // l'égalisatrice au joueur qui vient d'atteindre sa distance et fabriquerait une
+  // égalité fantôme.
+  it('refuses to swap the players during the equalizing reprise', () => {
+    const store = startedGame()
+    validate(store, 'player1', 10)
+    store.acceptEqualizingReprise()
+
+    store.swapPlayers()
+
+    expect(store.player1.name).toBe('MICHEL')
+    expect(store.player1.score).toBe(10)
+    expect(store.sidesSwapped).toBe(false)
+
+    validate(store, 'player2', 3)
+
+    expect(store.endPrompt).toEqual({ kind: 'over', winner: 'player1' })
+  })
+
+  // Discriminant vis-à-vis du prorata : le total du jaune, corrigé par `+` jusqu'à sa
+  // distance (aucune détection, AC8), lui donnerait l'égalité au prorata. Le refus de
+  // l'égalisatrice, lui, donne TOUJOURS la victoire au blanc.
+  it('gives the white player the win on a declined offer, whatever the pro rata says', () => {
+    const store = startedGame()
+    for (let i = 0; i < 8; i += 1) store.adjustScore('player2', 1)
+    expect(store.player2.score).toBe(8)
+    validate(store, 'player1', 10)
+    expect(store.endPrompt).toEqual({ kind: 'equalizing-offer' })
+
+    store.finishGame()
+
+    expect(store.winner).toBe('player1')
+  })
+
+  // AC6 : le jaune atteint le premier → il gagne immédiatement.
+  it('ends the game at once when the yellow player reaches his distance first', () => {
+    const store = startedGame()
+    validate(store, 'player1', 5)
+
+    validate(store, 'player2', 8)
+
+    expect(store.endPrompt).toEqual({ kind: 'over', winner: 'player2' })
+    store.finishGame()
+    expect(store.winner).toBe('player2')
+    expect(store.status).toBe('finished')
+  })
+
+  it('finishes with the winner announced by the end prompt', () => {
+    const store = startedGame()
+    validate(store, 'player1', 10)
+    store.acceptEqualizingReprise()
+    validate(store, 'player2', 8)
+
+    store.finishGame()
+
+    expect(store.winner).toBeNull()
+    expect(store.status).toBe('finished')
+  })
+
+  // `dismissEndPrompt` (sans bouton depuis la revue de Nathan du 2026-09-10, gardée pour
+  // le pilotage déporté) referme « PARTIE TERMINÉE » ; l'offre, elle, ne se ferme pas —
+  // une décision est attendue.
+  it('dismisses an end prompt but never the equalizing offer', () => {
+    const store = startedGame()
+    validate(store, 'player1', 5)
+    validate(store, 'player2', 8)
+    expect(store.endPrompt).toEqual({ kind: 'over', winner: 'player2' })
+
+    store.dismissEndPrompt()
+
+    expect(store.endPrompt).toBeNull()
+    expect(store.status).toBe('playing')
+
+    store.undoLastAction()
+    validate(store, 'player2', 2)
+    validate(store, 'player1', 5)
+    expect(store.endPrompt).toEqual({ kind: 'equalizing-offer' })
+
+    store.dismissEndPrompt()
+
+    expect(store.endPrompt).toEqual({ kind: 'equalizing-offer' })
+  })
+
+  // Après `dismissEndPrompt`, le score est déjà à la distance : la série suivante est
+  // plafonnée à 0.
+  it('caps to zero a series played once the distance is already reached', () => {
+    const store = startedGame()
+    validate(store, 'player1', 5)
+    validate(store, 'player2', 8)
+    store.dismissEndPrompt()
+    validate(store, 'player1', 2)
+
+    validate(store, 'player2', 4)
+
+    expect(store.player2.score).toBe(8)
+    expect(store.reprises[1]!.player2).toBe(0)
+    expect(store.endPrompt).toEqual({ kind: 'over', winner: 'player2' })
+  })
+
+  // AC8 : seules les séries déclenchent la détection.
+  it('never ends the game on a correction nor on a swap', () => {
+    const store = startedGame()
+
+    store.adjustScore('player1', 10)
+    expect(store.player1.score).toBe(10)
+    expect(store.endPrompt).toBeNull()
+
+    store.swapPlayers()
+    expect(store.endPrompt).toBeNull()
+  })
+
+  it('never ends the game automatically when the distance is free', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+
+    validate(store, 'player1', 50)
+    validate(store, 'player2', 50)
+
+    expect(store.endPrompt).toBeNull()
+  })
+
+  // AC11 : fin manuelle au prorata (score / distance).
+  it('picks the winner pro rata on a manual finish', () => {
+    const store = startedGame()
+    validate(store, 'player1', 4)
+    validate(store, 'player2', 4)
+
+    store.finishGame()
+
+    expect(store.status).toBe('finished')
+    expect(store.winner).toBe('player2')
+  })
+
+  it('declares a tie when both pro rata are equal', () => {
+    const store = startedGame()
+    validate(store, 'player1', 5)
+    validate(store, 'player2', 4)
+
+    store.finishGame()
+
+    expect(store.winner).toBeNull()
+  })
+
+  it('declares a tie on a manual finish with no score at all', () => {
+    const store = startedGame()
+
+    store.finishGame()
+
+    expect(store.status).toBe('finished')
+    expect(store.winner).toBeNull()
+  })
+
+  it('compares raw scores on a manual finish when distances are free', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    validate(store, 'player1', 7)
+    validate(store, 'player2', 3)
+
+    store.finishGame()
+
+    expect(store.winner).toBe('player1')
+  })
+
+  it('finishes only a running game', () => {
+    const store = useGameStore()
+
+    store.finishGame()
+
+    expect(store.status).toBe('idle')
+    expect(store.finishedAt).toBeNull()
+  })
+
+  it('empties a running entry when the game is finished', () => {
+    const store = startedGame()
+    validate(store, 'player1', 4)
+    store.appendScoreDigit('player2', 3)
+
+    store.finishGame()
+
+    expect(store.currentInput.player2).toBe('')
+  })
+
+  // AC16 : `UNE PARTIE DE PLUS` — même mode, mêmes noms, mêmes distances, mêmes côtés.
+  it('starts a rematch with the same players, distances and sides', () => {
+    const store = useGameStore()
+    store.startGame('cadre-47-2', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })
+    validate(store, 'player1', 10)
+    store.finishGame()
+
+    store.rematch()
+
+    expect(store.status).toBe('playing')
+    expect(store.mode).toBe('cadre-47-2')
+    expect(store.reprises).toEqual([])
+    expect(store.player1.name).toBe('MICHEL')
+    expect(store.player1.targetScore).toBe(10)
+    expect(store.player1.score).toBe(0)
+    expect(store.player2.name).toBe('ANDRE')
+    expect(store.player2.targetScore).toBe(8)
+    expect(store.player2.score).toBe(0)
+    expect(store.winner).toBeNull()
+    expect(store.finishedAt).toBeNull()
+    expect(store.history).toEqual([])
+    expect(store.activePlayer).toBe('player1')
+  })
+
+  it('keeps swapped players on their current side for the rematch', () => {
+    const store = startedGame()
+    store.swapPlayers()
+    store.finishGame()
+
+    store.rematch()
+
+    expect(store.player1.name).toBe('ANDRE')
+    expect(store.player1.targetScore).toBe(8)
+    expect(store.player2.name).toBe('MICHEL')
+    expect(store.player2.targetScore).toBe(10)
+  })
+
+  it('refuses a rematch while a game is still running', () => {
+    const store = startedGame()
+    validate(store, 'player1', 4)
+
+    store.rematch()
+
+    expect(store.status).toBe('playing')
+    expect(store.reprises).toHaveLength(1)
+  })
+
+  // AC9 : l'égalisatrice acceptée est défaite avec la série gagnante du blanc.
+  it('undoes the accepted equalizing reprise along with the winning series', () => {
+    const store = startedGame()
+    validate(store, 'player1', 10)
+    store.acceptEqualizingReprise()
+    expect(store.equalizingReprise).toBe(true)
+
+    store.undoLastAction()
+
+    expect(store.equalizingReprise).toBe(false)
+    expect(store.player1.score).toBe(0)
+    expect(store.activePlayer).toBe('player1')
+    expect(store.endPrompt).toBeNull()
+
+    validate(store, 'player1', 10)
+
+    expect(store.endPrompt).toEqual({ kind: 'equalizing-offer' })
+  })
+
+  // Accepter l'offre n'est pas une action de score : rien n'est empilé.
+  it('pushes nothing on the history when the equalizing reprise is accepted', () => {
+    const store = startedGame()
+    validate(store, 'player1', 10)
+    expect(store.history).toHaveLength(1)
+
+    store.acceptEqualizingReprise()
+
+    expect(store.history).toHaveLength(1)
+  })
+
+  it('accepts the equalizing reprise only while it is offered', () => {
+    const store = startedGame()
+    validate(store, 'player1', 4)
+
+    store.acceptEqualizingReprise()
+
+    expect(store.equalizingReprise).toBe(false)
+  })
+
+  // La ligne REPRISES du récap : reprises effectivement jouées par chaque joueur.
+  it('exposes the reprise count of each player', () => {
+    const store = startedGame()
+    validate(store, 'player1', 2)
+    validate(store, 'player2', 3)
+    validate(store, 'player1', 1)
+
+    expect(store.repriseCounts).toEqual({ player1: 2, player2: 1 })
   })
 })

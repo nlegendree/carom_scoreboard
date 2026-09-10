@@ -158,7 +158,7 @@ Ceci doit être la toute première story d'implémentation, suivie immédiatemen
 - UX-DR10 : Construire le composant `NumericPad` avec les états : vide, saisie active, valeur hors limites (> 999, refus de saisie avec retour haptique court distinct, sans bloquer l'écran par un message).
 - UX-DR11 : Construire le composant `CenterPanel` limité au contexte neutre/partagé (mode de jeu, numéro de reprise, alerte d'inactivité) et aux actions **symétriques**, qui s'appliquent identiquement aux deux joueurs : annulation de la dernière série (ANNULER) et interversion des billes. Jamais une action qui favorise un joueur ni une saisie de score, qui restent portées par chaque `PlayerPanel`. *(Amendé en revue de la Story 1.3, 2026-09-08 : la console centrale façon Billiboard/CUESCO porte ANNULER et l'interversion — la symétrie exigée porte sur l'absence de biais entre joueurs, pas sur l'absence de toute action.)*
 - UX-DR12 : Construire l'écran d'accueil `HomeScreen` — plein écran, fusionnant veille et sélection de mode, zones tactiles aussi grandes que le reste de l'interface, navigation à deux niveaux (catégorie → mode) sans fermeture accidentelle possible. *(Révisé le 2026-09-08 : remplace la modale `ModeSelector` initiale.)*
-- UX-DR13 : Construire le composant `GameSummary` façon "battle" — bandeau VS, médaille winner/loser, stats comparées côte à côte, état de mise en avant explicite en cas de nouveau record personnel.
+- UX-DR13 : Construire le composant `GameSummary` façon "battle" — bandeau VS, médaille winner/loser, stats comparées côte à côte, état de mise en avant explicite en cas de nouveau record personnel. *Précisé le 2026-09-10 (Story 1.10) — **format Billiboard** : bandeau `NOM / distance` **VS** `NOM / distance` (mode de jeu en surtitre discret), deux colonnes joueur autour d'une colonne de libellés (`RÉSULTAT`, `POINTS`, `MOY`, `SÉRIE`, `REPRISES`), la **colonne du vainqueur mise en couleur** (ruban rouge) avec le mot `VICTOIRE` — c'est cette colonne colorée qui tient lieu de « médaille » —, et deux boutons en bas : `FIN DE PARTIE` et `UNE PARTIE DE PLUS`. L'état « nouveau record » existe par joueur, non déclenché avant la Story 3.5.*
 - UX-DR14 : Implémenter un indicateur de tour actif non-dépendant de la seule teinte (daltonisme) : le panneau du joueur qui doit jouer est encadré d'un liseré rouge épais (`--color-turn-active`, convention CUESCO/Billiboard). Le signal est la **présence du cadre**, perceptible indépendamment de la perception des couleurs et à distance.
 - UX-DR15 : Implémenter la validation hybride du score — tap explicite sur "Valider" OU validation automatique après 3 secondes d'inactivité suivant la dernière frappe ; les deux chemins doivent aboutir au même état résultant.
 - UX-DR16 : Implémenter la correction avec le même poids visuel que la validation — bouton Corriger/Annuler toujours visible avec la même prominence que le pavé de saisie, jamais dans un sous-menu, accessible pendant la saisie (efface la saisie en cours) et après validation (annule la dernière série validée).
@@ -189,7 +189,7 @@ FR12: Epic 1 - Sélection d'un mode JDS (Libre, Cadre 47/2, 47/1, 71/2, 1 Bande,
 FR13: Epic 2 - Sélection du mode 3 Bandes avec timer
 FR14: Epic 2 - Incrémentation point par point ou score global en 3 Bandes
 FR15: Epic 1 - Configuration du format du match
-FR16: Epic 1 - Détection automatique de fin de set/match
+FR16: Epic 1 - Détection automatique de fin de set/match *(fin de **match** sur distance atteinte livrée en Story 1.10, règle de la reprise égalisatrice comprise — 2026-09-10 ; la fin de **set** reste hors V1a, Epic 2)*
 FR17: Epic 1 - Affichage automatique des stats de fin de match
 FR18: Epic 3 - Liste des parties jouées
 FR19: Epic 3 - Détail complet d'une partie passée
@@ -402,6 +402,8 @@ So that le match a un objectif clair, y compris quand les deux joueurs ne jouent
 **When** je démarre la partie
 **Then** les deux joueurs s'appellent `JOUEUR 1` et `JOUEUR 2` et jouent sans distance (0) ; le parcours de démarrage est strictement identique à celui de la Story 1.3 et aucune fin de partie automatique n'est induite
 
+**⚠️ Supersédé (Story 1.10, décision de Nathan, 2026-09-10) :** l'AC « aucun réglage explicite → sans distance (0) » ci-dessus est **caduc**. La **distance est obligatoire au démarrage** pour les deux joueurs : `DÉMARRER` sans distance n'ouvre qu'une pop-up d'erreur « DISTANCE MANQUANTE » (`PromptModal`, titre et CTA `RÉGLER LA DISTANCE` / `ANNULER`, sans croix) dont le premier ouvre la `PlayerSetupModal` du premier joueur sans distance directement sur le champ `DISTANCE` — et, si le blanc vient d'être réglé alors que le jaune manque encore, celle du jaune s'enchaîne d'elle-même (revue au rendu, 2026-09-10). Le **nom** reste optionnel (`JOUEUR 1` / `JOUEUR 2`). Le store, lui, reste permissif (0 = libre, aucune fin automatique) pour les tests et le pilotage déporté : c'est l'accueil qui impose la règle.
+
 **Note de périmètre :** le champ `targetScore` existe depuis la Story 1.3 sur `GameState`, câblé en dur à 20. Cette story le **déplace sur `Player`** (handicap), supprime toute valeur par défaut et le pilote depuis la pop-up. Elle ne fait que *stocker* et *afficher* la distance : la détection de fin relève de la Story 1.11.
 
 **Note de périmètre — sets :** le **nombre de sets** est retiré du périmètre de cette story. C'est une notion propre au 3 Bandes, traitée dans l'**Epic 2** (voir Story 2.1). FR15 n'est donc couvert en V1a que sur son volet « objectif de score ».
@@ -577,6 +579,8 @@ So that je peux enregistrer une pénalité ou déduction selon les règles du je
 
 **⚠️ Impact de la Story 1.5 (2026-09-09).** Le second AC est **déjà satisfait** : `addReprise` accepte une valeur négative sans cas particulier (testé), et le total étant recalculé comme somme des séries, la soustraction est exacte par construction. Il ne reste que la **bascule de signe dans la pop-up de saisie** et le champ `isNegative`. ⚠️ **Ne pas confondre avec les boutons `−` / `+`** livrés en 1.5 : ceux-là corrigent le **total** sans créer de reprise ; ils n'enregistrent pas une série négative. Noter aussi que la taille du score gère déjà le caractère `−` supplémentaire (le calcul porte sur la longueur de la chaîne affichée), et que la correction manuelle n'est volontairement pas bornée à zéro.
 
+**❌ Annulée (décision de Nathan, 2026-09-10) — aucun code.** À la création de la story, aucune justification métier de FR10 n'a été retrouvée dans les specs : les règles du carambole (JDS, 3 bandes) ne retirent jamais de points — une faute termine la série. Le seul cas d'usage identifié par Nathan était la **correction d'une erreur** (« retirer 10 points ») ; il est couvert depuis la 1.5 par les boutons `−` / `+` du panneau, non bornés à zéro, et par `ANNULER` (1.7) pour défaire une série entière. Une saisie de série négative n'apporterait donc rien de plus qu'un second chemin de correction. FR10 est considéré comme **satisfait par les corrections manuelles** ; le champ `isNegative` de `GameState`/`GameSnapshot` reste déclaré et inerte (toujours `false`) — à retirer du modèle si une story future y touche (1.12 persistance). `1-9` passe `done` sans fichier de story.
+
 ### Story 1.10: Terminer une partie et consulter le récapitulatif automatique
 
 As a joueur (Michel qui termine son match),
@@ -593,9 +597,20 @@ So that ce moment devienne le plus gratifiant de la session.
 **When** je le consulte
 **Then** aucune statistique n'exige de calcul mental — total, moyenne et meilleure série sont déjà calculés (FR17)
 
+**Recadrage à la création (décision de Nathan, 2026-09-10) — périmètre élargi, voir le fichier de story pour les AC détaillés :**
+- **La Story 1.11 est absorbée** : détection automatique de fin et récap sont une seule fonctionnalité. Le « déclenchement manuel » de l'AC ci-dessus devient un cas parmi trois (voir sortie).
+- **Règles du jeu consignées (reprise égalisatrice)** : le blanc ouvre toujours et chaque joueur a **sa** distance. Si le **blanc** atteint sa distance le premier, il a joué une reprise de plus : le jaune a droit à la **reprise égalisatrice** (une série pour atteindre **sa** distance) — s'il y parvient c'est l'**égalité**, sinon le blanc gagne ; il peut y renoncer (le blanc gagne). Si le **jaune** atteint sa distance le premier, il **gagne immédiatement**. La série qui amène à la distance est **plafonnée au restant** (on s'arrête à la distance, tout dépassement est une erreur de saisie). Au 3 Bandes l'égalisatrice est optionnelle → réglage Epic 2.
+- **Pop-ups de décision (`PromptModal`, voile inerte, sans croix ni message sur le scoreboard — revue au rendu du 2026-09-10)** : « X A ATTEINT SA DISTANCE » avec deux CTA `Y JOUE` / `FIN DE PARTIE` ; « PARTIE TERMINÉE » avec le seul CTA `VOIR LE RÉCAP` — le vainqueur se lit sur le récap, et on ne revient pas au scoreboard une fois la fin détectée. La détection ne réagit qu'aux **séries** (validation, main rendue), jamais aux corrections `−`/`+` ni à `ÉCHANGER`.
+- **Distance obligatoire au démarrage** (pop-up d'erreur, voir la note de la Story 1.4).
+- **Le picto de sortie ne jette plus la partie** : avec au moins une série, pop-up « TERMINER LA PARTIE ? » (`VOIR LE RÉCAP` / `ANNULER`, sans croix) dont le CTA mène au récap ; sans rien à récapituler, retour direct à l'accueil — le critère est « aucune action annulable » (`canUndo`), pas « aucune série » : des points ajoutés par `+` sans série demandent aussi confirmation *(revue de code 1.10, 2026-09-10)*. **Vainqueur en fin manuelle au prorata** (`score / distance`, égalité si égal).
+- **Écran de récap façon Billiboard** (`explore/resources/IMG_6632.JPG`, voir UX-DR13) avec `FIN DE PARTIE` (accueil) et `UNE PARTIE DE PLUS` (revanche : même mode, mêmes joueurs, mêmes distances, mêmes côtés, scoreboard direct). Le récap est **terminal** : pas de `ANNULER` depuis `finished`, et une fin détectée n'est pas rattrapable non plus (revue au rendu, 2026-09-10) — la correction se fait avant la série gagnante, ou par `ANNULER` de la pop-up de sortie. `ÉCHANGER` est **bloqué pendant la reprise égalisatrice** (le drapeau est attaché au côté droit, un échange fabriquerait une égalité fantôme — revue de code 1.10, 2026-09-10).
+- **Égalité = résultat final** pour l'instant ; la prolongation viendra dans une story ultérieure.
+
 **Note de périmètre (V1a) :** la mise en avant visuelle "nouveau record personnel" (UX-DR13) n'est **pas** couverte par cette story — Epic 1 seul n'a pas accès à l'historique multi-parties nécessaire pour détecter un record de façon fiable (cette donnée est gérée par Epic 3). La détection de record est traitée comme une évolution différée en Epic 3 / Story 3.5, une fois l'historique disponible. `GameSummary` doit néanmoins prévoir dès cette story l'état visuel "nouveau record" (UX-DR13) sans le déclencher automatiquement, pour qu'Epic 3 / Story 3.5 puisse l'activer sans modifier le composant.
 
 ### Story 1.11: Détecter automatiquement la fin d'un set ou d'un match
+
+**✅ Absorbée par la Story 1.10 (décision de Nathan, 2026-09-10) — aucun fichier de story.** La détection de fin obéit à la règle de la **reprise égalisatrice** (consignée dans la Story 1.10), inséparable du récap. Le second AC ci-dessous (« aucun objectif configuré → fin manuelle ») est **caduc** : la distance est désormais **obligatoire** au démarrage. La note de périmètre reste valable : la fin de **set** attend l'Epic 2 ; la détection est bien **par joueur** et un joueur en distance 0 (partie démarrée hors accueil) n'induit jamais de fin automatique.
 
 As a joueur,
 I want que le système détecte automatiquement quand le format configuré est atteint,
@@ -688,6 +703,8 @@ So that je peux corriger rapidement une configuration de départ erronée sans q
 **Then** l'historique des parties précédentes n'est jamais affecté
 
 **Note de périmètre :** le bouton QUITTER de la barre d'action et l'action `resetGame()` existent depuis la Story 1.3, mais s'exécutent **sans confirmation**. Cette story ajoute le garde-fou (confirmation avant abandon), elle ne crée ni le bouton ni l'action.
+
+**Mise à jour (Story 1.10, 2026-09-10) :** la « confirmation avant abandon » est **livrée** par la pop-up de sortie de la 1.10 — le picto de sortie n'abandonne plus la partie, il ouvre « TERMINER LA PARTIE ? » dont le CTA mène au **récap** (fin manuelle, vainqueur au prorata) ; sans aucune série jouée, il ramène directement à l'accueil. Cette story reste pour un éventuel **abandon / réinitialisation sans récap** (repartir de zéro sans clore la partie dans les stats) — périmètre à réexaminer le jour venu.
 
 ### Story 1.16: Activer/désactiver l'annonce vocale du score
 

@@ -9,11 +9,17 @@ import type { PlayerColor } from '../types/game'
 const MAX_DIGITS = 3
 const MAX_NAME_LENGTH = 20
 
-const props = defineProps<{
-  color: PlayerColor
-  name: string
-  targetScore: number
-}>()
+const props = withDefaults(
+  defineProps<{
+    color: PlayerColor
+    name: string
+    targetScore: number
+    // Champ ouvert au montage : la pop-up « DISTANCE MANQUANTE » (Story 1.10) ouvre
+    // directement sur la distance.
+    initialField?: 'name' | 'distance'
+  }>(),
+  { initialField: 'name' },
+)
 
 const emit = defineEmits<{
   confirm: [setup: { name: string; targetScore: number }]
@@ -45,8 +51,9 @@ const distance = ref(props.targetScore > 0 ? String(props.targetScore) : '')
 // frappe repart de zéro (convention calculatrice). Sans ça, un réglage à 3 chiffres serait
 // inéditable — le plafond ignorerait toutes les touches, pavé apparemment en panne.
 const distancePristine = ref(distance.value !== '')
-// Champ alimenté par le clavier. Le nom d'abord : c'est l'ordre de remplissage naturel.
-const focused = ref<'name' | 'distance'>('name')
+// Champ alimenté par le clavier. Le nom d'abord par défaut : c'est l'ordre de
+// remplissage naturel.
+const focused = ref<'name' | 'distance'>(props.initialField)
 
 const displayedDistance = computed(() => distance.value || '0')
 

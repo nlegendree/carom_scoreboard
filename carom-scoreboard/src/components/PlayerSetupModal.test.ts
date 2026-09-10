@@ -8,7 +8,12 @@ import AlphaKeyboard from './AlphaKeyboard.vue'
 import NumericPad from './NumericPad.vue'
 
 function mountModal(
-  overrides: Partial<{ color: 'white' | 'yellow'; name: string; targetScore: number }> = {},
+  overrides: Partial<{
+    color: 'white' | 'yellow'
+    name: string
+    targetScore: number
+    initialField: 'name' | 'distance'
+  }> = {},
 ) {
   return mount(PlayerSetupModal, {
     props: { color: 'white', name: '', targetScore: 0, ...overrides },
@@ -39,6 +44,16 @@ describe('PlayerSetupModal', () => {
     expect(wrapper.findComponent(NumericPad).exists()).toBe(false)
     expect(nameOf(wrapper)).toBe('JOUEUR')
     expect(distanceOf(wrapper)).toBe('0')
+  })
+
+  // Story 1.10 : la pop-up d'erreur de distance ouvre directement sur le champ manquant.
+  it('opens on the requested field', () => {
+    const wrapper = mountModal({ initialField: 'distance' })
+
+    expect(wrapper.findComponent(NumericPad).exists()).toBe(true)
+    expect(wrapper.findComponent(AlphaKeyboard).exists()).toBe(false)
+    expect(wrapper.find('[data-testid="distance-field"]').classes()).toContain('border-turn-active')
+    expect(wrapper.find('[data-testid="name-field"]').classes()).not.toContain('border-turn-active')
   })
 
   // Le cœur de la demande : un seul emplacement, le clavier s'adapte au champ touché.

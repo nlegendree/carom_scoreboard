@@ -3,20 +3,32 @@ import { mount, type VueWrapper } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
 import GameView from './GameView.vue'
 import { useGameStore } from '../stores/useGameStore'
+import type { PlayerId } from '../types/game'
 
 describe('GameView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
 
+  // Depuis la 1.10, DÉMARRER exige une distance par joueur (AC1) : le parcours complet
+  // passe par la modale de réglage de chacun.
   it('shows the home screen while idle, then the game once started', async () => {
     const wrapper = mount(GameView)
+    const press = async (testid: string) =>
+      wrapper.find(`[data-testid="${testid}"]`).trigger('pointerdown')
 
     expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
 
-    await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="mode-libre"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await press('category-series')
+    await press('mode-libre')
+    for (const player of ['player1', 'player2']) {
+      await press(`${player}-zone`)
+      await press('distance-field')
+      await press('digit-5')
+      await press('digit-0')
+      await press('setup-confirm-button')
+    }
+    await press('confirm-button')
 
     expect(wrapper.findAllComponents({ name: 'PlayerPanel' })).toHaveLength(2)
   })
@@ -30,20 +42,6 @@ describe('GameView', () => {
     const panels = wrapper.findAllComponents({ name: 'PlayerPanel' })
     expect(panels[0]!.props('player').color).toBe('white')
     expect(panels[1]!.props('player').color).toBe('yellow')
-  })
-
-  // Le retour texte de la barre a laissé place à un picto de sortie qui change de côté
-  // avec le CTA de saisie (refonte du 2026-09-09).
-  it('returns to the home screen from the exit control', async () => {
-    const wrapper = mount(GameView)
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE')
-    await wrapper.vm.$nextTick()
-
-    await wrapper.find('[data-testid="exit-button"]').trigger('pointerdown')
-
-    expect(store.status).toBe('idle')
-    expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
   })
 
   it('swaps players sides when the center panel asks for it', async () => {
@@ -635,5 +633,339 @@ describe('GameView — annulation', () => {
 
     expect(panels(wrapper)[0]!.props('player').name).toBe('ANDRE')
     expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
+  })
+})
+
+// --- Story 1.10 : fin de partie, reprise égalisatrice, récap ---
+
+describe('GameView — fin de partie', () => {
+  // Fake timers pour tout le describe : la grâce anti-tap fantôme (300 ms) suit chaque
+  // fermeture de pop-up, les helpers la font s'écouler explicitement.
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  // Distances courtes pour des scénarios lisibles : blanc 10, jaune 8.
+  async function startedGame(targets = { player1: 10, player2: 8 }) {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRÉ', targets)
+    await wrapper.vm.$nextTick()
+    return { wrapper, store }
+  }
+
+  function panels(wrapper: VueWrapper) {
+    return wrapper.findAllComponents({ name: 'PlayerPanel' })
+  }
+
+  function scoreOf(wrapper: VueWrapper, side: 0 | 1) {
+    return panels(wrapper)[side]!.find('[data-testid="score"]').text()
+  }
+
+  const prompt = (wrapper: VueWrapper) => wrapper.find('[data-testid="prompt-modal"]')
+  const summary = (wrapper: VueWrapper) => wrapper.find('[data-testid="game-summary"]')
+
+  function summaryCell(wrapper: VueWrapper, side: PlayerId, testid: string) {
+    return wrapper
+      .find(`[data-testid="summary-column"][data-side="${side}"]`)
+      .find(`[data-testid="${testid}"]`)
+      .text()
+  }
+
+  async function press(wrapper: VueWrapper, testid: string) {
+    await wrapper.find(`[data-testid="${testid}"]`).trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+  }
+
+  async function openEntry(wrapper: VueWrapper) {
+    await press(wrapper, 'add-points-button')
+  }
+
+  async function type(wrapper: VueWrapper, digits: number[]) {
+    for (const digit of digits) {
+      await wrapper.find(`[data-testid="digit-${digit}"]`).trigger('pointerdown')
+    }
+  }
+
+  // Une série saisie au pavé et validée, comme au doigt — grâce écoulée ensuite.
+  async function validateSeries(wrapper: VueWrapper, digits: number[]) {
+    await openEntry(wrapper)
+    await type(wrapper, digits)
+    await wrapper.find('[data-testid="entry-confirm-button"]').trigger('pointerdown')
+    vi.advanceTimersByTime(300)
+    await wrapper.vm.$nextTick()
+  }
+
+  // AC3 : le blanc atteint sa distance → offre d'égalisatrice, sans croix, le tour a
+  // basculé sur le jaune comme d'habitude.
+  it('offers the equalizing reprise when the white player reaches his distance', async () => {
+    const { wrapper } = await startedGame()
+
+    await validateSeries(wrapper, [1, 0])
+
+    expect(prompt(wrapper).exists()).toBe(true)
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('MICHEL A ATTEINT SA DISTANCE')
+    // Revue de Nathan (2026-09-10) : pas de message, les deux CTA disent tout.
+    expect(wrapper.find('[data-testid="prompt-message"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="prompt-primary"]').text()).toBe('ANDRÉ JOUE')
+    expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('FIN DE PARTIE')
+    expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="prompt-ball"]').classes()).toContain('bg-player-white')
+    expect(panels(wrapper)[1]!.classes()).toContain('ring-turn-active')
+  })
+
+  // AC4, AC5 : OUI ramène au scoreboard, le jaune joue, sa série termine la partie.
+  it('returns to the board on OUI and ends the game after the yellow series', async () => {
+    const { wrapper } = await startedGame()
+    await validateSeries(wrapper, [1, 0])
+
+    await press(wrapper, 'prompt-primary')
+
+    expect(prompt(wrapper).exists()).toBe(false)
+    expect(panels(wrapper)).toHaveLength(2)
+    // Grâce anti-tap fantôme : le CTA était au-dessus des panneaux, un `ANNULER` qui
+    // suit immédiatement est ignoré — la série gagnante reste.
+    await press(wrapper, 'undo-button')
+    expect(scoreOf(wrapper, 0)).toBe('10')
+    vi.advanceTimersByTime(300)
+    expect(panels(wrapper)[1]!.props('active')).toBe(true)
+    // Règle de la 1.5 : le CTA est sous le panneau de l'adversaire ASSIS, le blanc.
+    expect(wrapper.find('[data-testid="add-points-button"]').attributes('data-side')).toBe('player1')
+
+    await validateSeries(wrapper, [3])
+
+    // Revue de Nathan (2026-09-10) : la pop-up n'annonce rien — ni vainqueur, ni bille,
+    // ni croix. Le résultat se lit sur le récap.
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('PARTIE TERMINÉE')
+    expect(wrapper.find('[data-testid="prompt-message"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="prompt-ball"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="prompt-primary"]').text()).toBe('VOIR LE RÉCAP')
+
+    await press(wrapper, 'prompt-primary')
+
+    expect(summary(wrapper).exists()).toBe(true)
+    expect(summaryCell(wrapper, 'player1', 'summary-result')).toBe('VICTOIRE')
+    expect(summaryCell(wrapper, 'player2', 'summary-result')).toBe('DÉFAITE')
+  })
+
+  it('declares a tie when the yellow player equalizes', async () => {
+    const { wrapper } = await startedGame()
+    await validateSeries(wrapper, [1, 0])
+    await press(wrapper, 'prompt-primary')
+
+    await validateSeries(wrapper, [8])
+
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('PARTIE TERMINÉE')
+
+    await press(wrapper, 'prompt-primary')
+
+    expect(summaryCell(wrapper, 'player1', 'summary-result')).toBe('ÉGALITÉ')
+    expect(summaryCell(wrapper, 'player2', 'summary-result')).toBe('ÉGALITÉ')
+    expect(wrapper.findAll('.bg-victory-ribbon')).toHaveLength(0)
+  })
+
+  // AC6 : le jaune atteint le premier → fin immédiate, sans offre ni croix, et le récap
+  // le donne vainqueur.
+  it('ends the game at once when the yellow player reaches first', async () => {
+    const { wrapper } = await startedGame()
+    await validateSeries(wrapper, [5])
+
+    await validateSeries(wrapper, [8])
+
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('PARTIE TERMINÉE')
+    expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="prompt-secondary"]').exists()).toBe(false)
+
+    await press(wrapper, 'prompt-primary')
+
+    expect(summaryCell(wrapper, 'player2', 'summary-result')).toBe('VICTOIRE')
+    expect(summaryCell(wrapper, 'player1', 'summary-result')).toBe('DÉFAITE')
+  })
+
+  // Revue de Nathan (2026-09-10) : une fois la fin détectée, on ne revient pas au
+  // scoreboard — la pop-up n'a qu'une issue, le récap. Le voile reste inerte.
+  it('offers no way back to the board from the end prompt', async () => {
+    const { wrapper, store } = await startedGame()
+    await validateSeries(wrapper, [5])
+    await validateSeries(wrapper, [8])
+
+    await prompt(wrapper).trigger('pointerdown')
+    await prompt(wrapper).trigger('pointerup')
+    await wrapper.vm.$nextTick()
+
+    expect(prompt(wrapper).exists()).toBe(true)
+    expect(wrapper.findAll('[data-testid="prompt-close"]')).toHaveLength(0)
+    expect(store.status).toBe('playing')
+  })
+
+  // AC4 : `FIN DE PARTIE` sur l'offre = le blanc gagne, récap direct.
+  it('finishes from FIN DE PARTIE with the white player as winner', async () => {
+    const { wrapper, store } = await startedGame()
+    await validateSeries(wrapper, [1, 0])
+
+    await press(wrapper, 'prompt-secondary')
+
+    expect(store.status).toBe('finished')
+    expect(summary(wrapper).exists()).toBe(true)
+    expect(summaryCell(wrapper, 'player1', 'summary-result')).toBe('VICTOIRE')
+    expect(
+      wrapper.find('[data-testid="summary-column"][data-side="player1"]').classes(),
+    ).toContain('bg-victory-ribbon')
+  })
+
+  // AC8, UX-DR15 : l'auto-validation à 3 s aboutit au même état que le bouton.
+  it('reaches the end prompt through the three-second path too', async () => {
+    const { wrapper } = await startedGame()
+
+    await openEntry(wrapper)
+    await type(wrapper, [1, 0])
+    vi.advanceTimersByTime(3000)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-testid="modal-backdrop"]').exists()).toBe(false)
+    expect(prompt(wrapper).exists()).toBe(true)
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('MICHEL A ATTEINT SA DISTANCE')
+  })
+
+  // AC8 : les corrections ne déclenchent jamais la détection.
+  it('never ends the game on a correction', async () => {
+    const { wrapper } = await startedGame()
+
+    for (let i = 0; i < 10; i += 1) {
+      await panels(wrapper)[0]!.find('[data-testid="score-plus"]').trigger('pointerdown')
+    }
+    await wrapper.vm.$nextTick()
+
+    expect(scoreOf(wrapper, 0)).toBe('10')
+    expect(prompt(wrapper).exists()).toBe(false)
+  })
+
+  // AC10, AC11 : la sortie demande confirmation ; confirmée, le vainqueur est au prorata.
+  it('asks before leaving a game with series, and computes the winner pro rata', async () => {
+    const { wrapper, store } = await startedGame()
+    await validateSeries(wrapper, [4])
+    await validateSeries(wrapper, [4])
+
+    await press(wrapper, 'exit-button')
+
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('TERMINER LA PARTIE ?')
+    expect(wrapper.find('[data-testid="prompt-message"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="prompt-primary"]').text()).toBe('VOIR LE RÉCAP')
+    // Revue de Nathan (2026-09-10) : un gros CTA `ANNULER` plutôt qu'une croix.
+    expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('ANNULER')
+    expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
+    expect(store.status).toBe('playing')
+
+    await press(wrapper, 'prompt-secondary')
+
+    expect(prompt(wrapper).exists()).toBe(false)
+    expect(panels(wrapper)).toHaveLength(2)
+    expect(store.status).toBe('playing')
+    // Grâce anti-tap fantôme : `ANNULER` de la pop-up est au-dessus des panneaux, un
+    // `undo` qui suit immédiatement est ignoré — la dernière série reste.
+    await press(wrapper, 'undo-button')
+    expect(scoreOf(wrapper, 1)).toBe('4')
+
+    vi.advanceTimersByTime(300)
+    await press(wrapper, 'exit-button')
+    await press(wrapper, 'prompt-primary')
+
+    expect(store.status).toBe('finished')
+    expect(summary(wrapper).exists()).toBe(true)
+    // 4/8 = 0,5 > 4/10 = 0,4 : le jaune gagne.
+    expect(summaryCell(wrapper, 'player2', 'summary-result')).toBe('VICTOIRE')
+    expect(summaryCell(wrapper, 'player1', 'summary-result')).toBe('DÉFAITE')
+  })
+
+  // AC12 : rien à récapituler → accueil direct, sans pop-up.
+  it('leaves straight to the home screen when nothing was played', async () => {
+    const { wrapper, store } = await startedGame()
+
+    await press(wrapper, 'exit-button')
+
+    expect(prompt(wrapper).exists()).toBe(false)
+    expect(store.status).toBe('idle')
+    expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
+  })
+
+  // Revue 1.10 (décision de Nathan, 2026-09-10) : des points ajoutés par `+` sans aucune
+  // série sont quand même quelque chose à récapituler — la sortie demande confirmation.
+  it('asks before leaving when points were only added by a correction', async () => {
+    const { wrapper, store } = await startedGame()
+    await press(wrapper, 'score-plus')
+    expect(scoreOf(wrapper, 0)).toBe('1')
+
+    await press(wrapper, 'exit-button')
+
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('TERMINER LA PARTIE ?')
+    expect(store.status).toBe('playing')
+  })
+
+  // AC13, AC15, AC16 : le récap remplace le scoreboard — bandeau, stats, aucune commande
+  // de jeu.
+  it('shows the Billiboard banner and stats on the summary', async () => {
+    const { wrapper } = await startedGame()
+    await validateSeries(wrapper, [4])
+    await validateSeries(wrapper, [2])
+    await validateSeries(wrapper, [6])
+    await press(wrapper, 'prompt-secondary')
+
+    const banner = wrapper.find('[data-testid="summary-banner"]')
+    expect(banner.text()).toContain('MICHEL / 10')
+    expect(banner.text()).toContain('ANDRÉ / 8')
+    expect(banner.text()).toContain('VS')
+    expect(banner.text()).toContain('LIBRE')
+    expect(summaryCell(wrapper, 'player1', 'summary-points')).toBe('10')
+    expect(summaryCell(wrapper, 'player1', 'summary-average')).toBe('5.000')
+    expect(summaryCell(wrapper, 'player1', 'summary-best')).toBe('6')
+    expect(summaryCell(wrapper, 'player1', 'summary-reprises')).toBe('2')
+    expect(summaryCell(wrapper, 'player2', 'summary-points')).toBe('2')
+    expect(summaryCell(wrapper, 'player2', 'summary-average')).toBe('2.000')
+    expect(summaryCell(wrapper, 'player2', 'summary-best')).toBe('2')
+    expect(summaryCell(wrapper, 'player2', 'summary-reprises')).toBe('1')
+    expect(wrapper.find('[data-testid="undo-button"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="add-points-button"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="back-button"]').exists()).toBe(false)
+    expect(panels(wrapper)).toHaveLength(0)
+  })
+
+  // AC16 : UNE PARTIE DE PLUS — mêmes joueurs, mêmes distances, mêmes côtés, scoreboard
+  // direct.
+  it('starts a rematch with the same players, distances and sides', async () => {
+    const { wrapper, store } = await startedGame()
+    await validateSeries(wrapper, [1, 0])
+    await press(wrapper, 'prompt-secondary')
+    expect(summary(wrapper).exists()).toBe(true)
+
+    await press(wrapper, 'rematch-button')
+
+    expect(store.status).toBe('playing')
+    expect(summary(wrapper).exists()).toBe(false)
+    expect(panels(wrapper)).toHaveLength(2)
+    expect(panels(wrapper)[0]!.props('player').name).toBe('MICHEL')
+    expect(panels(wrapper)[0]!.find('[data-testid="target-score"]').text()).toBe('10')
+    expect(panels(wrapper)[1]!.props('player').name).toBe('ANDRÉ')
+    expect(panels(wrapper)[1]!.find('[data-testid="target-score"]').text()).toBe('8')
+    expect(scoreOf(wrapper, 0)).toBe('0')
+    expect(scoreOf(wrapper, 1)).toBe('0')
+    expect(wrapper.find('[data-testid="reprise-number"]').text()).toBe('1')
+    expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(false)
+  })
+
+  it('returns home from FIN DE PARTIE', async () => {
+    const { wrapper, store } = await startedGame()
+    await validateSeries(wrapper, [1, 0])
+    await press(wrapper, 'prompt-secondary')
+
+    await press(wrapper, 'end-game-button')
+
+    expect(store.status).toBe('idle')
+    expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
   })
 })

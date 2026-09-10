@@ -7,9 +7,13 @@ import ActionBar from '../components/ActionBar.vue'
 import PlayerPanel from '../components/PlayerPanel.vue'
 import CenterPanel from '../components/CenterPanel.vue'
 import ScoreEntryModal from '../components/ScoreEntryModal.vue'
+import PromptModal from '../components/PromptModal.vue'
+import GameSummary from '../components/GameSummary.vue'
+import type { PlayerId } from '../types/game'
 
 const gameStore = useGameStore()
 const {
+  mode,
   status,
   player1,
   player2,
@@ -18,7 +22,10 @@ const {
   completedReprises,
   averages,
   bestSeries,
+  repriseCounts,
   canUndo,
+  endPrompt,
+  winner,
 } = storeToRefs(gameStore)
 
 // AC15 : la reprise est OUVERTE par le joueur blanc. Le numéro affiché compte donc les
@@ -52,9 +59,13 @@ const entrySide = computed(() => (activePlayer.value === 'player1' ? 'player2' :
 const PANEL_GRACE_MS = 300
 let panelsLockedUntil = 0
 
+function lockPanels(): void {
+  panelsLockedUntil = Date.now() + PANEL_GRACE_MS
+}
+
 function closeEntry(): void {
   entryOpen.value = false
-  panelsLockedUntil = Date.now() + PANEL_GRACE_MS
+  lockPanels()
 }
 
 function panelsAcceptInput(): boolean {
@@ -66,7 +77,7 @@ function passTurn(): void {
   gameStore.passTurn()
 }
 
-function adjustScore(playerId: 'player1' | 'player2', delta: number): void {
+function adjustScore(playerId: PlayerId, delta: number): void {
   if (!panelsAcceptInput()) return
   gameStore.adjustScore(playerId, delta)
 }
@@ -106,8 +117,45 @@ function validateEntry(): void {
 const EXIT_BUTTON_CLASSES =
   'flex min-h-[var(--size-touch-target)] min-w-[var(--size-touch-target)] items-center justify-center rounded-2xl bg-white/10 text-white touch-manipulation select-none active:bg-white/20'
 
+// --- Fin de partie (Story 1.10) ---
+// La détection vit dans le store : `endPrompt` dit quelle pop-up montrer, la vue ne
+// fait qu'afficher et appeler `finishGame()` — qui déduit seul le vainqueur (Décision 9).
+// Revue de Nathan (2026-09-10, au rendu) : les pop-ups de fin n'annoncent rien et n'ont
+// pas de croix — le vainqueur se lit sur le récap, et on ne revient pas au scoreboard.
+// `dismissEndPrompt` reste une action du store (pilotage déporté), sans bouton ici.
+
+// Sortie : plus rien de destructif au contact (revue 1.5). Dès qu'une action annulable
+// a été jouée (série, main rendue, correction `+`/`−`), une confirmation mène au récap ;
+// sans rien à récapituler, retour direct à l'accueil (AC12). Le critère est `canUndo`,
+// pas « aucune série » : des points ajoutés par `+` sans série ne doivent pas être jetés
+// au contact (revue 1.10, décision de Nathan du 2026-09-10). État local, comme
+// `entryOpen` : l'ouverture d'une confirmation n'est pas un état de partie.
+const exitPromptOpen = ref(false)
+
 function leaveGame(): void {
-  gameStore.resetGame()
+  if (!canUndo.value) {
+    gameStore.resetGame()
+    return
+  }
+  exitPromptOpen.value = true
+}
+
+// `<NOM> JOUE` : le scoreboard revient sous le doigt, le CTA est au-dessus des panneaux
+// — même grâce anti-tap fantôme que les autres fermetures de pop-up.
+function acceptEqualizingReprise(): void {
+  gameStore.acceptEqualizingReprise()
+  lockPanels()
+}
+
+// `ANNULER` : le CTA est au-dessus des panneaux — même grâce anti-tap fantôme.
+function closeExitPrompt(): void {
+  exitPromptOpen.value = false
+  lockPanels()
+}
+
+function confirmExit(): void {
+  exitPromptOpen.value = false
+  gameStore.finishGame()
 }
 </script>
 
@@ -241,6 +289,73 @@ function leaveGame(): void {
         @validate="validateEntry"
         @cancel="cancelEntry"
       />
+
+      <!-- Pop-ups de fin, APRÈS la saisie dans le template : elles montent au `pointerdown`
+           de `VALIDER`, sous le doigt. Leur voile est inerte (AC18) — le `pointerup` qui
+           retombe dessus est sans effet. Aucun handler sur ce voile. -->
+      <PromptModal
+        v-if="endPrompt?.kind === 'equalizing-offer'"
+        :title="`${player1.name} A ATTEINT SA DISTANCE`"
+        ball="white"
+        :primaryLabel="`${player2.name} JOUE`"
+        secondaryLabel="FIN DE PARTIE"
+        @primary="acceptEqualizingReprise"
+        @secondary="gameStore.finishGame()"
+      />
+      <PromptModal
+        v-else-if="endPrompt?.kind === 'over'"
+        title="PARTIE TERMINÉE"
+        primaryLabel="VOIR LE RÉCAP"
+        @primary="gameStore.finishGame()"
+      />
+      <!-- Pas de croix (revue de Nathan, 2026-09-10 : les croix ne sont pas intuitives pour
+           les joueurs, un gros CTA l'est) : `ANNULER` est le retour, comme sur toutes les
+           pop-ups de décision. -->
+      <PromptModal
+        v-if="exitPromptOpen"
+        title="TERMINER LA PARTIE ?"
+        primaryLabel="VOIR LE RÉCAP"
+        secondaryLabel="ANNULER"
+        @primary="confirmExit"
+        @secondary="closeExitPrompt"
+      />
+    </template>
+
+    <!-- Récap : un ÉTAT de la partie qui remplace le scoreboard, pas une pop-up (AC13).
+         Terminal : ni retour, ni `ANNULER` — une fin détectée n'est pas rattrapable
+         (revue de Nathan, 2026-09-10), la correction se fait avant la série gagnante. -->
+    <template v-else-if="status === 'finished'">
+      <GameSummary
+        class="min-h-0 flex-1"
+        :mode="mode"
+        :player1="player1"
+        :player2="player2"
+        :averages="averages"
+        :bestSeries="bestSeries"
+        :repriseCounts="repriseCounts"
+        :winner="winner"
+      />
+
+      <ActionBar :showBack="false">
+        <template #actions>
+          <div class="flex flex-1 items-center justify-between gap-4">
+            <button
+              data-testid="end-game-button"
+              class="min-h-[var(--size-touch-target)] rounded-2xl bg-white/10 px-10 text-label font-black text-white touch-manipulation select-none active:bg-white/20"
+              @pointerdown="gameStore.resetGame()"
+            >
+              FIN DE PARTIE
+            </button>
+            <button
+              data-testid="rematch-button"
+              class="min-h-[var(--size-touch-target)] rounded-2xl bg-accent px-10 text-label font-black text-on-accent touch-manipulation select-none active:brightness-90"
+              @pointerdown="gameStore.rematch()"
+            >
+              UNE PARTIE DE PLUS
+            </button>
+          </div>
+        </template>
+      </ActionBar>
     </template>
   </div>
 </template>

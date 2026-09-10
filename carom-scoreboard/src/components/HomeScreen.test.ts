@@ -42,6 +42,21 @@ async function validateModal(wrapper: ReturnType<typeof mount>) {
   await setupModal(wrapper).find('[data-testid="setup-confirm-button"]').trigger('pointerdown')
 }
 
+// Depuis la 1.10, DÉMARRER exige une distance par joueur : les parcours qui ne portent
+// pas sur la distance la règlent par ce helper (100 / 80).
+async function setDistances(wrapper: ReturnType<typeof mount>) {
+  await openSetup(wrapper, 'player1')
+  await typeHandicap(wrapper, [1, 0, 0])
+  await validateModal(wrapper)
+  await openSetup(wrapper, 'player2')
+  await typeHandicap(wrapper, [8, 0])
+  await validateModal(wrapper)
+}
+
+function errorPrompt(wrapper: ReturnType<typeof mount>) {
+  return wrapper.find('[data-testid="prompt-modal"]')
+}
+
 describe('HomeScreen', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -112,6 +127,7 @@ describe('HomeScreen', () => {
     const store = useGameStore()
 
     await goToPlayersStep(wrapper, 'cadre-47-2')
+    await setDistances(wrapper)
     await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
 
     expect(store.mode).toBe('cadre-47-2')
@@ -128,6 +144,7 @@ describe('HomeScreen', () => {
     const store = useGameStore()
 
     await goToPlayersStep(wrapper)
+    await setDistances(wrapper)
     await openSetup(wrapper, 'player1')
     await pressInModal(wrapper, ['name-field', 'key-M', 'key-space', 'key-space', 'key-A'])
     await validateModal(wrapper)
@@ -141,6 +158,7 @@ describe('HomeScreen', () => {
     const store = useGameStore()
 
     await goToPlayersStep(wrapper)
+    await setDistances(wrapper)
     await openSetup(wrapper, 'player2')
     await validateModal(wrapper)
     await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
@@ -153,6 +171,7 @@ describe('HomeScreen', () => {
     const store = useGameStore()
 
     await goToPlayersStep(wrapper)
+    await setDistances(wrapper)
     await openSetup(wrapper, 'player1')
     await typeName(wrapper, 'MICHEL ')
     await validateModal(wrapper)
@@ -211,19 +230,208 @@ describe('HomeScreen', () => {
     expect(wrapper.find('[data-testid="player1-target"]').exists()).toBe(false)
   })
 
-  // Le parcours de la Story 1.3 reste strictement identique quand on ignore les réglages.
-  it('starts with default names and no handicap when no zone is ever pressed', async () => {
+  // Story 1.10 (AC1) : la distance est obligatoire — sans elle, DÉMARRER n'ouvre qu'une
+  // pop-up d'erreur réduite au titre et au CTA (revue de Nathan, 2026-09-10 : pas de
+  // message, la modale qui suit dit d'elle-même de quel joueur il s'agit). Remplace
+  // « starts with default names and no handicap when no zone is ever pressed » (1.4).
+  it('refuses to start while a distance is missing', async () => {
     const wrapper = mount(HomeScreen)
     const store = useGameStore()
 
     await goToPlayersStep(wrapper)
     await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
 
+    expect(store.status).toBe('idle')
+    expect(errorPrompt(wrapper).exists()).toBe(true)
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('DISTANCE MANQUANTE')
+    expect(wrapper.find('[data-testid="prompt-message"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="prompt-primary"]').text()).toBe('RÉGLER LA DISTANCE')
+    expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('ANNULER')
+    expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
+
+    await wrapper.find('[data-testid="prompt-secondary"]').trigger('pointerdown')
+    await openSetup(wrapper, 'player2')
+    await typeHandicap(wrapper, [8, 0])
+    await validateModal(wrapper)
+    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+
+    expect(store.status).toBe('idle')
+    expect(errorPrompt(wrapper).exists()).toBe(true)
+  })
+
+  it('opens the setup of the first player without distance from the error prompt', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="prompt-primary"]').trigger('pointerdown')
+
+    expect(errorPrompt(wrapper).exists()).toBe(false)
+    expect(setupModal(wrapper).exists()).toBe(true)
+    expect(setupModal(wrapper).props('color')).toBe('white')
+    expect(setupModal(wrapper).find('[data-testid="distance-field"]').classes()).toContain(
+      'border-turn-active',
+    )
+    expect(setupModal(wrapper).find('[data-testid="digit-5"]').exists()).toBe(true)
+  })
+
+  it('opens the yellow setup straight from the error prompt when only its distance is missing', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await openSetup(wrapper, 'player1')
+    await typeHandicap(wrapper, [1, 0, 0])
+    await validateModal(wrapper)
+    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="prompt-primary"]').trigger('pointerdown')
+
+    expect(setupModal(wrapper).props('color')).toBe('yellow')
+    expect(setupModal(wrapper).find('[data-testid="distance-field"]').classes()).toContain(
+      'border-turn-active',
+    )
+  })
+
+  // Revue de Nathan (2026-09-10) : depuis le CTA, les modales s'enchaînent — valider la
+  // distance du blanc ouvre directement celle du jaune, sans repasser par DÉMARRER.
+  it('chains the yellow distance right after the white one from the error prompt', async () => {
+    const wrapper = mount(HomeScreen)
+    const store = useGameStore()
+
+    await goToPlayersStep(wrapper)
+    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="prompt-primary"]').trigger('pointerdown')
+    await pressInModal(wrapper, ['digit-1', 'digit-0', 'digit-0'])
+    await validateModal(wrapper)
+
+    expect(setupModal(wrapper).exists()).toBe(true)
+    expect(setupModal(wrapper).props('color')).toBe('yellow')
+    expect(setupModal(wrapper).find('[data-testid="distance-field"]').classes()).toContain(
+      'border-turn-active',
+    )
+    expect(wrapper.find('[data-testid="player1-target"]').text()).toBe('100')
+
+    await pressInModal(wrapper, ['digit-8', 'digit-0'])
+    await validateModal(wrapper)
+
+    expect(setupModal(wrapper).exists()).toBe(false)
+    expect(wrapper.find('[data-testid="player2-target"]').text()).toBe('80')
+    expect(store.status).toBe('idle')
+
+    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+
+    expect(store.status).toBe('playing')
+    expect(store.player1.targetScore).toBe(100)
+    expect(store.player2.targetScore).toBe(80)
+  })
+
+  // L'enchaînement ne vaut que pour le rattrapage : une zone ouverte à la main ne fait
+  // jamais surgir la modale de l'autre joueur.
+  it('does not chain the modals when a zone is opened directly', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await openSetup(wrapper, 'player1')
+    await typeHandicap(wrapper, [1, 0, 0])
+    await validateModal(wrapper)
+
+    expect(setupModal(wrapper).exists()).toBe(false)
+  })
+
+  it('stops chaining when the setup is closed by its cross', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="prompt-primary"]').trigger('pointerdown')
+    await setupModal(wrapper).find('[data-testid="modal-close-button"]').trigger('pointerdown')
+
+    expect(setupModal(wrapper).exists()).toBe(false)
+
+    await openSetup(wrapper, 'player1')
+    await typeHandicap(wrapper, [1, 0, 0])
+    await validateModal(wrapper)
+
+    expect(setupModal(wrapper).exists()).toBe(false)
+  })
+
+  // Une distance laissée à 0 dans la modale enchaînée ne relance pas la même modale en
+  // boucle : l'enchaînement ne passe qu'au joueur SUIVANT.
+  it('never reopens the same modal in a loop when the distance is left empty', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="prompt-primary"]').trigger('pointerdown')
+    await validateModal(wrapper)
+
+    expect(setupModal(wrapper).props('color')).toBe('yellow')
+
+    await validateModal(wrapper)
+
+    expect(setupModal(wrapper).exists()).toBe(false)
+  })
+
+  // Une zone touchée directement s'ouvre toujours sur le nom, comme avant.
+  it('still opens a zone on the name field when pressed directly', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="prompt-primary"]').trigger('pointerdown')
+    await setupModal(wrapper).find('[data-testid="modal-close-button"]').trigger('pointerdown')
+
+    await openSetup(wrapper, 'player2')
+
+    expect(setupModal(wrapper).find('[data-testid="name-field"]').classes()).toContain(
+      'border-turn-active',
+    )
+  })
+
+  it('starts once both distances are set', async () => {
+    const wrapper = mount(HomeScreen)
+    const store = useGameStore()
+
+    await goToPlayersStep(wrapper)
+    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="prompt-primary"]').trigger('pointerdown')
+    await pressInModal(wrapper, ['digit-1', 'digit-0', 'digit-0'])
+    await validateModal(wrapper)
+    await pressInModal(wrapper, ['digit-8', 'digit-0'])
+    await validateModal(wrapper)
+    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+
     expect(store.status).toBe('playing')
     expect(store.player1.name).toBe('JOUEUR 1')
     expect(store.player2.name).toBe('JOUEUR 2')
-    expect(store.player1.targetScore).toBe(0)
-    expect(store.player2.targetScore).toBe(0)
+    expect(store.player1.targetScore).toBe(100)
+    expect(store.player2.targetScore).toBe(80)
+  })
+
+  it('closes the error prompt on ANNULER without doing anything', async () => {
+    const wrapper = mount(HomeScreen)
+    const store = useGameStore()
+
+    await goToPlayersStep(wrapper)
+    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="prompt-secondary"]').trigger('pointerdown')
+
+    expect(errorPrompt(wrapper).exists()).toBe(false)
+    expect(setupModal(wrapper).exists()).toBe(false)
+    expect(store.status).toBe('idle')
+    expect(wrapper.find('[data-testid="step-players"]').exists()).toBe(true)
+  })
+
+  it('forgets the error prompt when the step is abandoned', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    expect(errorPrompt(wrapper).exists()).toBe(true)
+
+    await wrapper.find('[data-testid="back-button"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="mode-libre"]').trigger('pointerdown')
+
+    expect(errorPrompt(wrapper).exists()).toBe(false)
   })
 
   // Handicap : chaque joueur saisit le sien, séparément.
@@ -318,9 +526,16 @@ describe('HomeScreen', () => {
     expect(wrapper.find('[data-testid="player1-name"]').text()).toBe('JOUEUR 1')
     expect(wrapper.find('[data-testid="player1-target"]').exists()).toBe(false)
 
+    // Distance obligatoire (1.10) : d'autres valeurs, pour prouver que 100 est oublié.
+    await openSetup(wrapper, 'player1')
+    await typeHandicap(wrapper, [5, 0])
+    await validateModal(wrapper)
+    await openSetup(wrapper, 'player2')
+    await typeHandicap(wrapper, [5, 0])
+    await validateModal(wrapper)
     await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
 
     expect(store.player1.name).toBe('JOUEUR 1')
-    expect(store.player1.targetScore).toBe(0)
+    expect(store.player1.targetScore).toBe(50)
   })
 })

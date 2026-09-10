@@ -207,8 +207,14 @@ interface GameState {
   isNegative: { player1: boolean; player2: boolean }
   startedAt: number | null
   lastSaved: string
+  // Fin de partie (Story 1.10, 2026-09-10)
+  winner: PlayerId | null          // null tant que la partie n'est pas finie, ou égalité
+  finishedAt: number | null
+  equalizingReprise: boolean       // reprise égalisatrice en cours (côté droit)
 }
 ```
+
+*Note (2026-09-10, Story 1.10)* : `PlayerId = 'player1' | 'player2'` est un type nommé de `game.ts`. La détection de fin vit dans le **store** (`checkEndOfGame` en fin des actions de série), qui expose une pop-up de décision `endPrompt: EndPrompt | null` (`equalizing-offer` ou `over` avec `winner`) ; `GameView` ne fait que l'afficher et appeler `finishGame()`, seule action de clôture, qui déduit le vainqueur du contexte (pop-up ou prorata). `equalizingReprise` fait partie de `GameSnapshot` (annuler la série gagnante défait l'offre acceptée) ; `endPrompt`, `winner` et `finishedAt` n'y sont pas — le récap est terminal, `undoLastAction` reste un no-op hors `playing`.
 
 Le catalogue des modes (`GAME_CATEGORIES`) vit dans ce même fichier : il décrit les catégories, leurs modes et leur disponibilité, et sert de source unique à l'écran d'accueil. Il ne porte **pas** les règles de score propres à chaque mode, qui arrivent avec la story de chaque mode. Il ne porte **aucune distance de jeu** non plus : la distance est saisie par l'utilisateur dans `PlayerSetupModal` et vit sur `Player.targetScore` (décision produit du 2026-09-08 — aucune distance de référence par mode, aucune donnée fédérale codée en dur).
 
@@ -263,10 +269,11 @@ Réglages en V1 : modales inline sur `GameView`, pas de route dédiée.
 - `CenterPanel.vue` — reprises, stats, contrôles
 - `NumericPad.vue` — pavé numérique tactile, purement présentationnel (emits `digit`/`clear`/`backspace`)
 - `AlphaKeyboard.vue` — clavier AZERTY intégré, purement présentationnel (emits `input`/`backspace`). L'écran cible étant une **borne fixe**, la saisie de texte ne doit jamais dépendre du clavier du système
-- `PlayerSetupModal.vue` — réglage optionnel du **nom et de la distance d'un joueur**, ouvert en tapant sa zone : pop-up centrée sur arrière-plan flouté (AR6), sans aucun champ natif, avec bascule de clavier selon le champ visé
+- `PlayerSetupModal.vue` — réglage du **nom (optionnel) et de la distance (obligatoire depuis la Story 1.10) d'un joueur**, ouvert en tapant sa zone : pop-up centrée sur arrière-plan flouté (AR6), sans aucun champ natif, avec bascule de clavier selon le champ visé
+- `PromptModal.vue` — pop-up de **décision** réutilisable (Story 1.10, 2026-09-10) : même coquille que les pop-ups de saisie mais **voile inerte**, sans croix (le retour est un CTA secondaire `ANNULER` — revue de code 1.10), CTA principal/secondaire ; sert à l'erreur de distance, à l'offre de reprise égalisatrice, à « PARTIE TERMINÉE » et à la confirmation de sortie
 - `HomeScreen.vue` — écran d'accueil : veille, sélection catégorie → mode, zones joueur ouvrant leur réglage
 - `ActionBar.vue` — barre d'action basse commune à tous les écrans (retour, CTA contextuels)
-- `GameSummary.vue` — récapitulatif fin de partie
+- `GameSummary.vue` — récapitulatif fin de partie, format Billiboard (bandeau VS, colonnes joueur, colonne du vainqueur en couleur) — purement présentationnel, sans interaction (Story 1.10)
 
 ### Infrastructure & Déploiement
 
@@ -498,6 +505,8 @@ carom-scoreboard/               ← sous-dossier applicatif, PAS la racine du d�
     │   ├── AlphaKeyboard.test.ts
     │   ├── PlayerSetupModal.vue ← Nom + distance d'un joueur (pop-up, AR6)
     │   ├── PlayerSetupModal.test.ts
+    │   ├── PromptModal.vue      ← Pop-up de décision, voile inerte (Story 1.10)
+    │   ├── PromptModal.test.ts
     │   ├── keyClasses.ts        ← Style de touche partagé par les deux claviers
     │   ├── HomeScreen.vue       ← Écran d'accueil (veille + sélection catégorie/mode + joueurs)
     │   ├── HomeScreen.test.ts

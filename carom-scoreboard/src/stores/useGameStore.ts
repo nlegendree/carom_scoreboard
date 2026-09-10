@@ -1,6 +1,14 @@
 import { computed, ref, shallowRef } from 'vue'
 import { defineStore } from 'pinia'
-import type { GameMode, GameSnapshot, GameStatus, Player, Reprise } from '../types/game'
+import type {
+  EndPrompt,
+  GameMode,
+  GameSnapshot,
+  GameStatus,
+  Player,
+  PlayerId,
+  Reprise,
+} from '../types/game'
 
 const DEFAULT_MODE: GameMode = 'libre'
 // Plafond de saisie repris de la contrainte de série (FR7) : une distance de 4 chiffres
@@ -31,7 +39,7 @@ function normalizeTargetScore(raw: number): number {
   return Math.min(Math.max(Math.trunc(raw), 0), MAX_TARGET_SCORE)
 }
 
-function makePlayer(id: 'player1' | 'player2'): Player {
+function makePlayer(id: PlayerId): Player {
   return {
     id,
     name: '',
@@ -72,6 +80,8 @@ export function mirrorSnapshot(snapshot: GameSnapshot): GameSnapshot {
       player2: snapshot.isNegative.player1,
     },
     sidesSwapped: !snapshot.sidesSwapped,
+    // Fait de jeu attaché au côté droit, pas à une personne : recopié tel quel.
+    equalizingReprise: snapshot.equalizingReprise,
   }
 }
 
@@ -80,7 +90,7 @@ export const useGameStore = defineStore('game', () => {
   const status = ref<GameStatus>('idle')
   const player1 = ref<Player>(makePlayer('player1'))
   const player2 = ref<Player>(makePlayer('player2'))
-  const activePlayer = ref<'player1' | 'player2'>('player1')
+  const activePlayer = ref<PlayerId>('player1')
   // AR9 : `shallowRef` évite la réactivité profonde sur les sessions longues.
   // Conséquence à respecter impérativement : toute évolution de `reprises` doit REMPLACER
   // le tableau (`reprises.value = [...reprises.value, r]`), jamais le muter — un `push`
@@ -94,6 +104,22 @@ export const useGameStore = defineStore('game', () => {
   const scoreAdjustments = ref({ player1: 0, player2: 0 })
   const startedAt = ref<number | null>(null)
   const lastSaved = ref('')
+
+  // --- Fin de partie (Story 1.10) ---
+  const winner = ref<PlayerId | null>(null)
+  const finishedAt = ref<number | null>(null)
+  // ⚠️ Porte sur le CÔTÉ DROIT (`player2`), pas sur une personne — cohérent avec le tour
+  // attaché au côté (Décision 15 de la 1.5). `swapPlayers` est donc BLOQUÉ tant qu'elle
+  // dure (revue 1.10, décision de Nathan du 2026-09-10) : sinon le joueur déjà à sa
+  // distance passerait à droite, sa série serait plafonnée à 0 et `checkEndOfGame`
+  // déclarerait une égalité fantôme. Dans le snapshot (AC9) : annuler la série gagnante
+  // du blanc défait l'offre. Conservé tel quel en `finished` : il dit si la partie s'est
+  // jouée jusqu'à l'égalisatrice (historique 3.1, persistance 1.12).
+  const equalizingReprise = ref(false)
+  // Pop-up de décision attendue ; `null` = aucune. Vit ici et non dans la vue pour qu'un
+  // pilotage déporté (V2+) la voie et que la 1.12 puisse la persister (Décision 8).
+  // Hors snapshot : toujours fermée quand on peut appuyer sur `ANNULER`.
+  const endPrompt = ref<EndPrompt | null>(null)
 
   // --- Annulation multi-niveaux (Story 1.7) ---
   // Pile des états d'AVANT chaque action annulable ; `undoLastAction` en restaure le
@@ -122,6 +148,7 @@ export const useGameStore = defineStore('game', () => {
       currentInput: { ...currentInput.value },
       isNegative: { ...isNegative.value },
       sidesSwapped: sidesSwapped.value,
+      equalizingReprise: equalizingReprise.value,
     }
   }
 
@@ -163,6 +190,10 @@ export const useGameStore = defineStore('game', () => {
     scoreAdjustments.value = { player1: 0, player2: 0 }
     history.value = []
     sidesSwapped.value = false
+    winner.value = null
+    finishedAt.value = null
+    equalizingReprise.value = false
+    endPrompt.value = null
     lastSaved.value = new Date().toISOString()
   }
 
@@ -180,8 +211,10 @@ export const useGameStore = defineStore('game', () => {
   // Hors pile d'annulation (Story 1.7, décision produit) : pour revenir, on rappuie. Seule
   // la parité `sidesSwapped` est basculée, pour que les snapshots antérieurs restent
   // restaurables sans défaire l'échange.
+  // Bloqué pendant la reprise égalisatrice : le drapeau est attaché au côté droit, un
+  // échange ferait jouer l'égalisatrice au joueur qui vient d'atteindre sa distance.
   function swapPlayers(): void {
-    if (status.value !== 'playing') return
+    if (status.value !== 'playing' || equalizingReprise.value) return
 
     sidesSwapped.value = !sidesSwapped.value
     reprises.value = reprises.value.map((reprise) => ({
@@ -211,7 +244,7 @@ export const useGameStore = defineStore('game', () => {
 
   // --- Saisie d'une série au pavé numérique (Story 1.5) ---
 
-  function playerRef(playerId: 'player1' | 'player2') {
+  function playerRef(playerId: PlayerId) {
     return playerId === 'player1' ? player1 : player2
   }
 
@@ -219,7 +252,7 @@ export const useGameStore = defineStore('game', () => {
   // SOMME recalculée, jamais un `score += value` — c'est ce qui rend l'annulation
   // (Story 1.7) exacte sans arithmétique inverse, et la saisie négative (1.9) sans cas
   // particulier.
-  function recomputeScore(playerId: 'player1' | 'player2'): void {
+  function recomputeScore(playerId: PlayerId): void {
     const total = reprises.value.reduce((sum, reprise) => sum + (reprise[playerId] ?? 0), 0)
     playerRef(playerId).value = {
       ...playerRef(playerId).value,
@@ -232,7 +265,7 @@ export const useGameStore = defineStore('game', () => {
   // Garde `playing` comme `swapPlayers` : hors partie, aucune action ne doit muter l'état
   // (revue de code du 2026-09-09, appliqué à toutes les actions de jeu ci-dessous).
   // Un appui = une action annulable (Story 1.7, Décision 8) : cinq `+` = cinq `ANNULER`.
-  function adjustScore(playerId: 'player1' | 'player2', delta: number): void {
+  function adjustScore(playerId: PlayerId, delta: number): void {
     if (status.value !== 'playing') return
     pushHistory()
     scoreAdjustments.value[playerId] += delta
@@ -245,7 +278,7 @@ export const useGameStore = defineStore('game', () => {
   // `ScoreEntryModal` décide du refus localement à partir de `MAX_SCORE_DIGITS` pour que
   // l'haptique reste synchrone (NFR1) ; le booléen reste le contrat de l'action pour tout
   // autre appelant (pilotage déporté V2+).
-  function appendScoreDigit(playerId: 'player1' | 'player2', digit: number): boolean {
+  function appendScoreDigit(playerId: PlayerId, digit: number): boolean {
     if (status.value !== 'playing') return false
     const buffer = currentInput.value[playerId]
     if (buffer.length >= MAX_SCORE_DIGITS) return false
@@ -257,11 +290,11 @@ export const useGameStore = defineStore('game', () => {
     return true
   }
 
-  function clearScoreInput(playerId: 'player1' | 'player2'): void {
+  function clearScoreInput(playerId: PlayerId): void {
     currentInput.value[playerId] = ''
   }
 
-  function backspaceScoreInput(playerId: 'player1' | 'player2'): void {
+  function backspaceScoreInput(playerId: PlayerId): void {
     currentInput.value[playerId] = currentInput.value[playerId].slice(0, -1)
   }
 
@@ -274,7 +307,7 @@ export const useGameStore = defineStore('game', () => {
   // Primitive volontairement NON gardée par `status` : c'est le point d'entrée bas niveau
   // (tests, pilotage déporté V2+). Les gardes vivent sur les actions de GESTE qui
   // l'appellent (`validateScoreInput`, `passTurn`) et sur les autres mutations de jeu.
-  function addReprise(playerId: 'player1' | 'player2', value: number): void {
+  function addReprise(playerId: PlayerId, value: number): void {
     const last = reprises.value[reprises.value.length - 1]
 
     if (last !== undefined && last[playerId] === null) {
@@ -306,7 +339,7 @@ export const useGameStore = defineStore('game', () => {
   // Chemin unique de validation : le bouton `VALIDER` et l'auto-validation à 3 s appellent
   // tous deux CETTE action, ce qui garantit qu'ils aboutissent au même état (AC9, AC13).
   // Décision 6 : rentrer sa série EST l'acte de rendre la main.
-  function validateScoreInput(playerId: 'player1' | 'player2'): void {
+  function validateScoreInput(playerId: PlayerId): void {
     if (status.value !== 'playing') return
     const buffer = currentInput.value[playerId]
     // AC12 : no-op strict sur un buffer vide — ni série fantôme, ni bascule de tour.
@@ -318,9 +351,24 @@ export const useGameStore = defineStore('game', () => {
     // d'action fantôme (Story 1.7).
     currentInput.value[playerId] = ''
     pushHistory()
-    addReprise(playerId, Number(buffer))
+    addReprise(playerId, capToRemainingDistance(playerId, Number(buffer)))
     switchTurn()
+    checkEndOfGame(playerId)
     lastSaved.value = new Date().toISOString()
+  }
+
+  // Plafonnement à la distance restante (Story 1.10, AC7, Décision 14) : au billard on
+  // s'arrête à la distance, tout au-delà est une erreur de saisie — la série enregistrée
+  // est celle qui y amène, jamais plus. Le `Math.max(…, 0)` couvre un score déjà à la
+  // distance (état atteignable par `dismissEndPrompt` en pilotage déporté, ou par une
+  // correction `+`) : la série vaut 0.
+  // Aucun plafonnement en distance libre. Dans l'action (AR17), APRÈS le snapshot :
+  // l'undo restaure l'état d'avant la série plafonnée. `passTurn` (série de 0) n'a rien
+  // à plafonner.
+  function capToRemainingDistance(playerId: PlayerId, value: number): number {
+    const { targetScore, score } = playerRef(playerId).value
+    if (targetScore <= 0) return value
+    return Math.min(value, Math.max(targetScore - score, 0))
   }
 
   // Rendre la main SANS marquer (décision produit du 2026-09-09) : le joueur tape la zone
@@ -329,16 +377,113 @@ export const useGameStore = defineStore('game', () => {
   // moyenne. Ne rien enregistrer ferait monter artificiellement la moyenne du joueur.
   function passTurn(): void {
     if (status.value !== 'playing') return
+    const playerId = activePlayer.value
     pushHistory()
-    addReprise(activePlayer.value, 0)
+    addReprise(playerId, 0)
     switchTurn()
+    checkEndOfGame(playerId)
     lastSaved.value = new Date().toISOString()
+  }
+
+  // --- Fin de partie (Story 1.10) ---
+
+  // `>=` et non `===` par robustesse : avec le plafonnement, `===` suffirait en pratique,
+  // mais `adjustScore` n'est pas borné. Distance libre (0) : jamais atteinte.
+  function hasReachedTarget(playerId: PlayerId): boolean {
+    const { targetScore, score } = playerRef(playerId).value
+    return targetScore > 0 && score >= targetScore
+  }
+
+  // Règle de la reprise égalisatrice (Nathan, 2026-09-10). Le blanc ouvre toujours ;
+  // s'il atteint sa distance le premier, il a joué une reprise de plus et le jaune a
+  // droit à UNE série pour égaliser. Le jaune, lui, gagne immédiatement s'il atteint le
+  // premier : les deux ont alors joué le même nombre de reprises.
+  // Appelée en FIN des deux actions de série (`validateScoreInput`, `passTurn`) et
+  // d'elles seules (AC8) : ni `adjustScore`, ni `addReprise`, ni `swapPlayers`.
+  // Le premier cas passe AVANT les autres : en égalisatrice, la série du jaune termine
+  // la partie même s'il n'atteint pas sa distance.
+  function checkEndOfGame(playerId: PlayerId): void {
+    const reached = hasReachedTarget(playerId)
+    if (equalizingReprise.value && playerId === 'player2') {
+      endPrompt.value = { kind: 'over', winner: reached ? null : 'player1' }
+    } else if (reached && playerId === 'player1') {
+      endPrompt.value = { kind: 'equalizing-offer' }
+    } else if (reached && playerId === 'player2') {
+      endPrompt.value = { kind: 'over', winner: 'player2' }
+    }
+  }
+
+  // `OUI, IL JOUE` : la partie reprend, le jaune joue sa reprise égalisatrice. N'empile
+  // RIEN : ce n'est pas une action de score, et le snapshot de la série gagnante du blanc
+  // porte déjà `equalizingReprise: false` — l'annuler défait l'offre acceptée (AC9).
+  function acceptEqualizingReprise(): void {
+    if (endPrompt.value?.kind !== 'equalizing-offer') return
+    equalizingReprise.value = true
+    endPrompt.value = null
+  }
+
+  // Referme « PARTIE TERMINÉE » sans terminer : retour au scoreboard, la détection
+  // rejouera à la prochaine validation. Aucun bouton ne l'appelle depuis la 1.10 (revue
+  // de Nathan, 2026-09-10 : on ne revient pas au scoreboard une fois la fin détectée) ;
+  // l'action reste exposée pour le pilotage déporté (V2+). L'offre égalisatrice, elle,
+  // ne se ferme jamais : une décision est attendue.
+  function dismissEndPrompt(): void {
+    if (endPrompt.value?.kind !== 'over') return
+    endPrompt.value = null
+  }
+
+  // Fin manuelle (AC11) : le plus avancé vers SA distance gagne, égalité si égal — 0‑0
+  // compris. Distance libre : score brut (mélange ratio/brut seulement si une seule
+  // distance vaut 0, injoignable depuis l'accueil, acceptable pour le store).
+  function prorataWinner(): PlayerId | null {
+    const progress = (player: Player) =>
+      player.targetScore > 0 ? player.score / player.targetScore : player.score
+    const left = progress(player1.value)
+    const right = progress(player2.value)
+    if (left > right) return 'player1'
+    if (right > left) return 'player2'
+    return null
+  }
+
+  // UNE SEULE action de clôture pour les trois CTA (`VOIR LE RÉCAP`, `NON, FIN DE
+  // PARTIE`, sortie confirmée) : le vainqueur se déduit du contexte, `GameView` n'a
+  // rien à décider (Décision 9). `history` et `equalizingReprise` sont conservés :
+  // inoffensifs, et le second dit comment la partie s'est terminée ; `startGame` et
+  // `resetGame` remettent tout à zéro.
+  function finishGame(): void {
+    if (status.value !== 'playing') return
+    const prompt = endPrompt.value
+    winner.value =
+      prompt?.kind === 'over'
+        ? prompt.winner
+        : prompt?.kind === 'equalizing-offer'
+          ? // Refus de l'égalisatrice : le blanc gagne.
+            'player1'
+          : prorataWinner()
+    status.value = 'finished'
+    finishedAt.value = Date.now()
+    endPrompt.value = null
+    currentInput.value = { player1: '', player2: '' }
+    lastSaved.value = new Date().toISOString()
+  }
+
+  // `UNE PARTIE DE PLUS` : même mode, mêmes noms, mêmes distances, chacun du côté où il
+  // est. Passe par `startGame`, qui réassigne tout (pile, parité, état de fin).
+  function rematch(): void {
+    if (status.value !== 'finished') return
+    startGame(mode.value, player1.value.name, player2.value.name, {
+      player1: player1.value.targetScore,
+      player2: player2.value.targetScore,
+    })
   }
 
   // `ANNULER` : revient d'UNE action en arrière à chaque appel (FR9, UX-DR16). Action
   // nommée (AR15, UX-DR23) : un pilotage déporté produit le même état que le bouton.
   // Pas de recalcul — le snapshot porte déjà des scores cohérents. Cas général de
   // l'`undoLastSeries` cité par l'architecture (la Story 1.8 est absorbée ici).
+  // Hors `playing` : no-op. Le récap est TERMINAL (décision du 2026-09-10, Story 1.10) —
+  // et depuis la revue au rendu, une fin détectée n'est plus rattrapable non plus ; la
+  // correction se fait avant la série gagnante, ou par `ANNULER` de la pop-up de sortie.
   function undoLastAction(): void {
     if (status.value !== 'playing') return
     const previous = history.value[history.value.length - 1]
@@ -358,13 +503,14 @@ export const useGameStore = defineStore('game', () => {
     scoreAdjustments.value = { ...snapshot.scoreAdjustments }
     currentInput.value = { ...snapshot.currentInput }
     isNegative.value = { ...snapshot.isNegative }
+    equalizingReprise.value = snapshot.equalizingReprise
     lastSaved.value = new Date().toISOString()
   }
 
   // Nombre de reprises effectivement jouées par un joueur : celles où sa case est
   // renseignée. Une reprise ouverte par l'adversaire et qu'il n'a pas encore jouée n'entre
   // pas dans son compte (Décision 7 — la moyenne se fige quand le joueur rend la main).
-  function playedReprises(playerId: 'player1' | 'player2'): number {
+  function playedReprises(playerId: PlayerId): number {
     return reprises.value.filter((reprise) => reprise[playerId] !== null).length
   }
 
@@ -375,7 +521,7 @@ export const useGameStore = defineStore('game', () => {
   }))
 
   // Meilleure série de la partie en cours, 0 tant qu'aucune n'a été jouée.
-  function bestSeriesOf(playerId: 'player1' | 'player2'): number {
+  function bestSeriesOf(playerId: PlayerId): number {
     const played = reprises.value
       .map((reprise) => reprise[playerId])
       .filter((value): value is number => value !== null)
@@ -387,6 +533,12 @@ export const useGameStore = defineStore('game', () => {
     player2: bestSeriesOf('player2'),
   }))
 
+  // Ligne REPRISES du récap (Story 1.10) : le même compte que celui de la moyenne.
+  const repriseCounts = computed(() => ({
+    player1: playedReprises('player1'),
+    player2: playedReprises('player2'),
+  }))
+
   // AC15 : la reprise est ouverte par le joueur BLANC. Seules les reprises où les deux
   // joueurs ont joué sont terminées — le numéro affiché s'en déduit (`GameView`).
   const completedReprises = computed(
@@ -395,7 +547,8 @@ export const useGameStore = defineStore('game', () => {
         .length,
   )
 
-  // Retour à l'accueil : la Story 1.15 y ajoutera la confirmation avant abandon.
+  // Retour à l'accueil (`FIN DE PARTIE` du récap, sortie d'une partie sans série). La
+  // confirmation avant abandon est portée par la pop-up de sortie de `GameView` (1.10).
   // Restaure l'intégralité de l'état initial pour qu'aucune valeur de la partie précédente
   // (mode, distances de jeu) ne soit silencieusement reconduite au démarrage suivant :
   // les distances repassent par `makePlayer()`, qui les remet à 0.
@@ -411,6 +564,10 @@ export const useGameStore = defineStore('game', () => {
     scoreAdjustments.value = { player1: 0, player2: 0 }
     history.value = []
     sidesSwapped.value = false
+    winner.value = null
+    finishedAt.value = null
+    equalizingReprise.value = false
+    endPrompt.value = null
     startedAt.value = null
     lastSaved.value = ''
   }
@@ -433,6 +590,11 @@ export const useGameStore = defineStore('game', () => {
     completedReprises,
     averages,
     bestSeries,
+    repriseCounts,
+    winner,
+    finishedAt,
+    equalizingReprise,
+    endPrompt,
     startGame,
     swapPlayers,
     resetGame,
@@ -445,5 +607,9 @@ export const useGameStore = defineStore('game', () => {
     adjustScore,
     validateScoreInput,
     undoLastAction,
+    finishGame,
+    acceptEqualizingReprise,
+    dismissEndPrompt,
+    rematch,
   }
 })

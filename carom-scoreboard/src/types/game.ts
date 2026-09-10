@@ -1,5 +1,17 @@
 export type GameStatus = 'idle' | 'playing' | 'finished'
 
+// Côté de la table, pas personne : `player1` est TOUJOURS le joueur de gauche (bille
+// blanche), `player2` celui de droite (jaune). Introduit en Story 1.10 pour remplacer
+// l'union littérale répétée ; adopté dans le nouveau code et les signatures touchées,
+// sans chasse exhaustive.
+export type PlayerId = 'player1' | 'player2'
+
+// Pop-up de décision attendue en fin de partie (Story 1.10). Portée par le store et non
+// par la vue : un pilotage déporté (V2+) la voit, et la persistance (1.12) pourra la
+// restaurer. `equalizing-offer` : le blanc a atteint sa distance, le jaune a droit à la
+// reprise égalisatrice. `over` : la partie est jouée, `winner` à `null` signifie égalité.
+export type EndPrompt = { kind: 'equalizing-offer' } | { kind: 'over'; winner: PlayerId | null }
+
 // La bille est attachée à la position : joueur de gauche blanc, joueur de droite jaune.
 // Intervertir les billes revient donc à échanger les joueurs de côté (voir swapPlayers).
 export type PlayerColor = 'white' | 'yellow'
@@ -65,7 +77,7 @@ export interface GameCategoryDescriptor {
 export const GAME_CATEGORIES: readonly GameCategoryDescriptor[] = CATALOG
 
 export interface Player {
-  id: 'player1' | 'player2'
+  id: PlayerId
   name: string
   score: number
   color: PlayerColor
@@ -86,12 +98,19 @@ export interface GameState {
   status: GameStatus
   player1: Player
   player2: Player
-  activePlayer: 'player1' | 'player2'
+  activePlayer: PlayerId
   reprises: Reprise[]
   currentInput: { player1: string; player2: string }
   isNegative: { player1: boolean; player2: boolean }
   startedAt: number | null
   lastSaved: string
+  // --- Fin de partie (Story 1.10) ---
+  // `null` tant que la partie n'est pas `finished`, ou en cas d'égalité une fois finie.
+  winner: PlayerId | null
+  finishedAt: number | null
+  // Reprise égalisatrice en cours : le blanc a atteint sa distance, le jaune joue SA
+  // dernière série. Attachée au côté droit, comme le tour (Décision 15 de la 1.5).
+  equalizingReprise: boolean
 }
 
 // Photographie de l'état de partie prise AVANT chaque action annulable (Story 1.7) :
@@ -100,15 +119,20 @@ export interface GameState {
 // `ÉCHANGER` sans défaire l'échange. Rien de plus : `mode`, `status`, `startedAt` ne
 // bougent jamais en cours de partie. Volontairement absent de `GameState` tant que la
 // Story 1.12 n'a pas tranché la persistance de la pile.
+// `equalizingReprise` en fait partie (Story 1.10, AC9) : annuler la série gagnante du
+// blanc défait aussi l'offre acceptée. `endPrompt`, `winner`, `finishedAt` n'y sont PAS :
+// la pop-up est toujours fermée quand on peut annuler, et l'undo est impossible hors
+// `playing` — le récap est terminal.
 export interface GameSnapshot {
   player1: Player
   player2: Player
-  activePlayer: 'player1' | 'player2'
+  activePlayer: PlayerId
   reprises: Reprise[]
   scoreAdjustments: { player1: number; player2: number }
   currentInput: { player1: string; player2: string }
   isNegative: { player1: boolean; player2: boolean }
   sidesSwapped: boolean
+  equalizingReprise: boolean
 }
 
 // Exhaustif par construction : les clés proviennent du même catalogue que l'union `GameMode`.

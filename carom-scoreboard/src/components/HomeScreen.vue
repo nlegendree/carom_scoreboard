@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/useGameStore'
 import ActionBar from './ActionBar.vue'
 import PlayerSetupModal from './PlayerSetupModal.vue'
+import PromptModal from './PromptModal.vue'
 import {
   GAME_CATEGORIES,
   GAME_MODE_LABELS,
@@ -10,6 +11,7 @@ import {
   type GameCategoryDescriptor,
   type GameMode,
   type GameModeDescriptor,
+  type PlayerId,
 } from '../types/game'
 
 const DEFAULT_PLAYER1_NAME = 'JOUEUR 1'
@@ -25,11 +27,21 @@ const selectedMode = ref<GameMode>('libre')
 // derrière — on obtenait « JOUEUR 1MICHEL ».
 const player1Name = ref('')
 const player2Name = ref('')
-// Réglage optionnel : 0 signifie « distance libre ». Aucun mode n'apporte de valeur par
-// défaut, le handicap n'existe que si le joueur le saisit.
+// 0 = pas encore réglée. Aucun mode n'apporte de valeur par défaut : le joueur saisit sa
+// distance (handicap). OBLIGATOIRE au démarrage depuis la 1.10 (décision de Nathan,
+// 2026-09-10) — le store, lui, reste permissif (0 = libre) pour les tests et le pilotage
+// déporté ; c'est l'accueil qui impose la règle.
 const targetScores = ref({ player1: 0, player2: 0 })
 // Joueur en cours de réglage : `null` = aucune modale ouverte.
-const editing = ref<'player1' | 'player2' | null>(null)
+const editing = ref<PlayerId | null>(null)
+// Champ sur lequel la modale s'ouvre : la distance quand on vient de l'erreur de distance.
+const editingField = ref<'name' | 'distance'>('name')
+// Pop-up « DISTANCE MANQUANTE » ouverte.
+const distanceError = ref(false)
+// Parcours de rattrapage en cours (revue de Nathan, 2026-09-10) : depuis le CTA de la
+// pop-up d'erreur, les modales des joueurs sans distance s'enchaînent d'elles-mêmes —
+// valider la distance du blanc ouvre directement celle du jaune s'il en manque encore.
+const fixingDistances = ref(false)
 
 const categoryModes = computed(() => selectedCategory.value?.modes ?? [])
 const names = computed(() => ({ player1: player1Name.value, player2: player2Name.value }))
@@ -37,6 +49,9 @@ const displayedNames = computed(() => ({
   player1: player1Name.value || DEFAULT_PLAYER1_NAME,
   player2: player2Name.value || DEFAULT_PLAYER2_NAME,
 }))
+const missingDistance = computed(() =>
+  (['player1', 'player2'] as const).filter((player) => targetScores.value[player] <= 0),
+)
 const headerTitle = computed(() => {
   if (step.value === 'mode') return selectedCategory.value?.label
   if (step.value === 'players') return GAME_MODE_LABELS[selectedMode.value]
@@ -79,6 +94,8 @@ function back(): void {
   // Sans ça la modale n'est que masquée par le garde `step` du `v-if` : elle se rouvrirait
   // toute seule au retour sur l'étape joueurs, sur un mode différent et des valeurs effacées.
   editing.value = null
+  distanceError.value = false
+  fixingDistances.value = false
 
   if (step.value === 'players' && categoryModes.value.length > 1) {
     step.value = 'mode'
@@ -109,15 +126,48 @@ function applySetup(setup: { name: string; targetScore: number }): void {
   target.value = cleanName(setup.name)
   targetScores.value = { ...targetScores.value, [player]: setup.targetScore }
   editing.value = null
+
+  // Rattrapage enchaîné, dans UN seul sens (blanc puis jaune) : après le blanc, la
+  // modale du jaune s'ouvre seule s'il lui manque encore sa distance. Après le jaune, on
+  // s'arrête — même si une distance a été laissée à 0, sinon les deux modales
+  // tourneraient en boucle.
+  if (fixingDistances.value && player === 'player1' && missingDistance.value.includes('player2')) {
+    openSetup('player2', 'distance')
+    return
+  }
+  fixingDistances.value = false
 }
 
+function cancelSetup(): void {
+  editing.value = null
+  fixingDistances.value = false
+}
+
+function openSetup(player: PlayerId, field: 'name' | 'distance' = 'name'): void {
+  editingField.value = field
+  editing.value = player
+}
+
+// AC1 : sans distance, la partie ne démarre pas — une pop-up propose de la régler.
 function confirm(): void {
+  if (missingDistance.value.length > 0) {
+    distanceError.value = true
+    return
+  }
   gameStore.startGame(
     selectedMode.value,
     normalizeName(player1Name.value, DEFAULT_PLAYER1_NAME),
     normalizeName(player2Name.value, DEFAULT_PLAYER2_NAME),
     targetScores.value,
   )
+}
+
+// `RÉGLER LA DISTANCE` : la modale du PREMIER joueur sans distance, ouverte sur ce champ ;
+// les suivantes s'enchaînent depuis `applySetup`.
+function fixDistance(): void {
+  distanceError.value = false
+  fixingDistances.value = true
+  openSetup(missingDistance.value[0]!, 'distance')
 }
 </script>
 
@@ -184,7 +234,7 @@ function confirm(): void {
         <button
           data-testid="player1-zone"
           class="flex flex-1 flex-col justify-between bg-player-white p-6 text-left text-on-player-white touch-manipulation select-none"
-          @pointerdown="editing = 'player1'"
+          @pointerdown="openSetup('player1')"
         >
           <span class="text-stat font-bold opacity-60">BILLE BLANCHE</span>
           <span class="flex items-end justify-between gap-4">
@@ -208,7 +258,7 @@ function confirm(): void {
         <button
           data-testid="player2-zone"
           class="flex flex-1 flex-col justify-between bg-player-yellow p-6 text-left text-on-player-yellow touch-manipulation select-none"
-          @pointerdown="editing = 'player2'"
+          @pointerdown="openSetup('player2')"
         >
           <span class="text-stat font-bold opacity-60">BILLE JAUNE</span>
           <span class="flex items-end justify-between gap-4">
@@ -250,8 +300,21 @@ function confirm(): void {
       :color="editing === 'player1' ? 'white' : 'yellow'"
       :name="names[editing]"
       :targetScore="targetScores[editing]"
+      :initialField="editingField"
       @confirm="applySetup"
-      @cancel="editing = null"
+      @cancel="cancelSetup"
+    />
+
+    <!-- Titre et deux CTA, sans message ni croix (revue de Nathan, 2026-09-10) : la modale
+         qui suit dit d'elle-même de quel joueur il s'agit, et `ANNULER` est le retour de
+         toutes les pop-ups de décision. -->
+    <PromptModal
+      v-if="distanceError"
+      title="DISTANCE MANQUANTE"
+      primaryLabel="RÉGLER LA DISTANCE"
+      secondaryLabel="ANNULER"
+      @primary="fixDistance"
+      @secondary="distanceError = false"
     />
   </div>
 </template>

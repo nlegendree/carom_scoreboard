@@ -205,6 +205,16 @@ Entièrement établi, aucune innovation d'interaction risquée : pavé numériqu
 
 **Mode 3 Bandes** (rappel step 2.1 de l'étape 3) : le joueur assis tape sa propre zone pour incrémenter le score de l'adversaire en train de jouer, avec le pavé numérique disponible en backup pour saisir une série complète directement.
 
+**Règles de fin de partie** *(ajouté le 2026-09-10, Story 1.10 — règles données par Nathan, valables en JDS ; au 3 Bandes l'égalisatrice sera un réglage de l'Epic 2)* :
+- **Chaque joueur a sa distance** (obligatoire au démarrage) et **le blanc ouvre toujours**. La série qui amène un joueur à sa distance est **plafonnée au restant** : on s'arrête à la distance, tout dépassement est une erreur de saisie.
+- **Le blanc atteint sa distance le premier** → il a joué une reprise de plus. Une pop-up « MICHEL A ATTEINT SA DISTANCE » attend une décision par ses deux seuls CTA, sans message ni croix : `ANDRÉ JOUE` / `FIN DE PARTIE` *(libellés arrêtés en revue au rendu, 2026-09-10)*. `ANDRÉ JOUE` : retour au scoreboard, le jaune joue **une** série — s'il atteint sa distance, **égalité**, sinon **le blanc gagne** ; dans les deux cas la partie se termine. `FIN DE PARTIE` : le blanc gagne, récap direct. Aucun signal visuel particulier sur le scoreboard pendant la reprise égalisatrice — la pop-up a suffi.
+- **Le jaune atteint sa distance le premier** → il **gagne immédiatement**.
+- **Pop-up « PARTIE TERMINÉE »** réduite au titre et à `VOIR LE RÉCAP` — ni vainqueur annoncé, ni croix *(revue au rendu, 2026-09-10 : le résultat se lit sur le récap, on ne revient pas au scoreboard)*. Une série gagnante mal saisie n'est donc plus rattrapable une fois la fin détectée — accepté. Le récap est terminal.
+- **`ÉCHANGER` est bloqué pendant la reprise égalisatrice** : le drapeau est attaché au côté droit, un échange ferait jouer l'égalisatrice au joueur qui vient d'atteindre sa distance et fabriquerait une égalité fantôme *(revue de code 1.10, décision de Nathan, 2026-09-10)*.
+- **La détection ne réagit qu'aux séries** (validation au pavé, auto-validation, main rendue) — jamais aux corrections `−`/`+` ni à `ÉCHANGER`.
+- **Fin manuelle** (picto de sortie, avec au moins une série) : pop-up « TERMINER LA PARTIE ? » avec `VOIR LE RÉCAP` et `ANNULER` → récap, **vainqueur au prorata** (`score / distance` le plus élevé ; égalité si égal). Sans série, le picto ramène directement à l'accueil.
+- **Égalité = résultat final** pour l'instant ; la prolongation viendra plus tard.
+
 ## Visual Design Foundation
 
 *Extraction de première passe réalisée par l'agent à partir des captures CUESCO/Billiboard déjà analysées — approximative (pas de pixel-picking), destinée à driver les décisions Tailwind initiales. Nathan formalisera le système définitif plus tard à partir de ses propres outils d'extraction.*
@@ -254,7 +264,7 @@ Unité de base 8px (standard Tailwind). Les blocs joueur occupent quasiment 100%
 
 **Sélection des joueurs.** Deux grands panneaux côte à côte portant déjà la bille de leur côté (blanc à gauche, jaune à droite). Taper une zone ouvre la pop-up de réglage de **ce joueur-là** (nom + distance) : la zone du joueur *est* le point d'entrée, il n'y a pas de bouton de réglage dans la barre d'action. Cette structure préfigure la sélection depuis la base joueurs du club (Epic 4) sans avoir à être redessinée.
 
-**Réglage par joueur, optionnel et sans écran supplémentaire** *(ajouté le 2026-09-08, réécrit le 2026-09-09, Story 1.4)*. Le nom et la distance d'un joueur se règlent en tapant **sa propre zone** à l'étape joueurs, qui ouvre une pop-up dédiée. Aucun bouton de réglage n'encombre la barre d'action : le parcours par défaut reste `catégorie → mode → joueurs → jeu`, et ignorer les réglages ne coûte aucun geste. **Aucun mode ne porte de distance par défaut** — le libellé d'attente est `0`, aucun objectif — et la distance appartient au **joueur**, pas à la partie : le handicap est simplement la conséquence de deux saisies indépendantes, sans mode « lié » ni action de dissociation. Sur le scoreboard, un joueur sans distance n'affiche rien à cet emplacement.
+**Réglage par joueur — nom optionnel, distance obligatoire — sans écran supplémentaire** *(ajouté le 2026-09-08, réécrit le 2026-09-09, Story 1.4 ; distance rendue obligatoire le 2026-09-10, Story 1.10 : `DÉMARRER` sans distance ouvre une pop-up d'erreur « DISTANCE MANQUANTE » à deux CTA `RÉGLER LA DISTANCE` / `ANNULER`, dont le premier ouvre la pop-up du premier joueur sans distance directement sur ce champ, puis celle du jaune à la suite si elle manque encore — un seul geste de rattrapage, pas un par joueur)*. Le nom et la distance d'un joueur se règlent en tapant **sa propre zone** à l'étape joueurs, qui ouvre une pop-up dédiée. Aucun bouton de réglage n'encombre la barre d'action : le parcours par défaut reste `catégorie → mode → joueurs → jeu`, et ignorer les réglages ne coûte aucun geste. **Aucun mode ne porte de distance par défaut** — le libellé d'attente est `0`, aucun objectif — et la distance appartient au **joueur**, pas à la partie : le handicap est simplement la conséquence de deux saisies indépendantes, sans mode « lié » ni action de dissociation. Sur le scoreboard, un joueur sans distance n'affiche rien à cet emplacement.
 
 **Saisie sur borne fixe : claviers intégrés, clavier système exclu** *(ajouté le 2026-09-09)*. L'écran cible est **fixé**, pas pris en main. Le clavier du système, dont ni la taille ni l'apparence ne sont contrôlables et qui recouvre 40 à 50 % de l'écran, est donc proscrit : toute saisie passe par des claviers dessinés dans l'application. La garantie est **structurelle** — les modales de saisie ne contiennent aucun champ natif, les valeurs sont du texte affiché alimenté par nos claviers — et non un simple attribut `inputmode`. Conséquence assumée : un clavier alphabétique à 10 colonnes ne peut pas tenir la cible de 90×90 px dans une pop-up à 768 px de large (touches ≈ 57 px, comme le clavier natif de l'iPad) ; la règle des 90 px reste entière pour les commandes de jeu.
 
@@ -294,7 +304,7 @@ flowchart TD
     A[Lancement app] --> B{Partie en cours\nsauvegardée ?}
     B -- Oui --> C[Reprendre la partie\nGameView restauré]
     B -- Non --> D[Accueil : catégorie puis mode\nJeux de séries / 3 Bandes / Quilles / Casin]
-    D --> E[Réglage joueurs\ntap sur une zone → pop-up, ou garder défaut]
+    D --> E[Réglage joueurs\ntap sur une zone → pop-up, distance requise]
     E --> F[Partie démarrée\nGameView, reprise 1]
     F --> G[< 30 secondes\ntest de succès]
 ```
@@ -319,6 +329,8 @@ flowchart TD
 *Note (Story 1.7, 2026-09-09)* : « Tap Corriger pendant saisie » est la touche `C` (ou `⌫`, ou la croix) de la pop-up — pas un bouton distinct. « Dernière série annulée, repasse à null » se lit désormais « **état d'avant la dernière action restauré** » : le bouton est `ANNULER` en console centrale, il remonte d'une action par appui, et ce chemin vaut aussi pour une main rendue sans marquer et pour une correction `−`/`+`. L'échange de côtés, lui, n'y passe jamais.
 
 ### Flow 3 — Terminer une partie & consulter l'historique
+
+*Note (2026-09-10, Story 1.10)* : entre « fin de match détectée » et « écran récap » s'intercale une **pop-up de décision** — l'offre de **reprise égalisatrice** quand c'est le blanc qui atteint sa distance, puis « PARTIE TERMINÉE » avec `VOIR LE RÉCAP` seul — sans croix, une fin détectée n'est pas rattrapable (revue au rendu, 2026-09-10). Voir « Règles de fin de partie » en §2.5. Le picto de sortie mène lui aussi au récap, après confirmation.
 
 ```mermaid
 flowchart TD
@@ -399,10 +411,15 @@ Aucun — le design system est **Custom** (étape 8). Aucun composant équivalen
 - *États* : retour seul · retour + action de démarrage.
 - *Note (Story 1.5, 2026-09-09, état final)* : en partie, la barre porte **`AJOUTER LES POINTS`** — large comme le bloc joueur, du côté du joueur **assis** — et le **picto de sortie** sur la colonne opposée, les deux échangeant de place à chaque bascule de tour. Le retour à place fixe d'`ActionBar` est donc désactivé sur cet écran (`showBack: false`) : une place fixe ne peut pas alterner. Les colonnes de la barre sont calées sur celles des panneaux (2/5 · 1/5 · 2/5), marges négatives comprises, sans quoi le CTA ne s'aligne pas sur le bloc.
 - *Amende UX-DR11* : « aucune action de score hors des panneaux » se lit désormais comme « aucune action qui **modifie** un score hors des panneaux ». Le CTA n'écrit rien : il **ouvre** la pop-up de saisie. Les corrections `−` / `+`, elles, sont bien restées dans les panneaux.
+- *État « récap » (Story 1.10, 2026-09-10)* : sous l'écran de fin, la barre porte **deux CTA** sans retour — `FIN DE PARTIE` (neutre, à gauche → accueil) et `UNE PARTIE DE PLUS` (accent, à droite → revanche immédiate).
 
-**GameSummary**
-- *Rôle* : écran de fin de partie façon "battle" (Flow 3) — total, moyenne, meilleure série, mise en avant si record personnel.
-- *États* : résultat standard · nouveau record atteint (mise en avant visuelle spécifique).
+**GameSummary** *(fiche réécrite le 2026-09-10, Story 1.10 — format Billiboard, `explore/resources/IMG_6632.JPG`)*
+- *Rôle* : écran de fin de partie façon "battle" (Flow 3), qui **remplace** le scoreboard en plein écran — c'est un état de la partie, pas une pop-up. **Bandeau** haut `NOM / distance` **VS** `NOM / distance` (côté conservé : gauche = blanc), le mode de jeu en surtitre discret au-dessus du `VS`. En dessous, **trois colonnes** — joueur gauche, libellés, joueur droit — avec les lignes `RÉSULTAT` (`VICTOIRE` / `DÉFAITE` / `ÉGALITÉ` + bille), `POINTS`, `MOY` (3 décimales), `SÉRIE`, `REPRISES`. Aucune interaction dans le composant : le récap est **terminal**, la correction se fait avant la série gagnante (aucune pop-up de fin n'a de croix — revue au rendu, 2026-09-10).
+- *États* : **vainqueur à gauche** ou **à droite** — sa colonne entière est en couleur **victoire** (ruban rouge `--color-victory-ribbon`, fidèle au rose/rouge Billiboard ; l'or reste le repli, UX-DR5), l'autre neutre sur fond sombre, et le mot `VICTOIRE` porte le signal hors couleur (UX-DR22) · **égalité** — aucune colonne mise en avant, `ÉGALITÉ` des deux côtés · **nouveau record** par joueur (badge dans la colonne), prévu mais **non déclenché** avant la Story 3.5.
+
+**PromptModal** *(ajouté le 2026-09-10, Story 1.10)*
+- *Rôle* : pop-up de **décision** — même coquille que les pop-ups de saisie (voile flouté, carte centrée, CTA en pied) mais **voile inerte** : fermer par un tap en dehors n'a pas de sens pour une décision, et la pop-up de fin monte sous le doigt qui vient de valider une série. Bille du joueur concerné en en-tête, CTA principal (accent) et secondaire (neutre) facultatif ; **aucune croix** — l'option `closable` prévue à la création a été retirée du composant (revue de code 1.10, 2026-09-10).
+- *Usages* : erreur « DISTANCE MANQUANTE » (accueil, `RÉGLER LA DISTANCE` / `ANNULER`) · offre de reprise égalisatrice (deux CTA `X JOUE` / `FIN DE PARTIE`) · « PARTIE TERMINÉE » (`VOIR LE RÉCAP` seul) · « TERMINER LA PARTIE ? » (`VOIR LE RÉCAP` / `ANNULER`). Aucune n'a de message ni de croix : les croix ne sont pas intuitives pour les joueurs, un gros CTA l'est — le retour, quand il existe, s'appelle toujours **`ANNULER`** — et les pop-ups de fin n'annoncent rien, le récap s'en charge (revue au rendu, 2026-09-10).
 
 **HistoryList / GameDetailView**
 - *Rôle* : consultation des parties passées (FR18-20).
