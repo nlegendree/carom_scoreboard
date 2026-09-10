@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '../stores/useGameStore'
+import { useTimer } from '../composables/useTimer'
 import HomeScreen from '../components/HomeScreen.vue'
 import ActionBar from '../components/ActionBar.vue'
 import PlayerPanel from '../components/PlayerPanel.vue'
@@ -35,6 +36,13 @@ const {
 // laisse l'affichage sur « REPRISE 1 », c'est la validation du jaune — qui rend la main
 // au blanc — qui ouvre la suivante.
 const repriseNumber = computed(() => completedReprises.value + 1)
+
+// Chrono de tir du 3 Bandes (Story 2.1). Le composable ne décompte qu'en `3bandes` et
+// vaut 40 (repos) ailleurs : la vue filtre une seconde fois par mode pour ne transmettre
+// une valeur à la console QUE dans ce cas — double garde volontaire, `CenterPanel` reste
+// générique. `resetTimer` n'est pas consommée ici : point d'extension de la Story 2.2.
+const { secondsRemaining } = useTimer()
+const shotClockSeconds = computed(() => (mode.value === '3bandes' ? secondsRemaining.value : null))
 // `canUndo` vient du store, pas d'un `computed` local sur `reprises` : celui-ci resterait
 // actif après avoir tout annulé, et inactif après une simple correction (Story 1.7).
 
@@ -227,6 +235,7 @@ function confirmRestart(): void {
         <CenterPanel
           :repriseNumber="repriseNumber"
           :canUndo="canUndo"
+          :secondsRemaining="shotClockSeconds"
           @undo="undoLastAction"
           @swap-players="swapPlayers"
         />

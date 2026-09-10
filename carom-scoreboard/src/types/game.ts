@@ -39,7 +39,7 @@ const CATALOG = [
     id: '3bandes',
     label: '3 BANDES',
     hint: 'Partie au point · chronomètre',
-    modes: [{ id: '3bandes', label: '3 BANDES', available: false }],
+    modes: [{ id: '3bandes', label: '3 BANDES', available: true }],
   },
   {
     id: 'quilles',

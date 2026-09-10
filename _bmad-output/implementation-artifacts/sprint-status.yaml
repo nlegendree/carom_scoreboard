@@ -61,10 +61,10 @@ development_status:
   1-15-reinitialiser-une-partie-en-cours: done
   1-16-activer-desactiver-lannonce-vocale-du-score: ready-for-dev # reportée, non prioritaire (décision de Nathan, 2026-09-10) — à faire plus tard
   1-17-detecter-linactivite-prolongee-et-alerter-lutilisateur: done # annulée sans code — une série de JDS peut durer 1 h+, l'inactivité de partie n'est pas un signal ; veille tablette = sujet d'accueil (décision de Nathan, 2026-09-10)
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
-  epic-2: backlog
-  2-1-selectionner-le-mode-3-bandes-et-demarrer-une-partie-avec-chronometre-actif: backlog
+  epic-2: in-progress
+  2-1-selectionner-le-mode-3-bandes-et-demarrer-une-partie-avec-chronometre-actif: in-progress
   2-2-incrementer-le-score-point-par-point-tap-du-joueur-assis: backlog
   2-3-saisir-un-score-global-en-fin-de-serie-backup-pave-numerique: backlog
   epic-2-retrospective: optional

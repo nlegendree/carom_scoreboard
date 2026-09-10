@@ -1320,3 +1320,122 @@ describe('GameView — reprise après fermeture', () => {
     expect(wrapper.findComponent({ name: 'ScoreEntryModal' }).exists()).toBe(false)
   })
 })
+
+// --- Story 2.1 : chronomètre 3 Bandes ---
+
+describe('GameView — chronomètre 3 Bandes', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  async function press(wrapper: VueWrapper, testid: string) {
+    await wrapper.find(`[data-testid="${testid}"]`).trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+  }
+
+  const clock = (wrapper: VueWrapper) => wrapper.find('[data-testid="shot-clock"]')
+  const clockValue = (wrapper: VueWrapper) =>
+    wrapper.find('[data-testid="shot-clock-value"]').text()
+
+  async function elapse(wrapper: VueWrapper, ms: number) {
+    vi.advanceTimersByTime(ms)
+    await wrapper.vm.$nextTick()
+  }
+
+  // Parcours réel depuis l'accueil : la catégorie 3 BANDES (mode unique) mène droit à
+  // l'étape joueurs, la distance est obligatoire comme en JDS (AC2, AC3, AC4).
+  async function startThreeCushionsFromHome() {
+    const wrapper = mount(GameView)
+
+    await press(wrapper, 'category-3bandes')
+    expect(wrapper.find('[data-testid="step-mode"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="step-players"]').exists()).toBe(true)
+
+    await press(wrapper, 'confirm-button')
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('DISTANCE MANQUANTE')
+    await press(wrapper, 'prompt-secondary')
+
+    for (const player of ['player1', 'player2']) {
+      await press(wrapper, `${player}-zone`)
+      await press(wrapper, 'distance-field')
+      await press(wrapper, 'digit-3')
+      await press(wrapper, 'digit-0')
+      await press(wrapper, 'setup-confirm-button')
+    }
+    await press(wrapper, 'confirm-button')
+
+    return { wrapper, store: useGameStore() }
+  }
+
+  async function validateSeries(wrapper: VueWrapper, digits: number[]) {
+    await press(wrapper, 'add-points-button')
+    for (const digit of digits) {
+      await wrapper.find(`[data-testid="digit-${digit}"]`).trigger('pointerdown')
+    }
+    await wrapper.find('[data-testid="entry-confirm-button"]').trigger('pointerdown')
+    await elapse(wrapper, 300)
+  }
+
+  // AC5, AC6 : le chrono apparaît dans la console centrale et décompte tout seul.
+  it('starts a 3 Bandes game from home with the shot clock counting down', async () => {
+    const { wrapper, store } = await startThreeCushionsFromHome()
+
+    expect(store.mode).toBe('3bandes')
+    expect(store.status).toBe('playing')
+    expect(wrapper.findAllComponents({ name: 'PlayerPanel' })).toHaveLength(2)
+    expect(clock(wrapper).exists()).toBe(true)
+    expect(clockValue(wrapper)).toBe('40')
+
+    await elapse(wrapper, 3000)
+
+    expect(clockValue(wrapper)).toBe('37')
+  })
+
+  // AC6 : absent dans tous les autres modes.
+  it('shows no shot clock during a series game', async () => {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRÉ', { player1: 100, player2: 80 })
+    await wrapper.vm.$nextTick()
+
+    expect(clock(wrapper).exists()).toBe(false)
+    await elapse(wrapper, 5000)
+    expect(clock(wrapper).exists()).toBe(false)
+  })
+
+  // AC8 : RECOMMENCER remet l'anneau plein.
+  it('restarts the shot clock from 40 on RECOMMENCER', async () => {
+    const { wrapper } = await startThreeCushionsFromHome()
+    await validateSeries(wrapper, [2])
+    await elapse(wrapper, 9700)
+    expect(clockValue(wrapper)).toBe('30')
+
+    await press(wrapper, 'restart-button')
+    await press(wrapper, 'prompt-primary')
+
+    expect(clockValue(wrapper)).toBe('40')
+    await elapse(wrapper, 1000)
+    expect(clockValue(wrapper)).toBe('39')
+  })
+
+  // AC9 : la sortie vers l'accueil fait disparaître le chrono, sans ré-apparition.
+  it('drops the shot clock when leaving to the home screen', async () => {
+    const { wrapper, store } = await startThreeCushionsFromHome()
+    await elapse(wrapper, 2000)
+    expect(clockValue(wrapper)).toBe('38')
+
+    await press(wrapper, 'exit-button')
+
+    expect(store.status).toBe('idle')
+    expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
+    expect(clock(wrapper).exists()).toBe(false)
+
+    await elapse(wrapper, 5000)
+    expect(clock(wrapper).exists()).toBe(false)
+  })
+})

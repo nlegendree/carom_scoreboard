@@ -1,9 +1,15 @@
 <script setup lang="ts">
+import ShotClock from './ShotClock.vue'
+import { SHOT_CLOCK_SECONDS } from '../composables/useTimer'
+
 // Le mode de jeu n'est plus affiché ici (décision du 2026-09-09) : la colonne est
 // réservée à ce qui change en cours de partie.
+// `secondsRemaining` (Story 2.1) : chrono de tir du 3 Bandes, `null` dans les autres
+// modes — c'est la vue qui filtre par mode, la console reste générique.
 defineProps<{
   repriseNumber: number
   canUndo: boolean
+  secondsRemaining: number | null
 }>()
 
 // `undo` : `ANNULER` revient d'UNE action en arrière à chaque appui (Story 1.7) ; la vue
@@ -24,6 +30,14 @@ const emit = defineEmits<{ undo: []; 'swap-players': [] }>()
         >{{ repriseNumber }}</span
       >
     </div>
+
+    <!-- Story 2.1 : anneau du chrono de tir, uniquement en 3 Bandes (UX-DR4). Empilé
+         sous REP, au-dessus des commandes — reste monté à 0 (anneau vide, AC7). -->
+    <ShotClock
+      v-if="secondsRemaining !== null"
+      :secondsRemaining="secondsRemaining"
+      :totalSeconds="SHOT_CLOCK_SECONDS"
+    />
 
     <button
       data-testid="undo-button"

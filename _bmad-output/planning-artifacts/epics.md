@@ -137,7 +137,7 @@ Ceci doit être la toute première story d'implémentation, suivie immédiatemen
 - AR11 : Déployer sur Netlify avec auto-deploy GitHub sur push `main` — CI/CD zéro configuration, HTTPS + CDN mondial inclus. *(livré en 1.13 : `netlify.toml` à la racine du dépôt, rattachement du site manuel)*
 - AR12 : Implémenter la gestion d'erreurs de toutes les opérations de stockage dans la couche service (`try/catch` + `console.error`) — jamais dans les composants (niveau de monitoring V1 ; Sentry/Plausible différés en V2+).
 - AR13 : Implémenter le composable `useSpeech.ts` (Web Speech API) pour l'annonce vocale du score (FR42).
-- AR14 : Implémenter le composable `useTimer.ts` pour le timer 3 Bandes, isolé du périmètre V1a (V1b uniquement).
+- AR14 : Implémenter le composable `useTimer.ts` pour le timer 3 Bandes, isolé du périmètre V1a (V1b uniquement). *Livré en Story 2.1 (2026-09-10) : `useTimer.ts` + `ShotClock.vue`.*
 - AR15 : Respecter les conventions de nommage obligatoires : composants Vue en PascalCase, stores/composables Pinia en camelCase préfixés `use`, services en camelCase suffixés `Service`, types TypeScript en PascalCase (sans préfixe `I`), emits Vue en kebab-case, actions Pinia en verbe+nom (`setPlayerName`, `addReprise`), exports nommés uniquement (jamais de default export pour composables/services).
 - AR16 : Co-localiser tous les tests de composants (`Component.test.ts` à côté de `Component.vue`), pas de dossier `__tests__/`.
 - AR17 : Imposer toute mutation de store exclusivement via des actions Pinia (jamais de mutation directe depuis un composant) et utiliser `storeToRefs()` pour toute propriété réactive du store consommée par un composant.
@@ -784,6 +784,13 @@ So that je joue avec un chronomètre de série toujours actif, cohérent avec le
 
 **Note de périmètre — sets :** la configuration du **nombre de sets** est rattachée à cet Epic, le set étant une notion propre au 3 Bandes. Elle a été explicitement retirée du périmètre de la Story 1.4, qui ne couvre FR15 que sur son volet « objectif de score ». Le réglage relevant du match et non d'un joueur, il ne se branchera pas sur la `PlayerSetupModal` de la Story 1.4 — qui est propre à un joueur — et demandera son propre point d'entrée, à définir avec cet Epic.
 
+**Note de livraison (Story 2.1, 2026-09-10) :**
+- **Déverrouillage par un booléen** : `available: true` sur l'entrée `3bandes` du catalogue (`types/game.ts`), rien d'autre — `selectCategory()` gérait déjà les catégories à mode unique (passage direct à l'étape joueurs), la distance obligatoire (1.10) s'applique à l'identique.
+- **Chrono de 40 s** (`SHOT_CLOCK_SECONDS`, sourcé de la spec UX « reset du chrono de tir (40s) »), **non persisté** dans `GameState` (AR14 l'isole de V1a) : un rechargement en pleine partie repart à 40. Décompte de 1 s en 1 s, figé à 0 sans pénalité ni bascule (aucune règle de faute au temps dans FR13/FR14). Repart de 40 à chaque `startGame()` interne (démarrage, `RECOMMENCER`, `UNE PARTIE DE PLUS`), s'arrête net en fin de partie et au retour à l'accueil.
+- **Pause/reprise retirée du périmètre** (décision de Nathan, 2026-09-10) : le troisième AC ci-dessus n'est **pas** livré — la pause n'a de sens qu'en compétition arbitrée, pas à l'entraînement ; reportée à une future épic Compétition/Arbitrage (proche d'Epic 7). `useTimer.ts` n'expose ni `pauseTimer`, ni `resumeTimer`, ni `isPaused`.
+- **Affichage circulaire** (`ShotClock.vue`, sous `REP` dans `CenterPanel`) : anneau SVG qui se vide en continu autour du chiffre central, rouge LED sur fond noir (UX-DR4) — forme inspirée du « SHOT CLOCK » du CUESCO (`explore/resources/IMG_6034.JPG`), la barre segmentée du Billiboard (`IMG_6459.JPG`) ayant été jugée « pas assez smooth ». Absent dans tous les autres modes.
+- **Nombre de sets** : toujours non couvert — aucune des trois stories de l'Epic n'en porte d'AC, consigné dans `deferred-work.md`.
+
 ### Story 2.2: Incrémenter le score point par point (tap du joueur assis)
 
 As a joueur assis (non-actif),
@@ -799,6 +806,8 @@ So that le score de mon adversaire progresse en temps réel sans qu'il touche lu
 **Given** un tap enregistré
 **When** le point est ajouté
 **Then** le chronomètre de série (Story 2.1) est réinitialisé à sa valeur de départ
+
+*Note (2026-09-10, décision de Nathan, consignée depuis la Story 2.1) :* le chrono se réinitialise **non seulement au tap `+1`** mais **aussi au changement de joueur** (bascule de tour), avec un **petit délai de grâce de 3 s supplémentaires** après l'une ou l'autre action. Le mécanisme exact (buffer ajouté au reset ? fenêtre avant le vrai décompte ?) n'est pas précisé : à trancher à la création de cette story. La primitive `resetTimer()` de `useTimer.ts` (livrée en 2.1, sans appelant) est le point de branchement prévu.
 
 **Given** le score du joueur actif
 **When** plusieurs points sont ajoutés au fil de la reprise

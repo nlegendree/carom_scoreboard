@@ -122,6 +122,21 @@ describe('HomeScreen', () => {
     expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
   })
 
+  // Story 2.1 : la catégorie 3 BANDES est déverrouillée par `available: true` dans le
+  // catalogue. À mode unique, elle mène directement à l'étape joueurs — sans étape mode.
+  it('opens the players step straight from the 3 BANDES category', async () => {
+    const wrapper = mount(HomeScreen)
+    const troisBandes = wrapper.find('[data-testid="category-3bandes"]')
+
+    expect(troisBandes.attributes('disabled')).toBeUndefined()
+    expect(troisBandes.text()).not.toContain('BIENTÔT')
+
+    await troisBandes.trigger('pointerdown')
+
+    expect(wrapper.find('[data-testid="step-mode"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="step-players"]').exists()).toBe(true)
+  })
+
   it('starts a game with the chosen sub-mode and default names', async () => {
     const wrapper = mount(HomeScreen)
     const store = useGameStore()

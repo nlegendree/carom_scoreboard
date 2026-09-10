@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import CenterPanel from './CenterPanel.vue'
+import ShotClock from './ShotClock.vue'
 
+// `secondsRemaining: null` = partie JDS, sans chrono (Story 2.1).
 const baseProps = {
   repriseNumber: 1,
   canUndo: false,
+  secondsRemaining: null,
 } as const
 
 describe('CenterPanel', () => {
@@ -78,5 +81,43 @@ describe('CenterPanel', () => {
     expect(wrapper.find('[data-testid="swap-players-button"]').text()).toBe('ÉCHANGER')
     expect(wrapper.find('[data-testid="reprise-label"]').text()).toBe('REP')
     expect(wrapper.text()).not.toContain('REPRISE')
+  })
+
+  // --- Story 2.1 : chrono de tir du 3 Bandes ---
+
+  it('shows no shot clock when no countdown is provided', () => {
+    const wrapper = mount(CenterPanel, { props: baseProps })
+
+    expect(wrapper.findComponent(ShotClock).exists()).toBe(false)
+  })
+
+  it('mounts the shot clock with the countdown and its 40s scale', () => {
+    const wrapper = mount(CenterPanel, { props: { ...baseProps, secondsRemaining: 40 } })
+    const clock = wrapper.findComponent(ShotClock)
+
+    expect(clock.exists()).toBe(true)
+    expect(clock.props('secondsRemaining')).toBe(40)
+    expect(clock.props('totalSeconds')).toBe(40)
+  })
+
+  // AC7 : le chrono à 0 reste affiché, anneau vide — il ne disparaît pas.
+  it('keeps the shot clock mounted at zero', () => {
+    const wrapper = mount(CenterPanel, { props: { ...baseProps, secondsRemaining: 0 } })
+
+    expect(wrapper.findComponent(ShotClock).exists()).toBe(true)
+    expect(wrapper.find('[data-testid="shot-clock-value"]').text()).toBe('0')
+  })
+
+  it('stacks the shot clock under REP and above ANNULER', () => {
+    const wrapper = mount(CenterPanel, { props: { ...baseProps, secondsRemaining: 40 } })
+    const order = ['reprise-number', 'shot-clock', 'undo-button', 'swap-players-button'].map(
+      (testid) => wrapper.find(`[data-testid="${testid}"]`).element,
+    )
+
+    for (let i = 1; i < order.length; i += 1) {
+      expect(
+        order[i - 1]!.compareDocumentPosition(order[i]!) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy()
+    }
   })
 })
