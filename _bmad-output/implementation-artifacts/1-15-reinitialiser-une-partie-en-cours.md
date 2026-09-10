@@ -1,6 +1,6 @@
 # Story 1.15: Réinitialiser une partie en cours
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -42,8 +42,8 @@ so that un faux départ ou une partie d'échauffement se corrige sur place, sans
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Store : `restartGame()` (AC: 5–8)**
-  - [ ] 1.1 Dans `useGameStore.ts`, juste après `rematch()` :
+- [x] **Task 1 — Store : `restartGame()` (AC: 5–8)**
+  - [x] 1.1 Dans `useGameStore.ts`, juste après `rematch()` :
     ```ts
     // Picto RECOMMENCER (Story 1.15) : la partie repart de zéro SANS passer par
     // `finished` — ni récap, ni vainqueur, ni (Epic 3) ligne d'historique. Même
@@ -57,16 +57,16 @@ so that un faux départ ou une partie d'échauffement se corrige sur place, sans
     }
     ```
     `startGame` remet déjà tout à zéro (`reprises`, `history`, `scoreAdjustments`, `sidesSwapped`, `endPrompt`, `equalizingReprise`, `entryOpen`, `currentInput`, `activePlayer = 'player1'`, `startedAt = Date.now()`, `lastSaved`). **Ne rien réinitialiser à la main**, ne pas toucher à `resetGame` ni à `rematch`. Exposer `restartGame` dans le `return` (à côté de `rematch`).
-  - [ ] 1.2 Mettre à jour le commentaire de `resetGame` (« Retour à l'accueil … La confirmation avant abandon est portée par la pop-up de sortie ») : ajouter que la remise à zéro **sans** retour à l'accueil est `restartGame` (1.15).
-  - [ ] 1.3 Tests `useGameStore.test.ts`, à la suite des tests de `rematch` (motif `startGame('cadre-47-2', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })`, helpers `startedGame`/`validate` existants) :
+  - [x] 1.2 Mettre à jour le commentaire de `resetGame` (« Retour à l'accueil … La confirmation avant abandon est portée par la pop-up de sortie ») : ajouter que la remise à zéro **sans** retour à l'accueil est `restartGame` (1.15).
+  - [x] 1.3 Tests `useGameStore.test.ts`, à la suite des tests de `rematch` (motif `startGame('cadre-47-2', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })`, helpers `startedGame`/`validate` existants) :
     - `restarts the running game with the same players, distances and sides` : `validate(store, 'player1', 4)`, `validate(store, 'player2', 3)`, `store.adjustScore('player1', 1)` → `restartGame()` → `status 'playing'`, `mode` conservé, `reprises []`, `history []`, `canUndo` faux, `player1` `{ name 'MICHEL', targetScore 10, score 0 }`, `player2` `{ 'ANDRE', 8, 0 }`, `activePlayer 'player1'`, `scoreAdjustments {0,0}`, `startedAt` renouvelé (fake timers ou `toBeGreaterThanOrEqual`), `winner null`, `finishedAt null`, `endPrompt null`, `equalizingReprise false`, `entryOpen false`, `currentInput` vide.
     - `keeps swapped players on their current side when restarting` : `swapPlayers()`, `validate(store, 'player1', 2)` → `restartGame()` → `player1.name 'ANDRE'`, `player1.targetScore 8`, `player2.name 'MICHEL'`, `sidesSwapped false`.
     - `clears an accepted equalizing reprise and a pending end prompt when restarting` : blanc valide `10` (offre), `acceptEqualizingReprise()` → `restartGame()` → `equalizingReprise false`, `endPrompt null`, `status 'playing'`. *(Injoignable au doigt — le voile recouvre la barre — mais c'est le contrat de l'action pour le pilotage déporté.)*
     - `refuses to restart while idle or finished` : store neuf → `restartGame()` → `status 'idle'`, `startedAt null` ; partie `finishGame()`d → `restartGame()` → `status 'finished'`, `winner` inchangé, `reprises` intactes.
     - Persistance (`describe` de la 1.12, helper `saved()`) : `saves after restart` — `validate(store, 'player1', 7)`, `restartGame()`, `await nextTick()` → `saved().status 'playing'`, `saved().reprises []`, `saved().history []`, `saved().player1.name 'MICHEL'`, `saved().player1.score 0`. Une seule écriture pour l'action (même vérification par compteur que « une action = une écriture », si le helper existe).
 
-- [ ] **Task 2 — `GameView.vue` : picto, pop-up, grâce (AC: 1–5)**
-  - [ ] 2.1 État local, à côté de `exitPromptOpen` (même raison : l'ouverture d'une confirmation n'est pas un état de partie, elle n'a pas à survivre à un rechargement) :
+- [x] **Task 2 — `GameView.vue` : picto, pop-up, grâce (AC: 1–5)**
+  - [x] 2.1 État local, à côté de `exitPromptOpen` (même raison : l'ouverture d'une confirmation n'est pas un état de partie, elle n'a pas à survivre à un rechargement) :
     ```ts
     const restartPromptOpen = ref(false)
     function askRestart(): void { if (!canUndo.value) return; restartPromptOpen.value = true }
@@ -74,38 +74,52 @@ so that un faux départ ou une partie d'échauffement se corrige sur place, sans
     function confirmRestart(): void { restartPromptOpen.value = false; gameStore.restartGame(); lockPanels() }
     ```
     **Garde `canUndo` dans `askRestart` en plus du `disabled`** : le `disabled` porte le visuel grisé (AC2), la garde porte le comportement — les navigateurs ne s'accordent pas sur l'envoi des `pointer events` aux contrôles désactivés (Chromium en a changé en 2023), et happy-dom non plus. Le test AC2 vérifie l'un et l'autre.
-  - [ ] 2.2 Picto : dans **chacune** des deux colonnes (le markup de la barre est dupliqué par colonne — dette connue, revue 1.5, **ne pas refactorer ici**), à côté du bouton `exit-button`, un `<button data-testid="restart-button" :data-side="…" aria-label="Recommencer la partie" :disabled="!canUndo" :class="EXIT_BUTTON_CLASSES" class="disabled:opacity-30" @pointerdown="askRestart">`. Ordre et marges : **colonne gauche** (`justify-start`) → sortie avec `ml-4` puis RECOMMENCER ; **colonne droite** (`justify-end`) → RECOMMENCER puis sortie avec `mr-4` — la sortie garde le bord extérieur, comme aujourd'hui. Poser `gap-2` (16 px, `--spacing: 8px`) sur le conteneur de colonne plutôt que des marges sur le picto. Vérifier que `EXIT_BUTTON_CLASSES` (constante) reste partagée telle quelle ; renommer en `PICTO_BUTTON_CLASSES` si on veut, en un seul endroit.
-  - [ ] 2.3 Glyphe : SVG inline **sur le même modèle que la sortie** (`viewBox="0 0 24 24"`, `h-8 w-8`, `fill="none"`, `stroke="currentColor"`, `stroke-width="2"`, `stroke-linecap/linejoin="round"`, `aria-hidden="true"`). Flèche circulaire de reprise, tracé Lucide `rotate-ccw` :
+  - [x] 2.2 Picto : dans **chacune** des deux colonnes (le markup de la barre est dupliqué par colonne — dette connue, revue 1.5, **ne pas refactorer ici**), à côté du bouton `exit-button`, un `<button data-testid="restart-button" :data-side="…" aria-label="Recommencer la partie" :disabled="!canUndo" :class="EXIT_BUTTON_CLASSES" class="disabled:opacity-30" @pointerdown="askRestart">`. Ordre et marges : **colonne gauche** (`justify-start`) → sortie avec `ml-4` puis RECOMMENCER ; **colonne droite** (`justify-end`) → RECOMMENCER puis sortie avec `mr-4` — la sortie garde le bord extérieur, comme aujourd'hui. Poser `gap-2` (16 px, `--spacing: 8px`) sur le conteneur de colonne plutôt que des marges sur le picto. Vérifier que `EXIT_BUTTON_CLASSES` (constante) reste partagée telle quelle ; renommer en `PICTO_BUTTON_CLASSES` si on veut, en un seul endroit.
+  - [x] 2.3 Glyphe : SVG inline **sur le même modèle que la sortie** (`viewBox="0 0 24 24"`, `h-8 w-8`, `fill="none"`, `stroke="currentColor"`, `stroke-width="2"`, `stroke-linecap/linejoin="round"`, `aria-hidden="true"`). Flèche circulaire de reprise, tracé Lucide `rotate-ccw` :
     ```html
     <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
     <path d="M3 3v5h5" />
     ```
     Nathan valide le glyphe à la passe visuelle (Task 4) — il a évoqué « une flèche recyclage avec une croix dedans » ; le tracé ci-dessus est la proposition de base, une petite croix centrale (`M9 9l6 6M15 9l-6 6` en `stroke-width="1.5"`) est l'alternative si la flèche seule ne dit pas « remise à zéro ».
-  - [ ] 2.4 Pop-up, **après** celle de sortie dans le template (même voile inerte, même absence de croix et de message) :
+  - [x] 2.4 Pop-up, **après** celle de sortie dans le template (même voile inerte, même absence de croix et de message) :
     ```html
     <PromptModal v-if="restartPromptOpen" title="RECOMMENCER LA PARTIE ?" primaryLabel="RECOMMENCER" secondaryLabel="ANNULER" @primary="confirmRestart" @secondary="closeRestartPrompt" />
     ```
     Commentaire au-dessus : recommencer ≠ terminer — pas de `finished`, pas de récap, pas d'historique (Epic 3).
-  - [ ] 2.5 Mettre à jour le commentaire de bloc « Sortie : plus rien de destructif au contact … » pour mentionner le second picto et sa confirmation.
+  - [x] 2.5 Mettre à jour le commentaire de bloc « Sortie : plus rien de destructif au contact … » pour mentionner le second picto et sa confirmation.
 
-- [ ] **Task 3 — Tests `GameView.test.ts` (AC: 1–5, 7)**
-  - [ ] 3.1 Dans `describe('GameView — saisie en popup et alternance')`, à côté de `keeps the exit control opposite the add-points button` : `keeps the restart control next to the exit control` — `restart-button[data-side="player1"]` existe et `[data-side="player2"]` non ; après `store.switchTurn()` l'inverse ; les deux pictos sont dans le **même** conteneur (`exit.element.parentElement === restart.element.parentElement`) ; `aria-label` présent, `text()` vide.
-  - [ ] 3.2 Dans `describe('GameView — fin de partie')` (fake timers, helpers `startedGame`, `validateSeries`, `press`, `prompt`, `scoreOf`, `panels`) :
+- [x] **Task 3 — Tests `GameView.test.ts` (AC: 1–5, 7)**
+  - [x] 3.1 Dans `describe('GameView — saisie en popup et alternance')`, à côté de `keeps the exit control opposite the add-points button` : `keeps the restart control next to the exit control` — `restart-button[data-side="player1"]` existe et `[data-side="player2"]` non ; après `store.switchTurn()` l'inverse ; les deux pictos sont dans le **même** conteneur (`exit.element.parentElement === restart.element.parentElement`) ; `aria-label` présent, `text()` vide.
+  - [x] 3.2 Dans `describe('GameView — fin de partie')` (fake timers, helpers `startedGame`, `validateSeries`, `press`, `prompt`, `scoreOf`, `panels`) :
     - `keeps the restart control inert on an untouched board` : `restart-button` a l'attribut `disabled` ; `press('restart-button')` → aucune `prompt-modal`, `status 'playing'` ; après `press('score-plus')` → plus de `disabled`.
     - `asks before restarting and leaves the board untouched on ANNULER` : deux séries (`[4]`, `[4]`), `press('restart-button')` → `prompt-title` « RECOMMENCER LA PARTIE ? », `prompt-primary` « RECOMMENCER », `prompt-secondary` « ANNULER », pas de `prompt-message`, `status 'playing'`, scores inchangés ; `press('prompt-secondary')` → pop-up fermée, `scoreOf(0) '4'`, `scoreOf(1) '4'`, `store.canUndo` vrai ; grâce : `press('undo-button')` immédiat → score toujours `'4'` ; `advanceTimersByTime(300)` puis `press('undo-button')` → `'0'` côté jaune (la grâce est bien levée). *Vérifier par mutation* : retirer `lockPanels()` de `closeRestartPrompt` doit casser ce test.
     - `restarts the game in place on RECOMMENCER` : `press('swap-players-button')`, séries `[4]`, `[4]`, `press('score-plus')` → `press('restart-button')`, `press('prompt-primary')` → pas de `prompt-modal`, pas de `game-summary`, pas de `step-category`, `status 'playing'`, `panels` ×2, panneau gauche `name 'ANDRÉ'` / `target-score '8'`, droit `'MICHEL'` / `'10'`, `scoreOf` `'0'` / `'0'`, `reprise-number '1'`, liseré sur le panneau gauche (`props('active')` vrai), `add-points-button[data-side="player2"]`, `undo-button` `disabled`, `restart-button` `disabled` ; grâce : `press('score-plus')` immédiat sur un panneau → score reste `'0'`.
     - `reopens no end prompt after a restart from an accepted equalizing reprise` — optionnel, uniquement si testable au doigt ; sinon couvert par le test du store (1.3).
-  - [ ] 3.3 Dans `describe('GameView — reprise après fermeture')` : `resumes the restarted game, not the old one` — série, `restartGame()` (via le store, ou via les pictos), remonter un `GameView` neuf après `checkSavedGame()` → `REPRENDRE LA PARTIE` → scores `'0'`, `reprises []`. Suivre le motif des tests existants de la 1.12 (storage réel de happy-dom ou helper `saved()`).
-  - [ ] 3.4 Le test existant `leaves the game from the exit pictogram` cherche `[data-testid="exit-button"]` : il reste valide (le picto RECOMMENCER a son propre `data-testid`). Si un test lisait « le seul `<button>` de la colonne », le corriger.
+  - [x] 3.3 Dans `describe('GameView — reprise après fermeture')` : `resumes the restarted game, not the old one` — série, `restartGame()` (via le store, ou via les pictos), remonter un `GameView` neuf après `checkSavedGame()` → `REPRENDRE LA PARTIE` → scores `'0'`, `reprises []`. Suivre le motif des tests existants de la 1.12 (storage réel de happy-dom ou helper `saved()`).
+  - [x] 3.4 Le test existant `leaves the game from the exit pictogram` cherche `[data-testid="exit-button"]` : il reste valide (le picto RECOMMENCER a son propre `data-testid`). Si un test lisait « le seul `<button>` de la colonne », le corriger.
 
-- [ ] **Task 4 — Passe visuelle unique (AC: 1, 3, 5, 9)** — CLAUDE.md §9 : après tests/`vue-tsc`/`build` verts, un seul parcours Chrome en **1024×768 et 768×1024** : deux pictos côte à côte, alignés sur le bord du bloc joueur, sortie à l'extérieur, `≥ 90 px` chacun, aucun débordement de la colonne 2/5 en portrait ; bascule de côté à chaque tour ; picto grisé sur scoreboard intact ; pop-up centrée, CTA pleine largeur ; RECOMMENCER → scoreboard neuf sous le doigt, pas de flash d'accueil ; console vierge. **Nathan tranche le glyphe à ce moment** (flèche seule vs flèche + croix).
+- [x] **Task 4 — Passe visuelle unique (AC: 1, 3, 5, 9)** — CLAUDE.md §9 : après tests/`vue-tsc`/`build` verts, un seul parcours Chrome en **1024×768 et 768×1024** : deux pictos côte à côte, alignés sur le bord du bloc joueur, sortie à l'extérieur, `≥ 90 px` chacun, aucun débordement de la colonne 2/5 en portrait ; bascule de côté à chaque tour ; picto grisé sur scoreboard intact ; pop-up centrée, CTA pleine largeur ; RECOMMENCER → scoreboard neuf sous le doigt, pas de flash d'accueil ; console vierge. **Nathan tranche le glyphe à ce moment** (flèche seule vs flèche + croix). *✅ Tranché en revue de code (2026-09-10) : flèche circulaire seule.*
 
-- [ ] **Task 5 — Specs (AC: 10)** — notes **datées**, lignes existantes conservées :
-  - [ ] 5.1 `epics.md` › Story 1.15 : note « ✅ Recadrée (décision de Nathan, 2026-09-10) » reprenant l'encadré de tête de ce fichier (RECOMMENCER à côté de la sortie, confirmation, sans récap, côté conservé ; quitter sans récap reporté à la 3.1). `epics.md` › Story 3.1 : note « à traiter : une partie **recommencée** (1.15) n'a jamais été `finished` et n'entre pas dans l'historique ; le « quitter sans récap » (abandon) reste à définir ici — abandon = non sauvegardée ? défaite ? ».
-  - [ ] 5.2 `ux-design-specification.md` : §2.5 « Règles de fin de partie » → puce « **Recommencer** (picto à côté de la sortie, confirmation « RECOMMENCER LA PARTIE ? » `RECOMMENCER` / `ANNULER`) : la partie repart de zéro sur place, mêmes joueurs, distances et côtés, sans récap » ; fiche `ActionBar` → note 1.15 (deux pictos dans la colonne opposée au CTA, sortie au bord) ; fiche `PromptModal` › *Usages* → « RECOMMENCER LA PARTIE ? » ; §2.5 point 1 (« Le picto de sortie occupe la colonne opposée ») → « les pictos de sortie et de recommencement ».
-  - [ ] 5.3 `architecture.md` : note store (ligne « `finishGame()`, seule action de clôture ») → `restartGame()` = `startGame` gardé sur `playing`, jamais `finished` ; fiche `PromptModal.vue` → ajouter l'usage.
-  - [ ] 5.4 `deferred-work.md` › revue 1.3 « **QUITTER destructif sans confirmation** … Story 1.15 » → « ✅ Traité en 1.10 (confirmation de sortie) ; la 1.15 livre RECOMMENCER (2026-09-10) ». Revue 1.5 « Markup dupliqué dans la barre basse » → ajouter « aggravé en 1.15 (second picto dupliqué), toujours à nettoyer ».
-  - [ ] 5.5 `sprint-status.yaml` : `1-15` → `review` en fin de dev.
+- [x] **Task 5 — Specs (AC: 10)** — notes **datées**, lignes existantes conservées :
+  - [x] 5.1 `epics.md` › Story 1.15 : note « ✅ Recadrée (décision de Nathan, 2026-09-10) » reprenant l'encadré de tête de ce fichier (RECOMMENCER à côté de la sortie, confirmation, sans récap, côté conservé ; quitter sans récap reporté à la 3.1). `epics.md` › Story 3.1 : note « à traiter : une partie **recommencée** (1.15) n'a jamais été `finished` et n'entre pas dans l'historique ; le « quitter sans récap » (abandon) reste à définir ici — abandon = non sauvegardée ? défaite ? ».
+  - [x] 5.2 `ux-design-specification.md` : §2.5 « Règles de fin de partie » → puce « **Recommencer** (picto à côté de la sortie, confirmation « RECOMMENCER LA PARTIE ? » `RECOMMENCER` / `ANNULER`) : la partie repart de zéro sur place, mêmes joueurs, distances et côtés, sans récap » ; fiche `ActionBar` → note 1.15 (deux pictos dans la colonne opposée au CTA, sortie au bord) ; fiche `PromptModal` › *Usages* → « RECOMMENCER LA PARTIE ? » ; §2.5 point 1 (« Le picto de sortie occupe la colonne opposée ») → « les pictos de sortie et de recommencement ».
+  - [x] 5.3 `architecture.md` : note store (ligne « `finishGame()`, seule action de clôture ») → `restartGame()` = `startGame` gardé sur `playing`, jamais `finished` ; fiche `PromptModal.vue` → ajouter l'usage.
+  - [x] 5.4 `deferred-work.md` › revue 1.3 « **QUITTER destructif sans confirmation** … Story 1.15 » → « ✅ Traité en 1.10 (confirmation de sortie) ; la 1.15 livre RECOMMENCER (2026-09-10) ». Revue 1.5 « Markup dupliqué dans la barre basse » → ajouter « aggravé en 1.15 (second picto dupliqué), toujours à nettoyer ».
+  - [x] 5.5 `sprint-status.yaml` : `1-15` → `review` en fin de dev.
+
+### Review Findings
+
+*Revue de code adversariale du 2026-09-10 (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 28 findings bruts, 9 écartés comme bruit après vérification (mocks restaurés par `beforeEach`, compte à rebours d'auto-validation annulé au démontage, `MAX_UNDO_DEPTH` = 1000 théorique, largeur < 530 px hors périmètre tablette, tests/`vue-tsc`/build revérifiés au vert, références de lignes historiques de `deferred-work.md`, motif `advanceTimersByTime(300)` établi depuis la 1.5, test de reprise via le store autorisé par la Task 3.3, duplication des handlers couverte par la dette « markup dupliqué »).*
+
+- [x] [Review][Decision] Task 4 cochée alors que le glyphe n'est pas tranché — **résolu (Nathan, 2026-09-10) : flèche seule, picto grisé et libellé conservés ; consigné dans la Task 4, les Completion Notes et les questions ouvertes.** Détail initial : — la tâche dit « Nathan tranche le glyphe à ce moment » et les Completion Notes le laissent « à trancher » ; les questions ouvertes 2 (grisé vs masqué) et 3 (libellé « RECOMMENCER LA PARTIE ? » vs « REPARTIR DE ZÉRO ? ») restent aussi sans réponse consignée. Choix à prendre : flèche seule (livrée) ou flèche + croix centrale (`M9 9l6 6M15 9l-6 6`, `stroke-width="1.5"`).
+- [x] [Review][Patch] La garde `canUndo` d'`askRestart` n'est prouvée par aucun test : `trigger('pointerdown')` de Vue Test Utils ne dispatch rien sur un bouton `disabled`, donc le test AC2 passe avec ou sans la garde, contrairement à la note « le test AC2 vérifie l'un et l'autre » ; happy-dom délivre bien un `dispatchEvent(new Event('pointerdown'))` natif au bouton désactivé (vérifié), c'est ce qu'il faut dispatcher pour prouver la garde [carom-scoreboard/src/views/GameView.test.ts:941]
+- [x] [Review][Patch] Test store principal en partie tautologique : `entryOpen`, `currentInput`, `endPrompt`, `winner`, `finishedAt` ne sont jamais sortis de leur valeur par défaut avant `restartGame()` ; seule l'offre `equalizing-offer` est couverte, jamais la pop-up `over` ; la branche `finished` de « refuses to restart » ne vérifie ni `startedAt`, ni `finishedAt`, ni les scores ; aucun test n'est annoté AC8 [carom-scoreboard/src/stores/useGameStore.test.ts:1483-1583]
+- [x] [Review][Patch] `saves after restart` démarre sans distances et ne vérifie pas `targetScore` dans la sauvegarde — le seul champ que `restartGame` doit réinjecter à la main [carom-scoreboard/src/stores/useGameStore.test.ts:1798]
+- [x] [Review][Patch] `aria-label` non épinglé (`toBeTruthy()` seulement) alors que la spec fixe « Recommencer la partie » ; un copier-coller de « Quitter la partie » passerait [carom-scoreboard/src/views/GameView.test.ts:311]
+- [x] [Review][Patch] AC5 « moyenne et meilleure série à leur état initial » non vérifié par le test de vue après RECOMMENCER (`data-testid="average"` / `"best-series"` disponibles dans `PlayerPanel`) [carom-scoreboard/src/views/GameView.test.ts:993]
+- [x] [Review][Patch] Indentation cassée dans les deux `<template v-else>` : `<button` au niveau du `<template>`, attributs et enfants quatre espaces plus loin (pas de formateur dans le projet, à réindenter à la main) [carom-scoreboard/src/views/GameView.vue:266-384]
+- [x] [Review][Patch] Note Story 3.1 d'`epics.md` inexacte : « le seul chemin de sortie d'une partie entamée passe par le récap » — deux sorties sans récap existent (picto de sortie sur scoreboard intact → accueil direct ; « PARTIE EN COURS » › `ANNULER` jette une sauvegarde avec séries) ; l'Epic 3 serait planifié sur une prémisse fausse [_bmad-output/planning-artifacts/epics.md:853]
+- [x] [Review][Defer] État local des pop-ups (`restartPromptOpen`, `exitPromptOpen`) non réconcilié avec le store en pilotage déporté : rien ne les referme quand `status` quitte `playing` ou qu'une partie neuve démarre, pas d'exclusion mutuelle entre les deux pop-ups, `confirmRestart` ne revérifie pas `canUndo`, et un `restartGame()` reçu pendant `entryOpen` referme le pavé sans grâce anti-tap fantôme [carom-scoreboard/src/views/GameView.vue:137-193] — deferred, pre-existing (famille « store non durci pendant une pop-up », différée en 1.7/1.10 ; injoignable au doigt : le voile recouvre la barre ; explicitement hors périmètre de la story)
 
 ## Dev Notes
 
@@ -166,9 +180,9 @@ so that un faux départ ou une partie d'échauffement se corrige sur place, sans
 
 ### Questions ouvertes pour Nathan (à trancher au rendu, pas bloquantes)
 
-1. **Glyphe** : flèche circulaire seule (`rotate-ccw`) ou flèche + petite croix au centre ? Proposition de base : flèche seule ; à voir à la passe visuelle.
-2. **Picto grisé vs. masqué** sur scoreboard intact : la story choisit **grisé** (barre stable, motif `ANNULER`). Dire si masqué est préféré.
-3. **Libellé** : « RECOMMENCER LA PARTIE ? » / `RECOMMENCER`. Alternative « REPARTIR DE ZÉRO ? » si « recommencer » prête à confusion avec « une partie de plus ».
+1. **Glyphe** : flèche circulaire seule (`rotate-ccw`) ou flèche + petite croix au centre ? Proposition de base : flèche seule ; à voir à la passe visuelle. **→ Tranché (Nathan, revue de code du 2026-09-10) : flèche seule, telle que livrée.**
+2. **Picto grisé vs. masqué** sur scoreboard intact : la story choisit **grisé** (barre stable, motif `ANNULER`). Dire si masqué est préféré. **→ Tranché (2026-09-10) : grisé, conservé.**
+3. **Libellé** : « RECOMMENCER LA PARTIE ? » / `RECOMMENCER`. Alternative « REPARTIR DE ZÉRO ? » si « recommencer » prête à confusion avec « une partie de plus ». **→ Tranché (2026-09-10) : « RECOMMENCER LA PARTIE ? » conservé.**
 
 ### References
 
@@ -188,13 +202,38 @@ so that un faux départ ou une partie d'échauffement se corrige sur place, sans
 | Date | Changement |
 |---|---|
 | 2026-09-10 | Création de la story (bmad-create-story) après cadrage avec Nathan : périmètre recadré de « confirmation avant abandon » (livrée en 1.10) à « picto RECOMMENCER à côté de la sortie, remise à zéro confirmée, sans récap » ; quitter sans récap reporté à la Story 3.1. |
+| 2026-09-10 | Implémentation (bmad-dev-story) : `restartGame()` dans le store, picto RECOMMENCER ×2 + pop-up « RECOMMENCER LA PARTIE ? » + grâce dans `GameView`, 10 tests (5 store, 5 vue), notes datées dans les quatre specs, passe visuelle 1024×768 et 768×1024. 428 tests, `vue-tsc` et build verts. Statut → review. |
+| 2026-09-10 | Revue de code (bmad-code-review, 3 relecteurs parallèles) : 1 décision (glyphe flèche seule, grisé et libellé conservés), 7 patchs appliqués — garde `canUndo` prouvée par `dispatchEvent` natif (vérifiée par mutation), tests store renforcés (saisie ouverte, pop-up `over`, `finished` intact, AC8), `targetScore` vérifié dans la sauvegarde, `aria-label` épinglé, moyenne/série vérifiées après RECOMMENCER, indentation du template, note Story 3.1 d'`epics.md` corrigée ; 1 report (pop-ups locales vs pilotage déporté) en `deferred-work.md` ; 9 findings écartés. 428 tests, `vue-tsc` et build verts. Statut → done. |
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
+Claude Fable 5.1 (claude-fable-5-1), session bmad-dev-story du 2026-09-10.
+
 ### Debug Log References
+
+- Cycle red-green respecté : 5 tests store écrits d'abord (échec `restartGame is not a function`), puis l'action ; 5 tests vue écrits d'abord (4 en échec, le test de reprise passait déjà car il passe par le store), puis le picto.
+- Vérification par mutation de la grâce anti-tap fantôme : retirer `lockPanels()` de `closeRestartPrompt` casse « asks before restarting… on ANNULER » ; le retirer de `confirmRestart` casse « restarts the game in place on RECOMMENCER ». Fichier restauré à l'identique (diff vide).
+- `npm test` : 428 tests / 15 fichiers verts. `npx vue-tsc -b` : exit 0. `npm run build` : OK.
 
 ### Completion Notes List
 
+- **Task 1** — `restartGame()` ajoutée juste après `rematch()`, gardée sur `status === 'playing'`, délègue à `startGame(mode, noms, distances courants)` : rien n'est remis à zéro à la main. Exposée dans le `return` à côté de `rematch`. Commentaire de `resetGame` complété. Tests : remise à zéro complète (`startedAt` renouvelé sous fake timers), côtés conservés après `ÉCHANGER`, offre égalisatrice en attente et égalisatrice acceptée effacées, no-op en `idle` et `finished`, persistance en **une** écriture (`setItem` compté).
+- **Task 2** — `restartPromptOpen` local, `askRestart` (garde `canUndo` doublant le `disabled`), `closeRestartPrompt` et `confirmRestart` avec `lockPanels()`. Picto `restart-button` dupliqué dans chaque colonne dans un `<template v-else>` avec la sortie : colonne gauche sortie (`ml-4`) puis RECOMMENCER, colonne droite RECOMMENCER puis sortie (`mr-4`) ; `gap-2` (16 px) sur les deux conteneurs de colonne. Glyphe Lucide `rotate-ccw` (flèche seule — tranché par Nathan en revue de code, 2026-09-10). `EXIT_BUTTON_CLASSES` renommée `PICTO_BUTTON_CLASSES` (constante partagée, un seul endroit). `PromptModal` « RECOMMENCER LA PARTIE ? » après celle de sortie, commentaire « recommencer ≠ terminer ». Commentaire de bloc de la sortie mis à jour.
+- **Task 3** — Tests vue : voisinage et ordre des deux pictos (même parent, sortie au bord — `nextElementSibling` vérifié dans les deux sens), bascule de côté au `switchTurn` ; picto `disabled` et inerte sur scoreboard intact, réactivé après `+` ; pop-up sans message/bille/croix, `ANNULER` laisse tout intact + grâce vérifiée (undo immédiat ignoré, undo après 300 ms agit) ; `RECOMMENCER` après `ÉCHANGER` + deux séries + correction → scoreboard neuf (noms/distances échangés conservés, scores 0, REP 1, liseré gauche, CTA sous le jaune, `ANNULER` et RECOMMENCER grisés) + grâce vérifiée dans les deux sens ; reprise après fermeture ramène la partie recommencée. Le test existant `leaves the game from the exit pictogram` reste valide sans modification (Task 3.4 : aucun test ne lisait « le seul bouton de la colonne »).
+- **Task 4** — Passe visuelle unique dans Chrome (harnais iframe `_viewport-harness.html`, supprimé en fin de passe), **1024×768** puis **768×1024**, partie pilotée par le store de l'iframe (`[data-v-app].__vue_app__.config.globalProperties.$pinia._s.get('game')`). Mesures DOM : chaque picto **90×90 px**, écart **16 px**, tous deux dans la colonne 2/5 (paysage : colonne 0–410, sortie 32–122, RECOMMENCER 138–228 ; portrait, côté droit : colonne 461–768, RECOMMENCER 540–630, sortie 646–736), `scrollWidth` = `innerWidth` en portrait. Scoreboard intact → `disabled` + opacité 0,3 ; après `+` → actif ; main rendue → les deux pictos basculent, sortie toujours au bord extérieur. Tap RECOMMENCER → pop-up centrée « RECOMMENCER LA PARTIE ? », CTA pleine largeur (606 px dans une carte de 672), sans message/bille/croix, état inchangé. `ANNULER` → scoreboard intact (score 1, main au jaune, pile de 2). RECOMMENCER → scoreboard neuf sous le doigt sans passer par l'accueil (`status` reste `playing`, aucun `step-category`, aucun `game-summary`), scores 0, REP 1, blanc à la main, CTA sous le jaune, `ANNULER` et RECOMMENCER grisés, sauvegarde `localStorage` neuve (0 reprise, pile vide). Console vierge (aucun message après rechargement en portrait). **Glyphe** : flèche circulaire seule (Lucide `rotate-ccw`) livrée comme proposition de base — **tranchée par Nathan en revue de code (2026-09-10) : flèche seule**, l'alternative flèche + croix (Task 2.3) est abandonnée.
+- **Task 5 (5.1–5.4)** — Notes datées ajoutées, lignes existantes conservées : `epics.md` (Story 1.15 « ✅ Recadrée », Story 3.1 « à traiter ici »), `ux-design-specification.md` (§2.5 point 1, puce « Recommencer » des règles de fin, fiche `ActionBar`, fiche `PromptModal` › Usages), `architecture.md` (note store 1.10 + fiche `PromptModal.vue`), `deferred-work.md` (revue 1.3 ✅ traité 1.10 / RECOMMENCER 1.15 ; revue 1.5 markup dupliqué « aggravé »).
+
 ### File List
+
+- `carom-scoreboard/src/stores/useGameStore.ts` — action `restartGame()`, commentaire `resetGame`, export
+- `carom-scoreboard/src/stores/useGameStore.test.ts` — 4 tests `restartGame` (fin de partie) + `saves after restart` (persistance)
+- `carom-scoreboard/src/views/GameView.vue` — picto RECOMMENCER ×2, `restartPromptOpen`/`askRestart`/`closeRestartPrompt`/`confirmRestart`, `PromptModal` « RECOMMENCER LA PARTIE ? », `PICTO_BUTTON_CLASSES`, commentaires
+- `carom-scoreboard/src/views/GameView.test.ts` — 5 tests (voisinage des pictos, picto inerte, ANNULER + grâce, RECOMMENCER + grâce, reprise après fermeture)
+- `_bmad-output/planning-artifacts/epics.md` — notes Story 1.15 et Story 3.1
+- `_bmad-output/planning-artifacts/ux-design-specification.md` — §2.5, fiches `ActionBar` et `PromptModal`
+- `_bmad-output/planning-artifacts/architecture.md` — note store, fiche `PromptModal.vue`
+- `_bmad-output/implementation-artifacts/deferred-work.md` — revues 1.3 et 1.5
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — `1-15` → `in-progress` puis `review`
+- `_bmad-output/implementation-artifacts/1-15-reinitialiser-une-partie-en-cours.md` — ce fichier

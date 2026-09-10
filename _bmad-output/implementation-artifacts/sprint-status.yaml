@@ -58,7 +58,7 @@ development_status:
   1-12-preserver-letat-de-la-partie-en-cas-de-fermeture-accidentelle: done
   1-13-fonctionner-offline-et-sinstaller-comme-application-native: review
   1-14-modifier-les-noms-des-joueurs-en-cours-de-partie: done # annulée sans code — nom invité sans effet durable, comptes joueurs à venir en Epic 4 (décision de Nathan, 2026-09-10)
-  1-15-reinitialiser-une-partie-en-cours: ready-for-dev
+  1-15-reinitialiser-une-partie-en-cours: done
   1-16-activer-desactiver-lannonce-vocale-du-score: backlog
   1-17-detecter-linactivite-prolongee-et-alerter-lutilisateur: backlog
   epic-1-retrospective: optional

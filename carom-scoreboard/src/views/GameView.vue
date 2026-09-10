@@ -113,9 +113,10 @@ function validateEntry(): void {
   closeEntry()
 }
 
-// Sortie réduite à un picto (porte + flèche, signalétique d'évacuation) : elle ne doit
-// pas peser autant que le CTA de saisie, mais reste une vraie zone tactile.
-const EXIT_BUTTON_CLASSES =
+// Pictos de la barre basse — sortie (porte + flèche, signalétique d'évacuation) et, depuis
+// la 1.15, RECOMMENCER (flèche circulaire) : ils ne doivent pas peser autant que le CTA
+// de saisie, mais restent de vraies zones tactiles (`≥ 90×90 px`).
+const PICTO_BUTTON_CLASSES =
   'flex min-h-[var(--size-touch-target)] min-w-[var(--size-touch-target)] items-center justify-center rounded-2xl bg-white/10 text-white touch-manipulation select-none active:bg-white/20'
 
 // --- Fin de partie (Story 1.10) ---
@@ -131,7 +132,8 @@ const EXIT_BUTTON_CLASSES =
 // pas « aucune série » : des points ajoutés par `+` sans série ne doivent pas être jetés
 // au contact (revue 1.10, décision de Nathan du 2026-09-10). État LOCAL, à l'inverse de
 // `entryOpen` : l'ouverture d'une confirmation n'est pas un état de partie, et n'a pas à
-// survivre à un rechargement.
+// survivre à un rechargement. Le second picto de la colonne, RECOMMENCER (1.15), suit la
+// même règle : confirmation obligatoire, état local (`restartPromptOpen`, plus bas).
 const exitPromptOpen = ref(false)
 
 function leaveGame(): void {
@@ -158,6 +160,36 @@ function closeExitPrompt(): void {
 function confirmExit(): void {
   exitPromptOpen.value = false
   gameStore.finishGame()
+}
+
+// --- Recommencer (Story 1.15) ---
+// Second picto de la barre, à côté de la sortie : la partie repart de zéro SUR PLACE —
+// mêmes joueurs, mêmes distances, chacun du côté où il est — sans récap et sans passer par
+// l'accueil (faux départ, échauffement, « on la refait »). Ce n'est PAS une fin de partie :
+// `restartGame` ne passe jamais par `finished`. Sur un scoreboard intact (`canUndo` faux,
+// même critère que la sortie directe), le picto est grisé par `disabled` — mais la garde
+// est doublée ici, parce que les navigateurs ne s'accordent pas sur l'envoi des pointer
+// events aux contrôles désactivés (Chromium en a changé en 2023) : `disabled` porte le
+// visuel, la garde porte le comportement.
+const restartPromptOpen = ref(false)
+
+function askRestart(): void {
+  if (!canUndo.value) return
+  restartPromptOpen.value = true
+}
+
+// Les deux CTA de la pop-up sont au-dessus des panneaux et de la console — même grâce
+// anti-tap fantôme. Après `RECOMMENCER`, le scoreboard NEUF revient sous le doigt : un
+// `pointerup` tardif ou un second tap ne doit ni rendre la main ni corriger un score.
+function closeRestartPrompt(): void {
+  restartPromptOpen.value = false
+  lockPanels()
+}
+
+function confirmRestart(): void {
+  restartPromptOpen.value = false
+  gameStore.restartGame()
+  lockPanels()
 }
 </script>
 
@@ -218,7 +250,7 @@ function confirmExit(): void {
                Le CTA occupe TOUTE la largeur de la colonne du joueur assis ; la sortie
                tient l'autre. Les deux échangent de place à chaque bascule. -->
           <div class="-mx-4 flex flex-1 items-center">
-            <div class="flex w-2/5 justify-start">
+            <div class="flex w-2/5 justify-start gap-2">
               <button
                 v-if="entrySide === 'player1'"
                 data-testid="add-points-button"
@@ -228,35 +260,62 @@ function confirmExit(): void {
               >
                 AJOUTER LES POINTS
               </button>
-              <button
-                v-else
-                data-testid="exit-button"
-                data-side="player1"
-                aria-label="Quitter la partie"
-                class="ml-4"
-                :class="EXIT_BUTTON_CLASSES"
-                @pointerdown="leaveGame"
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  class="h-8 w-8"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+              <!-- Deux pictos (1.15) : la sortie garde le bord extérieur, RECOMMENCER
+                   vient vers l'intérieur — `gap-2` = 16 px (`--spacing: 8px`). Markup
+                   dupliqué par colonne, dette connue (revue 1.5), pas de refactor ici. -->
+              <template v-else>
+                <button
+                  data-testid="exit-button"
+                  data-side="player1"
+                  aria-label="Quitter la partie"
+                  class="ml-4"
+                  :class="PICTO_BUTTON_CLASSES"
+                  @pointerdown="leaveGame"
                 >
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                  <polyline points="16 17 21 12 16 7" />
-                  <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-              </button>
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    class="h-8 w-8"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                </button>
+                <button
+                  data-testid="restart-button"
+                  data-side="player1"
+                  aria-label="Recommencer la partie"
+                  :disabled="!canUndo"
+                  class="disabled:opacity-30"
+                  :class="PICTO_BUTTON_CLASSES"
+                  @pointerdown="askRestart"
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    class="h-8 w-8"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                  </svg>
+                </button>
+              </template>
             </div>
 
             <div class="w-1/5 shrink-0" />
 
-            <div class="flex w-2/5 justify-end">
+            <div class="flex w-2/5 justify-end gap-2">
               <button
                 v-if="entrySide === 'player2'"
                 data-testid="add-points-button"
@@ -266,30 +325,54 @@ function confirmExit(): void {
               >
                 AJOUTER LES POINTS
               </button>
-              <button
-                v-else
-                data-testid="exit-button"
-                data-side="player2"
-                aria-label="Quitter la partie"
-                class="mr-4"
-                :class="EXIT_BUTTON_CLASSES"
-                @pointerdown="leaveGame"
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  class="h-8 w-8"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+              <template v-else>
+                <button
+                  data-testid="restart-button"
+                  data-side="player2"
+                  aria-label="Recommencer la partie"
+                  :disabled="!canUndo"
+                  class="disabled:opacity-30"
+                  :class="PICTO_BUTTON_CLASSES"
+                  @pointerdown="askRestart"
                 >
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                  <polyline points="16 17 21 12 16 7" />
-                  <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-              </button>
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    class="h-8 w-8"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                  </svg>
+                </button>
+                <button
+                  data-testid="exit-button"
+                  data-side="player2"
+                  aria-label="Quitter la partie"
+                  class="mr-4"
+                  :class="PICTO_BUTTON_CLASSES"
+                  @pointerdown="leaveGame"
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    class="h-8 w-8"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                </button>
+              </template>
             </div>
           </div>
         </template>
@@ -335,6 +418,17 @@ function confirmExit(): void {
         secondaryLabel="ANNULER"
         @primary="confirmExit"
         @secondary="closeExitPrompt"
+      />
+      <!-- Recommencer ≠ terminer (Story 1.15) : la partie repart de zéro sur place, sans
+           passer par `finished` — pas de récap, pas de vainqueur, pas de ligne d'historique
+           (Epic 3). Même pop-up de décision : titre + deux CTA, ni message ni croix. -->
+      <PromptModal
+        v-if="restartPromptOpen"
+        title="RECOMMENCER LA PARTIE ?"
+        primaryLabel="RECOMMENCER"
+        secondaryLabel="ANNULER"
+        @primary="confirmRestart"
+        @secondary="closeRestartPrompt"
       />
     </template>
 

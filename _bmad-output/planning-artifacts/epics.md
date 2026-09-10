@@ -718,6 +718,8 @@ So that je peux corriger rapidement une configuration de départ erronée sans q
 
 **Mise à jour (Story 1.10, 2026-09-10) :** la « confirmation avant abandon » est **livrée** par la pop-up de sortie de la 1.10 — le picto de sortie n'abandonne plus la partie, il ouvre « TERMINER LA PARTIE ? » dont le CTA mène au **récap** (fin manuelle, vainqueur au prorata) ; sans aucune série jouée, il ramène directement à l'accueil. Cette story reste pour un éventuel **abandon / réinitialisation sans récap** (repartir de zéro sans clore la partie dans les stats) — périmètre à réexaminer le jour venu.
 
+**✅ Recadrée (décision de Nathan, 2026-09-10) :** le titre reste, le périmètre change. Le garde-fou « confirmation avant abandon » étant livré en 1.10, la story livre **RECOMMENCER** : un **second picto** dans la barre basse (flèche circulaire), **à côté du picto de sortie**, dans la même colonne — celle qui n'a pas `AJOUTER LES POINTS` — et qui change de côté avec lui. Derrière une pop-up de confirmation « RECOMMENCER LA PARTIE ? » (`RECOMMENCER` / `ANNULER`), la partie **repart de zéro sur place** : même mode, mêmes joueurs, mêmes distances, **chacun du côté où il est**, **sans récap et sans passer par l'accueil** (faux départ, échauffement, « on la refait »). Grisé sur un scoreboard intact. Action Pinia `restartGame()`, gardée sur `playing`, qui délègue à `startGame` comme `rematch()` — la partie ne passe **jamais** par `finished`. Le « quitter sans récap » (abandon sans clore) est **reporté à la Story 3.1** (Epic 3), seul endroit où il posera problème. Le picto de sortie, sa pop-up et ses libellés ne changent pas.
+
 ### Story 1.16: Activer/désactiver l'annonce vocale du score
 
 As a joueur,
@@ -847,6 +849,8 @@ So that je retrouve toutes mes parties passées, et que démarrer une nouvelle p
 **Given** une erreur d'écriture Dexie (quota dépassé, navigation privée)
 **When** la sauvegarde échoue
 **Then** l'erreur est gérée dans `databaseService.ts` (try/catch + `console.error`), jamais dans le composant (AR12)
+
+**À traiter ici (note du 2026-09-10, Story 1.15) :** une partie **recommencée** (picto RECOMMENCER, `restartGame()`) n'a **jamais** été `finished` et n'entre pas dans l'historique — « recommencer » n'est pas « terminer ». Le « quitter sans récap » (abandon d'une partie sans la clore) reste à définir dans cette story : abandon = partie non sauvegardée ? défaite ? Aujourd'hui, une partie qui a au moins une action annulable ne se quitte que par le récap (`FIN DE PARTIE`), qui écrira donc une ligne d'historique — mais deux sorties **sans récap** existent déjà et sont à couvrir dans la définition de l'abandon : le picto de sortie sur un scoreboard intact (`canUndo` faux → accueil direct, 1.10) et « PARTIE EN COURS » › `ANNULER` au lancement, qui jette une sauvegarde pouvant contenir des séries (1.12). *(Précision de la revue de code 1.15, 2026-09-10.)*
 
 ### Story 3.2: Consulter la liste des parties jouées
 

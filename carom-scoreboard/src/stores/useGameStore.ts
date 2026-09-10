@@ -501,6 +501,17 @@ export const useGameStore = defineStore('game', () => {
     })
   }
 
+  // Picto RECOMMENCER (Story 1.15) : la partie repart de zéro SANS passer par
+  // `finished` — ni récap, ni vainqueur, ni (Epic 3) ligne d'historique. Même
+  // recette que `rematch()`, gardée sur `playing` : chacun repart du côté où il est.
+  function restartGame(): void {
+    if (status.value !== 'playing') return
+    startGame(mode.value, player1.value.name, player2.value.name, {
+      player1: player1.value.targetScore,
+      player2: player2.value.targetScore,
+    })
+  }
+
   // `ANNULER` : revient d'UNE action en arrière à chaque appel (FR9, UX-DR16). Action
   // nommée (AR15, UX-DR23) : un pilotage déporté produit le même état que le bouton.
   // Pas de recalcul — le snapshot porte déjà des scores cohérents. Cas général de
@@ -572,6 +583,8 @@ export const useGameStore = defineStore('game', () => {
 
   // Retour à l'accueil (`FIN DE PARTIE` du récap, sortie d'une partie sans série). La
   // confirmation avant abandon est portée par la pop-up de sortie de `GameView` (1.10).
+  // La remise à zéro SANS retour à l'accueil (mêmes joueurs, même configuration) est
+  // `restartGame` (1.15), pas ici.
   // Restaure l'intégralité de l'état initial pour qu'aucune valeur de la partie précédente
   // (mode, distances de jeu) ne soit silencieusement reconduite au démarrage suivant :
   // les distances repassent par `makePlayer()`, qui les remet à 0.
@@ -727,6 +740,7 @@ export const useGameStore = defineStore('game', () => {
     acceptEqualizingReprise,
     dismissEndPrompt,
     rematch,
+    restartGame,
     checkSavedGame,
     resumeGame,
     discardSavedGame,

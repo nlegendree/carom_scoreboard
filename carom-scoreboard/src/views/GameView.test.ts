@@ -295,6 +295,32 @@ describe('GameView — saisie en popup et alternance', () => {
     expect(wrapper.find('[data-testid="exit-button"][data-side="player1"]').exists()).toBe(false)
   })
 
+  // Story 1.15 (AC1) : le picto RECOMMENCER tient la MÊME colonne que la sortie et change
+  // de côté avec elle. La sortie garde le bord extérieur, RECOMMENCER vient vers
+  // l'intérieur : à gauche sortie puis RECOMMENCER, à droite RECOMMENCER puis sortie.
+  it('keeps the restart control next to the exit control', async () => {
+    const { wrapper, store } = await startedGame()
+
+    expect(wrapper.find('[data-testid="restart-button"][data-side="player1"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="restart-button"][data-side="player2"]').exists()).toBe(false)
+    let exit = wrapper.find('[data-testid="exit-button"]')
+    let restart = wrapper.find('[data-testid="restart-button"]')
+    expect(restart.element.parentElement).toBe(exit.element.parentElement)
+    expect(exit.element.nextElementSibling).toBe(restart.element)
+    expect(restart.text()).toBe('')
+    expect(restart.attributes('aria-label')).toBe('Recommencer la partie')
+
+    store.switchTurn()
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-testid="restart-button"][data-side="player2"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="restart-button"][data-side="player1"]').exists()).toBe(false)
+    exit = wrapper.find('[data-testid="exit-button"]')
+    restart = wrapper.find('[data-testid="restart-button"]')
+    expect(restart.element.parentElement).toBe(exit.element.parentElement)
+    expect(restart.element.nextElementSibling).toBe(exit.element)
+  })
+
   // Picto seul : il ne porte plus de libellé, donc l'intention passe par `aria-label`.
   it('leaves the game from the exit pictogram', async () => {
     const { wrapper, store } = await startedGame()
@@ -908,6 +934,114 @@ describe('GameView — fin de partie', () => {
     expect(store.status).toBe('playing')
   })
 
+  // --- Story 1.15 : RECOMMENCER ---
+
+  // AC2 : rien à recommencer sur un scoreboard intact — picto grisé (`disabled`) ET inerte
+  // (garde `canUndo`), sans que la barre change de forme. `trigger()` de Vue Test Utils ne
+  // dispatche RIEN sur un bouton `disabled` (il ne prouve donc que le `disabled`) : un
+  // événement natif, lui, atteint le handler — comme Chromium depuis 2023 — et c'est la
+  // garde `canUndo` d'`askRestart` qui doit l'ignorer (revue de code 1.15).
+  it('keeps the restart control inert on an untouched board', async () => {
+    const { wrapper, store } = await startedGame()
+    expect(wrapper.find('[data-testid="restart-button"]').attributes('disabled')).toBeDefined()
+
+    await press(wrapper, 'restart-button')
+
+    expect(prompt(wrapper).exists()).toBe(false)
+    expect(store.status).toBe('playing')
+
+    wrapper.find('[data-testid="restart-button"]').element.dispatchEvent(new Event('pointerdown'))
+    await wrapper.vm.$nextTick()
+
+    expect(prompt(wrapper).exists()).toBe(false)
+    expect(store.status).toBe('playing')
+
+    await press(wrapper, 'score-plus')
+
+    expect(wrapper.find('[data-testid="restart-button"]').attributes('disabled')).toBeUndefined()
+  })
+
+  // AC3, AC4 : confirmation obligatoire — titre + deux CTA, ni message, ni croix, ni bille.
+  // `ANNULER` rend le scoreboard intact, et la grâce anti-tap fantôme suit (le CTA est
+  // au-dessus de la console) : un `undo` immédiat est ignoré, le suivant agit.
+  it('asks before restarting and leaves the board untouched on ANNULER', async () => {
+    const { wrapper, store } = await startedGame()
+    await validateSeries(wrapper, [4])
+    await validateSeries(wrapper, [4])
+
+    await press(wrapper, 'restart-button')
+
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('RECOMMENCER LA PARTIE ?')
+    expect(wrapper.find('[data-testid="prompt-message"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="prompt-ball"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="prompt-primary"]').text()).toBe('RECOMMENCER')
+    expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('ANNULER')
+    expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
+    expect(store.status).toBe('playing')
+    expect(scoreOf(wrapper, 0)).toBe('4')
+    expect(scoreOf(wrapper, 1)).toBe('4')
+
+    await press(wrapper, 'prompt-secondary')
+
+    expect(prompt(wrapper).exists()).toBe(false)
+    expect(store.status).toBe('playing')
+    expect(scoreOf(wrapper, 0)).toBe('4')
+    expect(scoreOf(wrapper, 1)).toBe('4')
+    expect(store.canUndo).toBe(true)
+    await press(wrapper, 'undo-button')
+    expect(scoreOf(wrapper, 1)).toBe('4')
+
+    vi.advanceTimersByTime(300)
+    await press(wrapper, 'undo-button')
+    expect(scoreOf(wrapper, 1)).toBe('0')
+  })
+
+  // AC5 : la partie repart SUR PLACE — ni récap ni accueil — même mode, mêmes noms, mêmes
+  // distances, chacun du côté où il est (après un ÉCHANGER), le blanc a la main, rien
+  // d'annulable. La grâce s'applique : le scoreboard neuf revient sous le doigt.
+  it('restarts the game in place on RECOMMENCER', async () => {
+    const { wrapper, store } = await startedGame()
+    await press(wrapper, 'swap-players-button')
+    await validateSeries(wrapper, [4])
+    await validateSeries(wrapper, [4])
+    await press(wrapper, 'score-plus')
+    expect(scoreOf(wrapper, 0)).toBe('5')
+
+    await press(wrapper, 'restart-button')
+    await press(wrapper, 'prompt-primary')
+
+    expect(prompt(wrapper).exists()).toBe(false)
+    expect(summary(wrapper).exists()).toBe(false)
+    expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(false)
+    expect(store.status).toBe('playing')
+    expect(panels(wrapper)).toHaveLength(2)
+    expect(panels(wrapper)[0]!.props('player').name).toBe('ANDRÉ')
+    expect(panels(wrapper)[0]!.find('[data-testid="target-score"]').text()).toBe('8')
+    expect(panels(wrapper)[1]!.props('player').name).toBe('MICHEL')
+    expect(panels(wrapper)[1]!.find('[data-testid="target-score"]').text()).toBe('10')
+    expect(scoreOf(wrapper, 0)).toBe('0')
+    expect(scoreOf(wrapper, 1)).toBe('0')
+    for (const panel of panels(wrapper)) {
+      expect(panel.find('[data-testid="average"]').text()).toBe('0.000')
+      expect(panel.find('[data-testid="best-series"]').text()).toBe('0')
+    }
+    expect(wrapper.find('[data-testid="reprise-number"]').text()).toBe('1')
+    expect(panels(wrapper)[0]!.props('active')).toBe(true)
+    expect(panels(wrapper)[1]!.props('active')).toBe(false)
+    expect(wrapper.find('[data-testid="add-points-button"]').attributes('data-side')).toBe(
+      'player2',
+    )
+    expect(wrapper.find('[data-testid="undo-button"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('[data-testid="restart-button"]').attributes('disabled')).toBeDefined()
+
+    await press(wrapper, 'score-plus')
+    expect(scoreOf(wrapper, 0)).toBe('0')
+
+    vi.advanceTimersByTime(300)
+    await press(wrapper, 'score-plus')
+    expect(scoreOf(wrapper, 0)).toBe('1')
+  })
+
   // AC13, AC15, AC16 : le récap remplace le scoreboard — bandeau, stats, aucune commande
   // de jeu.
   it('shows the Billiboard banner and stats on the summary', async () => {
@@ -1069,6 +1203,26 @@ describe('GameView — reprise après fermeture', () => {
     await press(wrapper, 'undo-button')
 
     expect(scoreOf(wrapper, 0)).toBe('7')
+  })
+
+  // Story 1.15 (AC7) : la sauvegarde reflète la partie recommencée — au relancement,
+  // `REPRENDRE LA PARTIE` ramène la partie neuve, sans trace de l'ancienne.
+  it('resumes the restarted game, not the old one', async () => {
+    const { wrapper, store } = await relaunchAfter((store) => {
+      playedGame(store)
+      store.restartGame()
+    })
+
+    await press(wrapper, 'prompt-primary')
+
+    expect(store.status).toBe('playing')
+    expect(store.reprises).toEqual([])
+    expect(scoreOf(wrapper, 0)).toBe('0')
+    expect(scoreOf(wrapper, 1)).toBe('0')
+    expect(panels(wrapper)[0]!.props('player').name).toBe('MICHEL')
+    expect(panels(wrapper)[0]!.find('[data-testid="target-score"]').text()).toBe('100')
+    expect(wrapper.find('[data-testid="reprise-number"]').text()).toBe('1')
+    expect(wrapper.find('[data-testid="undo-button"]').attributes('disabled')).toBeDefined()
   })
 
   // AC4 : la sauvegarde est jetée, l'accueil reste.

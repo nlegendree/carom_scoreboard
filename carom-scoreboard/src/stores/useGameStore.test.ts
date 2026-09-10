@@ -1476,6 +1476,132 @@ describe('useGameStore — fin de partie', () => {
     expect(store.reprises).toHaveLength(1)
   })
 
+  // --- Story 1.15 : RECOMMENCER — la partie repart de zéro SANS passer par `finished`. ---
+
+  // AC5, AC6, AC8 : même recette que `rematch`, gardée sur `playing` : mode, noms,
+  // distances et côtés conservés, tout le reste (scores, pile, corrections, saisie, fin)
+  // remis à zéro — et jamais de `finished` ni de vainqueur au passage. La saisie est
+  // OUVERTE avec un chiffre tapé avant l'action, sinon `entryOpen`/`currentInput` ne
+  // seraient vérifiés qu'à leur valeur par défaut (revue de code 1.15).
+  it('restarts the running game with the same players, distances and sides', () => {
+    vi.useFakeTimers()
+    try {
+      const store = useGameStore()
+      store.startGame('cadre-47-2', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })
+      const firstStart = store.startedAt!
+      validate(store, 'player1', 4)
+      validate(store, 'player2', 3)
+      store.adjustScore('player1', 1)
+      store.openScoreEntry('player1')
+      store.appendScoreDigit('player1', 5)
+      expect(store.entryOpen).toBe(true)
+      expect(store.currentInput.player1).toBe('5')
+      vi.advanceTimersByTime(1000)
+
+      store.restartGame()
+
+      expect(store.status).toBe('playing')
+      expect(store.mode).toBe('cadre-47-2')
+      expect(store.reprises).toEqual([])
+      expect(store.history).toEqual([])
+      expect(store.canUndo).toBe(false)
+      expect(store.player1).toMatchObject({ name: 'MICHEL', targetScore: 10, score: 0 })
+      expect(store.player2).toMatchObject({ name: 'ANDRE', targetScore: 8, score: 0 })
+      expect(store.activePlayer).toBe('player1')
+      expect(store.scoreAdjustments).toEqual({ player1: 0, player2: 0 })
+      expect(store.startedAt).toBeGreaterThan(firstStart)
+      expect(store.winner).toBeNull()
+      expect(store.finishedAt).toBeNull()
+      expect(store.endPrompt).toBeNull()
+      expect(store.equalizingReprise).toBe(false)
+      expect(store.entryOpen).toBe(false)
+      expect(store.currentInput).toEqual({ player1: '', player2: '' })
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  // AC5 : après un `ÉCHANGER`, chacun repart du côté où il est — même règle que `rematch`.
+  it('keeps swapped players on their current side when restarting', () => {
+    const store = startedGame()
+    store.swapPlayers()
+    validate(store, 'player1', 2)
+
+    store.restartGame()
+
+    expect(store.player1.name).toBe('ANDRE')
+    expect(store.player1.targetScore).toBe(8)
+    expect(store.player2.name).toBe('MICHEL')
+    expect(store.player2.targetScore).toBe(10)
+    expect(store.sidesSwapped).toBe(false)
+  })
+
+  // AC5, AC6 : injoignable au doigt (le voile de la pop-up recouvre la barre), mais c'est
+  // le contrat de l'action pour un pilotage déporté — aucune fin en cours ne survit.
+  it('clears an accepted equalizing reprise and a pending end prompt when restarting', () => {
+    const store = startedGame()
+    validate(store, 'player1', 10)
+    expect(store.endPrompt).toEqual({ kind: 'equalizing-offer' })
+
+    store.restartGame()
+
+    expect(store.endPrompt).toBeNull()
+    expect(store.equalizingReprise).toBe(false)
+    expect(store.status).toBe('playing')
+
+    validate(store, 'player1', 10)
+    store.acceptEqualizingReprise()
+    expect(store.equalizingReprise).toBe(true)
+
+    store.restartGame()
+
+    expect(store.equalizingReprise).toBe(false)
+    expect(store.endPrompt).toBeNull()
+    expect(store.status).toBe('playing')
+
+    // « PARTIE TERMINÉE » en attente (le jaune atteint sa distance) : effacée de même,
+    // sans vainqueur ni `finished`.
+    validate(store, 'player1', 3)
+    validate(store, 'player2', 8)
+    expect(store.endPrompt).toEqual({ kind: 'over', winner: 'player2' })
+
+    store.restartGame()
+
+    expect(store.endPrompt).toBeNull()
+    expect(store.winner).toBeNull()
+    expect(store.status).toBe('playing')
+    expect(store.reprises).toEqual([])
+  })
+
+  // AC6 : gardée sur `playing` — no-op à l'accueil comme sur le récap : rien ne bouge,
+  // ni les scores, ni les horodatages, ni la pile.
+  it('refuses to restart while idle or finished', () => {
+    const store = useGameStore()
+
+    store.restartGame()
+
+    expect(store.status).toBe('idle')
+    expect(store.startedAt).toBeNull()
+
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })
+    validate(store, 'player1', 10)
+    store.finishGame()
+    expect(store.winner).toBe('player1')
+    const startedAt = store.startedAt
+    const finishedAt = store.finishedAt
+    const historyDepth = store.history.length
+
+    store.restartGame()
+
+    expect(store.status).toBe('finished')
+    expect(store.winner).toBe('player1')
+    expect(store.reprises).toHaveLength(1)
+    expect(store.player1.score).toBe(10)
+    expect(store.startedAt).toBe(startedAt)
+    expect(store.finishedAt).toBe(finishedAt)
+    expect(store.history).toHaveLength(historyDepth)
+  })
+
   // AC9 : l'égalisatrice acceptée est défaite avec la série gagnante du blanc.
   it('undoes the accepted equalizing reprise along with the winning series', () => {
     const store = startedGame()
@@ -1693,6 +1819,29 @@ describe('useGameStore — persistance', () => {
     expect(saved().status).toBe('playing')
     expect(saved().reprises).toEqual([])
     expect(saved().player1.name).toBe('MICHEL')
+  })
+
+  // AC7 (Story 1.15) : la partie neuve remplace l'ancienne dans le même tick, en UNE
+  // écriture — rien de l'ancienne ne subsiste dans le storage.
+  it('saves after restart', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })
+    validate(store, 'player1', 7)
+    await nextTick()
+    const setItem = vi.spyOn(localStorage, 'setItem')
+
+    store.restartGame()
+    await nextTick()
+
+    expect(setItem).toHaveBeenCalledTimes(1)
+    expect(saved().status).toBe('playing')
+    expect(saved().reprises).toEqual([])
+    expect(saved().history).toEqual([])
+    expect(saved().player1.name).toBe('MICHEL')
+    expect(saved().player1.score).toBe(0)
+    // Les distances sont le seul champ que `restartGame` réinjecte à la main.
+    expect(saved().player1.targetScore).toBe(10)
+    expect(saved().player2.targetScore).toBe(8)
   })
 
   // Une action = un tick au doigt : chaque frappe et la validation écrivent UNE fois
