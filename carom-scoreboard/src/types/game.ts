@@ -93,6 +93,13 @@ export interface Reprise {
   timestamp: number
 }
 
+// Forme EXACTE de ce que la Story 1.12 écrit en `localStorage` après chaque action et
+// restaure au lancement suivant : tout ce que le store expose en lecture, pile
+// d'annulation comprise. Le store construit un `computed<GameState>` complet — ajouter
+// un champ ici sans l'y renseigner ne compile pas, c'est la garantie contre l'oubli.
+// Tout changement de forme ici INCRÉMENTE `GAME_STORAGE_VERSION` (`storageService.ts`) :
+// la garde de lecture ne couvre qu'un sous-ensemble de champs.
+// `isNegative` (Story 1.9, annulée) a été retiré ici même : il n'a jamais rien porté.
 export interface GameState {
   mode: GameMode
   status: GameStatus
@@ -101,7 +108,15 @@ export interface GameState {
   activePlayer: PlayerId
   reprises: Reprise[]
   currentInput: { player1: string; player2: string }
-  isNegative: { player1: boolean; player2: boolean }
+  // Corrections `−`/`+` tenues à part des reprises (Story 1.7). Persistées : sans elles,
+  // la série suivante recalculerait le total depuis les seules reprises et les effacerait.
+  scoreAdjustments: { player1: number; player2: number }
+  // Parité des côtés (Story 1.7). Persistée : les snapshots pris avant un `ÉCHANGER`
+  // doivent être restaurés dans les bonnes coordonnées après une reprise.
+  sidesSwapped: boolean
+  // Pile d'annulation complète (décision de Nathan, 2026-09-10) : après une reprise,
+  // `ANNULER` remonte les actions d'avant la fermeture comme si rien ne s'était passé.
+  history: GameSnapshot[]
   startedAt: number | null
   lastSaved: string
   // --- Fin de partie (Story 1.10) ---
@@ -111,14 +126,19 @@ export interface GameState {
   // Reprise égalisatrice en cours : le blanc a atteint sa distance, le jaune joue SA
   // dernière série. Attachée au côté droit, comme le tour (Décision 15 de la 1.5).
   equalizingReprise: boolean
+  // Pop-up de décision ouverte, restaurée telle quelle à la reprise (1.12).
+  endPrompt: EndPrompt | null
+  // Pop-up de saisie ouverte (1.12, décision 3) : monte de la vue dans le store pour être
+  // rouverte à la reprise, avec le buffer `currentInput` déjà tapé.
+  entryOpen: boolean
 }
 
 // Photographie de l'état de partie prise AVANT chaque action annulable (Story 1.7) :
 // tout ce que les trois actions (série, main rendue, correction) peuvent toucher, plus
 // la parité des côtés (`sidesSwapped`) qui permet de restaurer un snapshot pris avant un
 // `ÉCHANGER` sans défaire l'échange. Rien de plus : `mode`, `status`, `startedAt` ne
-// bougent jamais en cours de partie. Volontairement absent de `GameState` tant que la
-// Story 1.12 n'a pas tranché la persistance de la pile.
+// bougent jamais en cours de partie. La pile de ces snapshots fait partie de `GameState`
+// et EST persistée intégralement (Story 1.12, décision de Nathan du 2026-09-10).
 // `equalizingReprise` en fait partie (Story 1.10, AC9) : annuler la série gagnante du
 // blanc défait aussi l'offre acceptée. `endPrompt`, `winner`, `finishedAt` n'y sont PAS :
 // la pop-up est toujours fermée quand on peut annuler, et l'undo est impossible hors
@@ -130,7 +150,6 @@ export interface GameSnapshot {
   reprises: Reprise[]
   scoreAdjustments: { player1: number; player2: number }
   currentInput: { player1: string; player2: string }
-  isNegative: { player1: boolean; player2: boolean }
   sidesSwapped: boolean
   equalizingReprise: boolean
 }

@@ -302,7 +302,7 @@ Trois flows critiques du scope V1a, issus des parcours PRD (Michel happy path, M
 ```mermaid
 flowchart TD
     A[Lancement app] --> B{Partie en cours\nsauvegardée ?}
-    B -- Oui --> C[Reprendre la partie\nGameView restauré]
+    B -- Oui --> C[Pop-up PARTIE EN COURS\nREPRENDRE LA PARTIE → GameView restauré\nANNULER → accueil, sauvegarde effacée]
     B -- Non --> D[Accueil : catégorie puis mode\nJeux de séries / 3 Bandes / Quilles / Casin]
     D --> E[Réglage joueurs\ntap sur une zone → pop-up, distance requise]
     E --> F[Partie démarrée\nGameView, reprise 1]
@@ -419,7 +419,7 @@ Aucun — le design system est **Custom** (étape 8). Aucun composant équivalen
 
 **PromptModal** *(ajouté le 2026-09-10, Story 1.10)*
 - *Rôle* : pop-up de **décision** — même coquille que les pop-ups de saisie (voile flouté, carte centrée, CTA en pied) mais **voile inerte** : fermer par un tap en dehors n'a pas de sens pour une décision, et la pop-up de fin monte sous le doigt qui vient de valider une série. Bille du joueur concerné en en-tête, CTA principal (accent) et secondaire (neutre) facultatif ; **aucune croix** — l'option `closable` prévue à la création a été retirée du composant (revue de code 1.10, 2026-09-10).
-- *Usages* : erreur « DISTANCE MANQUANTE » (accueil, `RÉGLER LA DISTANCE` / `ANNULER`) · offre de reprise égalisatrice (deux CTA `X JOUE` / `FIN DE PARTIE`) · « PARTIE TERMINÉE » (`VOIR LE RÉCAP` seul) · « TERMINER LA PARTIE ? » (`VOIR LE RÉCAP` / `ANNULER`). Aucune n'a de message ni de croix : les croix ne sont pas intuitives pour les joueurs, un gros CTA l'est — le retour, quand il existe, s'appelle toujours **`ANNULER`** — et les pop-ups de fin n'annoncent rien, le récap s'en charge (revue au rendu, 2026-09-10).
+- *Usages* : erreur « DISTANCE MANQUANTE » (accueil, `RÉGLER LA DISTANCE` / `ANNULER`) · offre de reprise égalisatrice (deux CTA `X JOUE` / `FIN DE PARTIE`) · « PARTIE TERMINÉE » (`VOIR LE RÉCAP` seul) · « TERMINER LA PARTIE ? » (`VOIR LE RÉCAP` / `ANNULER`) · « PARTIE EN COURS » au lancement, par-dessus l'accueil, quand une sauvegarde existe (`REPRENDRE LA PARTIE` / `ANNULER` — Story 1.12, 2026-09-10 ; le scoreboard revient tel qu'il était, pop-up de saisie et chiffres tapés compris). Aucune n'a de message ni de croix : les croix ne sont pas intuitives pour les joueurs, un gros CTA l'est — le retour, quand il existe, s'appelle toujours **`ANNULER`** — et les pop-ups de fin n'annoncent rien, le récap s'en charge (revue au rendu, 2026-09-10).
 
 **HistoryList / GameDetailView**
 - *Rôle* : consultation des parties passées (FR18-20).

@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { computed, defineComponent, h, nextTick, watchEffect } from 'vue'
 import { mount } from '@vue/test-utils'
 import { MAX_SCORE_DIGITS, mirrorSnapshot, useGameStore } from './useGameStore'
-import type { PlayerId } from '../types/game'
+import { GAME_STORAGE_KEY } from '../services/storageService'
+import type { GameState, PlayerId } from '../types/game'
 
 describe('useGameStore', () => {
   beforeEach(() => {
@@ -974,7 +975,6 @@ describe('useGameStore — undo', () => {
       reprises: [{ player1: 5, player2: null, timestamp: 1 }],
       scoreAdjustments: { player1: 2, player2: 0 },
       currentInput: { player1: '7', player2: '' },
-      isNegative: { player1: true, player2: false },
       sidesSwapped: false,
       equalizingReprise: true,
     })
@@ -997,7 +997,6 @@ describe('useGameStore — undo', () => {
     })
     expect(mirrored.scoreAdjustments).toEqual({ player1: 0, player2: 2 })
     expect(mirrored.currentInput).toEqual({ player1: '', player2: '7' })
-    expect(mirrored.isNegative).toEqual({ player1: false, player2: true })
     expect(mirrored.sidesSwapped).toBe(true)
     // Story 1.10 : la reprise égalisatrice est un fait de jeu attaché au côté droit,
     // recopié tel quel — la parité des côtés ne le change pas.
@@ -1524,5 +1523,473 @@ describe('useGameStore — fin de partie', () => {
     validate(store, 'player1', 1)
 
     expect(store.repriseCounts).toEqual({ player1: 2, player2: 1 })
+  })
+})
+
+// --- Story 1.12 : persistance de la partie et reprise après fermeture ---
+
+describe('useGameStore — persistance', () => {
+  type Store = ReturnType<typeof useGameStore>
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    localStorage.clear()
+    vi.restoreAllMocks()
+  })
+
+  function validate(store: Store, playerId: PlayerId, value: number) {
+    for (const digit of String(value)) store.appendScoreDigit(playerId, Number(digit))
+    store.validateScoreInput(playerId)
+  }
+
+  // Le CONTENU réel du storage, pas un mock : c'est ce qui serait relu au lancement.
+  const saved = () => JSON.parse(localStorage.getItem(GAME_STORAGE_KEY)!).state as GameState
+  const hasSave = () => localStorage.getItem(GAME_STORAGE_KEY) !== null
+
+  // Deux pinias : l'un joue et sauvegarde, l'autre simule le lancement suivant.
+  async function relaunch(): Promise<Store> {
+    await nextTick()
+    setActivePinia(createPinia())
+    const store = useGameStore()
+    store.checkSavedGame()
+    return store
+  }
+
+  // Ni `immediate` (qui appellerait `clearGameState` sur un store neuf) ni écriture :
+  // le storage n'est pas touché du tout, pas seulement laissé vide.
+  it('writes nothing while idle', async () => {
+    const setItem = vi.spyOn(localStorage, 'setItem')
+    const removeItem = vi.spyOn(localStorage, 'removeItem')
+    useGameStore()
+    await nextTick()
+
+    expect(hasSave()).toBe(false)
+    expect(setItem).not.toHaveBeenCalled()
+    expect(removeItem).not.toHaveBeenCalled()
+  })
+
+  // AC1 : une écriture par action, dans le tick — un champ discriminant par action.
+  it('saves after startGame', async () => {
+    const store = useGameStore()
+    store.startGame('cadre-47-2', 'MICHEL', 'ANDRE', { player1: 100, player2: 80 })
+    await nextTick()
+
+    expect(saved().status).toBe('playing')
+    expect(saved().mode).toBe('cadre-47-2')
+    expect(saved().player1.name).toBe('MICHEL')
+    expect(saved().player2.targetScore).toBe(80)
+  })
+
+  it('saves after a validated series', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    validate(store, 'player1', 7)
+    await nextTick()
+
+    expect(saved().reprises).toEqual([{ player1: 7, player2: null, timestamp: expect.any(Number) }])
+    expect(saved().player1.score).toBe(7)
+    expect(saved().activePlayer).toBe('player2')
+    expect(saved().history).toHaveLength(1)
+  })
+
+  it('saves after passTurn', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    store.passTurn()
+    await nextTick()
+
+    expect(saved().reprises).toEqual([{ player1: 0, player2: null, timestamp: expect.any(Number) }])
+    expect(saved().activePlayer).toBe('player2')
+  })
+
+  it('saves after adjustScore', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    store.adjustScore('player2', 2)
+    await nextTick()
+
+    expect(saved().scoreAdjustments).toEqual({ player1: 0, player2: 2 })
+    expect(saved().player2.score).toBe(2)
+  })
+
+  it('saves after swapPlayers', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    store.swapPlayers()
+    await nextTick()
+
+    expect(saved().sidesSwapped).toBe(true)
+    expect(saved().player1.name).toBe('ANDRE')
+  })
+
+  it('saves after undoLastAction', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    validate(store, 'player1', 7)
+    store.undoLastAction()
+    await nextTick()
+
+    expect(saved().reprises).toEqual([])
+    expect(saved().history).toEqual([])
+  })
+
+  it('saves the buffer after appendScoreDigit', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    store.appendScoreDigit('player1', 7)
+    await nextTick()
+
+    expect(saved().currentInput).toEqual({ player1: '7', player2: '' })
+  })
+
+  it('saves the open entry after openScoreEntry, and its closing', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    store.openScoreEntry('player1')
+    await nextTick()
+
+    expect(saved().entryOpen).toBe(true)
+
+    store.closeScoreEntry()
+    await nextTick()
+
+    expect(saved().entryOpen).toBe(false)
+  })
+
+  it('saves after acceptEqualizingReprise', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })
+    validate(store, 'player1', 10)
+    await nextTick()
+    expect(saved().endPrompt).toEqual({ kind: 'equalizing-offer' })
+
+    store.acceptEqualizingReprise()
+    await nextTick()
+
+    expect(saved().equalizingReprise).toBe(true)
+    expect(saved().endPrompt).toBeNull()
+  })
+
+  it('saves after finishGame', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    validate(store, 'player1', 7)
+    store.finishGame()
+    await nextTick()
+
+    expect(saved().status).toBe('finished')
+    expect(saved().winner).toBe('player1')
+    expect(saved().finishedAt).toEqual(expect.any(Number))
+  })
+
+  it('saves after rematch', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    validate(store, 'player1', 7)
+    store.finishGame()
+    store.rematch()
+    await nextTick()
+
+    expect(saved().status).toBe('playing')
+    expect(saved().reprises).toEqual([])
+    expect(saved().player1.name).toBe('MICHEL')
+  })
+
+  // Une action = un tick au doigt : chaque frappe et la validation écrivent UNE fois
+  // chacune (trois actions, trois écritures), et les mutations d'une même action
+  // (`validateScoreInput` en touche plusieurs) n'en font qu'une.
+  it('writes exactly once per action', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    await nextTick()
+    const setItem = vi.spyOn(localStorage, 'setItem')
+
+    store.appendScoreDigit('player1', 1)
+    await nextTick()
+    expect(setItem).toHaveBeenCalledTimes(1)
+
+    store.appendScoreDigit('player1', 2)
+    await nextTick()
+    expect(setItem).toHaveBeenCalledTimes(2)
+
+    store.validateScoreInput('player1')
+    await nextTick()
+    expect(setItem).toHaveBeenCalledTimes(3)
+    expect(saved().player1.score).toBe(12)
+  })
+
+  it('removes the save on resetGame', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    await nextTick()
+    expect(hasSave()).toBe(true)
+
+    store.resetGame()
+    await nextTick()
+
+    expect(hasSave()).toBe(false)
+  })
+
+  // AC3 : le scoreboard revient EXACTEMENT où il en était — et `ANNULER` remonte les
+  // actions d'avant la fermeture, parité des côtés comprise.
+  async function playedGame(): Promise<Store> {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 100, player2: 80 })
+    validate(store, 'player1', 7)
+    validate(store, 'player2', 3)
+    store.adjustScore('player1', 2)
+    store.swapPlayers()
+    validate(store, 'player1', 4)
+    store.openScoreEntry('player2')
+    store.appendScoreDigit('player2', 5)
+    return store
+  }
+
+  it('offers the saved game without touching the idle store', async () => {
+    await playedGame()
+
+    const store = await relaunch()
+
+    expect(store.pendingRestore).not.toBeNull()
+    expect(store.status).toBe('idle')
+    expect(store.player1.name).toBe('')
+  })
+
+  it('resumes the game exactly where it was', async () => {
+    const before = await playedGame()
+    const fields = [
+      'mode',
+      'status',
+      'player1',
+      'player2',
+      'activePlayer',
+      'reprises',
+      'scoreAdjustments',
+      'sidesSwapped',
+      'history',
+      'startedAt',
+      'equalizingReprise',
+      'winner',
+      'finishedAt',
+      'endPrompt',
+      'entryOpen',
+      'currentInput',
+    ] as const
+    const snapshotOf = (store: Store) => Object.fromEntries(fields.map((f) => [f, store[f]]))
+    const expected = JSON.parse(JSON.stringify(snapshotOf(before)))
+
+    const store = await relaunch()
+    store.resumeGame()
+
+    expect(JSON.parse(JSON.stringify(snapshotOf(store)))).toEqual(expected)
+    expect(store.player1.name).toBe('ANDRE')
+    expect(store.player2.score).toBe(9)
+    expect(store.activePlayer).toBe('player2')
+    expect(store.entryOpen).toBe(true)
+    expect(store.currentInput.player2).toBe('5')
+    expect(store.canUndo).toBe(true)
+    expect(store.pendingRestore).toBeNull()
+  })
+
+  it('keeps counting on top of the restored adjustments', async () => {
+    await playedGame()
+    const store = await relaunch()
+    store.resumeGame()
+
+    store.validateScoreInput('player2')
+
+    // 7 (série) + 2 (correction `+`) + 5 : sans `scoreAdjustments`, on lirait 12.
+    expect(store.player2.score).toBe(14)
+    expect(store.activePlayer).toBe('player1')
+  })
+
+  it('undoes actions taken before the closing, sides parity included', async () => {
+    await playedGame()
+    const store = await relaunch()
+    store.resumeGame()
+    store.validateScoreInput('player2')
+
+    store.undoLastAction()
+    expect(store.player2.score).toBe(9)
+    expect(store.activePlayer).toBe('player2')
+
+    store.undoLastAction()
+    expect(store.player1.score).toBe(3)
+    expect(store.activePlayer).toBe('player1')
+    expect(store.reprises).toHaveLength(1)
+
+    // Snapshot pris AVANT l'échange : mis en miroir, les joueurs restent où ils sont.
+    store.undoLastAction()
+    expect(store.player1.name).toBe('ANDRE')
+    expect(store.player1.score).toBe(3)
+    expect(store.player2.name).toBe('MICHEL')
+    expect(store.player2.score).toBe(7)
+    expect(store.activePlayer).toBe('player2')
+    expect(store.sidesSwapped).toBe(true)
+    expect(store.reprises).toEqual([{ player1: 3, player2: 7, timestamp: expect.any(Number) }])
+    expect(store.canUndo).toBe(true)
+  })
+
+  it('restores an open equalizing offer that can still be accepted', async () => {
+    const before = useGameStore()
+    before.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })
+    validate(before, 'player1', 10)
+
+    const store = await relaunch()
+    store.resumeGame()
+
+    expect(store.endPrompt).toEqual({ kind: 'equalizing-offer' })
+    store.acceptEqualizingReprise()
+    expect(store.equalizingReprise).toBe(true)
+    expect(store.endPrompt).toBeNull()
+  })
+
+  it('restores an equalizing reprise in progress', async () => {
+    const before = useGameStore()
+    before.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })
+    validate(before, 'player1', 10)
+    before.acceptEqualizingReprise()
+
+    const store = await relaunch()
+    store.resumeGame()
+
+    expect(store.equalizingReprise).toBe(true)
+    validate(store, 'player2', 8)
+    expect(store.endPrompt).toEqual({ kind: 'over', winner: null })
+  })
+
+  it('restores a finished game on which a rematch still works', async () => {
+    const before = useGameStore()
+    before.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })
+    validate(before, 'player1', 10)
+    before.finishGame()
+
+    const store = await relaunch()
+    store.resumeGame()
+
+    expect(store.status).toBe('finished')
+    expect(store.winner).toBe('player1')
+    store.rematch()
+    expect(store.status).toBe('playing')
+    expect(store.player1.targetScore).toBe(10)
+  })
+
+  it('discards the saved game and stays idle', async () => {
+    await playedGame()
+    const store = await relaunch()
+
+    store.discardSavedGame()
+
+    expect(hasSave()).toBe(false)
+    expect(store.status).toBe('idle')
+    expect(store.pendingRestore).toBeNull()
+  })
+
+  it('finds nothing to resume on an empty storage', () => {
+    const store = useGameStore()
+    store.checkSavedGame()
+
+    expect(store.pendingRestore).toBeNull()
+  })
+
+  it('ignores checkSavedGame while a game is on', async () => {
+    await playedGame()
+    await nextTick()
+    setActivePinia(createPinia())
+    const store = useGameStore()
+    store.startGame('libre', 'PAUL', 'JEAN')
+
+    store.checkSavedGame()
+    expect(store.pendingRestore).toBeNull()
+  })
+
+  // La garde `status` de `resumeGame` est exercée avec une offre RÉELLEMENT en attente :
+  // sans elle, la partie en cours serait écrasée par la sauvegarde.
+  it('ignores resumeGame while a game is on', async () => {
+    await playedGame()
+    const store = await relaunch()
+    const offered = store.pendingRestore
+    expect(offered).not.toBeNull()
+    store.startGame('libre', 'PAUL', 'JEAN')
+    store.pendingRestore = offered
+
+    store.resumeGame()
+
+    expect(store.player1.name).toBe('PAUL')
+    expect(store.pendingRestore).toBe(offered)
+  })
+
+  // Une partie démarrée pendant une offre en attente écrase la sauvegarde : l'offre ne
+  // doit pas resurgir au retour à l'accueil avec un état dont l'entrée n'existe plus.
+  it('clears a pending offer on startGame', async () => {
+    await playedGame()
+    const store = await relaunch()
+    expect(store.pendingRestore).not.toBeNull()
+
+    store.startGame('libre', 'PAUL', 'JEAN')
+    await nextTick()
+
+    expect(store.pendingRestore).toBeNull()
+    expect(saved().player1.name).toBe('PAUL')
+  })
+
+  // Même garde `idle` que ses deux sœurs : en partie, la sauvegarde vivante reste.
+  it('ignores discardSavedGame while a game is on', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    await nextTick()
+
+    store.discardSavedGame()
+
+    expect(hasSave()).toBe(true)
+    expect(store.status).toBe('playing')
+  })
+
+  // `id`/`color` appartiennent au côté, pas à la sauvegarde — dans la pile aussi, sinon
+  // le premier `ANNULER` après reprise réinstallerait ceux de la sauvegarde.
+  it('restamps the players ids and colors on resume, in the undo stack too', async () => {
+    await playedGame()
+    await nextTick()
+    const raw = JSON.parse(localStorage.getItem(GAME_STORAGE_KEY)!)
+    raw.state.player1.color = 'yellow'
+    raw.state.player1.id = 'player2'
+    for (const snapshot of raw.state.history) {
+      snapshot.player1.color = 'yellow'
+      snapshot.player1.id = 'player2'
+      snapshot.player2.color = 'white'
+      snapshot.player2.id = 'player1'
+    }
+    localStorage.setItem(GAME_STORAGE_KEY, JSON.stringify(raw))
+
+    const store = await relaunch()
+    store.resumeGame()
+
+    expect(store.player1.id).toBe('player1')
+    expect(store.player1.color).toBe('white')
+    expect(store.player2.id).toBe('player2')
+    expect(store.player2.color).toBe('yellow')
+
+    store.undoLastAction()
+
+    expect(store.player1.id).toBe('player1')
+    expect(store.player1.color).toBe('white')
+    expect(store.player2.id).toBe('player2')
+    expect(store.player2.color).toBe('yellow')
+  })
+
+  // AR12 : le store ne voit pas l'erreur, la partie continue.
+  it('keeps playing in memory when the storage fails', async () => {
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new DOMException('quota', 'QuotaExceededError')
+    })
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+
+    validate(store, 'player1', 7)
+    await nextTick()
+
+    expect(store.player1.score).toBe(7)
+    expect(error).toHaveBeenCalled()
   })
 })

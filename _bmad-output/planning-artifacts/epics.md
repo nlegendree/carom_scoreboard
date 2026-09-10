@@ -579,7 +579,7 @@ So that je peux enregistrer une pénalité ou déduction selon les règles du je
 
 **⚠️ Impact de la Story 1.5 (2026-09-09).** Le second AC est **déjà satisfait** : `addReprise` accepte une valeur négative sans cas particulier (testé), et le total étant recalculé comme somme des séries, la soustraction est exacte par construction. Il ne reste que la **bascule de signe dans la pop-up de saisie** et le champ `isNegative`. ⚠️ **Ne pas confondre avec les boutons `−` / `+`** livrés en 1.5 : ceux-là corrigent le **total** sans créer de reprise ; ils n'enregistrent pas une série négative. Noter aussi que la taille du score gère déjà le caractère `−` supplémentaire (le calcul porte sur la longueur de la chaîne affichée), et que la correction manuelle n'est volontairement pas bornée à zéro.
 
-**❌ Annulée (décision de Nathan, 2026-09-10) — aucun code.** À la création de la story, aucune justification métier de FR10 n'a été retrouvée dans les specs : les règles du carambole (JDS, 3 bandes) ne retirent jamais de points — une faute termine la série. Le seul cas d'usage identifié par Nathan était la **correction d'une erreur** (« retirer 10 points ») ; il est couvert depuis la 1.5 par les boutons `−` / `+` du panneau, non bornés à zéro, et par `ANNULER` (1.7) pour défaire une série entière. Une saisie de série négative n'apporterait donc rien de plus qu'un second chemin de correction. FR10 est considéré comme **satisfait par les corrections manuelles** ; le champ `isNegative` de `GameState`/`GameSnapshot` reste déclaré et inerte (toujours `false`) — à retirer du modèle si une story future y touche (1.12 persistance). `1-9` passe `done` sans fichier de story.
+**❌ Annulée (décision de Nathan, 2026-09-10) — aucun code.** À la création de la story, aucune justification métier de FR10 n'a été retrouvée dans les specs : les règles du carambole (JDS, 3 bandes) ne retirent jamais de points — une faute termine la série. Le seul cas d'usage identifié par Nathan était la **correction d'une erreur** (« retirer 10 points ») ; il est couvert depuis la 1.5 par les boutons `−` / `+` du panneau, non bornés à zéro, et par `ANNULER` (1.7) pour défaire une série entière. Une saisie de série négative n'apporterait donc rien de plus qu'un second chemin de correction. FR10 est considéré comme **satisfait par les corrections manuelles** ; le champ `isNegative` de `GameState`/`GameSnapshot` reste déclaré et inerte (toujours `false`) — à retirer du modèle si une story future y touche (1.12 persistance). `1-9` passe `done` sans fichier de story. *Mise à jour (2026-09-10)* : `isNegative` **retiré en 1.12** (`GameState`, `GameSnapshot`, `mirrorSnapshot`, store, tests).
 
 ### Story 1.10: Terminer une partie et consulter le récapitulatif automatique
 
@@ -647,6 +647,14 @@ So that fermer l'application accidentellement ne fasse jamais perdre ma progress
 **Given** une erreur de storage (quota dépassé, navigation privée restrictive)
 **When** la sauvegarde échoue
 **Then** l'erreur est gérée dans `storageService.ts` (try/catch + `console.error`), jamais dans le composant (AR12)
+
+**Cadrage (Nathan, 2026-09-10) — feature de filet de sécurité, développée vite.** La tablette de club tourne quasiment 24 h/24 : la fermeture accidentelle est rare, la persistance sert surtout au **rechargement** (mise à jour PWA, `⌘R`, onglet tué par l'OS). Quatre décisions :
+1. **Pop-up de reprise au lancement** : si une sauvegarde lisible existe, `PromptModal` « PARTIE EN COURS » par-dessus l'accueil, `REPRENDRE LA PARTIE` (scoreboard tel qu'il était) ou `ANNULER` (accueil, sauvegarde effacée). Pas de restauration silencieuse.
+2. **La pile d'annulation complète est persistée** : après une reprise, `ANNULER` remonte les actions d'avant la fermeture, parité des côtés comprise.
+3. **Fermeture pendant la saisie** : la pop-up de saisie se rouvre avec les chiffres déjà tapés (`entryOpen` monte de `GameView` dans le store).
+4. **Aucune limite d'âge** : une sauvegarde de la veille est proposée telle quelle.
+
+Au passage, la story **fixe le format persisté** : `GameState` = `+ scoreAdjustments, sidesSwapped, history, endPrompt, entryOpen`, `− isNegative`. Clé `carom-scoreboard:game`, enveloppe versionnée (version inconnue ou forme inattendue → jetée avec `console.warn`, pas de migration). Écriture par `watch` du store, une par action, jamais en `idle` (`resetGame` supprime l'entrée).
 
 ### Story 1.13: Fonctionner offline et s'installer comme application native
 

@@ -204,17 +204,31 @@ interface GameState {
   activePlayer: 'player1' | 'player2'
   reprises: Reprise[]
   currentInput: { player1: string; player2: string }
-  isNegative: { player1: boolean; player2: boolean }
+  // Persistance (Story 1.12, 2026-09-10) — forme EXACTE de ce qui est écrit en localStorage
+  scoreAdjustments: { player1: number; player2: number }  // corrections −/+ (1.7), à part des reprises
+  sidesSwapped: boolean            // parité des côtés (1.7)
+  history: GameSnapshot[]          // pile d'annulation COMPLÈTE, persistée intégralement
   startedAt: number | null
   lastSaved: string
   // Fin de partie (Story 1.10, 2026-09-10)
   winner: PlayerId | null          // null tant que la partie n'est pas finie, ou égalité
   finishedAt: number | null
   equalizingReprise: boolean       // reprise égalisatrice en cours (côté droit)
+  endPrompt: EndPrompt | null      // pop-up de décision ouverte, restaurée telle quelle (1.12)
+  entryOpen: boolean               // pop-up de saisie ouverte, rouverte avec son buffer (1.12)
 }
 ```
 
-*Note (2026-09-10, Story 1.10)* : `PlayerId = 'player1' | 'player2'` est un type nommé de `game.ts`. La détection de fin vit dans le **store** (`checkEndOfGame` en fin des actions de série), qui expose une pop-up de décision `endPrompt: EndPrompt | null` (`equalizing-offer` ou `over` avec `winner`) ; `GameView` ne fait que l'afficher et appeler `finishGame()`, seule action de clôture, qui déduit le vainqueur du contexte (pop-up ou prorata). `equalizingReprise` fait partie de `GameSnapshot` (annuler la série gagnante défait l'offre acceptée) ; `endPrompt`, `winner` et `finishedAt` n'y sont pas — le récap est terminal, `undoLastAction` reste un no-op hors `playing`.
+*Note (2026-09-10, Story 1.12)* : `isNegative` (Story 1.9, annulée) est **retiré** de `GameState`, `GameSnapshot`, `mirrorSnapshot` et du store.
+
+*Note (2026-09-10, Story 1.10)* : `PlayerId = 'player1' | 'player2'` est un type nommé de `game.ts`. La détection de fin vit dans le **store** (`checkEndOfGame` en fin des actions de série), qui expose une pop-up de décision `endPrompt: EndPrompt | null` (`equalizing-offer` ou `over` avec `winner`) ; `GameView` ne fait que l'afficher et appeler `finishGame()`, seule action de clôture, qui déduit le vainqueur du contexte (pop-up ou prorata). `equalizingReprise` fait partie de `GameSnapshot` (annuler la série gagnante défait l'offre acceptée) ; `endPrompt`, `winner` et `finishedAt` n'y sont pas — le récap est terminal, `undoLastAction` reste un no-op hors `playing`. `endPrompt` fait en revanche partie de `GameState` et est **restauré en 1.12**.
+
+**Persistance (Story 1.12, 2026-09-10)** — filet de sécurité pour une tablette qui tourne 24 h/24 : la fermeture accidentelle est rare, le cas réel est le **rechargement** (mise à jour de la PWA par le Service Worker, `⌘R`, onglet tué par l'OS).
+- `storageService.ts` est le **seul** point de contact avec `localStorage` (AR12, vérifié par test `?raw` sur `GameView`, `HomeScreen`, `useGameStore`). Clé `carom-scoreboard:game`, enveloppe versionnée `{ version: 1, savedAt, state: GameState }` ; une autre version ou une forme inattendue est **jetée** (`console.warn` + suppression), pas migrée. Un stockage qui lève est absorbé (`console.error`), la partie continue en mémoire sans message au joueur.
+- Le store construit `persistedState = computed<GameState>` (complet par typage) et un `watch` (flush `pre`, ni `immediate` ni `sync`) écrit **une fois par action, dans le même tick** ; un état `idle` n'est jamais écrit — `resetGame()` **supprime** l'entrée. Aucun `beforeunload`/`pagehide`. Pas de debounce (le prototype `explore/` en avait un de 500 ms).
+- La **pile d'annulation est persistée intégralement** (décision de Nathan) : après une reprise, `ANNULER` remonte les actions d'avant la fermeture, parité des côtés respectée. Coût : ≈ 52 octets par reprise et par snapshot en JSON (≈ 350 Ko pour 100 actions sur 60 reprises), au-dessus du repère « < 50 Ko » d'AR4 mais loin du quota ; à revoir avec le `+1` par point du 3 Bandes (Epic 2), un bornage à l'écriture est une ligne.
+- `entryOpen` monte de la vue dans le store : une fermeture pendant la saisie rouvre la pop-up de saisie avec ses chiffres (le compte à rebours de 3 s repart).
+- Reprise en trois actions : `checkSavedGame()` (appelée par `main.ts` avant le montage, remplit `pendingRestore`), `resumeGame()` (joueurs restampés `id`/`color`, pile remplacée, `status` posé en dernier), `discardSavedGame()`. `GameView` affiche, en `idle`, une `PromptModal` « PARTIE EN COURS » (`REPRENDRE LA PARTIE` / `ANNULER`) par-dessus l'accueil. Aucune limite d'âge de la sauvegarde.
 
 Le catalogue des modes (`GAME_CATEGORIES`) vit dans ce même fichier : il décrit les catégories, leurs modes et leur disponibilité, et sert de source unique à l'écran d'accueil. Il ne porte **pas** les règles de score propres à chaque mode, qui arrivent avec la story de chaque mode. Il ne porte **aucune distance de jeu** non plus : la distance est saisie par l'utilisateur dans `PlayerSetupModal` et vit sur `Player.targetScore` (décision produit du 2026-09-08 — aucune distance de référence par mode, aucune donnée fédérale codée en dur).
 
@@ -585,7 +599,7 @@ Toutes les décisions sont compatibles. Aucune contradiction détectée. Écosys
 | FR45-FR46 Offline + PWA | ✅ | vite-plugin-pwa + `manifest.json` |
 | NFR1 < 100ms tactile | ✅ | Pointer Events + touch-action |
 | NFR2 < 2s chargement | ✅ | Vite build + cache Service Worker |
-| NFR5 Sauvegarde chaque action | ✅ | `storageService` dans watchers store |
+| NFR5 Sauvegarde chaque action | ✅ | `storageService` dans watchers store — livré en Story 1.12 (`watch` sur `persistedState`, une écriture par action) |
 | NFR13 Aucune donnée externe V1 | ✅ | Pas d'API externe |
 
 ### Gaps Identifiés & Corrections

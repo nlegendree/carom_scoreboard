@@ -19,6 +19,7 @@ const {
   player2,
   activePlayer,
   currentInput,
+  entryOpen,
   completedReprises,
   averages,
   bestSeries,
@@ -26,6 +27,7 @@ const {
   canUndo,
   endPrompt,
   winner,
+  pendingRestore,
 } = storeToRefs(gameStore)
 
 // AC15 : la reprise est OUVERTE par le joueur blanc. Le numéro affiché compte donc les
@@ -36,9 +38,9 @@ const repriseNumber = computed(() => completedReprises.value + 1)
 // `canUndo` vient du store, pas d'un `computed` local sur `reprises` : celui-ci resterait
 // actif après avoir tout annulé, et inactif après une simple correction (Story 1.7).
 
-// État purement d'interface : l'ouverture de la popup ne fait pas partie de l'état de la
-// partie, elle n'a donc rien à faire dans le store.
-const entryOpen = ref(false)
+// L'ouverture de la pop-up de saisie vit dans le STORE depuis la 1.12 (`entryOpen`) :
+// c'est le seul moyen de la rouvrir, buffer compris, à la reprise après une fermeture
+// pendant la saisie (décision 3 de Nathan, 2026-09-10).
 
 // La saisie porte toujours sur le joueur qui a la main.
 const entryPlayer = computed(() => (activePlayer.value === 'player1' ? player1.value : player2.value))
@@ -64,7 +66,7 @@ function lockPanels(): void {
 }
 
 function closeEntry(): void {
-  entryOpen.value = false
+  gameStore.closeScoreEntry()
   lockPanels()
 }
 
@@ -93,9 +95,8 @@ function swapPlayers(): void {
 }
 
 function openEntry(): void {
-  // Repartir d'un buffer propre : une saisie abandonnée ne doit pas réapparaître.
-  gameStore.clearScoreInput(activePlayer.value)
-  entryOpen.value = true
+  // Le buffer est vidé par l'action : une saisie abandonnée ne doit pas réapparaître.
+  gameStore.openScoreEntry(activePlayer.value)
 }
 
 function cancelEntry(): void {
@@ -128,8 +129,9 @@ const EXIT_BUTTON_CLASSES =
 // a été jouée (série, main rendue, correction `+`/`−`), une confirmation mène au récap ;
 // sans rien à récapituler, retour direct à l'accueil (AC12). Le critère est `canUndo`,
 // pas « aucune série » : des points ajoutés par `+` sans série ne doivent pas être jetés
-// au contact (revue 1.10, décision de Nathan du 2026-09-10). État local, comme
-// `entryOpen` : l'ouverture d'une confirmation n'est pas un état de partie.
+// au contact (revue 1.10, décision de Nathan du 2026-09-10). État LOCAL, à l'inverse de
+// `entryOpen` : l'ouverture d'une confirmation n'est pas un état de partie, et n'a pas à
+// survivre à un rechargement.
 const exitPromptOpen = ref(false)
 
 function leaveGame(): void {
@@ -161,7 +163,22 @@ function confirmExit(): void {
 
 <template>
   <div class="flex h-dvh w-full flex-col">
-    <HomeScreen v-if="status === 'idle'" />
+    <template v-if="status === 'idle'">
+      <HomeScreen />
+      <!-- Reprise après fermeture accidentelle (Story 1.12) : une sauvegarde lisible est
+           proposée par-dessus l'accueil, sans croix — `ANNULER` est le retour, comme sur
+           toutes les pop-ups de décision. Pas de grâce anti-tap fantôme : `REPRENDRE`
+           remplace l'accueil par le scoreboard sous le doigt, et rien de destructif n'y
+           est au contact. -->
+      <PromptModal
+        v-if="pendingRestore"
+        title="PARTIE EN COURS"
+        primaryLabel="REPRENDRE LA PARTIE"
+        secondaryLabel="ANNULER"
+        @primary="gameStore.resumeGame()"
+        @secondary="gameStore.discardSavedGame()"
+      />
+    </template>
 
     <template v-else-if="status === 'playing'">
       <div class="flex min-h-0 flex-1">

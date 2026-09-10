@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
+import { nextTick } from 'vue'
 import GameView from './GameView.vue'
 import { useGameStore } from '../stores/useGameStore'
 import type { PlayerId } from '../types/game'
@@ -967,5 +968,201 @@ describe('GameView — fin de partie', () => {
 
     expect(store.status).toBe('idle')
     expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
+  })
+})
+
+// --- Story 1.12 : reprise après fermeture accidentelle ---
+
+describe('GameView — reprise après fermeture', () => {
+  // Fake timers : la pop-up de saisie rouverte relance son compte à rebours de 3 s, et la
+  // grâce anti-tap fantôme (300 ms) suit chaque fermeture de la pop-up de SAISIE.
+  // `REPRENDRE` n'en pose aucune (Task 4.2) : les panneaux répondent immédiatement.
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    localStorage.clear()
+    vi.restoreAllMocks()
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  type Store = ReturnType<typeof useGameStore>
+
+  function validate(store: Store, playerId: PlayerId, value: number) {
+    for (const digit of String(value)) store.appendScoreDigit(playerId, Number(digit))
+    store.validateScoreInput(playerId)
+  }
+
+  // Joue sur un premier pinia, laisse le `watch` écrire, puis simule le lancement
+  // suivant : nouveau pinia, `checkSavedGame()` comme `main.ts`, montage de la vue.
+  async function relaunchAfter(play: (store: Store) => void) {
+    play(useGameStore())
+    await nextTick()
+    setActivePinia(createPinia())
+    const store = useGameStore()
+    store.checkSavedGame()
+    const wrapper = mount(GameView)
+    await wrapper.vm.$nextTick()
+    return { wrapper, store }
+  }
+
+  // MICHEL 7 + 2 de correction = 9, ANDRE 3, la main au blanc.
+  function playedGame(store: Store) {
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 100, player2: 80 })
+    validate(store, 'player1', 7)
+    validate(store, 'player2', 3)
+    store.adjustScore('player1', 2)
+  }
+
+  const prompt = (wrapper: VueWrapper) => wrapper.find('[data-testid="prompt-modal"]')
+  const panels = (wrapper: VueWrapper) => wrapper.findAllComponents({ name: 'PlayerPanel' })
+  const scoreOf = (wrapper: VueWrapper, side: 0 | 1) =>
+    panels(wrapper)[side]!.find('[data-testid="score"]').text()
+
+  async function press(wrapper: VueWrapper, testid: string) {
+    await wrapper.find(`[data-testid="${testid}"]`).trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+  }
+
+  // AC2 : l'accueil est rendu derrière la pop-up, sans croix.
+  it('offers to resume over the home screen when a game was saved', async () => {
+    const { wrapper } = await relaunchAfter(playedGame)
+
+    expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
+    expect(prompt(wrapper).exists()).toBe(true)
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('PARTIE EN COURS')
+    expect(wrapper.find('[data-testid="prompt-primary"]').text()).toBe('REPRENDRE LA PARTIE')
+    expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('ANNULER')
+    expect(wrapper.find('[data-testid="modal-close-button"]').exists()).toBe(false)
+  })
+
+  // AC3 : le scoreboard revient exactement où il en était.
+  it('brings the scoreboard back as it was on REPRENDRE LA PARTIE', async () => {
+    const { wrapper } = await relaunchAfter(playedGame)
+
+    await press(wrapper, 'prompt-primary')
+
+    expect(prompt(wrapper).exists()).toBe(false)
+    expect(panels(wrapper)).toHaveLength(2)
+    expect(scoreOf(wrapper, 0)).toBe('9')
+    expect(scoreOf(wrapper, 1)).toBe('3')
+    expect(panels(wrapper)[0]!.props('player').name).toBe('MICHEL')
+    expect(panels(wrapper)[0]!.find('[data-testid="target-score"]').text()).toBe('100')
+    expect(wrapper.find('[data-testid="reprise-number"]').text()).toBe('2')
+    expect(panels(wrapper)[0]!.props('active')).toBe(true)
+    expect(panels(wrapper)[1]!.props('active')).toBe(false)
+    expect(wrapper.find('[data-testid="add-points-button"]').attributes('data-side')).toBe(
+      'player2',
+    )
+  })
+
+  it('lets ANNULER undo the actions taken before the reload', async () => {
+    const { wrapper } = await relaunchAfter(playedGame)
+    await press(wrapper, 'prompt-primary')
+    // Pas d'avance de timer : aucune grâce après `REPRENDRE`, l'appui suivant agit.
+
+    const undo = wrapper.find('[data-testid="undo-button"]')
+    expect(undo.attributes('disabled')).toBeUndefined()
+
+    await press(wrapper, 'undo-button')
+
+    expect(scoreOf(wrapper, 0)).toBe('7')
+  })
+
+  // AC4 : la sauvegarde est jetée, l'accueil reste.
+  it('drops the save and stays on the home screen on ANNULER', async () => {
+    const { wrapper, store } = await relaunchAfter(playedGame)
+
+    await press(wrapper, 'prompt-secondary')
+
+    expect(prompt(wrapper).exists()).toBe(false)
+    expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
+    expect(store.status).toBe('idle')
+    expect(localStorage.getItem('carom-scoreboard:game')).toBeNull()
+  })
+
+  // Décision 3 : fermeture pendant la saisie → la pop-up de saisie se rouvre, chiffres compris.
+  it('reopens the score entry with its buffer when it was open', async () => {
+    const { wrapper } = await relaunchAfter((store) => {
+      playedGame(store)
+      store.openScoreEntry('player1')
+      store.appendScoreDigit('player1', 5)
+    })
+
+    expect(wrapper.findComponent({ name: 'ScoreEntryModal' }).exists()).toBe(false)
+
+    await press(wrapper, 'prompt-primary')
+
+    const entry = wrapper.findComponent({ name: 'ScoreEntryModal' })
+    expect(entry.exists()).toBe(true)
+    expect(wrapper.find('[data-testid="entry-value"]').text()).toBe('5')
+    expect(wrapper.find('[data-testid="validate-countdown"]').exists()).toBe(true)
+  })
+
+  it('brings the equalizing offer back', async () => {
+    const { wrapper } = await relaunchAfter((store) => {
+      store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })
+      validate(store, 'player1', 10)
+    })
+
+    await press(wrapper, 'prompt-primary')
+
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe(
+      'MICHEL A ATTEINT SA DISTANCE',
+    )
+  })
+
+  it('brings the summary back for a finished game', async () => {
+    const { wrapper } = await relaunchAfter((store) => {
+      store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 })
+      validate(store, 'player1', 10)
+      store.finishGame()
+    })
+
+    await press(wrapper, 'prompt-primary')
+
+    expect(wrapper.find('[data-testid="game-summary"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="rematch-button"]').exists()).toBe(true)
+  })
+
+  // AC5 : rien à reprendre → accueil sans pop-up.
+  it('shows no prompt on an empty storage', async () => {
+    const store = useGameStore()
+    store.checkSavedGame()
+    const wrapper = mount(GameView)
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
+    expect(prompt(wrapper).exists()).toBe(false)
+  })
+
+  it('shows no prompt and drops a corrupted save', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    localStorage.setItem('carom-scoreboard:game', '{oops')
+    const store = useGameStore()
+    store.checkSavedGame()
+    const wrapper = mount(GameView)
+    await wrapper.vm.$nextTick()
+
+    expect(prompt(wrapper).exists()).toBe(false)
+    expect(localStorage.getItem('carom-scoreboard:game')).toBeNull()
+  })
+
+  // Le store porte désormais `entryOpen` : ouvrir et fermer la saisie passe par lui.
+  it('drives entryOpen through the store when opening and closing the entry', async () => {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    await wrapper.vm.$nextTick()
+
+    await press(wrapper, 'add-points-button')
+    expect(store.entryOpen).toBe(true)
+    expect(wrapper.findComponent({ name: 'ScoreEntryModal' }).exists()).toBe(true)
+
+    await press(wrapper, 'modal-close-button')
+    expect(store.entryOpen).toBe(false)
+    expect(wrapper.findComponent({ name: 'ScoreEntryModal' }).exists()).toBe(false)
   })
 })

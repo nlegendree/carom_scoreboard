@@ -1,14 +1,16 @@
-import { computed, ref, shallowRef } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
 import { defineStore } from 'pinia'
 import type {
   EndPrompt,
   GameMode,
   GameSnapshot,
+  GameState,
   GameStatus,
   Player,
   PlayerId,
   Reprise,
 } from '../types/game'
+import { clearGameState, loadGameState, saveGameState } from '../services/storageService'
 
 const DEFAULT_MODE: GameMode = 'libre'
 // Plafond de saisie repris de la contrainte de série (FR7) : une distance de 4 chiffres
@@ -23,6 +25,13 @@ export const MAX_SCORE_DIGITS = 3
 // trois petits objets copiés : 1000 reste négligeable, et couvre toute partie réaliste
 // même à une action par point (corrections `+`, 3 Bandes de l'Epic 2) — relevé de 200 à
 // 1000 en revue du 2026-09-09. Le plus ancien snapshot est abandonné en silence.
+// ⚠️ Depuis la 1.12, la pile est PERSISTÉE intégralement, et en JSON chaque snapshot
+// recopie tout le tableau des reprises (≈ 52 octets par reprise) : 100 actions sur une
+// partie de 60 reprises ≈ 350 Ko, très au-dessus du repère « < 50 Ko » d'AR4 mais loin
+// des 5 Mo de quota. Le cas limite (1000 actions × 100 reprises ≈ 5 Mo) est théorique
+// en JDS ; à revoir avec le `+1` par point du 3 Bandes (Epic 2) — un bornage à
+// l'écriture (`history.slice(-N)` dans `persistedState`) est alors une ligne. Une
+// écriture qui échoue est absorbée par le service (AR12), la partie continue.
 const MAX_UNDO_DEPTH = 1000
 
 export interface TargetScores {
@@ -75,10 +84,6 @@ export function mirrorSnapshot(snapshot: GameSnapshot): GameSnapshot {
       player1: snapshot.currentInput.player2,
       player2: snapshot.currentInput.player1,
     },
-    isNegative: {
-      player1: snapshot.isNegative.player2,
-      player2: snapshot.isNegative.player1,
-    },
     sidesSwapped: !snapshot.sidesSwapped,
     // Fait de jeu attaché au côté droit, pas à une personne : recopié tel quel.
     equalizingReprise: snapshot.equalizingReprise,
@@ -97,7 +102,17 @@ export const useGameStore = defineStore('game', () => {
   // ne déclencherait aucun recalcul des `computed` qui en dépendent (Story 1.5/1.7).
   const reprises = shallowRef<Reprise[]>([])
   const currentInput = ref({ player1: '', player2: '' })
-  const isNegative = ref({ player1: false, player2: false })
+  // Pop-up de saisie ouverte (Story 1.12, décision 3) : montée de `GameView` dans le
+  // store pour être persistée et ROUVERTE à la reprise, avec son buffer `currentInput`.
+  // L'ouverture d'une confirmation de sortie, elle, reste locale à la vue.
+  const entryOpen = ref(false)
+  // Sauvegarde chargée au lancement et proposée à la reprise (Story 1.12) ; `null` = rien
+  // à proposer. Porte l'état lui-même plutôt qu'un booléen : une seule lecture du storage,
+  // `resumeGame` n'a rien à relire. `shallowRef` (AR9) : rien à observer en profondeur, et
+  // les objets restent bruts jusqu'à leur adoption par les `ref` du store. Vidée par
+  // `startGame` : une partie démarrée pendant une offre en attente écrase la sauvegarde,
+  // l'offre ne doit pas resurgir au retour à l'accueil (revue 1.12).
+  const pendingRestore = shallowRef<GameState | null>(null)
   // Corrections manuelles du total, tenues À PART des reprises : ce sont des rattrapages
   // d'arbitrage, pas des séries. Les garder séparées est ce qui permet de corriger un
   // score sans toucher au déroulé de la partie — ni reprise, ni tour, ni meilleure série.
@@ -136,8 +151,8 @@ export const useGameStore = defineStore('game', () => {
   // parce qu'ils sont toujours REMPLACÉS, jamais mutés en place (`recomputeScore`,
   // `swapPlayers`, `addReprise`, `startGame`). Toute action future qui muterait un joueur
   // ou une reprise en place (ex. renommage, Story 1.14) doit soit le remplacer, soit copier
-  // ici. `scoreAdjustments`, `currentInput`, `isNegative` sont mutés en place par
-  // `adjustScore` et `appendScoreDigit` : ils sont COPIÉS, à la prise comme à la restauration.
+  // ici. `scoreAdjustments` et `currentInput` sont mutés en place par `adjustScore` et
+  // `appendScoreDigit` : ils sont COPIÉS, à la prise comme à la restauration.
   function takeSnapshot(): GameSnapshot {
     return {
       player1: player1.value,
@@ -146,7 +161,6 @@ export const useGameStore = defineStore('game', () => {
       reprises: reprises.value,
       scoreAdjustments: { ...scoreAdjustments.value },
       currentInput: { ...currentInput.value },
-      isNegative: { ...isNegative.value },
       sidesSwapped: sidesSwapped.value,
       equalizingReprise: equalizingReprise.value,
     }
@@ -186,7 +200,8 @@ export const useGameStore = defineStore('game', () => {
     reprises.value = []
     startedAt.value = Date.now()
     currentInput.value = { player1: '', player2: '' }
-    isNegative.value = { player1: false, player2: false }
+    entryOpen.value = false
+    pendingRestore.value = null
     scoreAdjustments.value = { player1: 0, player2: 0 }
     history.value = []
     sidesSwapped.value = false
@@ -230,10 +245,6 @@ export const useGameStore = defineStore('game', () => {
     currentInput.value = {
       player1: currentInput.value.player2,
       player2: currentInput.value.player1,
-    }
-    isNegative.value = {
-      player1: isNegative.value.player2,
-      player2: isNegative.value.player1,
     }
     scoreAdjustments.value = {
       player1: scoreAdjustments.value.player2,
@@ -292,6 +303,18 @@ export const useGameStore = defineStore('game', () => {
 
   function clearScoreInput(playerId: PlayerId): void {
     currentInput.value[playerId] = ''
+  }
+
+  // Ouvre la pop-up de saisie sur un buffer PROPRE : une saisie abandonnée ne doit pas
+  // réapparaître. Le buffer, lui, reste dans `currentInput` (déjà persisté).
+  function openScoreEntry(playerId: PlayerId): void {
+    if (status.value !== 'playing') return
+    currentInput.value[playerId] = ''
+    entryOpen.value = true
+  }
+
+  function closeScoreEntry(): void {
+    entryOpen.value = false
   }
 
   function backspaceScoreInput(playerId: PlayerId): void {
@@ -464,6 +487,7 @@ export const useGameStore = defineStore('game', () => {
     finishedAt.value = Date.now()
     endPrompt.value = null
     currentInput.value = { player1: '', player2: '' }
+    entryOpen.value = false
     lastSaved.value = new Date().toISOString()
   }
 
@@ -502,7 +526,6 @@ export const useGameStore = defineStore('game', () => {
     // partage les siens avec le snapshot dépilé.
     scoreAdjustments.value = { ...snapshot.scoreAdjustments }
     currentInput.value = { ...snapshot.currentInput }
-    isNegative.value = { ...snapshot.isNegative }
     equalizingReprise.value = snapshot.equalizingReprise
     lastSaved.value = new Date().toISOString()
   }
@@ -560,7 +583,7 @@ export const useGameStore = defineStore('game', () => {
     activePlayer.value = 'player1'
     reprises.value = []
     currentInput.value = { player1: '', player2: '' }
-    isNegative.value = { player1: false, player2: false }
+    entryOpen.value = false
     scoreAdjustments.value = { player1: 0, player2: 0 }
     history.value = []
     sidesSwapped.value = false
@@ -572,6 +595,95 @@ export const useGameStore = defineStore('game', () => {
     lastSaved.value = ''
   }
 
+  // --- Persistance et reprise après fermeture (Story 1.12) ---
+
+  // La forme persistée, construite en `computed<GameState>` COMPLET : oublier un champ
+  // ne compile pas. `currentInput`/`scoreAdjustments` sont mutés en place par les
+  // actions — copiés pour que l'objet sérialisé ne soit jamais un alias de l'état vivant.
+  // `player1`/`player2`/`reprises`/`history` ne sont suivis que par REMPLACEMENT de leur
+  // `.value` (même invariant que `takeSnapshot`) : une mutation en place d'un joueur ou
+  // d'une reprise ne déclencherait AUCUNE écriture — remplacer, jamais muter.
+  // Pas de bornage de la pile à l'écriture : voir `MAX_UNDO_DEPTH`.
+  const persistedState = computed<GameState>(() => ({
+    mode: mode.value,
+    status: status.value,
+    player1: player1.value,
+    player2: player2.value,
+    activePlayer: activePlayer.value,
+    reprises: reprises.value,
+    currentInput: { ...currentInput.value },
+    scoreAdjustments: { ...scoreAdjustments.value },
+    sidesSwapped: sidesSwapped.value,
+    history: history.value,
+    startedAt: startedAt.value,
+    lastSaved: lastSaved.value,
+    winner: winner.value,
+    finishedAt: finishedAt.value,
+    equalizingReprise: equalizingReprise.value,
+    endPrompt: endPrompt.value,
+    entryOpen: entryOpen.value,
+  }))
+
+  // Une écriture par action, dans le même tick : le flush `pre` (défaut) regroupe toutes
+  // les mutations d'une action avant de déclencher. Ni `immediate` (un store neuf n'a
+  // rien à écrire), ni `sync` (une écriture par mutation), ni `$subscribe`. Aucun
+  // `beforeunload`/`pagehide` : iPadOS tue une PWA sans les envoyer, et il ne reste rien
+  // à écrire. Un état `idle` n'est jamais écrit : `resetGame` SUPPRIME l'entrée.
+  watch(persistedState, (state) => {
+    if (state.status === 'idle') clearGameState()
+    else saveGameState(state)
+  })
+
+  // Appelée par `main.ts` avant le montage. Garde `idle` : un store en partie n'a rien
+  // à se faire proposer.
+  function checkSavedGame(): void {
+    if (status.value !== 'idle') return
+    pendingRestore.value = loadGameState()
+  }
+
+  // `REPRENDRE LA PARTIE` : le scoreboard revient exactement où il en était. Les joueurs
+  // sont RESTAMPÉS (`id`/`color` appartiennent au côté, pas à la sauvegarde) — dans la
+  // pile aussi, sinon le premier `ANNULER` réinstallerait ceux de la sauvegarde. La pile
+  // est REMPLACÉE (`shallowRef`, jamais `push`), et `sidesSwapped` restauré avec elle —
+  // sans lui, les snapshots pris avant un `ÉCHANGER` seraient remis du mauvais côté.
+  // `status` est posé EN DERNIER : c'est lui qui fait basculer `GameView`, tout le reste
+  // doit être en place avant. Le `watch` réécrit ensuite le même état (nouvelle enveloppe).
+  function resumeGame(): void {
+    const saved = pendingRestore.value
+    if (saved === null || status.value !== 'idle') return
+
+    mode.value = saved.mode
+    player1.value = { ...saved.player1, id: 'player1', color: 'white' }
+    player2.value = { ...saved.player2, id: 'player2', color: 'yellow' }
+    activePlayer.value = saved.activePlayer
+    reprises.value = saved.reprises
+    currentInput.value = { ...saved.currentInput }
+    entryOpen.value = saved.entryOpen
+    scoreAdjustments.value = { ...saved.scoreAdjustments }
+    sidesSwapped.value = saved.sidesSwapped
+    history.value = saved.history.map((snapshot) => ({
+      ...snapshot,
+      player1: { ...snapshot.player1, id: 'player1', color: 'white' },
+      player2: { ...snapshot.player2, id: 'player2', color: 'yellow' },
+    }))
+    startedAt.value = saved.startedAt
+    lastSaved.value = saved.lastSaved
+    winner.value = saved.winner
+    finishedAt.value = saved.finishedAt
+    equalizingReprise.value = saved.equalizingReprise
+    endPrompt.value = saved.endPrompt
+    status.value = saved.status
+    pendingRestore.value = null
+  }
+
+  // `ANNULER` de la pop-up de reprise : la sauvegarde est jetée, l'accueil reste. Garde
+  // `idle` comme ses deux sœurs : en partie, la sauvegarde vivante n'est pas à jeter.
+  function discardSavedGame(): void {
+    if (status.value !== 'idle') return
+    clearGameState()
+    pendingRestore.value = null
+  }
+
   return {
     mode,
     status,
@@ -580,12 +692,13 @@ export const useGameStore = defineStore('game', () => {
     activePlayer,
     reprises,
     currentInput,
-    isNegative,
+    entryOpen,
     startedAt,
     lastSaved,
     // Exposés en lecture (tests, pilotage déporté) — jamais à muter depuis un composant (AR17).
     history,
     sidesSwapped,
+    scoreAdjustments,
     canUndo,
     completedReprises,
     averages,
@@ -595,11 +708,14 @@ export const useGameStore = defineStore('game', () => {
     finishedAt,
     equalizingReprise,
     endPrompt,
+    pendingRestore,
     startGame,
     swapPlayers,
     resetGame,
     appendScoreDigit,
     clearScoreInput,
+    openScoreEntry,
+    closeScoreEntry,
     backspaceScoreInput,
     addReprise,
     switchTurn,
@@ -611,5 +727,8 @@ export const useGameStore = defineStore('game', () => {
     acceptEqualizingReprise,
     dismissEndPrompt,
     rematch,
+    checkSavedGame,
+    resumeGame,
+    discardSavedGame,
   }
 })

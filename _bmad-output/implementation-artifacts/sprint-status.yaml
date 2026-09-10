@@ -55,7 +55,7 @@ development_status:
   1-9-saisir-un-score-negatif: done # annulée sans code — couverte par les CTA −/+ de la 1.5 (décision de Nathan, 2026-09-10)
   1-10-terminer-une-partie-et-consulter-le-recapitulatif-automatique: done
   1-11-detecter-automatiquement-la-fin-dun-set-ou-dun-match: done # absorbée par 1-10 (décision de Nathan, 2026-09-10)
-  1-12-preserver-letat-de-la-partie-en-cas-de-fermeture-accidentelle: backlog
+  1-12-preserver-letat-de-la-partie-en-cas-de-fermeture-accidentelle: done
   1-13-fonctionner-offline-et-sinstaller-comme-application-native: backlog
   1-14-modifier-les-noms-des-joueurs-en-cours-de-partie: backlog
   1-15-reinitialiser-une-partie-en-cours: backlog
