@@ -334,9 +334,7 @@ export const useGameStore = defineStore('game', () => {
     const last = reprises.value[reprises.value.length - 1]
 
     if (last !== undefined && last[playerId] === null) {
-      reprises.value = reprises.value.map((reprise, index) =>
-        index === reprises.value.length - 1 ? { ...reprise, [playerId]: value } : reprise,
-      )
+      writeLastReprise(playerId, value)
     } else {
       reprises.value = [
         ...reprises.value,
@@ -349,6 +347,28 @@ export const useGameStore = defineStore('game', () => {
     }
 
     recomputeScore(playerId)
+  }
+
+  // Réécrit la case d'un joueur dans la DERNIÈRE reprise — toujours par remplacement du
+  // tableau (invariante des snapshots, jamais de mutation en place).
+  function writeLastReprise(playerId: PlayerId, value: number): void {
+    reprises.value = reprises.value.map((reprise, index) =>
+      index === reprises.value.length - 1 ? { ...reprise, [playerId]: value } : reprise,
+    )
+  }
+
+  // Série OUVERTE du joueur qui a la main (Story 2.2) : la valeur de sa case dans la
+  // dernière reprise si c'est bien LUI qui l'a écrite en dernier — c'est-à-dire si rien
+  // n'a été inscrit après elle. Le blanc ouvre la reprise : sa série n'est ouverte que
+  // tant que la case du jaune est vide ; celle du jaune, dès qu'elle est renseignée
+  // (le tour repasse au blanc, qui ouvre alors une reprise neuve). En JDS, la case est
+  // toujours écrite d'un bloc à la validation, qui rend aussitôt la main : il n'y a
+  // jamais de série ouverte, et `passTurn` y enregistre un 0 comme avant.
+  function openSeriesValue(playerId: PlayerId): number | null {
+    const last = reprises.value[reprises.value.length - 1]
+    if (last === undefined || last[playerId] === null) return null
+    if (playerId === 'player1' && last.player2 !== null) return null
+    return last[playerId]
   }
 
   // Action publique et nommée (UX-DR23, AR15) : la bascule manuelle au tap du mode
@@ -398,13 +418,43 @@ export const useGameStore = defineStore('game', () => {
   // de l'adversaire au lieu de saisir `0` au pavé. Le raccourci porte sur le geste, pas sur
   // le modèle — une reprise blanchie reste une reprise jouée, et doit compter dans la
   // moyenne. Ne rien enregistrer ferait monter artificiellement la moyenne du joueur.
+  // Story 2.2 (3 Bandes) : si des points ont déjà été comptés au `+1` pendant ce tour, la
+  // série est déjà inscrite — rendre la main la CLÔTURE, sans ajouter de 0 par-dessus.
   function passTurn(): void {
     if (status.value !== 'playing') return
     const playerId = activePlayer.value
     pushHistory()
-    addReprise(playerId, 0)
+    if (openSeriesValue(playerId) === null) addReprise(playerId, 0)
     switchTurn()
     checkEndOfGame(playerId)
+    lastSaved.value = new Date().toISOString()
+  }
+
+  // `+1 POINT` (Story 2.2, FR14) : le joueur assis crédite UN point à celui qui joue, au
+  // fil de la série. Le premier tap ouvre la série (case du joueur dans la reprise
+  // courante), les suivants l'incrémentent — le total reste une somme de reprises
+  // (Décision 5), le compteur `POUR n` et l'undo en découlent sans cas particulier. Un
+  // appui = une action annulable, comme `adjustScore`. Le tour ne change PAS : c'est le
+  // tap sur la carte (`passTurn`) qui rend la main. Exception : atteindre la distance
+  // termine la série sur-le-champ (on ne joue pas au-delà) — même bascule et même
+  // détection de fin que la validation d'une série au pavé. À la distance déjà atteinte
+  // (état joignable par une correction `+`), le tap est un no-op : rien à créditer.
+  function incrementSeries(): void {
+    if (status.value !== 'playing') return
+    const playerId = activePlayer.value
+    if (hasReachedTarget(playerId)) return
+    pushHistory()
+    const open = openSeriesValue(playerId)
+    if (open === null) {
+      addReprise(playerId, 1)
+    } else {
+      writeLastReprise(playerId, open + 1)
+      recomputeScore(playerId)
+    }
+    if (hasReachedTarget(playerId)) {
+      switchTurn()
+      checkEndOfGame(playerId)
+    }
     lastSaved.value = new Date().toISOString()
   }
 
@@ -733,6 +783,7 @@ export const useGameStore = defineStore('game', () => {
     addReprise,
     switchTurn,
     passTurn,
+    incrementSeries,
     adjustScore,
     validateScoreInput,
     undoLastAction,

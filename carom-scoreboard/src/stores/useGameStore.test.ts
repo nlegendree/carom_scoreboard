@@ -2128,7 +2128,7 @@ describe('useGameStore — persistance', () => {
 
   // AR12 : le store ne voit pas l'erreur, la partie continue.
   it('keeps playing in memory when the storage fails', async () => {
-    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+    const setItem = vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
       throw new DOMException('quota', 'QuotaExceededError')
     })
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -2140,5 +2140,253 @@ describe('useGameStore — persistance', () => {
 
     expect(store.player1.score).toBe(7)
     expect(error).toHaveBeenCalled()
+    // `vi.restoreAllMocks()` ne restaure pas ces espions (vérifié, Vitest 5) : sans ce
+    // `mockRestore`, tout `setItem` des blocs suivants continuerait de lever.
+    setItem.mockRestore()
+    error.mockRestore()
+  })
+})
+
+// --- Story 2.2 : série au point du 3 Bandes (`+1 POINT` du joueur assis) ---
+
+describe('useGameStore — série au point (3 Bandes)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    localStorage.clear()
+  })
+
+  function startThreeCushions(targets = { player1: 30, player2: 25 }) {
+    const store = useGameStore()
+    store.startGame('3bandes', 'MICHEL', 'ANDRÉ', targets)
+    return store
+  }
+
+  // AC1, AC3 : chaque tap crédite un point au joueur qui a la main, le total suit.
+  it('credits one point per tap to the active player without changing the turn', () => {
+    const store = startThreeCushions()
+
+    store.incrementSeries()
+    store.incrementSeries()
+    store.incrementSeries()
+
+    expect(store.player1.score).toBe(3)
+    expect(store.player2.score).toBe(0)
+    expect(store.activePlayer).toBe('player1')
+    expect(store.reprises).toEqual([expect.objectContaining({ player1: 3, player2: null })])
+  })
+
+  // La main rendue CLÔTURE la série comptée au tap : pas de 0 ajouté par-dessus.
+  it('passing the turn closes the tapped series instead of recording a zero', () => {
+    const store = startThreeCushions()
+
+    store.incrementSeries()
+    store.incrementSeries()
+    store.passTurn()
+
+    expect(store.activePlayer).toBe('player2')
+    expect(store.reprises).toEqual([expect.objectContaining({ player1: 2, player2: null })])
+    expect(store.player1.score).toBe(2)
+    expect(store.completedReprises).toBe(0)
+  })
+
+  // Sans aucun tap, rendre la main reste une série de 0 (elle compte dans la moyenne).
+  it('passing the turn without any tap still records a zero series', () => {
+    const store = startThreeCushions()
+
+    store.passTurn()
+
+    expect(store.reprises).toEqual([expect.objectContaining({ player1: 0, player2: null })])
+    expect(store.activePlayer).toBe('player2')
+  })
+
+  // Alternance complète : le jaune tape dans la case libre de la reprise ouverte par le
+  // blanc, puis le blanc ouvre une reprise neuve — jamais d'incrément sur une série
+  // d'un tour précédent.
+  it('keeps each series in its own reprise cell across turns', () => {
+    const store = startThreeCushions()
+
+    store.incrementSeries() // blanc 1
+    store.passTurn()
+    store.incrementSeries() // jaune 1
+    store.incrementSeries() // jaune 2
+    store.passTurn()
+    store.incrementSeries() // blanc, reprise 2 : 1
+    store.passTurn()
+    store.passTurn() // jaune : 0
+
+    expect(store.reprises).toEqual([
+      expect.objectContaining({ player1: 1, player2: 2 }),
+      expect.objectContaining({ player1: 1, player2: 0 }),
+    ])
+    expect(store.player1.score).toBe(2)
+    expect(store.player2.score).toBe(2)
+    expect(store.completedReprises).toBe(2)
+    expect(store.activePlayer).toBe('player1')
+    expect(store.averages).toEqual({ player1: 1, player2: 1 })
+    expect(store.bestSeries).toEqual({ player1: 1, player2: 2 })
+  })
+
+  // Un appui = une action annulable : trois taps, trois ANNULER.
+  it('undoes taps one at a time', () => {
+    const store = startThreeCushions()
+
+    store.incrementSeries()
+    store.incrementSeries()
+    store.incrementSeries()
+    store.undoLastAction()
+
+    expect(store.player1.score).toBe(2)
+    expect(store.reprises).toEqual([expect.objectContaining({ player1: 2, player2: null })])
+
+    store.undoLastAction()
+    store.undoLastAction()
+
+    expect(store.player1.score).toBe(0)
+    expect(store.reprises).toEqual([])
+    expect(store.canUndo).toBe(false)
+  })
+
+  // Annuler une main rendue rouvre la série comptée : le tap suivant la prolonge.
+  it('undoing a pass reopens the tapped series', () => {
+    const store = startThreeCushions()
+
+    store.incrementSeries()
+    store.incrementSeries()
+    store.passTurn()
+    store.undoLastAction()
+    store.incrementSeries()
+
+    expect(store.activePlayer).toBe('player1')
+    expect(store.reprises).toEqual([expect.objectContaining({ player1: 3, player2: null })])
+    expect(store.player1.score).toBe(3)
+  })
+
+  // Les corrections `−`/`+` restent hors des reprises : elles ne rouvrent ni ne
+  // prolongent la série au tap.
+  it('keeps manual corrections apart from the tapped series', () => {
+    const store = startThreeCushions()
+
+    store.incrementSeries()
+    store.adjustScore('player1', 1)
+    store.incrementSeries()
+
+    expect(store.player1.score).toBe(3)
+    expect(store.reprises).toEqual([expect.objectContaining({ player1: 2, player2: null })])
+  })
+
+  // Atteindre la distance au tap termine la série sur-le-champ : le blanc reçoit l'offre
+  // d'égalisatrice, comme après une série validée au pavé (Story 1.10).
+  it('ends the series at once when the white player reaches his distance by tap', () => {
+    const store = startThreeCushions({ player1: 3, player2: 25 })
+
+    store.incrementSeries()
+    store.incrementSeries()
+    expect(store.endPrompt).toBeNull()
+    store.incrementSeries()
+
+    expect(store.player1.score).toBe(3)
+    expect(store.activePlayer).toBe('player2')
+    expect(store.endPrompt).toEqual({ kind: 'equalizing-offer' })
+    expect(store.reprises).toEqual([expect.objectContaining({ player1: 3, player2: null })])
+  })
+
+  // Le jaune qui atteint sa distance au tap gagne immédiatement.
+  it('ends the game at once when the yellow player reaches his distance by tap', () => {
+    const store = startThreeCushions({ player1: 30, player2: 2 })
+
+    store.passTurn()
+    store.incrementSeries()
+    store.incrementSeries()
+
+    expect(store.player2.score).toBe(2)
+    expect(store.endPrompt).toEqual({ kind: 'over', winner: 'player2' })
+  })
+
+  // Égalisatrice au tap : le jaune égalise point par point, puis rend la main → fin.
+  it('lets the yellow player equalize by taps during the equalizing reprise', () => {
+    const store = startThreeCushions({ player1: 2, player2: 2 })
+
+    store.incrementSeries()
+    store.incrementSeries()
+    store.acceptEqualizingReprise()
+    expect(store.equalizingReprise).toBe(true)
+
+    store.incrementSeries()
+    expect(store.endPrompt).toBeNull()
+    store.incrementSeries()
+
+    expect(store.endPrompt).toEqual({ kind: 'over', winner: null })
+  })
+
+  it('lets the yellow player fall short in the equalizing reprise and lose on the pass', () => {
+    const store = startThreeCushions({ player1: 2, player2: 2 })
+
+    store.incrementSeries()
+    store.incrementSeries()
+    store.acceptEqualizingReprise()
+    store.incrementSeries()
+    store.passTurn()
+
+    expect(store.endPrompt).toEqual({ kind: 'over', winner: 'player1' })
+  })
+
+  // Distance déjà atteinte (correction `+`) : rien à créditer, aucune action empilée.
+  it('ignores a tap once the distance is already reached', () => {
+    const store = startThreeCushions({ player1: 1, player2: 25 })
+
+    store.adjustScore('player1', 1)
+    const depth = store.canUndo
+    store.incrementSeries()
+
+    expect(store.player1.score).toBe(1)
+    expect(store.reprises).toEqual([])
+    expect(store.canUndo).toBe(depth)
+  })
+
+  it('is a no-op outside a running game', () => {
+    const store = useGameStore()
+
+    store.incrementSeries()
+
+    expect(store.reprises).toEqual([])
+    expect(store.canUndo).toBe(false)
+  })
+
+  // Distance libre : les taps ne terminent jamais la partie.
+  it('never ends a free-distance game by tap', () => {
+    const store = startThreeCushions({ player1: 0, player2: 0 })
+
+    for (let i = 0; i < 12; i += 1) store.incrementSeries()
+
+    expect(store.player1.score).toBe(12)
+    expect(store.endPrompt).toBeNull()
+    expect(store.activePlayer).toBe('player1')
+  })
+
+  // Après un ÉCHANGER, la série ouverte suit son côté (les reprises sont rangées par
+  // côté et mises en miroir) : le tap continue de créditer le côté qui a la main.
+  it('keeps crediting the active side after the sides are swapped', () => {
+    const store = startThreeCushions()
+
+    store.incrementSeries()
+    store.passTurn()
+    store.incrementSeries() // jaune : 1
+    store.swapPlayers()
+
+    expect(store.activePlayer).toBe('player2')
+    store.incrementSeries()
+
+    expect(store.player2.score).toBe(2)
+    expect(store.player1.score).toBe(1)
+  })
+
+  it('saves after a tap', async () => {
+    const store = startThreeCushions()
+
+    store.incrementSeries()
+    await nextTick()
+
+    const saved = JSON.parse(localStorage.getItem(GAME_STORAGE_KEY)!).state as GameState
+    expect(saved.reprises).toEqual([expect.objectContaining({ player1: 1, player2: null })])
   })
 })

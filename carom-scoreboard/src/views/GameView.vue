@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '../stores/useGameStore'
 import { useTimer } from '../composables/useTimer'
+import { useHaptics } from '../composables/useHaptics'
 import HomeScreen from '../components/HomeScreen.vue'
 import ActionBar from '../components/ActionBar.vue'
 import PlayerPanel from '../components/PlayerPanel.vue'
@@ -40,9 +41,20 @@ const repriseNumber = computed(() => completedReprises.value + 1)
 // Chrono de tir du 3 Bandes (Story 2.1). Le composable ne décompte qu'en `3bandes` et
 // vaut 40 (repos) ailleurs : la vue filtre une seconde fois par mode pour ne transmettre
 // une valeur à la console QUE dans ce cas — double garde volontaire, `CenterPanel` reste
-// générique. `resetTimer` n'est pas consommée ici : point d'extension de la Story 2.2.
-const { secondsRemaining } = useTimer()
-const shotClockSeconds = computed(() => (mode.value === '3bandes' ? secondsRemaining.value : null))
+// générique. `resetTimer` (Story 2.2) est relancée au `+1 POINT` et à la main rendue ;
+// elle est elle-même gardée par le mode, la vue l'appelle donc sans distinguer.
+const { secondsRemaining, resetTimer } = useTimer()
+const isThreeCushions = computed(() => mode.value === '3bandes')
+const shotClockSeconds = computed(() => (isThreeCushions.value ? secondsRemaining.value : null))
+
+// Story 2.2 : en 3 Bandes, le CTA du joueur assis n'ouvre plus le pavé — il crédite UN
+// point à celui qui joue (`incrementSeries`), avec l'accusé haptique du pavé (UX-DR24,
+// NFR1). Même emplacement, même gabarit que `AJOUTER LES POINTS` : c'est le même geste
+// (l'assis compte pour celui qui joue), seule la granularité change. Le pavé de secours
+// du 3 Bandes (Story 2.3) trouvera son propre point d'entrée.
+const { tap } = useHaptics()
+const ctaTestId = computed(() => (isThreeCushions.value ? 'plus-one-button' : 'add-points-button'))
+const ctaLabel = computed(() => (isThreeCushions.value ? '+1 POINT' : 'AJOUTER LES POINTS'))
 // `canUndo` vient du store, pas d'un `computed` local sur `reprises` : celui-ci resterait
 // actif après avoir tout annulé, et inactif après une simple correction (Story 1.7).
 
@@ -82,9 +94,22 @@ function panelsAcceptInput(): boolean {
   return Date.now() >= panelsLockedUntil
 }
 
+// Rendre la main relance aussi le chrono (Story 2.2) : le joueur suivant repart de 40.
 function passTurn(): void {
   if (!panelsAcceptInput()) return
   gameStore.passTurn()
+  resetTimer()
+}
+
+function addPoint(): void {
+  tap()
+  gameStore.incrementSeries()
+  resetTimer()
+}
+
+function pressCta(): void {
+  if (isThreeCushions.value) addPoint()
+  else openEntry()
 }
 
 function adjustScore(playerId: PlayerId, delta: number): void {
@@ -262,12 +287,12 @@ function confirmRestart(): void {
             <div class="flex w-2/5 justify-start gap-2">
               <button
                 v-if="entrySide === 'player1'"
-                data-testid="add-points-button"
+                :data-testid="ctaTestId"
                 data-side="player1"
                 class="flex w-full min-h-[var(--size-touch-target)] items-center justify-center rounded-2xl px-4 text-label font-black tracking-[0.1em] bg-accent text-on-accent touch-manipulation select-none active:brightness-90"
-                @pointerdown="openEntry"
+                @pointerdown="pressCta"
               >
-                AJOUTER LES POINTS
+                {{ ctaLabel }}
               </button>
               <!-- Deux pictos (1.15) : la sortie garde le bord extérieur, RECOMMENCER
                    vient vers l'intérieur — `gap-2` = 16 px (`--spacing: 8px`). Markup
@@ -327,12 +352,12 @@ function confirmRestart(): void {
             <div class="flex w-2/5 justify-end gap-2">
               <button
                 v-if="entrySide === 'player2'"
-                data-testid="add-points-button"
+                :data-testid="ctaTestId"
                 data-side="player2"
                 class="flex w-full min-h-[var(--size-touch-target)] items-center justify-center rounded-2xl px-4 text-label font-black tracking-[0.1em] bg-accent text-on-accent touch-manipulation select-none active:brightness-90"
-                @pointerdown="openEntry"
+                @pointerdown="pressCta"
               >
-                AJOUTER LES POINTS
+                {{ ctaLabel }}
               </button>
               <template v-else>
                 <button

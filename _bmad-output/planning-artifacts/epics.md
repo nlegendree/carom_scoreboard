@@ -784,6 +784,8 @@ So that je joue avec un chronomètre de série toujours actif, cohérent avec le
 
 **Note de périmètre — sets :** la configuration du **nombre de sets** est rattachée à cet Epic, le set étant une notion propre au 3 Bandes. Elle a été explicitement retirée du périmètre de la Story 1.4, qui ne couvre FR15 que sur son volet « objectif de score ». Le réglage relevant du match et non d'un joueur, il ne se branchera pas sur la `PlayerSetupModal` de la Story 1.4 — qui est propre à un joueur — et demandera son propre point d'entrée, à définir avec cet Epic.
 
+**Revue au rendu (Nathan, 2026-09-11) — deux correctifs livrés avec la Story 2.2 :** l'anneau se dimensionne en unités de conteneur (`min(100cqw, 100cqh)` de la place restante dans la colonne) au lieu d'un `w-full` fixe qui, sur un iPad en paysage avec la barre Safari (~1180×673), rognait REP et ÉCHANGER ; la couleur n'est plus un rouge fixe mais un **fondu vert (40 s) → jaune → orange → rouge (0 s)** sur l'arc et le chiffre, à la manière des chronos de tir traditionnels — le rouge d'UX-DR4 est le point d'arrivée.
+
 **Note de livraison (Story 2.1, 2026-09-10) :**
 - **Déverrouillage par un booléen** : `available: true` sur l'entrée `3bandes` du catalogue (`types/game.ts`), rien d'autre — `selectCategory()` gérait déjà les catégories à mode unique (passage direct à l'étape joueurs), la distance obligatoire (1.10) s'applique à l'identique.
 - **Chrono de 40 s** (`SHOT_CLOCK_SECONDS`, sourcé de la spec UX « reset du chrono de tir (40s) »), **non persisté** dans `GameState` (AR14 l'isole de V1a) : un rechargement en pleine partie repart à 40. Décompte de 1 s en 1 s, figé à 0 sans pénalité ni bascule (aucune règle de faute au temps dans FR13/FR14). Repart de 40 à chaque `startGame()` interne (démarrage, `RECOMMENCER`, `UNE PARTIE DE PLUS`), s'arrête net en fin de partie et au retour à l'accueil.
@@ -808,6 +810,12 @@ So that le score de mon adversaire progresse en temps réel sans qu'il touche lu
 **Then** le chronomètre de série (Story 2.1) est réinitialisé à sa valeur de départ
 
 *Note (2026-09-10, décision de Nathan, consignée depuis la Story 2.1) :* le chrono se réinitialise **non seulement au tap `+1`** mais **aussi au changement de joueur** (bascule de tour), avec un **petit délai de grâce de 3 s supplémentaires** après l'une ou l'autre action. Le mécanisme exact (buffer ajouté au reset ? fenêtre avant le vrai décompte ?) n'est pas précisé : à trancher à la création de cette story. La primitive `resetTimer()` de `useTimer.ts` (livrée en 2.1, sans appelant) est le point de branchement prévu.
+
+**Note de livraison (Story 2.2, 2026-09-11, décisions de Nathan au rendu de la 2.1) :**
+- **Geste tranché** (question ouverte depuis la Story 1.5) : le `+1` est le **CTA de la barre basse**, côté joueur assis — `AJOUTER LES POINTS` devient **`+1 POINT`** en 3 Bandes et crédite un point à celui qui a la main, sans ouvrir le pavé. Le **tap sur la carte** de l'assis reste le geste de **rendre la main** (`passTurn`). L'AC « le joueur assis tape sur sa propre zone pour ajouter un point » est **supersédé** par cette répartition.
+- En 3 Bandes, la main rendue **clôture la série comptée au tap** (pas de reprise à 0 ajoutée par-dessus) ; sans tap, elle reste une série de 0. Le `+1` écrit dans la case du joueur de la reprise courante (`reprises` reste la source de vérité, `GameState` inchangé) ; un tap = une action annulable. Atteindre la distance au tap termine la série sur-le-champ (offre d'égalisatrice / victoire), comme au pavé.
+- **Chrono** : relancé à 40 au `+1` **et** à la main rendue, avec **2 s de latence** avant le premier tick (valeur du jour, remplace les 3 s de la note précédente ; s'applique aussi au démarrage et à RECOMMENCER, un seul chemin `resetTimer`). Un tap pendant la latence la relance entièrement.
+- **Non livré** : le compteur `POUR n` (note de périmètre ci-dessous) — non cité par Nathan, reste à confirmer ; le **pavé de secours** (Story 2.3) n'a plus de point d'entrée depuis que le CTA est le `+1` — à définir par la 2.3.
 
 **Given** le score du joueur actif
 **When** plusieurs points sont ajoutés au fil de la reprise

@@ -1321,7 +1321,7 @@ describe('GameView — reprise après fermeture', () => {
   })
 })
 
-// --- Story 2.1 : chronomètre 3 Bandes ---
+// --- Story 2.1 : chronomètre 3 Bandes --- (latence de 2 s avant le premier tick : Story 2.2)
 
 describe('GameView — chronomètre 3 Bandes', () => {
   beforeEach(() => {
@@ -1372,15 +1372,6 @@ describe('GameView — chronomètre 3 Bandes', () => {
     return { wrapper, store: useGameStore() }
   }
 
-  async function validateSeries(wrapper: VueWrapper, digits: number[]) {
-    await press(wrapper, 'add-points-button')
-    for (const digit of digits) {
-      await wrapper.find(`[data-testid="digit-${digit}"]`).trigger('pointerdown')
-    }
-    await wrapper.find('[data-testid="entry-confirm-button"]').trigger('pointerdown')
-    await elapse(wrapper, 300)
-  }
-
   // AC5, AC6 : le chrono apparaît dans la console centrale et décompte tout seul.
   it('starts a 3 Bandes game from home with the shot clock counting down', async () => {
     const { wrapper, store } = await startThreeCushionsFromHome()
@@ -1391,7 +1382,7 @@ describe('GameView — chronomètre 3 Bandes', () => {
     expect(clock(wrapper).exists()).toBe(true)
     expect(clockValue(wrapper)).toBe('40')
 
-    await elapse(wrapper, 3000)
+    await elapse(wrapper, 5000)
 
     expect(clockValue(wrapper)).toBe('37')
   })
@@ -1411,22 +1402,22 @@ describe('GameView — chronomètre 3 Bandes', () => {
   // AC8 : RECOMMENCER remet l'anneau plein.
   it('restarts the shot clock from 40 on RECOMMENCER', async () => {
     const { wrapper } = await startThreeCushionsFromHome()
-    await validateSeries(wrapper, [2])
-    await elapse(wrapper, 9700)
-    expect(clockValue(wrapper)).toBe('30')
+    await press(wrapper, 'plus-one-button')
+    await elapse(wrapper, 11700)
+    expect(clockValue(wrapper)).toBe('31')
 
     await press(wrapper, 'restart-button')
     await press(wrapper, 'prompt-primary')
 
     expect(clockValue(wrapper)).toBe('40')
-    await elapse(wrapper, 1000)
+    await elapse(wrapper, 3000)
     expect(clockValue(wrapper)).toBe('39')
   })
 
   // AC9 : la sortie vers l'accueil fait disparaître le chrono, sans ré-apparition.
   it('drops the shot clock when leaving to the home screen', async () => {
     const { wrapper, store } = await startThreeCushionsFromHome()
-    await elapse(wrapper, 2000)
+    await elapse(wrapper, 4000)
     expect(clockValue(wrapper)).toBe('38')
 
     await press(wrapper, 'exit-button')
@@ -1437,5 +1428,184 @@ describe('GameView — chronomètre 3 Bandes', () => {
 
     await elapse(wrapper, 5000)
     expect(clock(wrapper).exists()).toBe(false)
+  })
+})
+
+// --- Story 2.2 : `+1 POINT` du joueur assis, main rendue au tap, chrono relancé ---
+
+describe('GameView — +1 POINT (3 Bandes)', () => {
+  // `navigator.vibrate` est absent de happy-dom : installé pour observer l'haptique.
+  const vibrate = vi.fn()
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.useFakeTimers()
+    vibrate.mockClear()
+    Object.defineProperty(navigator, 'vibrate', { value: vibrate, configurable: true, writable: true })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    delete (navigator as Partial<Navigator>).vibrate
+  })
+
+  async function press(wrapper: VueWrapper, testid: string) {
+    await wrapper.find(`[data-testid="${testid}"]`).trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+  }
+
+  const clockValue = (wrapper: VueWrapper) =>
+    wrapper.find('[data-testid="shot-clock-value"]').text()
+  const panels = (wrapper: VueWrapper) => wrapper.findAllComponents({ name: 'PlayerPanel' })
+  const score = (wrapper: VueWrapper, side: 0 | 1) =>
+    panels(wrapper)[side]!.find('[data-testid="score"]').text()
+  // La main se rend en tapant la carte du joueur ASSIS (le panneau inactif).
+  async function tapPanel(wrapper: VueWrapper, side: 0 | 1) {
+    await panels(wrapper)[side]!.trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+  }
+
+  async function elapse(wrapper: VueWrapper, ms: number) {
+    vi.advanceTimersByTime(ms)
+    await wrapper.vm.$nextTick()
+  }
+
+  async function startThreeCushions(targets = { player1: 30, player2: 25 }) {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('3bandes', 'MICHEL', 'ANDRÉ', targets)
+    await wrapper.vm.$nextTick()
+    return { wrapper, store }
+  }
+
+  // AC1 : en 3 Bandes le CTA du joueur assis est `+1 POINT`, pas le pavé.
+  it('replaces AJOUTER LES POINTS with +1 POINT on the seated side', async () => {
+    const { wrapper } = await startThreeCushions()
+
+    const cta = wrapper.find('[data-testid="plus-one-button"]')
+    expect(cta.exists()).toBe(true)
+    expect(cta.text()).toBe('+1 POINT')
+    expect(cta.attributes('data-side')).toBe('player2')
+    expect(wrapper.find('[data-testid="add-points-button"]').exists()).toBe(false)
+  })
+
+  it('keeps AJOUTER LES POINTS in a series game', async () => {
+    const wrapper = mount(GameView)
+    useGameStore().startGame('libre', 'MICHEL', 'ANDRÉ', { player1: 100, player2: 80 })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-testid="add-points-button"]').text()).toBe('AJOUTER LES POINTS')
+    expect(wrapper.find('[data-testid="plus-one-button"]').exists()).toBe(false)
+  })
+
+  // AC1, AC3 : chaque tap crédite un point à celui qui joue, le tour ne change pas,
+  // le pavé ne s'ouvre pas, l'haptique accuse réception.
+  it('credits one point per tap to the playing side, without opening the keypad', async () => {
+    const { wrapper, store } = await startThreeCushions()
+
+    await press(wrapper, 'plus-one-button')
+    await press(wrapper, 'plus-one-button')
+
+    expect(score(wrapper, 0)).toBe('2')
+    expect(score(wrapper, 1)).toBe('0')
+    expect(store.activePlayer).toBe('player1')
+    expect(store.entryOpen).toBe(false)
+    expect(wrapper.findComponent({ name: 'ScoreEntryModal' }).exists()).toBe(false)
+    expect(vibrate).toHaveBeenCalledTimes(2)
+  })
+
+  // AC2 : le tap relance le chrono à 40, qui attend 2 s avant de reprendre.
+  it('restarts the shot clock at 40 with a 2 s grace on each tap', async () => {
+    const { wrapper } = await startThreeCushions()
+    await elapse(wrapper, 12000)
+    expect(clockValue(wrapper)).toBe('30')
+
+    await press(wrapper, 'plus-one-button')
+
+    expect(clockValue(wrapper)).toBe('40')
+    await elapse(wrapper, 2000)
+    expect(clockValue(wrapper)).toBe('40')
+    await elapse(wrapper, 1000)
+    expect(clockValue(wrapper)).toBe('39')
+  })
+
+  // La main rendue au tap sur la carte de l'assis clôture la série comptée et relance
+  // le chrono pour le joueur suivant.
+  it('passes the turn from the seated card, closing the tapped series and restarting the clock', async () => {
+    const { wrapper, store } = await startThreeCushions()
+    await press(wrapper, 'plus-one-button')
+    await press(wrapper, 'plus-one-button')
+    await elapse(wrapper, 9000)
+    expect(clockValue(wrapper)).toBe('33')
+
+    await tapPanel(wrapper, 1)
+
+    expect(store.activePlayer).toBe('player2')
+    expect(store.reprises).toEqual([expect.objectContaining({ player1: 2, player2: null })])
+    expect(clockValue(wrapper)).toBe('40')
+    // Le CTA suit l'assis : il est maintenant côté blanc.
+    expect(wrapper.find('[data-testid="plus-one-button"]').attributes('data-side')).toBe('player1')
+    await elapse(wrapper, 3000)
+    expect(clockValue(wrapper)).toBe('39')
+  })
+
+  // Rendre la main sans tap reste une série de 0 (comme en JDS) et relance aussi.
+  it('records a zero series on a pass without any tap', async () => {
+    const { wrapper, store } = await startThreeCushions()
+    await elapse(wrapper, 5000)
+
+    await tapPanel(wrapper, 1)
+
+    expect(store.reprises).toEqual([expect.objectContaining({ player1: 0, player2: null })])
+    expect(clockValue(wrapper)).toBe('40')
+  })
+
+  // Un chrono figé à 0 repart au tap suivant.
+  it('revives a clock frozen at zero on the next tap', async () => {
+    const { wrapper } = await startThreeCushions()
+    await elapse(wrapper, 50000)
+    expect(clockValue(wrapper)).toBe('0')
+
+    await press(wrapper, 'plus-one-button')
+
+    expect(clockValue(wrapper)).toBe('40')
+    await elapse(wrapper, 3000)
+    expect(clockValue(wrapper)).toBe('39')
+  })
+
+  // ANNULER défait un tap à la fois (chrono non touché : pas demandé).
+  it('undoes one tap per ANNULER', async () => {
+    const { wrapper, store } = await startThreeCushions()
+    await press(wrapper, 'plus-one-button')
+    await press(wrapper, 'plus-one-button')
+    await press(wrapper, 'plus-one-button')
+
+    await press(wrapper, 'undo-button')
+
+    expect(score(wrapper, 0)).toBe('2')
+    expect(store.canUndo).toBe(true)
+  })
+
+  // Atteindre la distance au tap ouvre l'offre d'égalisatrice sur-le-champ.
+  it('offers the equalizing reprise when the white player reaches his distance by tap', async () => {
+    const { wrapper } = await startThreeCushions({ player1: 2, player2: 25 })
+
+    await press(wrapper, 'plus-one-button')
+    await press(wrapper, 'plus-one-button')
+
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('MICHEL A ATTEINT SA DISTANCE')
+  })
+
+  // En JDS, rendre la main n'appelle aucun chrono (il n'existe pas) et reste une série de 0.
+  it('leaves the series game pass unchanged', async () => {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRÉ', { player1: 100, player2: 80 })
+    await wrapper.vm.$nextTick()
+
+    await tapPanel(wrapper, 1)
+
+    expect(store.reprises).toEqual([expect.objectContaining({ player1: 0, player2: null })])
+    expect(wrapper.find('[data-testid="shot-clock"]').exists()).toBe(false)
   })
 })

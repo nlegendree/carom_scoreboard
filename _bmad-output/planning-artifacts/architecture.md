@@ -519,7 +519,7 @@ carom-scoreboard/               ← sous-dossier applicatif, PAS la racine du d�
     │   ├── PlayerPanel.test.ts
     │   ├── CenterPanel.vue      ← Zone centre : reprises, stats, contrôles
     │   ├── CenterPanel.test.ts
-    │   ├── ShotClock.vue        ← Anneau du chrono 3 Bandes, rouge sur noir (Story 2.1)
+    │   ├── ShotClock.vue        ← Anneau du chrono 3 Bandes, fondu vert→rouge sur noir (Story 2.1, revue 2026-09-11)
     │   ├── ShotClock.test.ts
     │   ├── NumericPad.vue       ← Pavé numérique tactile
     │   ├── NumericPad.test.ts
@@ -567,7 +567,7 @@ Utilisateur (touch/pointer)
 |---|---|
 | FR1-FR6 — Gestion de partie | `useGameStore.ts`, `GameView.vue`, `PlayerPanel.vue` |
 | FR7-FR11 — Saisie & Correction | `NumericPad.vue`, `useGameStore.ts` |
-| FR12-FR16 — Modes de jeu | `HomeScreen.vue`, `types/game.ts` (catalogue `GAME_CATEGORIES`) ; FR13/FR14 (3 Bandes, Story 2.1) : `types/game.ts` (catalogue), `useTimer.ts`, `ShotClock.vue`, `CenterPanel.vue` |
+| FR12-FR16 — Modes de jeu | `HomeScreen.vue`, `types/game.ts` (catalogue `GAME_CATEGORIES`) ; FR13/FR14 (3 Bandes, Stories 2.1, 2.2) : `types/game.ts` (catalogue), `useTimer.ts`, `ShotClock.vue`, `CenterPanel.vue`, `useGameStore.ts` (`incrementSeries`), `GameView.vue` (`+1 POINT`) |
 | FR17-FR20 — Stats & Historique | `GameSummary.vue`, `useHistoryStore.ts`, `databaseService.ts`, `HistoryView.vue`, `GameDetailView.vue` |
 | FR39-FR43 — Admin & Config | `HomeScreen.vue`, `PlayerPanel.vue` (noms éditables inline), `CenterPanel.vue` (FR43 — alerte d'inactivité : **story 1.17 annulée** le 2026-09-10, rien à construire) |
 | NFR1-NFR4 — Performance tactile | `usePointerEvents.ts`, `assets/main.css` |
@@ -619,7 +619,7 @@ src/composables/
 ├── useSpeech.ts          ← Web Speech API (FR42 — annonce vocale)
 └── useTimer.ts           ← Timer 3 Bandes (V1b) — livré en Story 2.1 (2026-09-10)
 ```
-*Note (Story 2.1, 2026-09-10)* : `useTimer.ts` expose `SHOT_CLOCK_SECONDS = 40` et `useTimer()` → `{ secondsRemaining, resetTimer }`, appelé une fois dans `GameView.vue` (sa valeur alimente un prop de `CenterPanel`, contrairement à `usePwaUpdate` appelé dans `App.vue`). Décompte par `setInterval` natif, redémarré sur `watch([status, mode, startedAt])` — `startedAt` change à chaque `startGame()` interne (RECOMMENCER, revanche), `status` couvre l'arrêt en fin de partie et au retour accueil. **Pas d'état de pause** (retiré du périmètre V1b, décision de Nathan) et **pas de persistance** : aucun champ chrono dans `GameState`/`GameSnapshot`. Affichage par `ShotClock.vue` (anneau SVG `stroke-dashoffset`, rouge `--color-alert` sur `bg-black`, UX-DR4).
+*Note (Story 2.1, 2026-09-10)* : `useTimer.ts` expose `SHOT_CLOCK_SECONDS = 40` et `useTimer()` → `{ secondsRemaining, resetTimer }`, appelé une fois dans `GameView.vue` (sa valeur alimente un prop de `CenterPanel`, contrairement à `usePwaUpdate` appelé dans `App.vue`). Décompte par `setInterval` natif, redémarré sur `watch([status, mode, startedAt])` — `startedAt` change à chaque `startGame()` interne (RECOMMENCER, revanche), `status` couvre l'arrêt en fin de partie et au retour accueil. **Pas d'état de pause** (retiré du périmètre V1b, décision de Nathan) et **pas de persistance** : aucun champ chrono dans `GameState`/`GameSnapshot`. Affichage par `ShotClock.vue` (anneau SVG `stroke-dashoffset`, rouge `--color-alert` sur `bg-black`, UX-DR4). *Story 2.2 (2026-09-11)* : `SHOT_CLOCK_GRACE_MS = 2000` — `resetTimer()` remet 40 puis attend 2 s avant le premier tick, gardée par le mode (no-op hors 3 Bandes) ; appelée par `GameView` au `+1 POINT` (`incrementSeries`) et à la main rendue (`passTurn`). Store : `incrementSeries()` écrit dans la case du joueur de la reprise courante (`openSeriesValue` déduit la série ouverte de la dernière reprise, aucun champ ajouté à `GameState`) ; `passTurn()` n'ajoute une reprise à 0 que sans série ouverte. `ShotClock.vue` : taille en unités de conteneur (`container-type: size`, `min(100cqw,100cqh)`, chiffre en `cqmin`), couleur HSL interpolée vert → rouge (revue de Nathan).
 
 **Note workbox (vite.config.ts) :** stratégie `cache-first` pour assets JS/CSS, `StaleWhileRevalidate` pour HTML → à configurer lors de l'init projet.
 *Précisé en Story 1.13 (2026-09-10)* : **précache atomique, pas de `StaleWhileRevalidate` pour le HTML.** Le HTML référence des assets hachés ; un `index.html` servi « stale » pointerait vers des fichiers que `cleanupOutdatedCaches` a supprimés → page cassée hors ligne. `generateSW` précache tout le build (`globPatterns` avec `woff2`, `navigateFallback: 'index.html'`, `cleanupOutdatedCaches`, `clientsClaim`), ce qui satisfait l'intention d'AR10 (JS/CSS depuis le cache, HTML renouvelé à chaque déploiement) en gardant HTML et assets cohérents. Pas de `runtimeCaching` : aucune ressource réseau au runtime.
