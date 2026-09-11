@@ -1596,6 +1596,39 @@ describe('GameView — +1 POINT (3 Bandes)', () => {
     expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('MICHEL A ATTEINT SA DISTANCE')
   })
 
+  // Revue de code (2026-09-11) : à distance déjà atteinte (correction `+`), le tap est
+  // SANS EFFET — ni haptique, ni relance du chrono (AC8).
+  it('neither vibrates nor restarts the clock when the tap credits nothing', async () => {
+    const { wrapper, store } = await startThreeCushions({ player1: 1, player2: 25 })
+    store.adjustScore('player1', 1)
+    await elapse(wrapper, 12000)
+    expect(clockValue(wrapper)).toBe('30')
+
+    await press(wrapper, 'plus-one-button')
+
+    expect(store.player1.score).toBe(1)
+    expect(vibrate).not.toHaveBeenCalled()
+    expect(clockValue(wrapper)).toBe('30')
+  })
+
+  // Décision de Nathan (2026-09-11) : le jaune entame l'égalisatrice avec un chrono
+  // plein — pas avec ce qui restait du décompte lancé sous la pop-up.
+  it('restarts the clock at 40 when the equalizing reprise is accepted', async () => {
+    const { wrapper, store } = await startThreeCushions({ player1: 1, player2: 25 })
+
+    await press(wrapper, 'plus-one-button')
+    expect(store.endPrompt).toEqual({ kind: 'equalizing-offer' })
+    await elapse(wrapper, 10000)
+    expect(clockValue(wrapper)).toBe('32')
+
+    await press(wrapper, 'prompt-primary')
+
+    expect(store.equalizingReprise).toBe(true)
+    expect(clockValue(wrapper)).toBe('40')
+    await elapse(wrapper, 3000)
+    expect(clockValue(wrapper)).toBe('39')
+  })
+
   // En JDS, rendre la main n'appelle aucun chrono (il n'existe pas) et reste une série de 0.
   it('leaves the series game pass unchanged', async () => {
     const wrapper = mount(GameView)

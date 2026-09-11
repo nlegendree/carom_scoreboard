@@ -1,6 +1,6 @@
 # Story 2.1: Sélectionner le mode 3 Bandes et démarrer une partie avec chronomètre actif
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -32,8 +32,8 @@ So that je joue avec un chronomètre de série toujours actif, cohérent avec le
 
 ### Chronomètre actif
 
-5. **Given** une partie 3 Bandes qui vient de démarrer (reprise 1) **When** `GameView` affiche le scoreboard **Then** un compte à rebours démarre immédiatement à 40 secondes et décrémente d'une seconde chaque seconde, sans action requise du joueur (FR13, AR14).
-6. **Given** le chronomètre en cours **When** je consulte l'écran **Then** le temps restant est affiché dans la console centrale (`CenterPanel`) sous la forme d'un **anneau circulaire** (`ShotClock.vue`) qui se vide progressivement — fond **noir**, arc et chiffre central en **rouge LED** (`--color-alert`, `#FF3B30`) — cohérent avec l'esthétique d'alerte/urgence (UX-DR4) et inspiré du « SHOT CLOCK » circulaire du CUESCO plutôt que de la barre segmentée du Billiboard (cadrage 5). Le composant est **absent** dans tous les autres modes (JDS) : `CenterPanel` ne l'affiche que si le mode de la partie en cours est `3bandes`.
+5. **Given** une partie 3 Bandes qui vient de démarrer (reprise 1) **When** `GameView` affiche le scoreboard **Then** un compte à rebours démarre immédiatement à 40 secondes et décrémente d'une seconde chaque seconde, sans action requise du joueur (FR13, AR14). *Révisé (Story 2.2, 2026-09-11)* : l'anneau s'affiche plein à 40 immédiatement, le premier tick attend la grâce de `SHOT_CLOCK_GRACE_MS` (2 s) — au démarrage comme à chaque relance.
+6. **Given** le chronomètre en cours **When** je consulte l'écran **Then** le temps restant est affiché dans la console centrale (`CenterPanel`) sous la forme d'un **anneau circulaire** (`ShotClock.vue`) qui se vide progressivement — fond **noir**, arc et chiffre central en **rouge LED** (`--color-alert`, `#FF3B30`) — cohérent avec l'esthétique d'alerte/urgence (UX-DR4) et inspiré du « SHOT CLOCK » circulaire du CUESCO plutôt que de la barre segmentée du Billiboard (cadrage 5). Le composant est **absent** dans tous les autres modes (JDS) : `CenterPanel` ne l'affiche que si le mode de la partie en cours est `3bandes`. *Révisé au rendu (Nathan, 2026-09-11)* : la couleur est un **fondu vert → jaune → orange → rouge** (le rouge `--color-alert` n'est que le point d'arrivée, à 0), et le libellé `CHRONO` est **retiré** — voir Review Follow-ups.
 7. **Given** le chronomètre atteint 0 **When** aucune autre action ne l'a arrêté ou réinitialisé **Then** l'affichage se fige à `0`, anneau entièrement vidé — aucune pénalité, aucun changement de tour, aucune saisie forcée : cette story ne porte aucune règle de faute au temps (hors périmètre, non spécifié par FR13/FR14).
 8. **Given** une partie 3 Bandes qui redémarre sur place (`RECOMMENCER`, Story 1.15) ou une revanche (`UNE PARTIE DE PLUS`) **When** la nouvelle partie démarre **Then** le chronomètre repart de 40 secondes, anneau plein — jamais la valeur laissée par la partie précédente.
 9. **Given** une partie 3 Bandes en cours **When** je quitte vers l'accueil (`FIN DE PARTIE` du récap, ou sortie confirmée) ou que le mode n'est pas `3bandes` **Then** le décompte s'arrête complètement — aucun intervalle ne continue à tourner en arrière-plan (pas de fuite, testable par l'absence de tick après la sortie).
@@ -46,7 +46,7 @@ So that je joue avec un chronomètre de série toujours actif, cohérent avec le
   - [x] 1.2 Aucun changement dans `HomeScreen.vue` ni `PlayerSetupModal.vue` : `selectCategory()` (catégorie à mode unique → étape joueurs directe), la règle de distance obligatoire (1.10) et `startGame()` sont déjà génériques par rapport au mode.
   - [x] 1.3 `HomeScreen.test.ts` : ajouter un test qui sélectionne `category-3bandes` et vérifie le passage direct à `step-players` (même recette que `goToPlayersStep` existant sur un mode JDS à catégorie unique), pour couvrir explicitement le déverrouillage — le test existant `marks categories whose modes are all unavailable as disabled` continue de cibler `quilles`, inchangé.
 
-- [x] **Task 2 — `useTimer.ts` : composable du chronomètre de série (AC: 5, 7, 8, 9)**
+- [x] **Task 2 — `useTimer.ts` : composable du chronomètre de série (AC: 5, 7, 8, 9)** — *les sous-tâches ci-dessous décrivent la version 2.1 ; la Story 2.2 a ajouté la grâce de 2 s à `resetTimer` (`setTimeout(startInterval, SHOT_CLOCK_GRACE_MS)`), la garde par mode, et recalé les avances de temps des tests (39 à 3 s, pas à 1 s).*
   - [x] 2.1 Créer `src/composables/useTimer.ts` (exports nommés, AR15) :
     - `export const SHOT_CLOCK_SECONDS = 40` (cadrage 2, sourcé `ux-design-specification.md` l. 56).
     - `export function useTimer()` — appelé une fois dans `GameView.vue` (pas dans `App.vue` : contrairement à `useSpeech`/`usePwaUpdate`, sa valeur alimente directement un prop de template, cf. Task 3).
@@ -126,7 +126,7 @@ So that je joue avec un chronomètre de série toujours actif, cohérent avec le
   - [x] 4.1 `GameView.vue` : `import { useTimer } from '../composables/useTimer'` ; `const { secondsRemaining } = useTimer()` (`resetTimer` n'est pas consommée par cette story — c'est le point d'extension de la Story 2.2).
   - [x] 4.2 Template : `<CenterPanel :repriseNumber="repriseNumber" :canUndo="canUndo" :secondsRemaining="mode === '3bandes' ? secondsRemaining : null" @undo="undoLastAction" @swap-players="swapPlayers" />` — le filtrage par mode est fait ici (pas dans le composable ni dans `CenterPanel`, qui restent l'un et l'autre génériques) : `useTimer` tourne pour toute partie mais ne décompte que si `mode === '3bandes'` (Task 2), et `GameView` ne transmet la valeur à l'affichage que dans ce même cas — double garde volontaire, cohérente avec le fait que `secondsRemaining` du composable vaut `40` (valeur de repos) hors 3 Bandes plutôt que `null`.
   - [x] 4.3 `GameView.test.ts` : nouveau `describe('GameView — chronomètre 3 Bandes')` (`vi.useFakeTimers()`/`vi.useRealTimers()` en `beforeEach`/`afterEach`, comme les blocs « auto-validation » existants) :
-    - démarrer une partie `3bandes` (deux distances réglées, comme le test « home → game » existant mais avec `category-3bandes` → passage direct à `step-players`) → `shot-clock` présent, valeur `40` ; après `vi.advanceTimersByTime(3000)` → `37`.
+    - démarrer une partie `3bandes` (deux distances réglées, comme le test « home → game » existant mais avec `category-3bandes` → passage direct à `step-players`) → `shot-clock` présent, valeur `40` ; après `vi.advanceTimersByTime(3000)` → `37` (*recalé en 2.2 : `37` après 5000 ms, grâce comprise*).
     - démarrer une partie `libre` (JDS) → `shot-clock` absent, même après avance de temps.
     - `RECOMMENCER` (`restart-button` puis confirmation) sur une partie 3 Bandes à `secondsRemaining < 40` → revient à `40` après confirmation.
     - sortie vers l'accueil (`FIN DE PARTIE` sans série, ou récap → `FIN DE PARTIE`) puis avance de temps → aucune ré-apparition, aucun effet observable (le composant `CenterPanel` n'est plus monté, mais l'intervalle du composable ne doit pas non plus tourner dans le vide — couvert directement par `useTimer.test.ts`, ce test-ci vérifie seulement l'absence de `shot-clock` après sortie).
@@ -149,6 +149,13 @@ So that je joue avec un chronomètre de série toujours actif, cohérent avec le
 - [x] [Review][Med] **Couleur** : « le mettre en rouge tout le temps c'est pas idéal » — fondu **vert (40 s) → jaune → orange → rouge (0 s)** sur l'anneau, sa piste et le chiffre. Teinte HSL interpolée de 130° à 3° (le rouge `--color-alert` exact à 0), saturation/luminosité glissant vers celles d'UX-DR4 ; transition CSS d'une seconde sur `stroke` et `color` en plus de `stroke-dashoffset`. Libellé `CHRONO` passé en `text-white/60` comme `REP` (un libellé rouge n'avait de sens qu'avec un anneau rouge) — puis **retiré** au second rendu (Nathan, 2026-09-11 : « tu peux retirer la mention Chrono ») : l'anneau prend toute la place restante, `min(100cqw, 100cqh)`. Vérifié : vert `rgb(38,217,68)` à 40, jaune à 19, orange `rgb(248,138,42)` à 8, rouge `#FF3B30` à 0.
 - Les deux autres retours de Nathan (CTA `+1 POINT`, relance du chrono au `+1` et à la main rendue avec 2 s de latence) sont le périmètre de la **Story 2.2**, créée et livrée dans la même session.
 
+### Review Findings (code review, 2026-09-11)
+
+- [x] [Review][Patch] **À 0 s, `stroke-linecap="round"` laisse un point à midi : l'anneau n'est pas vide (AC7)** — artefact SVG connu des caps arrondis sur un dash de longueur nulle ; masquer l'arc (ou retirer le cap) quand `ratio === 0`, à confirmer au rendu [`ShotClock.vue:433-435`]
+- [x] [Review][Patch] **Texte de la story non révisé après les décisions de la 2.2** — AC5 (« démarre immédiatement… décrémente chaque seconde »), Task 2.1 (`resetTimer` sans grâce), Task 2.2 (« 39 après 1000 ms »), Task 4.3 (« 37 après 3000 ms »), Dev Note 7 (« +3 s ») et AC6 (« rouge LED », `shot-clock-label`) contredisent le code livré (grâce 2 s dès le démarrage, fondu vert → rouge, libellé retiré) ; seule la section Review Follow-ups le dit [cette fiche]
+- [x] [Review][Patch] **Accessibilité et libellé du chrono** — `role="img"` sur un compteur qui change chaque seconde (rôle `timer` attendu) ; `aria-label` « chronomètre de série » alors que partout ailleurs c'est « chrono de tir » ; `toContain('17')` accepterait « 170 » ; `40` en dur dans `CenterPanel.test.ts` au lieu de `SHOT_CLOCK_SECONDS` [`ShotClock.vue:411-412`, `ShotClock.test.ts:293`, `CenterPanel.test.ts:38`]
+- [x] [Review][Defer] **Décompte non ancré sur l'horloge** — `setInterval(tick, 1000)` cumule la dérive et se fige en onglet caché / veille ; un `deadline = Date.now() + …` recalculé à chaque tick serait exact [`useTimer.ts:783-786`] — deferred, pre-existing (tablette toujours au premier plan, écart négligeable sur 40 s)
+
 ## Dev Notes
 
 ### Décisions de cadrage (bmad-create-story, 2026-09-10)
@@ -159,7 +166,7 @@ So that je joue avec un chronomètre de série toujours actif, cohérent avec le
 4. **Pause/reprise retirée du périmètre** (retour de Nathan, 2026-09-10) — utile en compétition arbitrée, pas à l'entraînement ; reportée à une future épic Compétition/Arbitrage. `useTimer.ts` n'expose ni `pauseTimer`, ni `resumeTimer`, ni `isPaused`.
 5. **Affichage circulaire** (`ShotClock.vue`), inspiré du « SHOT CLOCK » du CUESCO (`explore/resources/IMG_6034.JPG`) — écarté : la barre segmentée du Billiboard (`IMG_6459.JPG`), jugée « pas assez smooth » par Nathan. Couleurs du projet conservées (rouge/noir, UX-DR4), pas celles du CUESCO (bleu).
 6. « Nombre de sets » (FR15) : **trou de planification hérité de l'epic**, non traité par cette story ni par aucune des deux suivantes (2.2, 2.3) — consigné, pas résolu (Task 5.4).
-7. Pour information, non traité ici : le chrono se réinitialisera aussi au changement de joueur (pas seulement au tap +1), avec 3s de grâce supplémentaires — décision de Nathan consignée dans `epics.md` › Story 2.2 pour la création future de cette story (Task 5.1bis).
+7. Pour information, non traité ici : le chrono se réinitialisera aussi au changement de joueur (pas seulement au tap +1), avec 3s de grâce supplémentaires — décision de Nathan consignée dans `epics.md` › Story 2.2 pour la création future de cette story (Task 5.1bis). *Livré en 2.2 avec une grâce de **2 s** (valeur de Nathan du 2026-09-11).*
 
 ### Ce que cette story NE fait PAS
 
@@ -234,6 +241,7 @@ So that je joue avec un chronomètre de série toujours actif, cohérent avec le
 | 2026-09-11 | Revue au rendu (Nathan) : anneau fluide en unités de conteneur (débordement iPad paysage corrigé), fondu vert → rouge sur l'arc et le chiffre ; 8 tests `ShotClock`. Retours sur le `+1` et la relance du chrono → Story 2.2. |
 | 2026-09-11 | Fin de l'implémentation (bmad-dev-story) : Task 6 passe visuelle Chrome (1024×768 et 768×1024, harnais iframe recréé puis supprimé) et Task 7 contrôle final (457 tests / 17 fichiers, `vue-tsc`, `build` verts, aucune dépendance) — story passée en `review`. |
 | 2026-09-10 | Révision après retour de Nathan : pause/reprise **retirée** du périmètre (fonctions et AC10/11 supprimées) et reportée à une future épic Compétition/Arbitrage ; affichage repensé en **anneau circulaire** (`ShotClock.vue`, composant dédié) inspiré du CUESCO (`IMG_6034.JPG`) plutôt que la barre segmentée du Billiboard, jugée pas assez smooth ; note ajoutée pour la future Story 2.2 (reset du chrono aussi au changement de joueur, +3s de grâce) sans l'implémenter ici. |
+| 2026-09-11 | Revue de code (bmad-code-review, commune 2.1+2.2+2.4) : cap droit à 0 s (plus de point résiduel), `role="timer"` et libellé « Chrono de tir », assertions renforcées, AC5/AC6 et Tasks annotés des décisions de la 2.2 ; dérive du `setInterval` reportée. Statut `done`. |
 
 ## Dev Agent Record
 

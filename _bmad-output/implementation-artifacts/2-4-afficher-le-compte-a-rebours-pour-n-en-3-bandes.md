@@ -1,6 +1,6 @@
 # Story 2.4: Afficher le compte à rebours `POUR n` en 3 Bandes
 
-Status: review
+Status: done
 
 > **Cadrage (2026-09-11)** — story courte demandée par Nathan au rendu de la 2.2 (« fais une story courte pour le POUR N »). Elle livre la note de périmètre reportée depuis la Story 1.6 dans la Story 2.2, telle que la spec UX la décrit : `POUR 3` / `POUR 2` / `POUR 1` sous le score, entre `−` et `+`, en 3 Bandes seulement. Deux décisions :
 > 1. **Seuil à 3, rien au-delà.** L'epic laissait ouverte la question « afficher aussi au-dessus de 3 ? » : tranchée par défaut sur la convention d'annonce de l'arbitre (on annonce à l'approche), sans question à Nathan — à rouvrir s'il veut le restant en permanence.
@@ -26,6 +26,10 @@ So that l'annonce de l'arbitre est sous mes yeux sans calcul mental (FR15).
 - [x] **Task 4 — Passe visuelle** : commune au retrait du libellé CHRONO (2.1) — 1024×768, 768×1024, 1180×673 : `POUR 2` lisible entre `−` et `+`, sans débordement en portrait.
 - [x] **Task 5 — Qualité** : `npm test`, `npx vue-tsc -b`, `npm run build` verts, aucune dépendance.
 
+### Review Findings (code review, 2026-09-11)
+
+- Aucun constat propre à cette story (revue commune 2.1 + 2.2 + 2.4 : les constats sont consignés dans les fiches 2.1 et 2.2).
+
 ## Dev Notes
 
 - Aucun changement au store : `remaining` se déduit de `player.score`/`player.targetScore`, déjà à jour à chaque action (tap, correction, undo, égalisatrice).
@@ -37,6 +41,7 @@ So that l'annonce de l'arbitre est sous mes yeux sans calcul mental (FR15).
 | Date | Changement |
 |---|---|
 | 2026-09-11 | Création et implémentation dans la foulée de la revue de la 2.2 ; statut `review`. |
+| 2026-09-11 | Revue de code (bmad-code-review, commune 2.1+2.2+2.4) : aucun constat propre à la story. Statut `done`. |
 
 ## Dev Agent Record
 

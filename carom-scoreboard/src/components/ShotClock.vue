@@ -28,6 +28,11 @@ const ratio = computed(() =>
 
 const dashoffset = computed(() => CIRCUMFERENCE * (1 - ratio.value))
 
+// À 0 l'anneau doit être VIDE (AC7) : avec `stroke-linecap="round"`, un dash de longueur
+// nulle laisse encore un point à midi (artefact SVG connu des caps arrondis). Le cap
+// redevient droit à zéro, et l'arc disparaît pour de bon.
+const linecap = computed(() => (ratio.value > 0 ? 'round' : 'butt'))
+
 // Vert → rouge par le jaune et l'orange : la teinte descend linéairement de 130° à 3°
 // (le rouge d'alerte du projet). Saturation et luminosité glissent vers celles de
 // `--color-alert` pour que l'arrivée soit exactement la couleur d'UX-DR4.
@@ -52,8 +57,9 @@ const color = computed(() => {
       <div
         data-testid="shot-clock-ring"
         class="relative flex aspect-square w-[min(100cqw,100cqh)] items-center justify-center rounded-full bg-black [container-type:size]"
-        role="img"
-        :aria-label="`Chronomètre de série : ${secondsRemaining} secondes restantes`"
+        role="timer"
+        aria-live="off"
+        :aria-label="`Chrono de tir : ${secondsRemaining} secondes restantes`"
       >
         <!-- `-rotate-90` fait partir le tracé de midi : l'anneau se vide en tournant. -->
         <svg viewBox="0 0 100 100" class="absolute inset-0 h-full w-full -rotate-90">
@@ -74,7 +80,7 @@ const color = computed(() => {
             r="42"
             fill="none"
             stroke-width="8"
-            stroke-linecap="round"
+            :stroke-linecap="linecap"
             class="transition-[stroke-dashoffset,stroke] duration-1000 ease-linear"
             :style="{ strokeDasharray: CIRCUMFERENCE, strokeDashoffset: dashoffset, stroke: color }"
           />

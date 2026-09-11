@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { computed, defineComponent, h, nextTick, watchEffect } from 'vue'
 import { mount } from '@vue/test-utils'
@@ -2126,12 +2126,21 @@ describe('useGameStore — persistance', () => {
     expect(store.player2.color).toBe('yellow')
   })
 
+  // `vi.restoreAllMocks()` ne restaure pas un espion posé sur `localStorage` (vérifié,
+  // Vitest 5) : sans cette restauration explicite, tout `setItem` des blocs suivants
+  // continuerait de lever. En `afterEach`, pour tenir même si une assertion échoue.
+  const spies: Array<{ mockRestore: () => void }> = []
+  afterEach(() => {
+    for (const spy of spies.splice(0)) spy.mockRestore()
+  })
+
   // AR12 : le store ne voit pas l'erreur, la partie continue.
   it('keeps playing in memory when the storage fails', async () => {
     const setItem = vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
       throw new DOMException('quota', 'QuotaExceededError')
     })
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    spies.push(setItem, error)
     const store = useGameStore()
     store.startGame('libre', 'MICHEL', 'ANDRE')
 
@@ -2140,10 +2149,6 @@ describe('useGameStore — persistance', () => {
 
     expect(store.player1.score).toBe(7)
     expect(error).toHaveBeenCalled()
-    // `vi.restoreAllMocks()` ne restaure pas ces espions (vérifié, Vitest 5) : sans ce
-    // `mockRestore`, tout `setItem` des blocs suivants continuerait de lever.
-    setItem.mockRestore()
-    error.mockRestore()
   })
 })
 
@@ -2330,24 +2335,34 @@ describe('useGameStore — série au point (3 Bandes)', () => {
     expect(store.endPrompt).toEqual({ kind: 'over', winner: 'player1' })
   })
 
-  // Distance déjà atteinte (correction `+`) : rien à créditer, aucune action empilée.
+  // Distance déjà atteinte (correction `+`) : rien à créditer, aucune action empilée —
+  // un seul ANNULER défait la correction, la pile est vide ensuite. Le tap renvoie
+  // `false` : la vue n'accuse pas réception et ne relance pas le chrono.
   it('ignores a tap once the distance is already reached', () => {
     const store = startThreeCushions({ player1: 1, player2: 25 })
 
     store.adjustScore('player1', 1)
-    const depth = store.canUndo
-    store.incrementSeries()
 
+    expect(store.incrementSeries()).toBe(false)
     expect(store.player1.score).toBe(1)
     expect(store.reprises).toEqual([])
-    expect(store.canUndo).toBe(depth)
+
+    store.undoLastAction()
+
+    expect(store.player1.score).toBe(0)
+    expect(store.canUndo).toBe(false)
+  })
+
+  it('reports a credited tap with true', () => {
+    const store = startThreeCushions()
+
+    expect(store.incrementSeries()).toBe(true)
   })
 
   it('is a no-op outside a running game', () => {
     const store = useGameStore()
 
-    store.incrementSeries()
-
+    expect(store.incrementSeries()).toBe(false)
     expect(store.reprises).toEqual([])
     expect(store.canUndo).toBe(false)
   })

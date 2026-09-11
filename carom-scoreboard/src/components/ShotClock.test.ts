@@ -47,17 +47,35 @@ describe('ShotClock', () => {
     expect(wrapper.find('[data-testid="shot-clock-value"]').text()).toBe('0')
   })
 
-  it('exposes the remaining time to assistive technologies', () => {
+  // Rôle `timer` (un compteur, pas une image) ; `aria-live="off"` : 40 annonces par
+  // série seraient du bruit, la valeur se lit à la demande.
+  it('exposes the remaining time to assistive technologies as a timer', () => {
     const wrapper = mount(ShotClock, { props: { secondsRemaining: 17, totalSeconds: 40 } })
+    const timer = wrapper.find('[role="timer"]')
 
-    expect(wrapper.find('[role="img"]').attributes('aria-label')).toContain('17')
+    expect(timer.exists()).toBe(true)
+    expect(timer.attributes('aria-live')).toBe('off')
+    expect(timer.attributes('aria-label')).toBe('Chrono de tir : 17 secondes restantes')
+    expect(wrapper.find('[role="img"]').exists()).toBe(false)
+  })
+
+  // Revue de code (2026-09-11) : un cap arrondi sur un dash de longueur nulle laisse un
+  // point à midi — à 0 le cap redevient droit, l'anneau est réellement vide (AC7).
+  it('drops the round cap at zero so no dot remains', () => {
+    const full = mount(ShotClock, { props: { secondsRemaining: 40, totalSeconds: 40 } })
+    const last = mount(ShotClock, { props: { secondsRemaining: 1, totalSeconds: 40 } })
+    const empty = mount(ShotClock, { props: { secondsRemaining: 0, totalSeconds: 40 } })
+
+    expect(arc(full).attributes('stroke-linecap')).toBe('round')
+    expect(arc(last).attributes('stroke-linecap')).toBe('round')
+    expect(arc(empty).attributes('stroke-linecap')).toBe('butt')
   })
 
   // Fond noir littéral (UX-DR4), sans libellé (retiré au rendu par Nathan, 2026-09-11).
   it('paints the ring on a black ground without any label', () => {
     const wrapper = mount(ShotClock, { props: { secondsRemaining: 40, totalSeconds: 40 } })
 
-    expect(wrapper.find('[role="img"]').classes()).toContain('bg-black')
+    expect(wrapper.find('[role="timer"]').classes()).toContain('bg-black')
     expect(wrapper.find('[data-testid="shot-clock-label"]').exists()).toBe(false)
     expect(wrapper.text()).not.toContain('CHRONO')
   })

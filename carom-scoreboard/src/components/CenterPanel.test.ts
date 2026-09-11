@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import CenterPanel from './CenterPanel.vue'
 import ShotClock from './ShotClock.vue'
+import { SHOT_CLOCK_SECONDS } from '../composables/useTimer'
 
 // `secondsRemaining: null` = partie JDS, sans chrono (Story 2.1).
 const baseProps = {
@@ -97,7 +98,7 @@ describe('CenterPanel', () => {
 
     expect(clock.exists()).toBe(true)
     expect(clock.props('secondsRemaining')).toBe(40)
-    expect(clock.props('totalSeconds')).toBe(40)
+    expect(clock.props('totalSeconds')).toBe(SHOT_CLOCK_SECONDS)
   })
 
   // AC7 : le chrono à 0 reste affiché, anneau vide — il ne disparaît pas.

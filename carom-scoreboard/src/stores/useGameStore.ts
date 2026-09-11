@@ -439,10 +439,13 @@ export const useGameStore = defineStore('game', () => {
   // termine la série sur-le-champ (on ne joue pas au-delà) — même bascule et même
   // détection de fin que la validation d'une série au pavé. À la distance déjà atteinte
   // (état joignable par une correction `+`), le tap est un no-op : rien à créditer.
-  function incrementSeries(): void {
-    if (status.value !== 'playing') return
+  // Retourne `false` quand rien n'a été crédité (revue de code du 2026-09-11) : la vue
+  // n'accuse réception (haptique) et ne relance le chrono que sur `true` — même contrat
+  // que `appendScoreDigit`.
+  function incrementSeries(): boolean {
+    if (status.value !== 'playing') return false
     const playerId = activePlayer.value
-    if (hasReachedTarget(playerId)) return
+    if (hasReachedTarget(playerId)) return false
     pushHistory()
     const open = openSeriesValue(playerId)
     if (open === null) {
@@ -456,6 +459,7 @@ export const useGameStore = defineStore('game', () => {
       checkEndOfGame(playerId)
     }
     lastSaved.value = new Date().toISOString()
+    return true
   }
 
   // --- Fin de partie (Story 1.10) ---

@@ -101,9 +101,11 @@ function passTurn(): void {
   resetTimer()
 }
 
+// Haptique et relance du chrono SEULEMENT si un point a été crédité (revue de code du
+// 2026-09-11) : à distance déjà atteinte (correction `+`), le tap est sans effet — AC8.
 function addPoint(): void {
+  if (!gameStore.incrementSeries()) return
   tap()
-  gameStore.incrementSeries()
   resetTimer()
 }
 
@@ -179,8 +181,11 @@ function leaveGame(): void {
 
 // `<NOM> JOUE` : le scoreboard revient sous le doigt, le CTA est au-dessus des panneaux
 // — même grâce anti-tap fantôme que les autres fermetures de pop-up.
+// Le chrono repart pour le jaune (décision de Nathan, 2026-09-11) : il avait été relancé
+// au tap gagnant du blanc et tournait sous la pop-up — l'égalisatrice part de 40.
 function acceptEqualizingReprise(): void {
   gameStore.acceptEqualizingReprise()
+  resetTimer()
   lockPanels()
 }
 

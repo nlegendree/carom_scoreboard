@@ -98,9 +98,9 @@ describe('useTimer', () => {
     const store = startThreeCushions()
 
     await nextTick()
-    store.openScoreEntry('player1')
-    store.appendScoreDigit('player1', 3)
-    store.validateScoreInput('player1')
+    // Une action de jeu du 3 Bandes (le pavé n'y a pas de point d'entrée, Story 2.3
+    // annulée) : le store seul ne relance pas le chrono, c'est la vue qui le fait.
+    store.incrementSeries()
     vi.advanceTimersByTime(30000)
     expect(secondsRemaining.value).toBe(12)
 
