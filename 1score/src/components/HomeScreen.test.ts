@@ -2,11 +2,20 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
 import HomeScreen from './HomeScreen.vue'
+import ModeTile from './ModeTile.vue'
 import PlayerSetupModal from './PlayerSetupModal.vue'
+import PromptModal from './PromptModal.vue'
 import { useGameStore } from '../stores/useGameStore'
 
+// Depuis la 10.2, les trois cadres ne sont plus des tuiles mais les commandes de la
+// pop-up ouverte par la tuile CADRE ; les autres modes gardent leur tuile.
 async function goToPlayersStep(wrapper: ReturnType<typeof mount>, mode = 'libre') {
   await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
+  if (mode.startsWith('cadre-')) {
+    await wrapper.find('[data-testid="mode-cadre"]').trigger('pointerdown')
+    await wrapper.find(`[data-testid="prompt-action-${mode}"]`).trigger('pointerdown')
+    return
+  }
   await wrapper.find(`[data-testid="mode-${mode}"]`).trigger('pointerdown')
 }
 
@@ -68,14 +77,14 @@ describe('HomeScreen', () => {
     await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
 
     expect(wrapper.find('[data-testid="step-mode"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="mode-cadre-47-2"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="mode-cadre"]').exists()).toBe(true)
   })
 
   it('goes back from the sub-mode step to the category step', async () => {
     const wrapper = mount(HomeScreen)
 
     await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="back-button"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="sidebar-item-back"]').trigger('pointerdown')
 
     expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
   })
@@ -90,33 +99,45 @@ describe('HomeScreen', () => {
   })
 
   // Un retour visible mais inerte sur le tout premier écran est un piège pour la cible
-  // « pas de formation ». Depuis la 10.1, l'accueil n'a plus de barre basse du tout.
-  it('hides the back button on the root step only', async () => {
+  // « pas de formation ». Depuis la 10.2, les DEUX premiers écrans sont sous la coquille
+  // de l'accueil : plus de barre basse, le retour vit dans la barre latérale.
+  it('hides the bottom back button until the players step', async () => {
     const wrapper = mount(HomeScreen)
     expect(wrapper.find('[data-testid="back-button"]').exists()).toBe(false)
 
     await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
+    expect(wrapper.find('[data-testid="back-button"]').exists()).toBe(false)
+
+    await wrapper.find('[data-testid="mode-libre"]').trigger('pointerdown')
 
     expect(wrapper.find('[data-testid="back-button"]').exists()).toBe(true)
   })
 
-  // Story 10.1 : le logo vit dans l'en-tête de la barre latérale, propre à l'accueil.
-  it('shows the logo on the home step only', async () => {
+  // Story 10.1 puis 10.2 : la barre latérale et son logo tiennent l'accueil ET la
+  // sélection JDS ; l'étape joueurs garde l'ancienne coquille jusqu'à la 10.3.
+  it('shows the sidebar and its logo until the players step', async () => {
     const wrapper = mount(HomeScreen)
     expect(wrapper.find('[data-testid="sidebar"]').exists()).toBe(true)
     expect(wrapper.find('img[alt="1Score"]').exists()).toBe(true)
 
     await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
+    expect(wrapper.find('[data-testid="sidebar"]').exists()).toBe(true)
+    expect(wrapper.find('img[alt="1Score"]').exists()).toBe(true)
+
+    await wrapper.find('[data-testid="mode-libre"]').trigger('pointerdown')
 
     expect(wrapper.find('[data-testid="sidebar"]').exists()).toBe(false)
     expect(wrapper.find('img[alt="1Score"]').exists()).toBe(false)
   })
 
-  it('does not render the bottom action bar on the home step', async () => {
+  it('does not render the bottom action bar before the players step', async () => {
     const wrapper = mount(HomeScreen)
     expect(wrapper.find('[data-testid="action-bar"]').exists()).toBe(false)
 
     await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
+    expect(wrapper.find('[data-testid="action-bar"]').exists()).toBe(false)
+
+    await wrapper.find('[data-testid="mode-libre"]').trigger('pointerdown')
 
     expect(wrapper.find('[data-testid="action-bar"]').exists()).toBe(true)
   })
@@ -166,6 +187,165 @@ describe('HomeScreen', () => {
       expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
       expect(wrapper.find('[data-testid="prompt-modal"]').exists()).toBe(false)
     }
+  })
+
+  // ——— Sélection JDS (Story 10.2) ———
+
+  // Le titre vient du catalogue : c'est le libellé de la catégorie ouverte, pas une
+  // chaîne écrite en dur dans l'écran.
+  it('titles the JDS step with the label of the category opened', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
+
+    expect(wrapper.find('[data-testid="jds-title"]').text()).toBe('JEUX DE SÉRIES')
+  })
+
+  // Ordre de présentation, distinct de celui du catalogue (où les cadres suivent LIBRE).
+  // Aucune accroche : titre et flèche seulement, comme à l'accueil (décision de Nathan).
+  it('lays out the JDS tiles as LIBRE, 1 BANDE, CADRE, 4 BILLES, without taglines', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
+    const tiles = wrapper.findAll('[data-testid^="mode-"]')
+
+    expect(tiles.map((tile) => tile.attributes('data-testid'))).toEqual([
+      'mode-libre',
+      'mode-bande',
+      'mode-cadre',
+      'mode-4billes',
+    ])
+    expect(tiles.map((tile) => tile.find('[data-testid="tile-title"]').text())).toEqual([
+      'LIBRE',
+      '1 BANDE',
+      'CADRE',
+      '4 BILLES',
+    ])
+    expect(wrapper.find('[data-testid="tile-tagline"]').exists()).toBe(false)
+  })
+
+  // Un seul bleu pour toutes les tuiles ouvertes (décision de Nathan, 2026-09-12) :
+  // l'écran ne porte plus de couleur, la tuile la connaît.
+  it('leaves the JDS tiles on the single product blue', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
+
+    for (const tile of wrapper.findAll('[data-testid^="mode-"]')) {
+      expect(tile.findComponent(ModeTile).props('color')).toBeUndefined()
+      expect(tile.find('[data-testid="tile-background"]').classes()).toContain(
+        'bg-(image:--gradient-blue)',
+      )
+    }
+  })
+
+  // Seules les catégories BIENTÔT gardent une nuance propre.
+  it('keeps a dark shade on the soon categories only', () => {
+    const wrapper = mount(HomeScreen)
+    const colors = wrapper
+      .findAll('[data-testid^="category-"]')
+      .map((tile) => tile.findComponent(ModeTile).props('color'))
+
+    expect(colors).toEqual([undefined, undefined, 'tile-quilles', 'tile-casin'])
+  })
+
+  // UX-DR31 : la barre porte le contenu de SON écran. Ici, un seul item et pas de sortie.
+  it('gives the JDS step a sidebar holding RETOUR alone, with no exit item', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
+    const items = wrapper.findAll('[data-testid^="sidebar-item-"]')
+
+    expect(items.map((item) => item.attributes('data-testid'))).toEqual(['sidebar-item-back'])
+    expect(items[0]!.text()).toContain('RETOUR')
+    expect(items[0]!.attributes('disabled')).toBeUndefined()
+    expect(wrapper.find('[data-testid="sidebar-bottom"]').exists()).toBe(false)
+  })
+
+  it('forgets the category when RETOUR is pressed on the JDS step', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="sidebar-item-back"]').trigger('pointerdown')
+
+    expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="step-mode"]').exists()).toBe(false)
+  })
+
+  it.each([
+    ['libre', 'libre'],
+    ['bande', 'bande'],
+    ['4billes', '4billes'],
+  ] as const)('starts a %s game straight from its tile', async (testid, mode) => {
+    const wrapper = mount(HomeScreen)
+    const store = useGameStore()
+
+    await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
+    await wrapper.find(`[data-testid="mode-${testid}"]`).trigger('pointerdown')
+    expect(wrapper.find('[data-testid="step-players"]').exists()).toBe(true)
+
+    await setDistances(wrapper)
+    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+
+    expect(store.mode).toBe(mode)
+  })
+
+  // La tuile CADRE n'est pas un mode : c'est un groupe de présentation qui ouvre le choix.
+  // Le titre porte déjà le mot, les commandes ne portent que la variante.
+  it('opens the frame choice as a list prompt holding 47/2, 47/1, 71/2 then ANNULER', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="mode-cadre"]').trigger('pointerdown')
+    const prompt = wrapper.findComponent(PromptModal)
+
+    expect(prompt.find('[data-testid="prompt-title"]').text()).toBe('CADRE')
+    expect(
+      prompt.findAll('[data-testid^="prompt-action-"]').map((action) => action.text()),
+    ).toEqual(['47/2', '47/1', '71/2'])
+    expect(prompt.find('[data-testid="prompt-secondary"]').text()).toBe('ANNULER')
+    expect(prompt.find('[data-testid="prompt-primary"]').exists()).toBe(false)
+  })
+
+  it.each(['cadre-47-2', 'cadre-47-1', 'cadre-71-2'] as const)(
+    'starts a %s game from the frame prompt',
+    async (mode) => {
+      const wrapper = mount(HomeScreen)
+      const store = useGameStore()
+
+      await goToPlayersStep(wrapper, mode)
+      expect(wrapper.find('[data-testid="step-players"]').exists()).toBe(true)
+
+      await setDistances(wrapper)
+      await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+
+      expect(store.mode).toBe(mode)
+    },
+  )
+
+  it('leaves the JDS step untouched when the frame choice is cancelled', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="mode-cadre"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="prompt-secondary"]').trigger('pointerdown')
+
+    expect(wrapper.find('[data-testid="prompt-modal"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="step-mode"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="step-players"]').exists()).toBe(false)
+  })
+
+  // P2 : une pop-up seulement masquée par le garde `step` se rouvrirait d'elle-même au
+  // retour sur l'étape — c'est le défaut déjà corrigé sur `distanceError` en 1.4.
+  it('closes the frame prompt when the JDS step is abandoned', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="mode-cadre"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="sidebar-item-back"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
+
+    expect(wrapper.find('[data-testid="prompt-modal"]').exists()).toBe(false)
   })
 
   it('marks categories whose modes are all unavailable as disabled and does not open them', async () => {
@@ -595,7 +775,8 @@ describe('HomeScreen', () => {
     await typeHandicap(wrapper, [1, 0, 0])
     await validateModal(wrapper)
     await wrapper.find('[data-testid="back-button"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="mode-cadre-47-2"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="mode-cadre"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="prompt-action-cadre-47-2"]').trigger('pointerdown')
 
     expect(wrapper.find('[data-testid="player1-name"]').text()).toBe('JOUEUR 1')
     expect(wrapper.find('[data-testid="player1-target"]').exists()).toBe(false)

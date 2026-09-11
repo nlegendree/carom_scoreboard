@@ -98,6 +98,9 @@
   --color-border-strong: rgba(255, 255, 255, 0.40);
   --radius-container: 0px;
   --radius-cta: 0px;
+  /* Seule exception aux angles vifs : la carte des pop-ups, très légèrement adoucie pour
+     se détacher du fond flouté (revue de rendu de Nathan, 2026-09-12). */
+  --radius-modal: 12px;
 
   /* Barre latérale : aplat sombre collé au bord de l'écran (modèle Cueuny). */
   --color-sidebar: #101318;
@@ -107,10 +110,18 @@
      `--color-turn-active` (liseré de tour), qui gardent leur rôle. */
   --color-brand-red: #D0343F;
 
-  /* Tuiles de mode : une nuance de bleu par tuile, en dégradé, de la plus claire à la
-     plus sombre. Palette des apps de référence : bleus, noir/gris, rouge. */
-  --gradient-tile-3b: linear-gradient(160deg, #2E8FDB 0%, var(--color-cloth) 100%);
-  --gradient-tile-jds: linear-gradient(160deg, #0A7CC9 0%, #04558D 100%);
+  /* LE bleu du produit (décision de Nathan, 2026-09-12) : une seule teinte pour toutes les
+     tuiles de mode, à l'accueil comme en sélection JDS, et pour tout CTA qui demande du
+     bleu. Haut de l'échelle, ancré sur le drap (`--color-cloth`) : une pop-up monte sur un
+     fond déjà sombre qu'elle floute, elle doit ressortir. L'échelle d'une nuance par tuile
+     de la 10.1 est abandonnée — plus simple, et rien ne distinguait vraiment les nuances.
+     Le neutre est le même dégradé en blanc voilé (CTA secondaires). */
+  --gradient-blue: linear-gradient(160deg, #2E8FDB 0%, var(--color-cloth) 100%);
+  --gradient-neutral: linear-gradient(160deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.10) 100%);
+
+  /* Seules survivantes de l'échelle par tuile : les nuances sombres des tuiles BIENTÔT,
+     laissées telles quelles (Nathan, 2026-09-12) — elles disent l'inactivité autant que le
+     badge. Une tuile qui s'ouvrira plus tard basculera sur `--gradient-blue`. */
   --gradient-tile-quilles: linear-gradient(160deg, #0668AD 0%, #033F6B 100%);
   --gradient-tile-casin: linear-gradient(160deg, #05508A 0%, #022B4D 100%);
 

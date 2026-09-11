@@ -20,6 +20,7 @@ const PATHS: Record<PictoName, readonly string[]> = {
   ],
   power: ['M12 2v10', 'M18.4 6.6a9 9 0 1 1-12.77.04'],
   'arrow-right': ['M5 12h14', 'm12 5 7 7-7 7'],
+  'arrow-left': ['M19 12H5', 'm12 19-7-7 7-7'],
 }
 </script>
 

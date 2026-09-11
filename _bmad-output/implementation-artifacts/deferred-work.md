@@ -129,3 +129,10 @@ Dossier applicatif, clé de sauvegarde et chemins des documents sont renommés. 
   
   Les stories 10.2 à 10.7 doivent partir des notes datées ; nettoyer le texte à leur création.
 - **Revue de code de la 10.1 reportée** (décision de Nathan, 2026-09-11 : « j'ai envie d'avancer là, on fera tous les fix à la fin »). La story est committée et laissée en `review` : **livrée mais non relue**. Les revues de l'Epic 10 seront passées groupées en fin d'epic, idéalement avec un autre modèle, et les correctifs appliqués à ce moment-là.
+
+## Deferred from: dev-story 10-2-refonte-de-la-selection-des-modes-jds-tuiles-et-choix-cadre (2026-09-12)
+
+- **Voile et flou des pop-ups à revoir avec le pavé numérique** (décision de Nathan, 2026-09-12). L'assombrissement `bg-black/60` et le flou, ramené de 12 px à 8 px en fin de story, conviennent pour une pop-up de choix ; ils seront peut-être retravaillés en **Story 10.3**, quand le fonctionnement du pavé numérique sera repris — un dock de saisie qui reste ouvert pendant qu'on lit le scoreboard derrière ne demande pas le même traitement d'arrière-plan qu'une pop-up de décision plein écran. Ne rien figer d'ici là.
+- **`ScoreEntryModal` et `PlayerSetupModal` n'ont pas suivi le nouveau style des pop-ups.** `PromptModal` est passé aux angles vifs (`--radius-cta`, carte à `--radius-modal`), au dégradé par CTA (`--gradient-blue` / `--gradient-neutral`) et au flou 8 px ; les deux autres gardent leurs `rounded-3xl`/`rounded-2xl`, `bg-accent` et leur flou 12 px. À aligner en **Story 10.7** (finition transverse), ou plus tôt si la 10.3 les refond — elle supprime `PlayerSetupModal` au profit d'une saisie en place.
+- **Contraste du blanc sur `--gradient-blue` : 3,46:1** au point le plus clair du dégradé. Conforme AA pour du **texte large**, ce que sont les libellés de CTA (~24 px en `font-black`), mais sans marge. À revalider dans la passe contraste AA de la **Story 10.7**, en même temps que les autres écrans.
+- **Revue de code de la 10.2 reportée**, comme la 10.1 : livrée, committée, laissée en `review` sans relecture (décision de Nathan, 2026-09-11 — revues et correctifs groupés en fin d'Epic 10).

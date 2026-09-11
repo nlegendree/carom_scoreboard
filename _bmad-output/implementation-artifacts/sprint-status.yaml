@@ -1,5 +1,5 @@
 # generated: 2026-09-08
-# last_updated: 2026-09-11
+# last_updated: 2026-09-12
 
 # project: explore
 # project_key: NOKEY
@@ -36,7 +36,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-09-08
-last_updated: 2026-09-11
+last_updated: 2026-09-12
 project: explore
 project_key: NOKEY
 tracking_system: file-system
@@ -81,7 +81,7 @@ development_status:
   # Stories listées dans l'ordre d'exécution d'epics.md (10.6 → 10.1 → 10.2 → 10.3 → 10.4 → 10.5 → 10.7), pas dans l'ordre des numéros
   10-6-renommage-du-produit-en-1score: done # EN PREMIER — la sidebar de la 10.1 affiche « 1Score » ; package.json, manifest, index.html, README, CLAUDE.md ; dossier applicatif et clé localStorage renommés en 1score après revue ; dépôt GitHub, dossier local et site Netlify plus tard
   10-1-refonte-de-laccueil-barre-laterale-tuiles-de-mode-fond-degrade: review # story créée le 2026-09-11 (réf. cueuny_home, system-ui, logo.png de Nathan, cloth #0573BB) — tokens + dégradé, SideBar (API complète), ModeTile, état BIENTÔT ; « Fermer l'application » affiché mais inerte, sans spike (décision de Nathan, 2026-09-11) ; passe de rendu validée par Nathan le 2026-09-11 : paysage uniquement, angles vifs, sidebar collée à en-tête rouge en biais, tuiles bleues collées avec filets, fond gris/noir ; RESTE EN `review` : revue de code reportée à la fin de l'Epic 10 (décision de Nathan, 2026-09-11 — revues et correctifs groupés)
-  10-2-refonte-de-la-selection-des-modes-jds-tuiles-et-choix-cadre: backlog # tuiles JDS, PromptModal variante « liste » pour Cadre 47/2·47/1·71/2
+  10-2-refonte-de-la-selection-des-modes-jds-tuiles-et-choix-cadre: review # livrée le 2026-09-12 (dev-story) — étape `mode` sous la coquille de l'accueil, `PromptModal` variante liste, picto `arrow-left`, famille `--gradient-tile-jds-2|3|4` ; 559 tests verts, passe navigateur aux trois formats ; RESTE EN `review` : revue groupée en fin d'Epic 10. Story créée le 2026-09-12 — tuiles JDS, PromptModal variante « liste » pour Cadre 47/2·47/1·71/2 ; décisions de Nathan : aucune nouvelle référence visuelle (rendu 10.1 repris), aucune accroche de tuile, quatre nuances dérivées de `--gradient-tile-jds`, gabarit identique à l'accueil
   10-3-refonte-du-parametrage-joueurs-saisie-en-place-bille-et-cote-dissocies: backlog # NumericPadDock, AlphaKeyboardSheet, CHANGER DE BILLE / CHANGER DE CÔTÉ, PlayerSetupModal supprimé, ÉCHANGER retiré du jeu (DT1, DT4, DT5, DT7)
   10-4-refonte-du-scoreboard-carte-joueur-passer-le-tour-dock-de-saisie-barre-basse-en-pictos: backlog # la plus grosse, gardée entière (décision de Nathan, 2026-09-11) — IconAction, PASSER LE TOUR, ScoreEntryDock, RESTANT, ActionBar en markup unique (DT2)
   10-5-refonte-du-recap-barre-laterale-et-bandeau-corrige: backlog # SideBar QUITTER / RECOMMENCER, nom et distance séparés (DT6), côtés du scoreboard

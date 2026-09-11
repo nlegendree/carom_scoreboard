@@ -16,7 +16,7 @@ import {
   type GameModeDescriptor,
   type PlayerId,
 } from '../types/game'
-import type { SideBarItem } from '../types/ui'
+import type { PromptAction, SideBarItem } from '../types/ui'
 
 const DEFAULT_PLAYER1_NAME = 'JOUEUR 1'
 const DEFAULT_PLAYER2_NAME = 'JOUEUR 2'
@@ -39,15 +39,32 @@ const HOME_SIDEBAR_EXIT: SideBarItem = {
 // catalogue (`series` y vient en premier). Le catalogue est statique : pas de `computed`.
 const HOME_TILES = (
   [
-    { id: '3bandes', color: 'tile-3b' },
-    { id: 'series', color: 'tile-jds' },
+    { id: '3bandes' },
+    { id: 'series' },
     { id: 'quilles', color: 'tile-quilles' },
     { id: 'casin', color: 'tile-casin' },
-  ] as const satisfies readonly { id: GameCategoryId; color: string }[]
+  ] as const satisfies readonly { id: GameCategoryId; color?: string }[]
 ).map((tile) => ({
   ...tile,
   category: GAME_CATEGORIES.find((category) => category.id === tile.id)!,
 }))
+
+// Sélection JDS (Story 10.2) : ordre et regroupement des tuiles. Donnée de présentation
+// comme `HOME_TILES` — le catalogue, lui, liste les six modes dans son propre ordre.
+// `CADRE` n'est PAS un mode : c'est un groupe qui ouvre le choix de cadre, et il ne doit
+// pas entrer dans `GameMode`. Toutes portent LE bleu des tuiles, les modes étant des pairs
+// (décision de Nathan, 2026-09-12).
+// `group` est porté par les quatre entrées, y compris à `false` : sous `as const`, une clé
+// absente d'une entrée disparaît de sa branche d'union et `tile.group` ne se lit plus.
+const JDS_TILE_LAYOUT = [
+  { id: 'libre', group: false },
+  { id: 'bande', group: false },
+  { id: 'cadre', group: true },
+  { id: '4billes', group: false },
+] as const
+
+// Les trois cadres du catalogue, dans l'ordre d'affichage de la pop-up.
+const CADRE_MODES = ['cadre-47-2', 'cadre-47-1', 'cadre-71-2'] as const satisfies readonly GameMode[]
 
 const gameStore = useGameStore()
 
@@ -70,6 +87,8 @@ const editing = ref<PlayerId | null>(null)
 const editingField = ref<'name' | 'distance'>('name')
 // Pop-up « DISTANCE MANQUANTE » ouverte.
 const distanceError = ref(false)
+// Pop-up de choix du cadre ouverte (Story 10.2).
+const cadrePromptOpen = ref(false)
 // Parcours de rattrapage en cours (revue de Nathan, 2026-09-10) : depuis le CTA de la
 // pop-up d'erreur, les modales des joueurs sans distance s'enchaînent d'elles-mêmes —
 // valider la distance du blanc ouvre directement celle du jaune s'il en manque encore.
@@ -84,11 +103,34 @@ const displayedNames = computed(() => ({
 const missingDistance = computed(() =>
   (['player1', 'player2'] as const).filter((player) => targetScores.value[player] <= 0),
 )
-const headerTitle = computed(() => {
-  if (step.value === 'mode') return selectedCategory.value?.label
-  if (step.value === 'players') return GAME_MODE_LABELS[selectedMode.value]
-  return undefined
-})
+// Titre de l'ancienne coquille : depuis la 10.2, elle ne sert plus que l'étape joueurs,
+// le titre de l'écran JDS étant rendu par sa propre coquille.
+const headerTitle = computed(() =>
+  step.value === 'players' ? GAME_MODE_LABELS[selectedMode.value] : undefined,
+)
+
+// `computed` et non constante (à la différence de `HOME_TILES`) : la mise en page se
+// résout contre les modes de la catégorie ouverte. Le libellé des trois modes directs
+// vient du catalogue ; `CADRE` est un groupe, dont le titre est littéral et qui n'est
+// BIENTÔT que si aucun de ses trois cadres n'est disponible.
+const jdsTiles = computed(() =>
+  JDS_TILE_LAYOUT.map((tile) => {
+    if (tile.group) {
+      const cadres = categoryModes.value.filter((mode) => isCadre(mode.id))
+      return { ...tile, title: 'CADRE', soon: !cadres.some((mode) => mode.available), mode: null }
+    }
+    const mode = categoryModes.value.find((candidate) => candidate.id === tile.id) ?? null
+    return { ...tile, title: mode?.label ?? '', soon: !mode?.available, mode }
+  }),
+)
+
+// Le titre de la pop-up porte déjà le mot CADRE : ses commandes ne portent que la variante.
+const cadreActions = computed<PromptAction[]>(() =>
+  CADRE_MODES.flatMap((id) => {
+    const mode = categoryModes.value.find((candidate) => candidate.id === id)
+    return mode ? [{ id: mode.id, label: mode.label.replace('CADRE ', '') }] : []
+  }),
+)
 
 function goHome(): void {
   step.value = 'category'
@@ -110,11 +152,22 @@ function selectCategory(category: GameCategoryDescriptor): void {
   step.value = 'mode'
 }
 
-function selectMode(mode: GameModeDescriptor): void {
-  if (!mode.available) return
+function selectMode(mode: GameModeDescriptor | null): void {
+  if (!mode?.available) return
 
   selectedMode.value = mode.id
   step.value = 'players'
+}
+
+function isCadre(mode: GameMode): boolean {
+  return (CADRE_MODES as readonly string[]).includes(mode)
+}
+
+// Un cadre choisi dans la pop-up emprunte le MÊME chemin qu'une tuile : `selectMode` garde
+// la disponibilité, il n'y a pas de second chemin vers l'étape joueurs.
+function selectCadre(id: string): void {
+  selectMode(categoryModes.value.find((mode) => mode.id === id) ?? null)
+  cadrePromptOpen.value = false
 }
 
 function back(): void {
@@ -127,6 +180,7 @@ function back(): void {
   // toute seule au retour sur l'étape joueurs, sur un mode différent et des valeurs effacées.
   editing.value = null
   distanceError.value = false
+  cadrePromptOpen.value = false
   fixingDistances.value = false
 
   if (step.value === 'players' && categoryModes.value.length > 1) {
@@ -135,6 +189,12 @@ function back(): void {
   }
   goHome()
 }
+
+// Sélection JDS (UX-DR31) : la barre ne porte que le retour — pas de sortie, l'app ne se
+// quitte que depuis l'accueil. Déclarée après `back()`, dont elle référence la fonction.
+const JDS_SIDEBAR_ITEMS: SideBarItem[] = [
+  { id: 'back', picto: 'arrow-left', label: 'RETOUR', state: 'normal', action: back },
+]
 
 // Le repliement des espaces multiples est assuré en amont, par le refus d'espaces
 // consécutifs dans `PlayerSetupModal` : le buffer ne peut pas en contenir. On se contente
@@ -232,7 +292,7 @@ function fixDistance(): void {
             :key="tile.id"
             :data-testid="`category-${tile.id}`"
             :title="tile.category.label"
-            :color="tile.color"
+            :color="'color' in tile ? tile.color : undefined"
             :soon="!isCategoryAvailable(tile.category)"
             @select="selectCategory(tile.category)"
           />
@@ -240,7 +300,35 @@ function fixDistance(): void {
       </main>
     </div>
 
-    <!-- Étapes mode et joueurs : rendu d'avant l'Epic 10, refondu en 10.2 et 10.3. -->
+    <!-- Sélection JDS (Story 10.2) : la coquille de l'accueil, au pixel près — seuls le
+         titre et les tuiles changent d'un écran à l'autre. Le retour passe en barre
+         latérale, la barre basse disparaît. -->
+    <div
+      v-else-if="step === 'mode'"
+      data-testid="step-mode"
+      class="flex h-full w-full bg-(image:--gradient-bg)"
+    >
+      <SideBar :items="JDS_SIDEBAR_ITEMS" />
+
+      <main class="flex min-w-0 flex-1 flex-col">
+        <p data-testid="jds-title" class="px-4 pt-5 text-hero font-black leading-tight text-white">
+          {{ selectedCategory?.label }}
+        </p>
+
+        <section class="mt-auto grid h-[34%] grid-cols-4 divide-x divide-border">
+          <ModeTile
+            v-for="tile in jdsTiles"
+            :key="tile.id"
+            :data-testid="`mode-${tile.id}`"
+            :title="tile.title"
+            :soon="tile.soon"
+            @select="tile.group ? (cadrePromptOpen = true) : selectMode(tile.mode)"
+          />
+        </section>
+      </main>
+    </div>
+
+    <!-- Étape joueurs : rendu d'avant l'Epic 10, refondu en 10.3. -->
     <div v-else class="flex h-full w-full flex-col bg-bg">
       <header class="flex shrink-0 items-center gap-4 p-4">
         <h1 v-if="headerTitle" class="text-label font-black tracking-widest text-white">
@@ -249,29 +337,10 @@ function fixDistance(): void {
       </header>
 
       <main class="flex flex-1 flex-col justify-end overflow-hidden">
-        <section
-          v-if="step === 'mode'"
-          data-testid="step-mode"
-          class="grid grid-cols-2 gap-px bg-white/10 md:grid-cols-3"
-        >
-          <button
-            v-for="mode in categoryModes"
-            :key="mode.id"
-            :data-testid="`mode-${mode.id}`"
-            :disabled="!mode.available"
-            class="flex min-h-[var(--size-touch-target)] flex-col items-center justify-center gap-1 bg-bg p-6 text-label font-bold text-white touch-manipulation select-none disabled:opacity-40"
-            @pointerdown="selectMode(mode)"
-          >
-            {{ mode.label }}
-            <span v-if="!mode.available" class="text-stat font-normal text-white/40">BIENTÔT</span>
-          </button>
-        </section>
-
-        <!-- Étape joueurs : deux grands panneaux portant déjà la bille de leur côté,
+        <!-- Deux grands panneaux portant déjà la bille de leur côté,
              préfigurant la sélection depuis la base joueurs du club (Epic 4). Chaque panneau
              est la zone d'appel de son propre réglage (nom + handicap). -->
         <section
-          v-else
           data-testid="step-players"
           class="flex flex-1 flex-col gap-px bg-white/10 md:flex-row"
         >
@@ -353,6 +422,17 @@ function fixDistance(): void {
     <!-- Titre et deux CTA, sans message ni croix (revue de Nathan, 2026-09-10) : la modale
          qui suit dit d'elle-même de quel joueur il s'agit, et `ANNULER` est le retour de
          toutes les pop-ups de décision. -->
+    <!-- Choix du cadre (Story 10.2), en variante liste : le titre porte le mot, les
+         commandes la variante, `ANNULER` ferme sans rien choisir. -->
+    <PromptModal
+      v-if="cadrePromptOpen && step === 'mode'"
+      title="CADRE"
+      :actions="cadreActions"
+      secondaryLabel="ANNULER"
+      @select="selectCadre"
+      @secondary="cadrePromptOpen = false"
+    />
+
     <PromptModal
       v-if="distanceError"
       title="DISTANCE MANQUANTE"

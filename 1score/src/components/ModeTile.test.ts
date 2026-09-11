@@ -9,7 +9,7 @@ function background(wrapper: ReturnType<typeof mount>) {
 
 describe('ModeTile', () => {
   it('shows its title and an arrow, without soon badge', () => {
-    const wrapper = mount(ModeTile, { props: { title: '3 BANDES', color: 'tile-3b' } })
+    const wrapper = mount(ModeTile, { props: { title: '3 BANDES' } })
 
     expect(wrapper.find('[data-testid="tile-title"]').text()).toBe('3 BANDES')
     expect(wrapper.findComponent(PictoIcon).props('name')).toBe('arrow-right')
@@ -17,12 +17,12 @@ describe('ModeTile', () => {
   })
 
   it('emits select once on pointerdown, with its full gradient and a press effect', async () => {
-    const wrapper = mount(ModeTile, { props: { title: 'JEUX DE SÉRIES', color: 'tile-jds' } })
+    const wrapper = mount(ModeTile, { props: { title: 'JEUX DE SÉRIES' } })
 
     await wrapper.trigger('pointerdown')
 
     expect(wrapper.attributes('disabled')).toBeUndefined()
-    expect(background(wrapper).classes()).toContain('bg-(image:--gradient-tile-jds)')
+    expect(background(wrapper).classes()).toContain('bg-(image:--gradient-blue)')
     expect(background(wrapper).classes()).not.toContain('opacity-45')
     expect(wrapper.classes()).toContain('active:brightness-125')
     expect(wrapper.emitted('select')).toHaveLength(1)
@@ -43,19 +43,32 @@ describe('ModeTile', () => {
     expect(wrapper.emitted('select')).toBeUndefined()
   })
 
+  // Un seul bleu pour toutes les tuiles ouvertes, à l'accueil comme en sélection JDS
+  // (décision de Nathan, 2026-09-12) : l'écran n'a plus de couleur à choisir.
+  it('paints every open tile with the single product blue', () => {
+    for (const props of [{ title: '3 BANDES' }, { title: 'LIBRE' }, { title: 'CADRE' }]) {
+      expect(background(mount(ModeTile, { props })).classes()).toContain(
+        'bg-(image:--gradient-blue)',
+      )
+    }
+  })
+
+  // Les tuiles BIENTÔT gardent la nuance sombre de leur famille : elle dit l'inactivité
+  // autant que le badge.
   it.each([
-    ['tile-3b', 'bg-(image:--gradient-tile-3b)'],
-    ['tile-jds', 'bg-(image:--gradient-tile-jds)'],
     ['tile-quilles', 'bg-(image:--gradient-tile-quilles)'],
     ['tile-casin', 'bg-(image:--gradient-tile-casin)'],
-  ] as const)('maps %s to %s', (color, expected) => {
-    expect(background(mount(ModeTile, { props: { title: 'X', color } })).classes()).toContain(expected)
+  ] as const)('keeps %s on a soon tile', (color, expected) => {
+    const wrapper = mount(ModeTile, { props: { title: 'X', color, soon: true } })
+
+    expect(background(wrapper).classes()).toContain(expected)
+    expect(background(wrapper).classes()).not.toContain('bg-(image:--gradient-blue)')
   })
 
   it('renders the tagline only when given', () => {
-    const bare = mount(ModeTile, { props: { title: 'CASIN', color: 'tile-casin' } })
+    const bare = mount(ModeTile, { props: { title: 'CASIN' } })
     const withTagline = mount(ModeTile, {
-      props: { title: 'CASIN', color: 'tile-casin', tagline: 'Parties par catégories' },
+      props: { title: 'CASIN', tagline: 'Parties par catégories' },
     })
 
     expect(bare.find('[data-testid="tile-tagline"]').exists()).toBe(false)
@@ -64,7 +77,7 @@ describe('ModeTile', () => {
 
   // AC8 : l'accueil est l'écran de veille, rien n'y bouge au repos.
   it('carries no transition or animation', () => {
-    const html = mount(ModeTile, { props: { title: 'X', color: 'tile-3b' } }).html()
+    const html = mount(ModeTile, { props: { title: 'X' } }).html()
 
     expect(html).not.toMatch(/transition|animate-|scale-/)
   })

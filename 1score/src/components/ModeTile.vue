@@ -1,26 +1,33 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import PictoIcon from './PictoIcon.vue'
 
-type TileColor = 'tile-3b' | 'tile-jds' | 'tile-quilles' | 'tile-casin'
+// Une tuile DISPONIBLE n'a pas de couleur à choisir : toutes portent LE bleu du produit,
+// à l'accueil comme en sélection JDS (décision de Nathan, 2026-09-12) — les modes sont des
+// pairs, les hiérarchiser par la nuance n'apportait rien. `color` ne sert donc qu'aux deux
+// tuiles encore fermées, dont le bleu sombre dit l'inactivité autant que le badge ; elles
+// perdront leur `color` en s'ouvrant.
+type TileColor = 'tile-quilles' | 'tile-casin'
 
 // Tuile de mode de l'accueil (UX-DR34). Racine unique `<button>` : le `data-testid` posé
 // par le parent retombe dessus. `tagline` fait partie du contrat mais l'accueil n'en passe
 // pas (décision de Nathan, 2026-09-11).
 const props = withDefaults(
-  defineProps<{ title: string; color: TileColor; soon?: boolean; tagline?: string }>(),
-  { soon: false, tagline: undefined },
+  defineProps<{ title: string; color?: TileColor; soon?: boolean; tagline?: string }>(),
+  { color: undefined, soon: false, tagline: undefined },
 )
 
 const emit = defineEmits<{ select: [] }>()
 
-// Dégradé de bleu propre à chaque tuile (passe de rendu 10.1). Classes écrites en toutes
-// lettres pour le scanner JIT de Tailwind v4.
+// Classes écrites en toutes lettres pour le scanner JIT de Tailwind v4.
 const GRADIENT_CLASSES: Record<TileColor, string> = {
-  'tile-3b': 'bg-(image:--gradient-tile-3b)',
-  'tile-jds': 'bg-(image:--gradient-tile-jds)',
   'tile-quilles': 'bg-(image:--gradient-tile-quilles)',
   'tile-casin': 'bg-(image:--gradient-tile-casin)',
 }
+
+const gradientClass = computed(() =>
+  props.color ? GRADIENT_CLASSES[props.color] : 'bg-(image:--gradient-blue)',
+)
 
 // `disabled` porte le visuel, la garde porte le comportement (voir `SideBar`).
 function select(): void {
@@ -47,7 +54,7 @@ function select(): void {
       data-testid="tile-background"
       aria-hidden="true"
       class="absolute inset-0 -z-10"
-      :class="[GRADIENT_CLASSES[color], soon ? 'opacity-45' : '']"
+      :class="[gradientClass, soon ? 'opacity-45' : '']"
     />
 
     <span class="flex flex-col gap-1">
