@@ -42,6 +42,9 @@ project_key: NOKEY
 tracking_system: file-system
 story_location: "{project-root}/_bmad-output/implementation-artifacts"
 
+# ORDRE D'EXÉCUTION révisé le 2026-09-11 (sprint-change-proposal-2026-09-11.md, approuvé par Nathan) :
+#   Epic 1 → 2 (livrés) → consolidation V1 jeu → Epic 4 (profil joueur, V2a) → Epic 3 redéfini
+#   (parties rattachées au profil, V2a) → 5 → 6 → 7 → 8 → 9. Les numéros d'epic sont conservés.
 development_status:
   epic-1: in-progress
   1-1-initialisation-du-projet: done
@@ -70,15 +73,16 @@ development_status:
   2-4-afficher-le-compte-a-rebours-pour-n-en-3-bandes: done
   epic-2-retrospective: done
 
-  epic-3: backlog
-  3-1-sauvegarder-automatiquement-une-partie-terminee-dans-lhistorique: backlog
-  3-2-consulter-la-liste-des-parties-jouees: backlog
-  3-3-consulter-le-detail-complet-dune-partie-passee: backlog
-  3-4-conserver-lhistorique-des-parties-pendant-au-minimum-30-jours: backlog
-  3-5-detecter-et-signaler-un-nouveau-record-personnel-en-fin-de-partie: backlog
+  epic-3: backlog # recadré le 2026-09-11 → « Parties rattachées au profil joueur (V2a) », APRÈS l'Epic 4 — stories à réécrire (sprint-change-proposal-2026-09-11.md)
+  3-1-sauvegarder-automatiquement-une-partie-terminee-dans-lhistorique: backlog # recadrée le 2026-09-11 — non lancée ; à réécrire après l'Epic 4 comme file locale de sync avec l'identité des joueurs
+  3-2-consulter-la-liste-des-parties-jouees: backlog # supersédée le 2026-09-11 — consultation depuis le profil, puis tablette une fois identifié
+  3-3-consulter-le-detail-complet-dune-partie-passee: backlog # supersédée le 2026-09-11 — idem 3-2
+  3-4-conserver-lhistorique-des-parties-pendant-au-minimum-30-jours: backlog # supersédée le 2026-09-11 — devient « file locale conservée jusqu'à sync confirmée »
+  3-5-detecter-et-signaler-un-nouveau-record-personnel-en-fin-de-partie: backlog # fusionnée le 2026-09-11 dans les stats de carrière (4-3/4-4)
   epic-3-retrospective: optional
 
-  epic-4: backlog
+  epic-4: backlog # PROCHAIN epic après la consolidation V1 (décision de Nathan, 2026-09-11) — jalon V2a
+  4-0-fondation-backend-et-authentification: backlog # ajoutée le 2026-09-11 — prérequis : décision d'architecture backend (passe Architecte)
   4-1-creer-un-compte-joueur-avec-un-identifiant-court-memorisable: backlog
   4-2-sidentifier-sur-une-tablette-de-club-avec-son-identifiant: backlog
   4-3-consulter-mes-statistiques-cumulees-de-carriere: backlog
@@ -87,7 +91,7 @@ development_status:
 
   epic-5: backlog
   5-1-gerer-les-tables-de-son-club: backlog
-  5-2-synchroniser-automatiquement-les-donnees-locales-vers-le-cloud: backlog
+  5-2-synchroniser-automatiquement-les-donnees-locales-vers-le-cloud: backlog # déplacée vers l'Epic 3 redéfini le 2026-09-11 — clé conservée jusqu'à la passe epics
   5-3-consulter-les-statistiques-dusage-du-club: backlog
   5-4-gerer-son-abonnement-club: backlog
   5-5-activer-un-minuteur-de-facturation-a-la-table: backlog

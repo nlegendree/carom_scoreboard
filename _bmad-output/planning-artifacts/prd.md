@@ -62,7 +62,7 @@ Le marché coréen, observé directement, valide cette trajectoire — les clubs
 
 - Un joueur sans formation démarre une partie (mode + noms + premier score) en **moins de 30 secondes**, seul
 - En fin de match, le système affiche automatiquement score total, moyenne par reprise, meilleure série — **zéro calcul manuel**
-- Un joueur retrouve l'historique d'une partie jouée **jusqu'à 30 jours en arrière** depuis le même appareil
+- Un joueur identifié retrouve **toutes** ses parties sur son profil, quelle que soit la tablette du club sur laquelle il a joué ; un invité joue sans compte et sans historique *(réécrit le 2026-09-11, `sprint-change-proposal-2026-09-11.md` — remplace « jusqu'à 30 jours en arrière depuis le même appareil »)*
 - **Zéro perte de données** en cours de partie (fermeture accidentelle, coupure réseau)
 
 ### Succès Business
@@ -76,7 +76,7 @@ Le marché coréen, observé directement, valide cette trajectoire — les clubs
 ### Succès Technique
 
 - Réactivité tactile : retour visuel/haptique **< 100 ms** sur chaque appui
-- PWA installable, **100 % offline** en V1, sans dépendance backend
+- PWA installable ; le **jeu** est 100 % offline (démarrer, scorer, terminer une partie ne dépend jamais du réseau) ; comptes et historique passent par le cloud, avec file locale de synchronisation — zéro perte hors ligne *(réécrit le 2026-09-11)*
 - Compatible tablettes d'entrée de gamme : Android 10+, iPad 9e génération+
 - Taux de complétion des parties démarrées : **> 80 %** sans incident technique
 
@@ -103,7 +103,7 @@ Le marché coréen, observé directement, valide cette trajectoire — les clubs
 - Stats automatiques en fin de match : total, moyenne, meilleure série
 - Annonce vocale du score (on/off)
 - Alerte détection d'inactivité (partie ouverte sans saisie pendant X minutes)
-- Historique local — 30 jours minimum
+- ~~Historique local — 30 jours minimum~~ *(retiré le 2026-09-11 : les parties se rattachent au profil joueur, jalon V2a)*
 - Noms joueurs éditables inline
 - PWA installable, 100 % offline, localStorage
 - UX : démarrer une partie en < 30 secondes sans formation
@@ -119,6 +119,17 @@ Ajoute uniquement :
 - Pause/reprise timer (fondation pour l'arbitre V2)
 
 *V1b est un jalon distinct — le timer est la feature la plus complexe du V1. Valider l'UX V1a d'abord.*
+
+### V2a — Profil joueur & parties *(ajouté le 2026-09-11, `sprint-change-proposal-2026-09-11.md`)*
+
+Décision de Nathan : stocker les parties sur une tablette n'a pas de sens (les joueurs changent de billard) ; le profil joueur passe **avant** le stockage des parties. Ce jalon avance ici ce que V2/V3 prévoyait :
+- Backend cloud hébergé en Europe (décision d'architecture à produire), RGPD dès ce jalon
+- Compte joueur à identifiant court, créé **à la tablette ou par une page web minimale** (l'app compagnon reste V4)
+- Identification à la tablette **par code ou par recherche du nom** ; l'invité reste le chemin le plus court, et le seul disponible sans réseau
+- Parties rattachées au profil : enregistrement local à la clôture (file de synchronisation), synchronisation automatique, consultation **depuis le profil d'abord, depuis les tablettes du club ensuite**
+- Statistiques de carrière et record personnel
+
+*Le jeu (V1) reste 100 % offline. Ordre d'exécution : Epic 4 (profil) puis Epic 3 (parties), numéros conservés.*
 
 ### V2/V3 — Growth : Données, Streaming & Réseau
 
@@ -376,7 +387,7 @@ Le club adopte un scoreboard simple — l'usage quotidien construit progressivem
 - **FR2 :** Un joueur peut saisir le score de sa série pour la reprise en cours
 - **FR3 :** Le système calcule et affiche en temps réel le score total de chaque joueur
 - **FR4 :** Un joueur peut terminer une partie et consulter un récapitulatif automatique
-- **FR5 :** Un joueur peut démarrer une nouvelle partie sans effacer l'historique des parties précédentes
+- **FR5 :** Un joueur peut démarrer une nouvelle partie sans effacer les parties précédemment rattachées à un profil *(reformulé le 2026-09-11)*
 - **FR6 :** Le système préserve l'état complet de la partie en cours en cas de fermeture accidentelle de l'application
 
 ### 2. Saisie & Correction
@@ -398,11 +409,11 @@ Le club adopte un scoreboard simple — l'usage quotidien construit progressivem
 ### 4. Statistiques & Historique
 
 - **FR17 :** Le système affiche automatiquement en fin de match : score total, moyenne par reprise, meilleure série
-- **FR18 :** Un joueur peut consulter la liste des parties jouées sur l'appareil
-- **FR19 :** Un joueur peut consulter le détail complet d'une partie passée (reprises, séries, statistiques)
-- **FR20 :** L'application conserve l'historique des parties pendant au minimum 30 jours
-- **FR21 :** Un joueur enregistré peut consulter ses statistiques cumulées sur l'ensemble de sa carrière *(V2+)*
-- **FR22 :** Un joueur enregistré peut visualiser l'évolution de sa moyenne au fil du temps *(V2+)*
+- **FR18 :** Un joueur identifié peut consulter la liste de ses parties depuis son profil, et depuis une tablette du club une fois identifié *(V2a — reformulé le 2026-09-11)*
+- **FR19 :** Un joueur identifié peut consulter le détail complet d'une de ses parties passées (reprises, séries, statistiques) *(V2a)*
+- **FR20 :** Les parties rattachées à un profil sont conservées sans limite de durée ; une partie jouée hors ligne est conservée localement jusqu'à sa synchronisation *(V2a — reformulé le 2026-09-11)*
+- **FR21 :** Un joueur enregistré peut consulter ses statistiques cumulées sur l'ensemble de sa carrière *(V2a)*
+- **FR22 :** Un joueur enregistré peut visualiser l'évolution de sa moyenne au fil du temps *(V2a)*
 
 ### 5. Présentation & Diffusion *(V2+)*
 
@@ -421,11 +432,11 @@ Le club adopte un scoreboard simple — l'usage quotidien construit progressivem
 
 ### 7. Gestion des Joueurs & Clubs *(V2+)*
 
-- **FR32 :** Un joueur peut créer un compte avec un identifiant court mémorisable
-- **FR33 :** Un joueur peut s'identifier sur n'importe quelle tablette de club en saisissant son identifiant
+- **FR32 :** Un joueur peut créer un compte avec un identifiant court mémorisable *(V2a)*
+- **FR33 :** Un joueur peut s'identifier sur n'importe quelle tablette de club en saisissant son identifiant **ou en recherchant son nom** parmi les joueurs enregistrés *(V2a — complété le 2026-09-11)*
 - **FR34 :** Un admin club peut gérer les tables de son club (configuration, activation, désactivation)
 - **FR35 :** Un admin club peut consulter les statistiques d'usage de son club
-- **FR36 :** Le système synchronise automatiquement les données locales vers le cloud dès qu'une connexion réseau est disponible
+- **FR36 :** Le système synchronise automatiquement les données locales vers le cloud dès qu'une connexion réseau est disponible *(V2a)*
 - **FR37 :** Un admin club peut gérer son abonnement (palier, facturation)
 - **FR38 :** Le système exporte les résultats dans un format compatible avec les systèmes fédéraux *(V3)*
 
@@ -471,7 +482,7 @@ L'identité visuelle du produit sera définie séparément par Nathan (direction
 
 ### Sécurité & Conformité
 
-- **NFR13 :** En V1, **aucune donnée transmise** à un serveur externe — tout reste sur l'appareil
+- **NFR13 :** Le **jeu** ne dépend d'aucun serveur : scorer une partie ne transmet rien. Les données de profil et de parties sont transmises uniquement au backend du produit, pour les joueurs identifiés, jamais pour un invité. NFR14-16 s'appliquent dès V2a *(réécrit le 2026-09-11 — version initiale : « En V1, aucune donnée transmise à un serveur externe — tout reste sur l'appareil »)*
 - **NFR14 :** En V2+, communications client-serveur chiffrées en **TLS 1.3 minimum**
 - **NFR15 :** En V2+, données personnelles hébergées dans l'**Union Européenne** — conformité RGPD
 - **NFR16 :** En V2+, suppression complète des données d'un joueur accessible en **< 3 actions**

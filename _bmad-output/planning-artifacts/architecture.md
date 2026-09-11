@@ -93,7 +93,7 @@ npm install -D vitest @vue/test-utils happy-dom # Tests
 
 **Storage :**
 - `localStorage` : état de la partie en cours (synchrone, petit volume)
-- `Dexie.js` (IndexedDB) : historique des parties 30 jours (async, quota safe iOS Safari)
+- `Dexie.js` (IndexedDB) : historique des parties 30 jours (async, quota safe iOS Safari) *(requalifié le 2026-09-11 : **file locale de synchronisation** des parties vers le profil joueur, `sprint-change-proposal-2026-09-11.md`)*
 
 **Tests :** Vitest + Vue Test Utils + happy-dom
 
@@ -160,9 +160,9 @@ La création du projet et la rédaction du `CLAUDE.md` sont les **deux première
 - Structure des stores Pinia : `useGameStore`, `useHistoryStore`
 - CI/CD : Netlify auto-deploy depuis GitHub (zéro configuration)
 
-**Décisions Différées (post-MVP) :**
-- Authentification : ID court joueur + app compagnon (V2+)
-- API backend : REST ou tRPC (V2+)
+**Décisions Différées (post-MVP) :** *(2026-09-11 : les deux premières deviennent **dues** pour le jalon V2a — à produire par une passe Architecte avant la Story 4.0, voir « Backend, Authentification & Synchronisation » ci-dessous)*
+- Authentification : ID court joueur + app compagnon (V2+) → **V2a, création à la tablette ou page web minimale, identification par code ou recherche de nom**
+- API backend : REST ou tRPC (V2+) → **V2a, plateforme à décider (critères PRD : coût maîtrisé, hébergement EU, déploiement simple)**
 - Monitoring : Sentry + Plausible RGPD-friendly (V2+)
 - Validation runtime : Zod ou équivalent (V2+)
 
@@ -234,7 +234,7 @@ interface GameState {
 
 Le catalogue des modes (`GAME_CATEGORIES`) vit dans ce même fichier : il décrit les catégories, leurs modes et leur disponibilité, et sert de source unique à l'écran d'accueil. Il ne porte **pas** les règles de score propres à chaque mode, qui arrivent avec la story de chaque mode. Il ne porte **aucune distance de jeu** non plus : la distance est saisie par l'utilisateur dans `PlayerSetupModal` et vit sur `Player.targetScore` (décision produit du 2026-09-08 — aucune distance de référence par mode, aucune donnée fédérale codée en dur).
 
-**Historique — IndexedDB via Dexie.js (async, quota safe iOS Safari)**
+**Historique — IndexedDB via Dexie.js (async, quota safe iOS Safari)** *(requalifié le 2026-09-11 : **file locale de synchronisation** — l'esquisse ci-dessous recevra un identifiant joueur par côté (`null` = invité), un type de fin et un statut de sync ; la forme détaillée proposée par l'ancienne Story 3.1 — par côté, distance, vainqueur, corrections, stats dénormalisées — reste la base)*
 
 ```typescript
 // src/types/history.ts
@@ -259,8 +259,12 @@ Validation : TypeScript compile-time uniquement en V1 (pas de Zod — YAGNI).
 
 ### Authentification & Sécurité
 
-V1 : aucune authentification. Toutes les données restent locales sur l'appareil (NFR13).
-V2+ (différé) : ID court joueur + auth dans app compagnon mobile (modèle coréen — défini PRD).
+V1 (jeu) : aucune authentification ; scorer une partie ne transmet rien (NFR13 réécrit le 2026-09-11).
+V2a *(avancé le 2026-09-11, décision de Nathan)* : ID court joueur sans mot de passe à la tablette, identification par code **ou recherche du nom** ; compte créé à la tablette ou par une page web minimale (app compagnon → V4) ; invité conservé ; sans réseau, jeu en invité.
+
+### Backend, Authentification & Synchronisation (V2a) — *à décider*
+
+*Section ouverte le 2026-09-11 (`sprint-change-proposal-2026-09-11.md`), à remplir par une passe Architecte avant la Story 4.0.* Doit fixer : la plateforme et son hébergement en Europe (NFR15), le chiffrement (NFR14), le modèle d'authentification (FR32, FR33), le modèle de données joueur/partie (`GameRecord` avec identifiant joueur par côté, `null` = invité, statut de synchronisation), la stratégie de synchronisation (file locale Dexie → API, reprise après coupure, NFR7), la couche réseau de la PWA (`services/`, erreurs absorbées en couche service — AR12), la configuration d'environnement (variables, secrets Netlify) et les obligations RGPD (consentement, suppression en < 3 actions — NFR16). Invariant non négociable : **le jeu reste 100 % offline** (NFR6).
 
 ### Architecture Frontend
 
@@ -274,7 +278,7 @@ V2+ (différé) : ID court joueur + auth dans app compagnon mobile (modèle cor�
 
 Réglages en V1 : modales inline sur `GameView`, pas de route dédiée.
 
-**État d'implémentation :** seule la route `/` est déclarée en V1a. `/history` et `/history/:id` seront ajoutées avec l'Epic 3, quand `HistoryView` et `GameDetailView` existeront réellement.
+**État d'implémentation :** seule la route `/` est déclarée en V1a. `/history` et `/history/:id` seront ajoutées avec l'Epic 3, quand `HistoryView` et `GameDetailView` existeront réellement. *(2026-09-11 : Epic 3 redéfini — ces routes montrent les parties **du joueur identifié**, après le profil (Epic 4) ; consultation sur le profil d'abord, tablette ensuite.)*
 
 **Stores Pinia :**
 - `useGameStore` : état courant de partie + persistance `localStorage`

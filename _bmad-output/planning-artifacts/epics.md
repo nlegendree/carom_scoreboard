@@ -127,10 +127,10 @@ Ceci doit être la toute première story d'implémentation, suivie immédiatemen
 - AR1 : Initialiser le projet avec le starter Vue 3 + Vite PWA (`@vite-pwa/create-pwa`, template vue-ts) — première story d'implémentation.
 - AR2 : Créer `CLAUDE.md` à la racine du projet comme deuxième story d'implémentation, avant tout code fonctionnel — documente les conventions AI-vibe-codable (nommage, patterns, structure).
 - AR3 : Installer et configurer les dépendances complémentaires : Tailwind CSS v4 (+ `@tailwindcss/vite`), Pinia, Vue Router 4, Dexie.js, Vitest + Vue Test Utils + happy-dom.
-- AR4 : Implémenter l'architecture de stockage double — `localStorage` pour l'état de partie courante (synchrone, < 50 Ko) via `storageService.ts` ; `Dexie.js`/IndexedDB pour l'historique 30 jours (async, quota-safe iOS Safari) via `databaseService.ts`.
-- AR5 : Implémenter les types TypeScript stricts définis en architecture : `GameState`, `Player`, `Reprise`, `GameMode`, `GameStatus` (`types/game.ts`, Epic 1) et `GameRecord` (`types/history.ts`) — scaffoldé dès Epic 1 par anticipation architecturale (séquence d'implémentation : types avant services/stores), mais réellement utilisé à partir d'Epic 3 (historique).
-- AR6 : Implémenter le routing Vue Router avec exactement 3 routes : `/` (GameView), `/history` (HistoryView), `/history/:id` (GameDetailView) ; les réglages V1 sont des modales inline sur GameView, sans route dédiée.
-- AR7 : Implémenter les stores Pinia `useGameStore` (état de partie + persistance localStorage) et `useHistoryStore` (historique + Dexie.js), structure plate un store par domaine.
+- AR4 : Implémenter l'architecture de stockage double — `localStorage` pour l'état de partie courante (synchrone, < 50 Ko) via `storageService.ts` ; `Dexie.js`/IndexedDB pour l'historique 30 jours (async, quota-safe iOS Safari) via `databaseService.ts`. *(Requalifié le 2026-09-11 : IndexedDB devient la **file locale de synchronisation** des parties vers le profil joueur, pas un historique consultable par appareil — `sprint-change-proposal-2026-09-11.md`.)*
+- AR5 : Implémenter les types TypeScript stricts définis en architecture : `GameState`, `Player`, `Reprise`, `GameMode`, `GameStatus` (`types/game.ts`, Epic 1) et `GameRecord` (`types/history.ts`) — scaffoldé dès Epic 1 par anticipation architecturale (séquence d'implémentation : types avant services/stores), mais réellement utilisé à partir d'Epic 3 (historique). *(2026-09-11 : `types/history.ts` n'avait jamais été scaffoldé ; `GameRecord` sera créé avec l'Epic 3 redéfini, avec un identifiant joueur par côté.)*
+- AR6 : Implémenter le routing Vue Router avec exactement 3 routes : `/` (GameView), `/history` (HistoryView), `/history/:id` (GameDetailView) ; les réglages V1 sont des modales inline sur GameView, sans route dédiée. *(2026-09-11 : `/history*` conditionnées à l'identification d'un joueur, livrées après le profil — `sprint-change-proposal-2026-09-11.md`.)*
+- AR7 : Implémenter les stores Pinia `useGameStore` (état de partie + persistance localStorage) et `useHistoryStore` (historique + Dexie.js), structure plate un store par domaine. *(2026-09-11 : `useHistoryStore` porte la file de synchronisation et la consultation du profil, Epic 3 redéfini.)*
 - AR8 : Utiliser exclusivement l'API Pointer Events (`@pointerdown`) sur tous les éléments tactiles interactifs — jamais `@touchstart` ni `@click` seul — pour éliminer le délai tactile 300ms sur iPad/Android ; appliquer le CSS global (`touch-action: manipulation`, `user-select: none`, `-webkit-tap-highlight-color: transparent`).
 - AR9 : Utiliser `shallowRef` pour le tableau `reprises: Reprise[]` dans `useGameStore` afin d'éviter la réactivité profonde sur de longues sessions (NFR3 — 8h continu).
 - AR10 : Configurer la stratégie de cache du Service Worker via vite-plugin-pwa : `cache-first` pour les assets JS/CSS, `StaleWhileRevalidate` pour le HTML. *(précisé en 1.13 : précache atomique, le HTML n'est pas `StaleWhileRevalidate` — cohérence HTML/assets hachés)*
@@ -166,7 +166,7 @@ Ceci doit être la toute première story d'implémentation, suivie immédiatemen
 - UX-DR17 : Implémenter le retour haptique + visuel sur chaque tap, < 100ms (NFR1) — retour de succès affiché directement sur le bloc joueur concerné (flash bref), pas de toast/notification textuelle.
 - UX-DR18 : Implémenter l'alerte d'inactivité (FR43) comme une notification douce et non-intrusive dans `CenterPanel` — jamais en plein écran, jamais une interruption brutale de la partie en cours.
 - UX-DR19 : Implémenter la saisie du nom du joueur par **pop-up et claviers intégrés** — tap sur la zone du joueur pour ouvrir sa modale (`PlayerSetupModal`), saisie exclusivement au clavier applicatif (`AlphaKeyboard`), majuscules automatiques, limite 20 caractères, application à la validation. *Réécrit le 2026-09-09 (Story 1.4) : la version antérieure imposait une édition **inline sans modale séparée**. L'écran cible étant une **borne fixe** (décision produit du 2026-09-09), aucun champ natif ne doit exister — c'est ce qui empêche structurellement le clavier du système de monter par-dessus l'interface. L'édition inline supposait un `<input>` natif, donc exactement ce que la décision proscrit.*
-- UX-DR20 : Implémenter l'état vide de la liste d'historique au premier lancement — message simple + invitation explicite à jouer une première partie (jamais un écran vide non expliqué).
+- UX-DR20 : Implémenter l'état vide de la liste d'historique au premier lancement — message simple + invitation explicite à jouer une première partie (jamais un écran vide non expliqué). *(2026-09-11 : devient « aucune partie sur ce profil », joueur identifié — Epic 3 redéfini.)*
 - UX-DR21 : Implémenter le layout responsive selon 3 breakpoints — signage/desktop ≥1280px et tablette 768-1279px : layout 3 colonnes paysage identique (tablette = cible primaire) ; smartphone <768px : layout empilé vertical (fallback).
 - UX-DR22 : Assurer un contraste couleur WCAG AA (4.5:1 minimum) sur tous les blocs joueur et la console centrale, validé sur la palette finale (jaune/blanc/orange/rose sur fond sombre).
 - UX-DR23 : Exposer toute action affectant le score comme une action Pinia nommée du store (ex. `addReprise()`, `undoLastSeries()`) jamais couplée exclusivement à un event handler tactile — contrainte architecturale pour la compatibilité future avec un pilotage à distance (V2+), s'applique à tout le travail UI lié au score en V1.
@@ -178,7 +178,7 @@ FR1: Epic 1 - Démarrer une partie (mode + noms joueurs)
 FR2: Epic 1 - Saisir le score d'une série
 FR3: Epic 1 - Calcul temps réel du score total
 FR4: Epic 1 - Terminer une partie et récapitulatif automatique
-FR5: Epic 3 - Nouvelle partie sans effacer l'historique
+FR5: Epic 3 - Nouvelle partie sans effacer les parties rattachées à un profil *(reformulé le 2026-09-11)*
 FR6: Epic 1 - Préservation de l'état en cas de fermeture accidentelle
 FR7: Epic 1 - Saisie via pavé tactile
 FR8: Epic 1 - Annuler la saisie en cours
@@ -191,10 +191,10 @@ FR14: Epic 2 - Incrémentation point par point ou score global en 3 Bandes
 FR15: Epic 1 - Configuration du format du match
 FR16: Epic 1 - Détection automatique de fin de set/match *(fin de **match** sur distance atteinte livrée en Story 1.10, règle de la reprise égalisatrice comprise — 2026-09-10 ; la fin de **set** reste hors V1a, Epic 2)*
 FR17: Epic 1 - Affichage automatique des stats de fin de match
-FR18: Epic 3 - Liste des parties jouées
-FR19: Epic 3 - Détail complet d'une partie passée
-FR20: Epic 3 - Rétention de l'historique 30 jours minimum
-FR21: Epic 4 - Statistiques cumulées de carrière
+FR18: Epic 3 - Liste de mes parties depuis mon profil, puis depuis une tablette une fois identifié *(2026-09-11)*
+FR19: Epic 3 - Détail complet d'une de mes parties passées *(joueur identifié, 2026-09-11)*
+FR20: Epic 3 - Conservation sans limite sur le profil ; file locale conservée jusqu'à synchronisation *(2026-09-11)*
+FR21: Epic 4 - Statistiques cumulées de carrière (record personnel compris — ex-3.5, 2026-09-11)
 FR22: Epic 4 - Évolution de la moyenne dans le temps
 FR23: Epic 6 - Affichage grand format vue salle
 FR24: Epic 6 - URL overlay OBS/Streamlabs
@@ -209,7 +209,7 @@ FR32: Epic 4 - Création de compte joueur avec identifiant court
 FR33: Epic 4 - Identification sur n'importe quelle tablette de club
 FR34: Epic 5 - Gestion des tables du club
 FR35: Epic 5 - Statistiques d'usage du club
-FR36: Epic 5 - Synchronisation locale vers le cloud
+FR36: Epic 3 (déplacée depuis l'Epic 5 le 2026-09-11) - Synchronisation locale vers le cloud
 FR37: Epic 5 - Gestion de l'abonnement club
 FR38: Epic 9 - Export des résultats au format fédération
 FR39: Epic 1 - Modifier les noms des joueurs en cours de partie
@@ -233,20 +233,21 @@ Un joueur peut jouer une partie complète en mode 3 Bandes, avec un chronomètre
 **FRs couverts :** FR13, FR14
 **Notes d'implémentation :** Isolé du périmètre V1a — ne bloque pas Epic 1. Composable `useTimer.ts` (AR14). Couleur d'alerte chrono (UX-DR4) et interaction tap-incrémental (UX-DR24). S'appuie sur le shell `PlayerPanel`/`CenterPanel` déjà livré par Epic 1, sans le modifier.
 
-### Epic 3: Consulter l'Historique des Parties (V1a)
-Un joueur retrouve et consulte le détail de ses parties passées jusqu'à 30 jours en arrière depuis le même appareil, sans jamais perdre l'historique en démarrant une nouvelle partie.
-**FRs couverts :** FR5, FR18, FR19, FR20
-**Notes d'implémentation :** Routes `/history` et `/history/:id` (AR6), `useHistoryStore` + `databaseService.ts` (Dexie.js/IndexedDB — AR4, AR7). État vide au premier lancement (UX-DR20). Couvre les parties jouées en modes JDS (Epic 1) et 3 Bandes (Epic 2). Story 3.5 referme la dépendance ouverte en Epic 1 / Story 1.10 : détection du "nouveau record personnel" (UX-DR13), repoussée ici car elle nécessite l'historique multi-parties livré par cet epic.
+### Epic 3: Parties rattachées au profil joueur (V2a) — *redéfini le 2026-09-11*
+Une partie terminée est rattachée aux profils des joueurs identifiés, conservée localement jusqu'à synchronisation, puis consultable depuis le profil du joueur et, ensuite, depuis les tablettes du club — sans jamais être perdue en démarrant une nouvelle partie.
+**FRs couverts :** FR5, FR18, FR19, FR20, FR36 (déplacée depuis l'Epic 5)
+**Notes d'implémentation (2026-09-11, `sprint-change-proposal-2026-09-11.md`, approuvée par Nathan) :** s'exécute **APRÈS l'Epic 4** (numéro conservé). Conserve de l'ancienne 3.1 le socle `databaseService.ts`/`GameRecord`/déclencheur `finishGame`, requalifié en **file locale de synchronisation** (identifiant joueur par côté, `null` = invité, statut de sync). Abandonne l'historique par appareil, la rétention 30 jours et les records par nom (→ stats de carrière, Epic 4). Consultation : profil d'abord, tablette du club ensuite (décision 3 de Nathan). Les stories 3.1-3.5 sont à **réécrire** par une passe `create-epics-and-stories` une fois l'architecture backend décidée.
+*Ancien objectif (V1a, abandonné) :* « retrouver ses parties jusqu'à 30 jours en arrière depuis le même appareil ». *Anciennes notes :* Routes `/history` et `/history/:id` (AR6), `useHistoryStore` + `databaseService.ts` (Dexie.js/IndexedDB — AR4, AR7). État vide au premier lancement (UX-DR20). Couvre les parties jouées en modes JDS (Epic 1) et 3 Bandes (Epic 2). Story 3.5 referme la dépendance ouverte en Epic 1 / Story 1.10 : détection du "nouveau record personnel" (UX-DR13), repoussée ici car elle nécessite l'historique multi-parties livré par cet epic.
 
-### Epic 4: Comptes Joueurs & Suivi de Carrière (V2/V3)
+### Epic 4: Comptes Joueurs & Suivi de Carrière (V2a) — *avancé le 2026-09-11, prochain epic après la consolidation V1*
 Un joueur peut créer un compte avec un identifiant court mémorisable, s'identifier sur n'importe quelle tablette de club, consulter ses statistiques cumulées de carrière et visualiser l'évolution de sa moyenne dans le temps.
 **FRs couverts :** FR21, FR22, FR32, FR33
-**Notes d'implémentation :** Modèle d'authentification différé (ID court + app compagnon — architecture V2+). RGPD applicable (NFR14, NFR15, NFR16). ⚠️ Cet epic implique une app compagnon (mobile ou web) distincte de la PWA tablette, à développer en parallèle — précédent marché confirmé par CUESCO/Billiboard (référence UX, cf. `ux-design-specification.md`) qui séparent déjà création de compte (app/en ligne) et identification rapide à la tablette.
+**Notes d'implémentation :** *(2026-09-11, `sprint-change-proposal-2026-09-11.md`)* Précédé d'une **Story 4.0 — fondation backend et authentification**, elle-même conditionnée à une **décision d'architecture** (plateforme EU, auth ID court sans mot de passe à la tablette, modèle joueur/partie, RGPD). Décisions de Nathan : le compte se crée **à la tablette ou par une page web minimale** (pas d'app compagnon avant V4) ; l'identification à la tablette se fait **par code ou par recherche du nom** parmi les joueurs enregistrés ; l'**invité** reste le chemin le plus court (« 60 ans / 30 s » inchangé) ; sans réseau, on joue en invité. Absorbe l'ancienne 3.5 (record personnel = statistique de carrière). RGPD applicable dès ce jalon (NFR14, NFR15, NFR16). *Ancienne note :* ⚠️ Cet epic implique une app compagnon (mobile ou web) distincte de la PWA tablette, à développer en parallèle — précédent marché confirmé par CUESCO/Billiboard (référence UX, cf. `ux-design-specification.md`) qui séparent déjà création de compte (app/en ligne) et identification rapide à la tablette.
 
 ### Epic 5: Administration de Club Multi-Tables (V2/V3)
 Un admin club peut gérer les tables de son club, consulter les statistiques d'usage, synchroniser automatiquement les données locales vers le cloud, gérer son abonnement SaaS et activer un minuteur de facturation à la table pour la location horaire.
-**FRs couverts :** FR31, FR34, FR35, FR36, FR37
-**Notes d'implémentation :** Synchronisation offline→cloud garantissant zéro perte de données (NFR7). Hébergement EU + TLS 1.3 (NFR14, NFR15).
+**FRs couverts :** FR31, FR34, FR35, FR37 *(FR36 déplacée vers l'Epic 3 redéfini le 2026-09-11)*
+**Notes d'implémentation :** Synchronisation offline→cloud garantissant zéro perte de données (NFR7) — *portée par l'Epic 3 redéfini depuis le 2026-09-11 (Story 5.2 déplacée)*. Hébergement EU + TLS 1.3 (NFR14, NFR15).
 
 ### Epic 6: Diffusion Grand Format & Overlay Stream (V2/V3)
 Un organisateur peut diffuser les scores en cours sur un écran TV de salle, et un streameur peut générer une URL d'overlay fond transparent compatible OBS/Streamlabs, mise à jour en temps réel, avec mise en avant visuelle des moments clés d'une partie.
@@ -871,11 +872,15 @@ So that l'annonce de l'arbitre est sous mes yeux sans calcul mental (FR15, idée
 
 ---
 
-## Epic 3: Consulter l'Historique des Parties (V1a)
+## Epic 3: Parties rattachées au profil joueur (V2a)
 
-Un joueur retrouve et consulte le détail de ses parties passées jusqu'à 30 jours en arrière depuis le même appareil, sans jamais perdre l'historique en démarrant une nouvelle partie.
+> ⚠️ **Epic redéfini le 2026-09-11** (décision de Nathan, `sprint-change-proposal-2026-09-11.md`) : les parties appartiennent au **profil joueur**, pas à la tablette. Cet epic s'exécute **après l'Epic 4** et ses stories ci-dessous sont **à réécrire** — elles restent en l'état, annotées, jusqu'à la passe `create-epics-and-stories` qui suivra la décision d'architecture backend. Cible : enregistrement local à `finishGame` avec l'identité des joueurs (file de synchronisation), synchronisation vers le profil (ex-5.2), consultation depuis le profil puis depuis les tablettes du club.
+
+*Ancien objectif (abandonné) :* un joueur retrouve et consulte le détail de ses parties passées jusqu'à 30 jours en arrière depuis le même appareil, sans jamais perdre l'historique en démarrant une nouvelle partie.
 
 ### Story 3.1: Sauvegarder automatiquement une partie terminée dans l'historique
+
+> ⚠️ **Recadrée le 2026-09-11, non développée** : la story détaillée (`3-1-…md`, créée le jour même) repasse en `backlog`. À réécrire après l'Epic 4 : même socle technique (Dexie, `GameRecord`, déclencheur `finishGame`), requalifié en **file locale de synchronisation** avec un identifiant joueur par côté.
 
 As a joueur,
 I want que chaque partie terminée soit automatiquement enregistrée dans l'historique,
@@ -899,6 +904,8 @@ So that je retrouve toutes mes parties passées, et que démarrer une nouvelle p
 
 ### Story 3.2: Consulter la liste des parties jouées
 
+> ⚠️ **Supersédée le 2026-09-11** : la consultation se fait depuis le **profil du joueur** d'abord, puis depuis une tablette du club **une fois identifié** (décision 3 de Nathan). Pas de liste par appareil.
+
 As a joueur,
 I want consulter la liste des parties jouées sur l'appareil,
 So that je retrouve rapidement mon historique de jeu.
@@ -919,6 +926,8 @@ So that je retrouve rapidement mon historique de jeu.
 
 ### Story 3.3: Consulter le détail complet d'une partie passée
 
+> ⚠️ **Supersédée le 2026-09-11** : même règle que la 3.2 (profil d'abord, tablette ensuite, joueur identifié).
+
 As a joueur,
 I want consulter le détail complet d'une partie passée,
 So that je peux revoir mes reprises, mes séries et mes statistiques de cette partie précise.
@@ -935,6 +944,8 @@ So that je peux revoir mes reprises, mes séries et mes statistiques de cette pa
 
 ### Story 3.4: Conserver l'historique des parties pendant au minimum 30 jours
 
+> ⚠️ **Supersédée le 2026-09-11** : les parties d'un profil sont conservées sans limite de durée côté cloud ; localement, la file de synchronisation est conservée **jusqu'à synchronisation confirmée** (NFR7).
+
 As a joueur,
 I want que mon historique soit conservé au moins 30 jours,
 So that je peux suivre ma progression sur la durée, même sur un appareil peu utilisé.
@@ -950,6 +961,8 @@ So that je peux suivre ma progression sur la durée, même sur un appareil peu u
 **Then** Dexie.js (IndexedDB) reste dans une limite de quota safe compatible iOS Safari, sans dégrader la fluidité de l'application (NFR3, AR4)
 
 ### Story 3.5: Détecter et signaler un nouveau record personnel en fin de partie
+
+> ⚠️ **Fusionnée le 2026-09-11** dans les statistiques de carrière de l'Epic 4 (4.3/4.4) : le record se calcule sur le profil, pas par nom sur une tablette. La prop `records` de `GameSummary` reste inerte jusque-là. Les fins manuelles (`ending: 'manual'`, ancienne 3.1) seront exclues des records.
 
 As a joueur (Michel qui bat sa moyenne),
 I want que le système compare automatiquement le résultat de ma partie à mes parties précédentes,
@@ -973,9 +986,31 @@ So that je sois informé quand je bats un record personnel, sans avoir à compar
 
 ---
 
-## Epic 4: Comptes Joueurs & Suivi de Carrière (V2/V3)
+## Epic 4: Comptes Joueurs & Suivi de Carrière (V2a)
 
 Un joueur peut créer un compte avec un identifiant court mémorisable, s'identifier sur n'importe quelle tablette de club, consulter ses statistiques cumulées de carrière et visualiser l'évolution de sa moyenne dans le temps.
+
+> **Avancé le 2026-09-11** (décision de Nathan, `sprint-change-proposal-2026-09-11.md`) : prochain epic après la consolidation de la V1 jeu, **avant** l'Epic 3 redéfini. Décisions : compte créé à la tablette ou par une page web minimale (app compagnon → V4) ; identification par **code ou recherche du nom** ; invité conservé ; sans réseau, on joue en invité. Prérequis : **décision d'architecture backend** (Story 4.0).
+
+### Story 4.0: Fondation backend et authentification *(ajoutée le 2026-09-11)*
+
+As a développeur du produit,
+I want une décision d'architecture backend appliquée (plateforme hébergée en Europe, authentification par identifiant court sans mot de passe à la tablette, modèle de données joueur/partie, couche réseau dans la PWA),
+So that les stories de profil et de synchronisation reposent sur une fondation choisie et documentée, sans improvisation.
+
+**Acceptance Criteria:**
+
+**Given** `architecture.md`
+**When** la passe Architecte est terminée
+**Then** une section « Backend, Authentification & Synchronisation (V2a) » datée fixe la plateforme, l'hébergement EU (NFR15), le chiffrement (NFR14), le modèle d'auth (FR32, FR33), le modèle joueur/partie et la stratégie de synchronisation (file locale Dexie → API, NFR7)
+
+**Given** la PWA
+**When** la fondation est livrée
+**Then** une couche service réseau existe (erreurs absorbées en couche service, AR12), l'environnement est configuré (variables, secrets Netlify), et **le jeu reste 100 % offline** — démarrer, scorer et terminer une partie ne dépend jamais du réseau (NFR6)
+
+**Given** un joueur
+**When** ses données sont créées côté cloud
+**Then** le consentement et la suppression en moins de 3 actions sont prévus (NFR16), même si l'interface arrive avec les stories suivantes
 
 ### Story 4.1: Créer un compte joueur avec un identifiant court mémorisable
 
@@ -985,9 +1020,9 @@ So that je peux retrouver mon profil sur n'importe quelle tablette de club.
 
 **Acceptance Criteria:**
 
-**Given** l'app compagnon mobile (ou un parcours équivalent, V2+)
+**Given** la tablette du club ou une page web minimale *(canal tranché par Nathan le 2026-09-11 — l'app compagnon reste V4)*
 **When** je crée un compte
-**Then** un identifiant court et mémorisable m'est attribué, sans mot de passe requis à la tablette de club (FR32, modèle coréen — architecture V2+)
+**Then** un identifiant court et mémorisable m'est attribué, sans mot de passe requis à la tablette de club (FR32, modèle coréen)
 
 **Given** un compte créé
 **When** je consulte mon profil
@@ -1002,16 +1037,16 @@ So that mon profil et mes statistiques me suivent sans dépendre d'un appareil p
 **Acceptance Criteria:**
 
 **Given** une tablette de club affichant l'écran de démarrage d'une partie
-**When** je saisis mon identifiant court (Story 4.1)
-**Then** mon profil est chargé instantanément, sans mot de passe (FR33)
+**When** je saisis mon identifiant court (Story 4.1) **ou je recherche mon nom** parmi les joueurs enregistrés *(ajouté le 2026-09-11, décision de Nathan)*
+**Then** mon profil est chargé instantanément, sans mot de passe (FR33) — le parcours reste sous 30 secondes et la zone joueur de l'accueil reste le point d'entrée (« qui joue ? » : recherche, code, ou invité)
 
 **Given** un identifiant invalide ou inconnu
 **When** je le saisis
 **Then** un message clair m'indique que l'identifiant n'est pas reconnu, sans bloquer le parcours "invité"
 
-**Given** un joueur qui préfère ne pas s'identifier
+**Given** un joueur qui préfère ne pas s'identifier, ou une tablette sans réseau
 **When** il démarre une partie sans identifiant
-**Then** il joue en mode invité, données locales uniquement (rôle "Invité" — architecture V2+)
+**Then** il joue en mode invité, sans historique (rôle "Invité") — *sans réseau, l'identification et la synchronisation sont indisponibles, le jeu ne l'est jamais (décision de Nathan, 2026-09-11)*
 
 ### Story 4.3: Consulter mes statistiques cumulées de carrière
 
@@ -1023,7 +1058,7 @@ So that je vois ma progression globale, au-delà d'une seule partie ou d'un seul
 
 **Given** un joueur identifié (Story 4.2) ayant joué plusieurs parties, sur une ou plusieurs tablettes
 **When** j'accède à mon profil
-**Then** les statistiques cumulées (nombre de parties, moyenne globale, meilleure série toutes parties confondues) sont affichées (FR21)
+**Then** les statistiques cumulées (nombre de parties, moyenne globale, meilleure série toutes parties confondues) sont affichées (FR21) — *y compris le **record personnel** (ancienne Story 3.5, fusionnée ici le 2026-09-11) : `GameSummary` expose déjà l'état `records` par joueur, à déclencher depuis le profil*
 
 **Given** des parties jouées identifiées sur différentes tablettes de club
 **When** les statistiques de carrière sont calculées
@@ -1068,6 +1103,8 @@ So that je contrôle précisément quelles tables sont actives et utilisables pa
 **Then** l'accès est bloqué ou clairement signalé comme indisponible
 
 ### Story 5.2: Synchroniser automatiquement les données locales vers le cloud
+
+> ⚠️ **Déplacée vers l'Epic 3 redéfini le 2026-09-11** (elle est le prérequis de « parties rattachées au profil »). Conservée ici jusqu'à la passe epics.
 
 As a admin club,
 I want que les données de mes tables se synchronisent automatiquement vers le cloud dès qu'une connexion réseau est disponible,

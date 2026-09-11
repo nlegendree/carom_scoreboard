@@ -263,7 +263,7 @@ Unité de base 8px (standard Tailwind). Les blocs joueur occupent quasiment 100%
 
 **Navigation à deux niveaux.** Une catégorie regroupant plusieurs modes ouvre un second niveau listant ses modes ; une catégorie à mode unique passe directement à l'étape suivante. Les catégories dont aucun mode n'est encore livrable restent **affichées mais inertes**, marquées « BIENTÔT » : l'écran donne à voir l'ambition du produit sans mentir sur ce qui fonctionne.
 
-**Sélection des joueurs.** Deux grands panneaux côte à côte portant déjà la bille de leur côté (blanc à gauche, jaune à droite). Taper une zone ouvre la pop-up de réglage de **ce joueur-là** (nom + distance) : la zone du joueur *est* le point d'entrée, il n'y a pas de bouton de réglage dans la barre d'action. Cette structure préfigure la sélection depuis la base joueurs du club (Epic 4) sans avoir à être redessinée.
+**Sélection des joueurs.** Deux grands panneaux côte à côte portant déjà la bille de leur côté (blanc à gauche, jaune à droite). Taper une zone ouvre la pop-up de réglage de **ce joueur-là** (nom + distance) : la zone du joueur *est* le point d'entrée, il n'y a pas de bouton de réglage dans la barre d'action. Cette structure préfigure la sélection depuis la base joueurs du club (Epic 4) sans avoir à être redessinée. *(2026-09-11 : l'Epic 4 est avancé en V2a — la zone joueur ouvrira « qui joue ? » : recherche par nom, code, ou invité.)*
 
 **Réglage par joueur — nom optionnel, distance obligatoire — sans écran supplémentaire** *(ajouté le 2026-09-08, réécrit le 2026-09-09, Story 1.4 ; distance rendue obligatoire le 2026-09-10, Story 1.10 : `DÉMARRER` sans distance ouvre une pop-up d'erreur « DISTANCE MANQUANTE » à deux CTA `RÉGLER LA DISTANCE` / `ANNULER`, dont le premier ouvre la pop-up du premier joueur sans distance directement sur ce champ, puis celle du jaune à la suite si elle manque encore — un seul geste de rattrapage, pas un par joueur)*. Le nom et la distance d'un joueur se règlent en tapant **sa propre zone** à l'étape joueurs, qui ouvre une pop-up dédiée. Aucun bouton de réglage n'encombre la barre d'action : le parcours par défaut reste `catégorie → mode → joueurs → jeu`, et ignorer les réglages ne coûte aucun geste. **Aucun mode ne porte de distance par défaut** — le libellé d'attente est `0`, aucun objectif — et la distance appartient au **joueur**, pas à la partie : le handicap est simplement la conséquence de deux saisies indépendantes, sans mode « lié » ni action de dissociation. Sur le scoreboard, un joueur sans distance n'affiche rien à cet emplacement.
 
@@ -310,6 +310,8 @@ flowchart TD
     F --> G[< 30 secondes\ntest de succès]
 ```
 
+*Note (2026-09-11, `sprint-change-proposal-2026-09-11.md`)* : au jalon **V2a (profil joueur)**, l'étape « Réglage joueurs » devient « **qui joue ?** » — la zone joueur ouvre trois chemins : **recherche du nom** parmi les joueurs enregistrés, **saisie d'un code**, ou **invité** (chemin le plus court, seul disponible sans réseau). Contrainte inchangée : moins de 30 secondes, sans lecture de texte. Le tiret et l'apostrophe manquants au clavier alphabétique (revue 1.4) deviennent nécessaires pour la recherche par nom.
+
 ### Flow 2 — Saisir & Corriger un score (le cœur du produit)
 
 ```mermaid
@@ -343,6 +345,8 @@ flowchart TD
     F --> G[Sélection d'une partie\npassée]
     G --> H[Détail complet\nreprises, séries, stats]
 ```
+
+*Note (2026-09-11)* : « Historique local 30 jours » est **abandonné** — la partie close est enregistrée localement puis **synchronisée vers les profils** des joueurs identifiés ; la consultation se fait **depuis le profil d'abord, depuis la tablette du club ensuite** (une fois identifié). Voir `sprint-change-proposal-2026-09-11.md`.
 
 ### Journey Patterns
 
@@ -427,8 +431,8 @@ Aucun — le design system est **Custom** (étape 8). Aucun composant équivalen
 - *Usages* : erreur « DISTANCE MANQUANTE » (accueil, `RÉGLER LA DISTANCE` / `ANNULER`) · offre de reprise égalisatrice (deux CTA `X JOUE` / `FIN DE PARTIE`) · « PARTIE TERMINÉE » (`VOIR LE RÉCAP` seul) · « TERMINER LA PARTIE ? » (`VOIR LE RÉCAP` / `ANNULER`) · « RECOMMENCER LA PARTIE ? » (`RECOMMENCER` / `ANNULER` — Story 1.15, 2026-09-10 ; la partie repart de zéro sur place, sans récap) · « PARTIE EN COURS » au lancement, par-dessus l'accueil, quand une sauvegarde existe (`REPRENDRE LA PARTIE` / `ANNULER` — Story 1.12, 2026-09-10 ; le scoreboard revient tel qu'il était, pop-up de saisie et chiffres tapés compris). Aucune n'a de message ni de croix : les croix ne sont pas intuitives pour les joueurs, un gros CTA l'est — le retour, quand il existe, s'appelle toujours **`ANNULER`** — et les pop-ups de fin n'annoncent rien, le récap s'en charge (revue au rendu, 2026-09-10).
 
 **HistoryList / GameDetailView**
-- *Rôle* : consultation des parties passées (FR18-20).
-- *États* : liste vide (premier lancement) · liste peuplée · détail d'une partie.
+- *Rôle* : consultation des parties passées (FR18-20). *(2026-09-11 : consultation des parties **du joueur identifié**, livrée après le profil — Epic 3 redéfini ; sur la tablette dans un second temps.)*
+- *États* : liste vide (« aucune partie sur ce profil ») · liste peuplée · détail d'une partie.
 
 ### Component Implementation Strategy
 
@@ -468,7 +472,7 @@ Saisie de texte (nom joueur) : tap sur la zone du joueur → pop-up `PlayerSetup
 
 **Sélection de mode (HomeScreen)** *(révisé le 2026-09-08 — remplace la modale `ModeSelector`)* : la sélection n'est plus une modale mais l'écran d'accueil lui-même. Les choix de catégorie et de mode sont aussi gros et tactiles que le reste de l'interface. Aucune fermeture accidentelle n'est possible puisqu'il n'y a rien à fermer : le retour se fait par la barre d'action, toujours au même endroit.
 
-**États vides** : historique vide au premier lancement → message simple + invitation à jouer une première partie, jamais un écran vide non expliqué.
+**États vides** : historique vide au premier lancement → message simple + invitation à jouer une première partie, jamais un écran vide non expliqué. *(2026-09-11 : devient « aucune partie sur ce profil », joueur identifié.)*
 
 ## Responsive Design & Accessibility
 
