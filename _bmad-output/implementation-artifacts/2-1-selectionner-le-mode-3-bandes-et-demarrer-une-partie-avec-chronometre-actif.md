@@ -143,6 +143,12 @@ So that je joue avec un chronomètre de série toujours actif, cohérent avec le
 
 - [x] **Task 7 — Qualité** : `npm test`, `npx vue-tsc -b`, `npm run build` verts ; aucune régression sur les **428 tests / 15 fichiers** de départ (vérifiés le 2026-09-10) ; aucune dépendance ajoutée (le chrono est un `setInterval` natif) ; aucun harnais résiduel.
 
+### Review Follow-ups (Nathan, 2026-09-11)
+
+- [x] [Review][High] **Débordement de la colonne centrale** : sur l'iPad de Nathan en paysage (capture ~1180×673, barre Safari comprise), l'anneau `w-full` poussait `REP` (rogné en haut) et `ÉCHANGER` (rogné en bas) hors de la colonne `justify-center`. Correctif : la racine de `ShotClock` devient `flex-1 min-h-0 justify-center [container-type:size]` (la place laissée par REP et les commandes, libellé et anneau centrés ensemble), le disque se dimensionne en unités de conteneur — `w-[min(100cqw,calc(100cqh_-_32px))]`, 32 px = libellé + `gap-1` — et, conteneur de taille à son tour, porte le chiffre en `text-[44cqmin]` (44 % de son propre diamètre, plus de `text-reprise`). Vérifié à 1180×673 : REP y 16, CHRONO y 159 collé à l'anneau (y 188, 101 px, chiffre 44,6 px), ÉCHANGER bas 535 dans une colonne de 551, aucun défilement ; à 1024×768 l'anneau garde 173 px et le chiffre 76 px ; à 768×1024, anneau 122 px, libellé et anneau centrés dans la zone (y 309–460), ANNULER/ÉCHANGER en bas de colonne (674–886 sur 902).
+- [x] [Review][Med] **Couleur** : « le mettre en rouge tout le temps c'est pas idéal » — fondu **vert (40 s) → jaune → orange → rouge (0 s)** sur l'anneau, sa piste et le chiffre. Teinte HSL interpolée de 130° à 3° (le rouge `--color-alert` exact à 0), saturation/luminosité glissant vers celles d'UX-DR4 ; transition CSS d'une seconde sur `stroke` et `color` en plus de `stroke-dashoffset`. Libellé `CHRONO` passé en `text-white/60` comme `REP` (un libellé rouge n'avait de sens qu'avec un anneau rouge). Vérifié : vert `rgb(38,217,68)` à 40, jaune à 19, orange `rgb(248,138,42)` à 8, rouge `#FF3B30` à 0.
+- Les deux autres retours de Nathan (CTA `+1 POINT`, relance du chrono au `+1` et à la main rendue avec 2 s de latence) sont le périmètre de la **Story 2.2**, créée et livrée dans la même session.
+
 ## Dev Notes
 
 ### Décisions de cadrage (bmad-create-story, 2026-09-10)
@@ -224,6 +230,7 @@ So that je joue avec un chronomètre de série toujours actif, cohérent avec le
 |---|---|
 | 2026-09-10 | Création de la story (bmad-create-story) : 4 décisions de cadrage (déverrouillage par booléen, chrono 40s sourcé UX spec, non-persistance assumée, pause/reprise sans bouton visible), trou de planification « nombre de sets » consigné pour une future story. |
 | 2026-09-10 | Implémentation (bmad-dev-story) : Tasks 1 à 5 livrées — catégorie 3 BANDES déverrouillée, `useTimer.ts` (40 s, watch `[status, mode, startedAt]`, sans pause ni persistance), `ShotClock.vue` (anneau SVG rouge sur noir) branché dans `CenterPanel` via `GameView`, specs annotées. 457 tests / 17 fichiers, `vue-tsc` et `build` verts. **Task 6 (passe visuelle Chrome) et Task 7 (contrôle final) restent à faire** — session interrompue à la demande de Nathan (budget tokens), à reprendre. |
+| 2026-09-11 | Revue au rendu (Nathan) : anneau fluide en unités de conteneur (débordement iPad paysage corrigé), fondu vert → rouge sur l'arc et le chiffre ; 8 tests `ShotClock`. Retours sur le `+1` et la relance du chrono → Story 2.2. |
 | 2026-09-11 | Fin de l'implémentation (bmad-dev-story) : Task 6 passe visuelle Chrome (1024×768 et 768×1024, harnais iframe recréé puis supprimé) et Task 7 contrôle final (457 tests / 17 fichiers, `vue-tsc`, `build` verts, aucune dépendance) — story passée en `review`. |
 | 2026-09-10 | Révision après retour de Nathan : pause/reprise **retirée** du périmètre (fonctions et AC10/11 supprimées) et reportée à une future épic Compétition/Arbitrage ; affichage repensé en **anneau circulaire** (`ShotClock.vue`, composant dédié) inspiré du CUESCO (`IMG_6034.JPG`) plutôt que la barre segmentée du Billiboard, jugée pas assez smooth ; note ajoutée pour la future Story 2.2 (reset du chrono aussi au changement de joueur, +3s de grâce) sans l'implémenter ici. |
 
@@ -260,7 +267,7 @@ claude-fable-5-1 (Claude Fable 5.1)
 - `carom-scoreboard/src/types/game.ts` (modifié — `available: true`)
 - `carom-scoreboard/src/composables/useTimer.ts` (nouveau)
 - `carom-scoreboard/src/composables/useTimer.test.ts` (nouveau)
-- `carom-scoreboard/src/components/ShotClock.vue` (nouveau)
+- `carom-scoreboard/src/components/ShotClock.vue` (nouveau ; revu le 2026-09-11 — taille fluide, fondu de couleur)
 - `carom-scoreboard/src/components/ShotClock.test.ts` (nouveau)
 - `carom-scoreboard/src/components/CenterPanel.vue` (modifié)
 - `carom-scoreboard/src/components/CenterPanel.test.ts` (modifié)
