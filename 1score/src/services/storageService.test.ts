@@ -25,8 +25,8 @@ function playingState(): GameState {
   return {
     mode: 'cadre-47-2',
     status: 'playing',
-    player1: { id: 'player1', name: 'MICHEL', score: 9, color: 'white', targetScore: 100 },
-    player2: { id: 'player2', name: 'ANDRE', score: 3, color: 'yellow', targetScore: 80 },
+    player1: { name: 'MICHEL', score: 9, color: 'white', targetScore: 100 },
+    player2: { name: 'ANDRE', score: 3, color: 'yellow', targetScore: 80 },
     activePlayer: 'player2',
     reprises: [
       { player1: 7, player2: 3, timestamp: 1 },
@@ -34,16 +34,15 @@ function playingState(): GameState {
     ],
     currentInput: { player1: '', player2: '5' },
     scoreAdjustments: { player1: 2, player2: 0 },
-    sidesSwapped: true,
+    whiteSide: 'right',
     history: [
       {
-        player1: { id: 'player1', name: 'MICHEL', score: 7, color: 'white', targetScore: 100 },
-        player2: { id: 'player2', name: 'ANDRE', score: 3, color: 'yellow', targetScore: 80 },
+        player1: { name: 'MICHEL', score: 7, color: 'white', targetScore: 100 },
+        player2: { name: 'ANDRE', score: 3, color: 'yellow', targetScore: 80 },
         activePlayer: 'player1',
         reprises: [{ player1: 7, player2: 3, timestamp: 1 }],
         scoreAdjustments: { player1: 0, player2: 0 },
         currentInput: { player1: '', player2: '' },
-        sidesSwapped: false,
         equalizingReprise: false,
       },
     ],
@@ -104,15 +103,34 @@ describe('storageService', () => {
   it.each([
     ['corrupted JSON', '{not json'],
     ['an unknown version', JSON.stringify({ version: 0, savedAt: 1, state: playingState() })],
+    // DT5 : une sauvegarde de l'AVANT-Story 10.3 (`sidesSwapped`, pas de `whiteSide`) est
+    // écartée sur la seule version — aucune pop-up « PARTIE EN COURS » n'est proposée.
+    [
+      'a version 1 save from before the white-side field',
+      JSON.stringify({
+        version: 1,
+        savedAt: 1,
+        state: { ...playingState(), whiteSide: undefined, sidesSwapped: true },
+      }),
+    ],
+    // Et si la version venait à ne plus discriminer, la garde de forme prend le relais.
+    [
+      'a missing white side',
+      JSON.stringify({
+        version: GAME_STORAGE_VERSION,
+        savedAt: 1,
+        state: { ...playingState(), whiteSide: undefined },
+      }),
+    ],
     [
       'an idle status',
-      JSON.stringify({ version: 1, savedAt: 1, state: { ...playingState(), status: 'idle' } }),
+      JSON.stringify({ version: GAME_STORAGE_VERSION, savedAt: 1, state: { ...playingState(), status: 'idle' } }),
     ],
     [
       'an unexpected shape',
-      JSON.stringify({ version: 1, savedAt: 1, state: { ...playingState(), reprises: 'x' } }),
+      JSON.stringify({ version: GAME_STORAGE_VERSION, savedAt: 1, state: { ...playingState(), reprises: 'x' } }),
     ],
-    ['a missing history', JSON.stringify({ version: 1, savedAt: 1, state: { ...playingState(), history: undefined } })],
+    ['a missing history', JSON.stringify({ version: GAME_STORAGE_VERSION, savedAt: 1, state: { ...playingState(), history: undefined } })],
     ['a non-object envelope', JSON.stringify('hello')],
   ])('returns null and drops the entry on %s', (_label, raw) => {
     localStorage.setItem(GAME_STORAGE_KEY, raw)

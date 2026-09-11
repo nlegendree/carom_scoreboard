@@ -11,8 +11,9 @@ describe('GameView', () => {
     setActivePinia(createPinia())
   })
 
-  // Depuis la 1.10, DÉMARRER exige une distance par joueur (AC1) : le parcours complet
-  // passe par la modale de réglage de chacun.
+  // Depuis la 1.10, DÉMARRER exige une distance par joueur (AC1) ; depuis la 10.3, elle se
+  // saisit EN PLACE sur la carte, sans pop-up — `distance-field` existe donc en double, un
+  // par carte, et se cherche depuis la carte visée.
   it('shows the home screen while idle, then the game once started', async () => {
     const wrapper = mount(GameView)
     const press = async (testid: string) =>
@@ -22,16 +23,101 @@ describe('GameView', () => {
 
     await press('category-series')
     await press('mode-libre')
-    for (const player of ['player1', 'player2']) {
-      await press(`${player}-zone`)
-      await press('distance-field')
+    for (const side of ['left', 'right']) {
+      await wrapper
+        .find(`[data-testid="player-card-${side}"] [data-testid="distance-field"]`)
+        .trigger('pointerdown')
       await press('digit-5')
       await press('digit-0')
-      await press('setup-confirm-button')
+      await press('dock-confirm')
     }
     await press('confirm-button')
 
     expect(wrapper.findAllComponents({ name: 'PlayerPanel' })).toHaveLength(2)
+  })
+
+  // --- Story 10.3 : la bille blanche ouvre, où qu'elle soit assise (AR24) ---
+
+  it('seats the players on the side chosen at setup', async () => {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 100, player2: 80 }, 'right')
+    await wrapper.vm.$nextTick()
+
+    const panels = wrapper.findAllComponents({ name: 'PlayerPanel' })
+    expect(panels[0]!.props('player').color).toBe('yellow')
+    expect(panels[0]!.props('player').name).toBe('ANDRE')
+    expect(panels[1]!.props('player').color).toBe('white')
+    expect(panels[1]!.props('player').name).toBe('MICHEL')
+  })
+
+  // Le blanc ouvre même assis à droite : c'est lui qui a la main au premier tour.
+  it('still gives the hand to the white ball when it sits on the right', async () => {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 100, player2: 80 }, 'right')
+    await wrapper.vm.$nextTick()
+
+    const panels = wrapper.findAllComponents({ name: 'PlayerPanel' })
+    expect(panels[1]!.props('active')).toBe(true)
+    expect(panels[0]!.props('active')).toBe(false)
+  })
+
+  // ⚠️ Le piège de la story : le CTA appartient au joueur ASSIS, donc il doit suivre la
+  // COLONNE de l'assis. Avec le blanc à droite, `player1` joue à droite : le CTA revient à
+  // `player2`, dans la colonne de GAUCHE. Un ordre de panneaux qui suit `whiteSide` sans
+  // que la barre basse suive mettrait le CTA sous la carte de celui qui a la main.
+  it('keeps the entry CTA in the column of the seated player', async () => {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 100, player2: 80 }, 'right')
+    await wrapper.vm.$nextTick()
+
+    const cta = wrapper.find('[data-testid="add-points-button"]')
+    expect(cta.attributes('data-side')).toBe('player2')
+    expect(wrapper.find('[data-testid="exit-button"]').attributes('data-side')).toBe('player1')
+  })
+
+  // Bout en bout depuis l'accueil : on change de côté, on démarre, et le blanc ouvre.
+  it('goes from the setup to a game where the white ball opens from the right', async () => {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    const press = async (testid: string) =>
+      wrapper.find(`[data-testid="${testid}"]`).trigger('pointerdown')
+
+    await press('category-series')
+    await press('mode-libre')
+    for (const side of ['left', 'right']) {
+      await wrapper
+        .find(`[data-testid="player-card-${side}"] [data-testid="distance-field"]`)
+        .trigger('pointerdown')
+      await press('digit-5')
+      await press('digit-0')
+      await press('dock-confirm')
+    }
+    await press('change-side-button')
+    await press('confirm-button')
+    await wrapper.vm.$nextTick()
+
+    expect(store.whiteSide).toBe('right')
+    const panels = wrapper.findAllComponents({ name: 'PlayerPanel' })
+    expect(panels[0]!.props('player').color).toBe('yellow')
+    expect(panels[1]!.props('player').color).toBe('white')
+    expect(panels[1]!.props('active')).toBe(true)
+    expect(wrapper.find('[data-testid="add-points-button"]').attributes('data-side')).toBe(
+      'player2',
+    )
+  })
+
+  // AC14 : `ÉCHANGER` n'existe plus nulle part.
+  it('offers no swap button at all in game', async () => {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-testid="swap-players-button"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('ÉCHANGER')
   })
 
   it('gives the left panel the white ball and the right panel the yellow one', async () => {
@@ -45,39 +131,7 @@ describe('GameView', () => {
     expect(panels[1]!.props('player').color).toBe('yellow')
   })
 
-  it('swaps players sides when the center panel asks for it', async () => {
-    const wrapper = mount(GameView)
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE')
-    await wrapper.vm.$nextTick()
 
-    await wrapper.find('[data-testid="swap-players-button"]').trigger('pointerdown')
-
-    const panels = wrapper.findAllComponents({ name: 'PlayerPanel' })
-    expect(panels[0]!.props('player').name).toBe('ANDRE')
-    expect(panels[0]!.props('player').color).toBe('white')
-    expect(panels[1]!.props('player').name).toBe('MICHEL')
-  })
-
-  // AC#7 : avec des distances dissociées, la distance affichée suit le joueur d'un côté
-  // à l'autre — la bille, elle, reste attachée au côté.
-  it('carries each displayed distance with its player when sides are swapped', async () => {
-    const wrapper = mount(GameView)
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 100, player2: 80 })
-    await wrapper.vm.$nextTick()
-
-    const shown = () =>
-      wrapper.findAllComponents({ name: 'PlayerPanel' }).map((panel) =>
-        panel.find('[data-testid="target-score"]').text(),
-      )
-
-    expect(shown()).toEqual(['100', '80'])
-
-    await wrapper.find('[data-testid="swap-players-button"]').trigger('pointerdown')
-
-    expect(shown()).toEqual(['80', '100'])
-  })
 
   // Distance libre : aucun emplacement de distance sur les panneaux (NFR12).
   it('shows no distance at all when the game was started without a format', async () => {
@@ -433,24 +487,6 @@ describe('GameView — saisie en popup et alternance', () => {
     expect(shown()).toBe('2')
   })
 
-  // Le bouton d'interversion reste disponible toute la partie, et chaque joueur emporte
-  // ses séries passées — sinon le total, recalculé depuis `reprises`, changerait de camp.
-  it('keeps the swap button all game long and carries each history along', async () => {
-    const { wrapper, store } = await startedGame()
-    store.addReprise('player1', 5)
-    store.addReprise('player2', 2)
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.find('[data-testid="swap-players-button"]').exists()).toBe(true)
-
-    await wrapper.find('[data-testid="swap-players-button"]').trigger('pointerdown')
-    await wrapper.vm.$nextTick()
-
-    expect(panels(wrapper)[0]!.props('player').name).toBe('ANDRE')
-    expect(panels(wrapper)[0]!.props('player').score).toBe(2)
-    expect(panels(wrapper)[1]!.props('player').name).toBe('MICHEL')
-    expect(panels(wrapper)[1]!.props('player').score).toBe(5)
-  })
 })
 
 // --- Story 1.7 : `ANNULER` revient d'une action en arrière ---
@@ -573,26 +609,6 @@ describe('GameView — annulation', () => {
     expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
   })
 
-  // AC5 : l'annulation ne ramène jamais un échange ; la main revient à MICHEL, là où il est.
-  it('keeps the sides as they are when undoing a series recorded before a swap', async () => {
-    const { wrapper } = await startedGame()
-    await validateSeries(wrapper, [5])
-    await wrapper.find('[data-testid="swap-players-button"]').trigger('pointerdown')
-    await wrapper.vm.$nextTick()
-    expect(scoreOf(wrapper, 1)).toBe('5')
-
-    await undo(wrapper)
-
-    expect(panels(wrapper)[0]!.props('player').name).toBe('ANDRE')
-    expect(panels(wrapper)[0]!.props('player').color).toBe('white')
-    expect(scoreOf(wrapper, 0)).toBe('0')
-    expect(panels(wrapper)[1]!.props('player').name).toBe('MICHEL')
-    expect(scoreOf(wrapper, 1)).toBe('0')
-    expect(panels(wrapper)[1]!.props('active')).toBe(true)
-    expect(panels(wrapper)[0]!.props('active')).toBe(false)
-    expect(wrapper.find('[data-testid="add-points-button"]').attributes('data-side')).toBe('player1')
-    expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
-  })
 
   // AC3 : ouvrir la pop-up, taper, puis la refermer par la croix ou par un tap en dehors
   // ne modifie pas la partie — rien n'est empilé (revue de la 1.7 : une mutation
@@ -622,7 +638,7 @@ describe('GameView — annulation', () => {
   // À l'auto-validation, un doigt qui arrive sur l'emplacement d'une touche peut tomber sur
   // ANNULER et défaire la série qui vient d'être validée — ou sur ÉCHANGER. Même grâce
   // que les panneaux.
-  it('ignores a tap on ANNULER or ÉCHANGER right after the popup closed by itself', async () => {
+  it('ignores a tap on ANNULER right after the popup closed by itself', async () => {
     const { wrapper, store } = await startedGame()
 
     await wrapper.find('[data-testid="add-points-button"]').trigger('pointerdown')
@@ -637,30 +653,13 @@ describe('GameView — annulation', () => {
     expect(scoreOf(wrapper, 0)).toBe('12')
     expect(store.canUndo).toBe(true)
 
-    await wrapper.find('[data-testid="swap-players-button"]').trigger('pointerdown')
-    await wrapper.vm.$nextTick()
-    expect(panels(wrapper)[0]!.props('player').name).toBe('MICHEL')
-
-    // Grâce écoulée : les mêmes gestes agissent.
+    // Grâce écoulée : le même geste agit.
     vi.advanceTimersByTime(300)
     await undo(wrapper)
     expect(scoreOf(wrapper, 0)).toBe('0')
     expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
-    await wrapper.find('[data-testid="swap-players-button"]').trigger('pointerdown')
-    await wrapper.vm.$nextTick()
-    expect(panels(wrapper)[0]!.props('player').name).toBe('ANDRE')
   })
 
-  // AC3 : `ÉCHANGER` n'entre pas dans la pile.
-  it('leaves nothing to undo after a swap alone', async () => {
-    const { wrapper } = await startedGame()
-
-    await wrapper.find('[data-testid="swap-players-button"]').trigger('pointerdown')
-    await wrapper.vm.$nextTick()
-
-    expect(panels(wrapper)[0]!.props('player').name).toBe('ANDRE')
-    expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
-  })
 })
 
 // --- Story 1.10 : fin de partie, reprise égalisatrice, récap ---
@@ -1001,7 +1000,6 @@ describe('GameView — fin de partie', () => {
   // d'annulable. La grâce s'applique : le scoreboard neuf revient sous le doigt.
   it('restarts the game in place on RECOMMENCER', async () => {
     const { wrapper, store } = await startedGame()
-    await press(wrapper, 'swap-players-button')
     await validateSeries(wrapper, [4])
     await validateSeries(wrapper, [4])
     await press(wrapper, 'score-plus')
@@ -1015,10 +1013,10 @@ describe('GameView — fin de partie', () => {
     expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(false)
     expect(store.status).toBe('playing')
     expect(panels(wrapper)).toHaveLength(2)
-    expect(panels(wrapper)[0]!.props('player').name).toBe('ANDRÉ')
-    expect(panels(wrapper)[0]!.find('[data-testid="target-score"]').text()).toBe('8')
-    expect(panels(wrapper)[1]!.props('player').name).toBe('MICHEL')
-    expect(panels(wrapper)[1]!.find('[data-testid="target-score"]').text()).toBe('10')
+    expect(panels(wrapper)[0]!.props('player').name).toBe('MICHEL')
+    expect(panels(wrapper)[0]!.find('[data-testid="target-score"]').text()).toBe('10')
+    expect(panels(wrapper)[1]!.props('player').name).toBe('ANDRÉ')
+    expect(panels(wrapper)[1]!.find('[data-testid="target-score"]').text()).toBe('8')
     expect(scoreOf(wrapper, 0)).toBe('0')
     expect(scoreOf(wrapper, 1)).toBe('0')
     for (const panel of panels(wrapper)) {
@@ -1360,12 +1358,13 @@ describe('GameView — chronomètre 3 Bandes', () => {
     expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('DISTANCE MANQUANTE')
     await press(wrapper, 'prompt-secondary')
 
-    for (const player of ['player1', 'player2']) {
-      await press(wrapper, `${player}-zone`)
-      await press(wrapper, 'distance-field')
+    for (const side of ['left', 'right']) {
+      await wrapper
+        .find(`[data-testid="player-card-${side}"] [data-testid="distance-field"]`)
+        .trigger('pointerdown')
       await press(wrapper, 'digit-3')
       await press(wrapper, 'digit-0')
-      await press(wrapper, 'setup-confirm-button')
+      await press(wrapper, 'dock-confirm')
     }
     await press(wrapper, 'confirm-button')
 

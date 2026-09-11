@@ -3,13 +3,14 @@ import { mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
 import HomeScreen from './HomeScreen.vue'
 import ModeTile from './ModeTile.vue'
-import PlayerSetupModal from './PlayerSetupModal.vue'
 import PromptModal from './PromptModal.vue'
 import { useGameStore } from '../stores/useGameStore'
 
+type Wrapper = ReturnType<typeof mount>
+
 // Depuis la 10.2, les trois cadres ne sont plus des tuiles mais les commandes de la
 // pop-up ouverte par la tuile CADRE ; les autres modes gardent leur tuile.
-async function goToPlayersStep(wrapper: ReturnType<typeof mount>, mode = 'libre') {
+async function goToPlayersStep(wrapper: Wrapper, mode = 'libre') {
   await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
   if (mode.startsWith('cadre-')) {
     await wrapper.find('[data-testid="mode-cadre"]').trigger('pointerdown')
@@ -19,51 +20,72 @@ async function goToPlayersStep(wrapper: ReturnType<typeof mount>, mode = 'libre'
   await wrapper.find(`[data-testid="mode-${mode}"]`).trigger('pointerdown')
 }
 
-// Les testids de la modale (`name-field`, `digit-*`, `key-*`) ne doivent être cherchés que
-// dans la modale : les viser depuis le wrapper racine parcourrait aussi l'écran derrière.
-function setupModal(wrapper: ReturnType<typeof mount>) {
-  return wrapper.findComponent(PlayerSetupModal)
+// ⚠️ Depuis la 10.3, `name-field` et `distance-field` existent EN DOUBLE — une paire par
+// carte. Un `wrapper.find` non scopé attraperait toujours celle de GAUCHE, et un cas censé
+// viser le jaune passerait au vert en testant le blanc. Tout passe donc par la carte.
+function card(wrapper: Wrapper, side: 'left' | 'right') {
+  return wrapper.find(`[data-testid="player-card-${side}"]`)
 }
 
-async function openSetup(wrapper: ReturnType<typeof mount>, player: 'player1' | 'player2') {
-  await wrapper.find(`[data-testid="${player}-zone"]`).trigger('pointerdown')
+function ballOn(wrapper: Wrapper, side: 'left' | 'right') {
+  return card(wrapper, side).attributes('data-ball')
 }
 
-async function pressInModal(wrapper: ReturnType<typeof mount>, testids: string[]) {
+function nameOn(wrapper: Wrapper, side: 'left' | 'right') {
+  return card(wrapper, side).find('[data-testid="name-value"]')
+}
+
+function distanceOn(wrapper: Wrapper, side: 'left' | 'right') {
+  return card(wrapper, side).find('[data-testid="distance-value"]')
+}
+
+// Le côté de la BILLE demandée, qui se déplace au gré des deux CTA de réglage.
+function sideOfBall(wrapper: Wrapper, ball: 'white' | 'yellow'): 'left' | 'right' {
+  return ballOn(wrapper, 'left') === ball ? 'left' : 'right'
+}
+
+async function focusField(wrapper: Wrapper, ball: 'white' | 'yellow', field: 'name' | 'distance') {
+  await card(wrapper, sideOfBall(wrapper, ball))
+    .find(`[data-testid="${field}-field"]`)
+    .trigger('pointerdown')
+}
+
+// Le dock et le bandeau vivent dans l'écran, hors des cartes : ils se cherchent à la racine.
+async function press(wrapper: Wrapper, testids: string[]) {
   for (const testid of testids) {
-    await setupModal(wrapper).find(`[data-testid="${testid}"]`).trigger('pointerdown')
+    await wrapper.find(`[data-testid="${testid}"]`).trigger('pointerdown')
   }
 }
 
-// Le handicap vit derrière son propre champ : il faut le cibler avant de taper.
-async function typeHandicap(wrapper: ReturnType<typeof mount>, digits: number[]) {
-  await pressInModal(wrapper, ['distance-field', ...digits.map((d) => `digit-${d}`)])
+async function typeDistance(wrapper: Wrapper, ball: 'white' | 'yellow', digits: number[]) {
+  await focusField(wrapper, ball, 'distance')
+  await press(wrapper, digits.map((d) => `digit-${d}`))
 }
 
-async function typeName(wrapper: ReturnType<typeof mount>, name: string) {
-  await pressInModal(wrapper, [
-    'name-field',
-    ...[...name.toUpperCase()].map((c) => (c === ' ' ? 'key-space' : `key-${c}`)),
-  ])
-}
-
-async function validateModal(wrapper: ReturnType<typeof mount>) {
-  await setupModal(wrapper).find('[data-testid="setup-confirm-button"]').trigger('pointerdown')
+async function typeName(wrapper: Wrapper, ball: 'white' | 'yellow', name: string) {
+  await focusField(wrapper, ball, 'name')
+  await press(
+    wrapper,
+    [...name.toUpperCase()].map((c) => (c === ' ' ? 'key-space' : `key-${c}`)),
+  )
 }
 
 // Depuis la 1.10, DÉMARRER exige une distance par joueur : les parcours qui ne portent
 // pas sur la distance la règlent par ce helper (100 / 80).
-async function setDistances(wrapper: ReturnType<typeof mount>) {
-  await openSetup(wrapper, 'player1')
-  await typeHandicap(wrapper, [1, 0, 0])
-  await validateModal(wrapper)
-  await openSetup(wrapper, 'player2')
-  await typeHandicap(wrapper, [8, 0])
-  await validateModal(wrapper)
+async function setDistances(wrapper: Wrapper) {
+  await typeDistance(wrapper, 'white', [1, 0, 0])
+  await press(wrapper, ['dock-confirm'])
+  await typeDistance(wrapper, 'yellow', [8, 0])
+  await press(wrapper, ['dock-confirm'])
 }
 
-function errorPrompt(wrapper: ReturnType<typeof mount>) {
+function errorPrompt(wrapper: Wrapper) {
   return wrapper.find('[data-testid="prompt-modal"]')
+}
+
+// `RETOUR` de la barre latérale : il a remplacé la barre basse en 10.3.
+async function goBack(wrapper: Wrapper) {
+  await wrapper.find('[data-testid="sidebar-item-back"]').trigger('pointerdown')
 }
 
 describe('HomeScreen', () => {
@@ -93,44 +115,29 @@ describe('HomeScreen', () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    await wrapper.find('[data-testid="back-button"]').trigger('pointerdown')
+    await goBack(wrapper)
 
     expect(wrapper.find('[data-testid="step-mode"]').exists()).toBe(true)
   })
 
-  // Un retour visible mais inerte sur le tout premier écran est un piège pour la cible
-  // « pas de formation ». Depuis la 10.2, les DEUX premiers écrans sont sous la coquille
-  // de l'accueil : plus de barre basse, le retour vit dans la barre latérale.
-  it('hides the bottom back button until the players step', async () => {
-    const wrapper = mount(HomeScreen)
-    expect(wrapper.find('[data-testid="back-button"]').exists()).toBe(false)
-
-    await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
-    expect(wrapper.find('[data-testid="back-button"]').exists()).toBe(false)
-
-    await wrapper.find('[data-testid="mode-libre"]').trigger('pointerdown')
-
-    expect(wrapper.find('[data-testid="back-button"]').exists()).toBe(true)
-  })
-
-  // Story 10.1 puis 10.2 : la barre latérale et son logo tiennent l'accueil ET la
-  // sélection JDS ; l'étape joueurs garde l'ancienne coquille jusqu'à la 10.3.
-  it('shows the sidebar and its logo until the players step', async () => {
+  // Story 10.1, 10.2 puis 10.3 : la barre latérale et son logo tiennent désormais les
+  // TROIS écrans hors jeu. Le retour y vit, il n'a plus de barre basse où se poser.
+  it('shows the sidebar and its logo on every step', async () => {
     const wrapper = mount(HomeScreen)
     expect(wrapper.find('[data-testid="sidebar"]').exists()).toBe(true)
     expect(wrapper.find('img[alt="1Score"]').exists()).toBe(true)
 
     await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
     expect(wrapper.find('[data-testid="sidebar"]').exists()).toBe(true)
-    expect(wrapper.find('img[alt="1Score"]').exists()).toBe(true)
 
     await wrapper.find('[data-testid="mode-libre"]').trigger('pointerdown')
 
-    expect(wrapper.find('[data-testid="sidebar"]').exists()).toBe(false)
-    expect(wrapper.find('img[alt="1Score"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="sidebar"]').exists()).toBe(true)
+    expect(wrapper.find('img[alt="1Score"]').exists()).toBe(true)
   })
 
-  it('does not render the bottom action bar before the players step', async () => {
+  // AC1 : `ActionBar` ne sert plus qu'au scoreboard — l'accueil ne l'importe même plus.
+  it('never renders a bottom action bar, on any step', async () => {
     const wrapper = mount(HomeScreen)
     expect(wrapper.find('[data-testid="action-bar"]').exists()).toBe(false)
 
@@ -139,7 +146,8 @@ describe('HomeScreen', () => {
 
     await wrapper.find('[data-testid="mode-libre"]').trigger('pointerdown')
 
-    expect(wrapper.find('[data-testid="action-bar"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="action-bar"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="back-button"]').exists()).toBe(false)
   })
 
   it('greets the player with the home tagline', () => {
@@ -376,13 +384,100 @@ describe('HomeScreen', () => {
     expect(wrapper.find('[data-testid="step-players"]').exists()).toBe(true)
   })
 
+  // --- Story 10.3 : paramétrage refondu, saisie en place ---
+
+  // AC2, UX-DR44 : RETOUR, CONFIGURATION en BIENTÔT, et une sortie ANNULER calée en bas.
+  it('gives the players step a sidebar holding RETOUR, CONFIGURATION and an ANNULER exit', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    const items = wrapper.findAll('[data-testid^="sidebar-item-"]')
+
+    expect(items.map((item) => item.attributes('data-testid'))).toEqual([
+      'sidebar-item-back',
+      'sidebar-item-settings',
+      'sidebar-item-cancel',
+    ])
+    expect(items[1]!.text()).toContain('CONFIGURATION')
+    expect(items[1]!.attributes('disabled')).toBe('')
+    expect(items[2]!.text()).toContain('ANNULER')
+    expect(items[2]!.attributes('disabled')).toBeUndefined()
+    expect(wrapper.find('[data-testid="sidebar-bottom"]').exists()).toBe(true)
+  })
+
+  // Le 3 Bandes n'a pas d'étape mode : son RETOUR remonte donc à l'accueil.
+  it('goes back from the players step to the home screen in three cushions', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await wrapper.find('[data-testid="category-3bandes"]').trigger('pointerdown')
+    await goBack(wrapper)
+
+    expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
+  })
+
+  // AC2 : RETOUR est un pas en arrière, pas un abandon — revenir choisir un autre cadre
+  // ne doit pas coûter les deux noms déjà tapés.
+  it('keeps the names and distances typed when RETOUR is pressed', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await typeName(wrapper, 'white', 'MICHEL')
+    await press(wrapper, ['sheet-confirm'])
+    await typeDistance(wrapper, 'white', [1, 0, 0])
+    await press(wrapper, ['dock-confirm'])
+    await goBack(wrapper)
+    await wrapper.find('[data-testid="mode-bande"]').trigger('pointerdown')
+
+    expect(nameOn(wrapper, 'left').text()).toBe('MICHEL')
+    expect(distanceOn(wrapper, 'left').text()).toBe('100')
+  })
+
+  // AC2 : ANNULER, lui, efface tout et ramène à l'accueil, sans confirmation.
+  it('clears everything and goes home on ANNULER', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await typeName(wrapper, 'white', 'MICHEL')
+    await press(wrapper, ['sheet-confirm'])
+    await wrapper.find('[data-testid="sidebar-item-cancel"]').trigger('pointerdown')
+
+    expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
+
+    await goToPlayersStep(wrapper)
+
+    expect(nameOn(wrapper, 'left').text()).toBe('JOUEUR')
+    expect(distanceOn(wrapper, 'left').text()).toBe('0')
+  })
+
+  // AC3 : deux cartes, blanc à gauche au départ, chacune adressable par son côté.
+  it('lays out two cards with the white ball on the left', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+
+    expect(ballOn(wrapper, 'left')).toBe('white')
+    expect(ballOn(wrapper, 'right')).toBe('yellow')
+  })
+
+  // AC10 : la colonne centrale porte le surtitre du mode, les deux CTA, puis DÉMARRER.
+  it('shows the mode label and the two setting CTAs at rest', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper, 'cadre-47-2')
+
+    expect(wrapper.find('[data-testid="setup-mode-label"]').text()).toBe('CADRE 47/2')
+    expect(wrapper.find('[data-testid="change-ball-button"]').text()).toContain('CHANGER DE BILLE')
+    expect(wrapper.find('[data-testid="change-side-button"]').text()).toContain('CHANGER DE CÔTÉ')
+    expect(wrapper.find('[data-testid="confirm-button"]').text()).toBe('DÉMARRER')
+  })
+
   it('starts a game with the chosen sub-mode and default names', async () => {
     const wrapper = mount(HomeScreen)
     const store = useGameStore()
 
     await goToPlayersStep(wrapper, 'cadre-47-2')
     await setDistances(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await press(wrapper, ['confirm-button'])
 
     expect(store.mode).toBe('cadre-47-2')
     expect(store.status).toBe('playing')
@@ -390,19 +485,17 @@ describe('HomeScreen', () => {
     expect(store.player2.name).toBe('JOUEUR 2')
   })
 
-  // L'ancien test « uppercases the name » ne pouvait pas échouer : le clavier n'émet que des
-  // majuscules. Ce qui mérite d'être verrouillé de bout en bout, c'est qu'aucune suite
-  // d'espaces ne parvienne au store — la garde vit dans la modale.
+  // Ce qui mérite d'être verrouillé de bout en bout, c'est qu'aucune suite d'espaces ne
+  // parvienne au store — la garde vit dans le bandeau, l'écran n'en sait rien.
   it('never lets a run of spaces reach the store', async () => {
     const wrapper = mount(HomeScreen)
     const store = useGameStore()
 
     await goToPlayersStep(wrapper)
     await setDistances(wrapper)
-    await openSetup(wrapper, 'player1')
-    await pressInModal(wrapper, ['name-field', 'key-M', 'key-space', 'key-space', 'key-A'])
-    await validateModal(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await focusField(wrapper, 'white', 'name')
+    await press(wrapper, ['key-M', 'key-space', 'key-space', 'key-A', 'sheet-confirm'])
+    await press(wrapper, ['confirm-button'])
 
     expect(store.player1.name).toBe('M A')
   })
@@ -413,9 +506,9 @@ describe('HomeScreen', () => {
 
     await goToPlayersStep(wrapper)
     await setDistances(wrapper)
-    await openSetup(wrapper, 'player2')
-    await validateModal(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await focusField(wrapper, 'yellow', 'name')
+    await press(wrapper, ['sheet-confirm'])
+    await press(wrapper, ['confirm-button'])
 
     expect(store.player2.name).toBe('JOUEUR 2')
   })
@@ -426,74 +519,266 @@ describe('HomeScreen', () => {
 
     await goToPlayersStep(wrapper)
     await setDistances(wrapper)
-    await openSetup(wrapper, 'player1')
-    await typeName(wrapper, 'MICHEL ')
-    await validateModal(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await typeName(wrapper, 'white', 'MICHEL ')
+    await press(wrapper, ['sheet-confirm'])
+    await press(wrapper, ['confirm-button'])
 
     expect(store.player1.name).toBe('MICHEL')
   })
 
-  // Chaque zone joueur est la porte d'entrée de son propre réglage.
-  it('opens the setup modal for the ball whose zone is pressed', async () => {
+  // AC5 : taper le NOM ouvre le bandeau, et lui seul. Aucune pop-up de joueur n'existe
+  // plus (AC9) — plus rien ne recouvre les cartes.
+  it('opens the name sheet from the name field, and nothing else', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    expect(setupModal(wrapper).exists()).toBe(false)
+    expect(wrapper.find('[data-testid="alpha-keyboard-sheet"]').exists()).toBe(false)
 
-    await openSetup(wrapper, 'player2')
+    await focusField(wrapper, 'white', 'name')
 
-    expect(setupModal(wrapper).exists()).toBe(true)
-    expect(setupModal(wrapper).props('color')).toBe('yellow')
+    expect(wrapper.find('[data-testid="alpha-keyboard-sheet"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="modal-backdrop"]').exists()).toBe(false)
   })
 
-  it('opens the white ball modal from the left zone', async () => {
+  // AC4 : taper la DISTANCE ouvre le dock, à la place des CTA de réglage.
+  it('opens the distance dock in place of the setting CTAs', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    await openSetup(wrapper, 'player1')
+    await focusField(wrapper, 'yellow', 'distance')
 
-    expect(setupModal(wrapper).props('color')).toBe('white')
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="change-ball-button"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="confirm-button"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="alpha-keyboard-sheet"]').exists()).toBe(false)
   })
 
-  it('shows the confirmed name and handicap on the zone', async () => {
+  // AC3 : le liseré dit quel champ reçoit la frappe, et il n'y en a qu'un.
+  it('outlines the focused field of the targeted card only', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    expect(wrapper.find('[data-testid="player1-target"]').exists()).toBe(false)
+    await focusField(wrapper, 'yellow', 'distance')
 
-    await openSetup(wrapper, 'player1')
-    await typeName(wrapper, 'MICHEL')
-    await typeHandicap(wrapper, [1, 0, 0])
-    await validateModal(wrapper)
-
-    expect(setupModal(wrapper).exists()).toBe(false)
-    expect(wrapper.find('[data-testid="player1-name"]').text()).toBe('MICHEL')
-    expect(wrapper.find('[data-testid="player1-target"]').text()).toBe('100')
+    expect(card(wrapper, 'right').find('[data-testid="distance-field"]').classes()).toContain(
+      'border-turn-active',
+    )
+    expect(card(wrapper, 'right').find('[data-testid="name-field"]').classes()).not.toContain(
+      'border-turn-active',
+    )
+    expect(card(wrapper, 'left').find('[data-testid="distance-field"]').classes()).not.toContain(
+      'border-turn-active',
+    )
   })
 
-  it('discards the modal input when it is closed by the cross', async () => {
+  // AC4, AC5 : la carte se remplit À VUE, frappe après frappe — c'est tout l'intérêt de
+  // l'écran, et la raison pour laquelle rien ne la recouvre.
+  it('fills the targeted card as each key is pressed', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    await openSetup(wrapper, 'player1')
-    await typeHandicap(wrapper, [1, 0, 0])
-    await setupModal(wrapper).find('[data-testid="modal-close-button"]').trigger('pointerdown')
+    await typeDistance(wrapper, 'white', [4])
 
-    expect(setupModal(wrapper).exists()).toBe(false)
-    expect(wrapper.find('[data-testid="player1-target"]').exists()).toBe(false)
+    expect(distanceOn(wrapper, 'left').text()).toBe('4')
+
+    await press(wrapper, ['digit-7'])
+
+    expect(distanceOn(wrapper, 'left').text()).toBe('47')
+  })
+
+  it('fills the name of the targeted card as each key is pressed', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await typeName(wrapper, 'yellow', 'AN')
+
+    expect(nameOn(wrapper, 'right').text()).toBe('AN')
+  })
+
+  it('keeps the value applied once it is validated', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await typeDistance(wrapper, 'white', [4, 0])
+    await press(wrapper, ['dock-confirm'])
+
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(false)
+    expect(distanceOn(wrapper, 'left').text()).toBe('40')
+  })
+
+  // AC4, AC5 : la croix abandonne et restaure la valeur précédente.
+  it('restores the previous value when the entry is abandoned by its cross', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await typeDistance(wrapper, 'white', [4, 0])
+    await press(wrapper, ['dock-confirm'])
+    await typeDistance(wrapper, 'white', [9])
+    await press(wrapper, ['dock-close'])
+
+    expect(distanceOn(wrapper, 'left').text()).toBe('40')
+  })
+
+  it('restores the previous name when the sheet is abandoned by its cross', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await typeName(wrapper, 'white', 'MICHEL')
+    await press(wrapper, ['sheet-confirm'])
+    await typeName(wrapper, 'white', 'X')
+    await press(wrapper, ['sheet-close'])
+
+    expect(nameOn(wrapper, 'left').text()).toBe('MICHEL')
+  })
+
+  // AC6 : un seul geste pour passer d'un champ à l'autre — la saisie en cours est VALIDÉE,
+  // jamais perdue, et jamais besoin d'un tap mort pour refermer d'abord.
+  it('validates the running entry and opens the new one in a single tap', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await typeDistance(wrapper, 'white', [4, 0])
+    await focusField(wrapper, 'white', 'name')
+
+    expect(distanceOn(wrapper, 'left').text()).toBe('40')
+    expect(wrapper.find('[data-testid="alpha-keyboard-sheet"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(false)
+  })
+
+  it('carries the running entry across to the other card too', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await typeName(wrapper, 'white', 'MICHEL')
+    await focusField(wrapper, 'yellow', 'distance')
+
+    expect(nameOn(wrapper, 'left').text()).toBe('MICHEL')
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="alpha-keyboard-sheet"]').exists()).toBe(false)
+  })
+
+  // AC11 : les billes s'échangent, les joueurs restent en place.
+  it('swaps the balls and leaves the players in place on CHANGER DE BILLE', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await typeName(wrapper, 'white', 'MICHEL')
+    await press(wrapper, ['sheet-confirm'])
+    await typeDistance(wrapper, 'white', [1, 0, 0])
+    await press(wrapper, ['dock-confirm'])
+
+    await press(wrapper, ['change-ball-button'])
+
+    expect(ballOn(wrapper, 'left')).toBe('yellow')
+    expect(ballOn(wrapper, 'right')).toBe('white')
+    expect(nameOn(wrapper, 'left').text()).toBe('MICHEL')
+    expect(distanceOn(wrapper, 'left').text()).toBe('100')
+  })
+
+  it('is its own inverse on a second CHANGER DE BILLE', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await typeName(wrapper, 'white', 'MICHEL')
+    await press(wrapper, ['sheet-confirm', 'change-ball-button', 'change-ball-button'])
+
+    expect(ballOn(wrapper, 'left')).toBe('white')
+    expect(nameOn(wrapper, 'left').text()).toBe('MICHEL')
+  })
+
+  // AC12 : les cartes s'échangent de place, tout compris.
+  it('swaps the whole cards on CHANGER DE CÔTÉ', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await typeName(wrapper, 'white', 'MICHEL')
+    await press(wrapper, ['sheet-confirm'])
+    await typeName(wrapper, 'yellow', 'ANDRE')
+    await press(wrapper, ['sheet-confirm'])
+
+    await press(wrapper, ['change-side-button'])
+
+    expect(ballOn(wrapper, 'left')).toBe('yellow')
+    expect(nameOn(wrapper, 'left').text()).toBe('ANDRE')
+    expect(ballOn(wrapper, 'right')).toBe('white')
+    expect(nameOn(wrapper, 'right').text()).toBe('MICHEL')
+  })
+
+  it('is its own inverse on a second CHANGER DE CÔTÉ', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await typeName(wrapper, 'white', 'MICHEL')
+    await press(wrapper, ['sheet-confirm', 'change-side-button', 'change-side-button'])
+
+    expect(ballOn(wrapper, 'left')).toBe('white')
+    expect(nameOn(wrapper, 'left').text()).toBe('MICHEL')
+  })
+
+  // Les deux enchaînés : la bille revient à gauche, le joueur a changé de bille.
+  it('combines both settings without losing anyone', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await typeName(wrapper, 'white', 'MICHEL')
+    await press(wrapper, ['sheet-confirm'])
+    await typeName(wrapper, 'yellow', 'ANDRE')
+    await press(wrapper, ['sheet-confirm', 'change-ball-button', 'change-side-button'])
+
+    expect(ballOn(wrapper, 'left')).toBe('white')
+    expect(nameOn(wrapper, 'left').text()).toBe('ANDRE')
+    expect(ballOn(wrapper, 'right')).toBe('yellow')
+    expect(nameOn(wrapper, 'right').text()).toBe('MICHEL')
+  })
+
+  // AC13 : le côté part au store à part ; `player1` reste la bille blanche, donc celui qui
+  // ouvre — aucune règle de jeu ne bouge.
+  it('starts the game with the white ball seated where it was left', async () => {
+    const wrapper = mount(HomeScreen)
+    const store = useGameStore()
+
+    await goToPlayersStep(wrapper)
+    await typeName(wrapper, 'white', 'MICHEL')
+    await press(wrapper, ['sheet-confirm'])
+    await typeName(wrapper, 'yellow', 'ANDRE')
+    await press(wrapper, ['sheet-confirm'])
+    await setDistances(wrapper)
+    await press(wrapper, ['change-side-button', 'confirm-button'])
+
+    expect(store.whiteSide).toBe('right')
+    expect(store.player1.name).toBe('MICHEL')
+    expect(store.player1.color).toBe('white')
+    expect(store.player1.targetScore).toBe(100)
+    expect(store.activePlayer).toBe('player1')
+  })
+
+  it('sends the player who took the white ball as player1', async () => {
+    const wrapper = mount(HomeScreen)
+    const store = useGameStore()
+
+    await goToPlayersStep(wrapper)
+    await typeName(wrapper, 'white', 'MICHEL')
+    await press(wrapper, ['sheet-confirm'])
+    await typeName(wrapper, 'yellow', 'ANDRE')
+    await press(wrapper, ['sheet-confirm'])
+    await setDistances(wrapper)
+    await press(wrapper, ['change-ball-button', 'confirm-button'])
+
+    // MICHEL a pris la jaune : c'est ANDRE qui ouvre désormais.
+    expect(store.player1.name).toBe('ANDRE')
+    expect(store.player2.name).toBe('MICHEL')
   })
 
   // Story 1.10 (AC1) : la distance est obligatoire — sans elle, DÉMARRER n'ouvre qu'une
   // pop-up d'erreur réduite au titre et au CTA (revue de Nathan, 2026-09-10 : pas de
-  // message, la modale qui suit dit d'elle-même de quel joueur il s'agit). Remplace
-  // « starts with default names and no handicap when no zone is ever pressed » (1.4).
+  // message, la saisie qui suit dit d'elle-même de quel joueur il s'agit).
   it('refuses to start while a distance is missing', async () => {
     const wrapper = mount(HomeScreen)
     const store = useGameStore()
 
     await goToPlayersStep(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await press(wrapper, ['confirm-button'])
 
     expect(store.status).toBe('idle')
     expect(errorPrompt(wrapper).exists()).toBe(true)
@@ -503,142 +788,119 @@ describe('HomeScreen', () => {
     expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('ANNULER')
     expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
 
-    await wrapper.find('[data-testid="prompt-secondary"]').trigger('pointerdown')
-    await openSetup(wrapper, 'player2')
-    await typeHandicap(wrapper, [8, 0])
-    await validateModal(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await press(wrapper, ['prompt-secondary'])
+    await typeDistance(wrapper, 'yellow', [8, 0])
+    await press(wrapper, ['dock-confirm', 'confirm-button'])
 
     expect(store.status).toBe('idle')
     expect(errorPrompt(wrapper).exists()).toBe(true)
   })
 
-  it('opens the setup of the first player without distance from the error prompt', async () => {
+  // AC16 : le CTA ouvre DIRECTEMENT le dock sur le champ DISTANCE du premier joueur sans
+  // distance — le blanc d'abord, où qu'il soit assis.
+  it('opens the dock straight on the distance of the first player without one', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="prompt-primary"]').trigger('pointerdown')
+    await press(wrapper, ['confirm-button', 'prompt-primary'])
 
     expect(errorPrompt(wrapper).exists()).toBe(false)
-    expect(setupModal(wrapper).exists()).toBe(true)
-    expect(setupModal(wrapper).props('color')).toBe('white')
-    expect(setupModal(wrapper).find('[data-testid="distance-field"]').classes()).toContain(
-      'border-turn-active',
-    )
-    expect(setupModal(wrapper).find('[data-testid="digit-5"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(true)
+    expect(
+      card(wrapper, sideOfBall(wrapper, 'white'))
+        .find('[data-testid="distance-field"]')
+        .classes(),
+    ).toContain('border-turn-active')
   })
 
-  it('opens the yellow setup straight from the error prompt when only its distance is missing', async () => {
+  it('opens the yellow distance straight away when only its own is missing', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    await openSetup(wrapper, 'player1')
-    await typeHandicap(wrapper, [1, 0, 0])
-    await validateModal(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="prompt-primary"]').trigger('pointerdown')
+    await typeDistance(wrapper, 'white', [1, 0, 0])
+    await press(wrapper, ['dock-confirm', 'confirm-button', 'prompt-primary'])
 
-    expect(setupModal(wrapper).props('color')).toBe('yellow')
-    expect(setupModal(wrapper).find('[data-testid="distance-field"]').classes()).toContain(
-      'border-turn-active',
-    )
+    expect(
+      card(wrapper, sideOfBall(wrapper, 'yellow'))
+        .find('[data-testid="distance-field"]')
+        .classes(),
+    ).toContain('border-turn-active')
   })
 
-  // Revue de Nathan (2026-09-10) : depuis le CTA, les modales s'enchaînent — valider la
-  // distance du blanc ouvre directement celle du jaune, sans repasser par DÉMARRER.
+  // AC16 : valider la distance du blanc ouvre directement celle du jaune, sans repasser
+  // par DÉMARRER.
   it('chains the yellow distance right after the white one from the error prompt', async () => {
     const wrapper = mount(HomeScreen)
     const store = useGameStore()
 
     await goToPlayersStep(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="prompt-primary"]').trigger('pointerdown')
-    await pressInModal(wrapper, ['digit-1', 'digit-0', 'digit-0'])
-    await validateModal(wrapper)
+    await press(wrapper, ['confirm-button', 'prompt-primary'])
+    await press(wrapper, ['digit-1', 'digit-0', 'digit-0', 'dock-confirm'])
 
-    expect(setupModal(wrapper).exists()).toBe(true)
-    expect(setupModal(wrapper).props('color')).toBe('yellow')
-    expect(setupModal(wrapper).find('[data-testid="distance-field"]').classes()).toContain(
-      'border-turn-active',
-    )
-    expect(wrapper.find('[data-testid="player1-target"]').text()).toBe('100')
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(true)
+    expect(
+      card(wrapper, sideOfBall(wrapper, 'yellow'))
+        .find('[data-testid="distance-field"]')
+        .classes(),
+    ).toContain('border-turn-active')
+    expect(distanceOn(wrapper, sideOfBall(wrapper, 'white')).text()).toBe('100')
 
-    await pressInModal(wrapper, ['digit-8', 'digit-0'])
-    await validateModal(wrapper)
+    await press(wrapper, ['digit-8', 'digit-0', 'dock-confirm'])
 
-    expect(setupModal(wrapper).exists()).toBe(false)
-    expect(wrapper.find('[data-testid="player2-target"]').text()).toBe('80')
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(false)
+    expect(distanceOn(wrapper, sideOfBall(wrapper, 'yellow')).text()).toBe('80')
     expect(store.status).toBe('idle')
 
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await press(wrapper, ['confirm-button'])
 
     expect(store.status).toBe('playing')
     expect(store.player1.targetScore).toBe(100)
     expect(store.player2.targetScore).toBe(80)
   })
 
-  // L'enchaînement ne vaut que pour le rattrapage : une zone ouverte à la main ne fait
-  // jamais surgir la modale de l'autre joueur.
-  it('does not chain the modals when a zone is opened directly', async () => {
+  // L'enchaînement ne vaut que pour le rattrapage : un champ ouvert à la main ne fait
+  // jamais surgir la saisie de l'autre joueur.
+  it('does not chain the entries when a field is tapped directly', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    await openSetup(wrapper, 'player1')
-    await typeHandicap(wrapper, [1, 0, 0])
-    await validateModal(wrapper)
+    await typeDistance(wrapper, 'white', [1, 0, 0])
+    await press(wrapper, ['dock-confirm'])
 
-    expect(setupModal(wrapper).exists()).toBe(false)
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(false)
   })
 
-  it('stops chaining when the setup is closed by its cross', async () => {
+  it('stops chaining when the entry is closed by its cross', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="prompt-primary"]').trigger('pointerdown')
-    await setupModal(wrapper).find('[data-testid="modal-close-button"]').trigger('pointerdown')
+    await press(wrapper, ['confirm-button', 'prompt-primary', 'dock-close'])
 
-    expect(setupModal(wrapper).exists()).toBe(false)
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(false)
 
-    await openSetup(wrapper, 'player1')
-    await typeHandicap(wrapper, [1, 0, 0])
-    await validateModal(wrapper)
+    await typeDistance(wrapper, 'white', [1, 0, 0])
+    await press(wrapper, ['dock-confirm'])
 
-    expect(setupModal(wrapper).exists()).toBe(false)
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(false)
   })
 
-  // Une distance laissée à 0 dans la modale enchaînée ne relance pas la même modale en
-  // boucle : l'enchaînement ne passe qu'au joueur SUIVANT.
-  it('never reopens the same modal in a loop when the distance is left empty', async () => {
+  // AC16 : une distance laissée à 0 ne relance pas la même saisie en boucle —
+  // l'enchaînement ne passe qu'au joueur SUIVANT, puis s'arrête.
+  it('never reopens the same entry in a loop when the distance is left empty', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="prompt-primary"]').trigger('pointerdown')
-    await validateModal(wrapper)
+    await press(wrapper, ['confirm-button', 'prompt-primary', 'dock-confirm'])
 
-    expect(setupModal(wrapper).props('color')).toBe('yellow')
+    expect(
+      card(wrapper, sideOfBall(wrapper, 'yellow'))
+        .find('[data-testid="distance-field"]')
+        .classes(),
+    ).toContain('border-turn-active')
 
-    await validateModal(wrapper)
+    await press(wrapper, ['dock-confirm'])
 
-    expect(setupModal(wrapper).exists()).toBe(false)
-  })
-
-  // Une zone touchée directement s'ouvre toujours sur le nom, comme avant.
-  it('still opens a zone on the name field when pressed directly', async () => {
-    const wrapper = mount(HomeScreen)
-
-    await goToPlayersStep(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="prompt-primary"]').trigger('pointerdown')
-    await setupModal(wrapper).find('[data-testid="modal-close-button"]').trigger('pointerdown')
-
-    await openSetup(wrapper, 'player2')
-
-    expect(setupModal(wrapper).find('[data-testid="name-field"]').classes()).toContain(
-      'border-turn-active',
-    )
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(false)
   })
 
   it('starts once both distances are set', async () => {
@@ -646,13 +908,9 @@ describe('HomeScreen', () => {
     const store = useGameStore()
 
     await goToPlayersStep(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="prompt-primary"]').trigger('pointerdown')
-    await pressInModal(wrapper, ['digit-1', 'digit-0', 'digit-0'])
-    await validateModal(wrapper)
-    await pressInModal(wrapper, ['digit-8', 'digit-0'])
-    await validateModal(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await press(wrapper, ['confirm-button', 'prompt-primary'])
+    await press(wrapper, ['digit-1', 'digit-0', 'digit-0', 'dock-confirm'])
+    await press(wrapper, ['digit-8', 'digit-0', 'dock-confirm', 'confirm-button'])
 
     expect(store.status).toBe('playing')
     expect(store.player1.name).toBe('JOUEUR 1')
@@ -666,11 +924,10 @@ describe('HomeScreen', () => {
     const store = useGameStore()
 
     await goToPlayersStep(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="prompt-secondary"]').trigger('pointerdown')
+    await press(wrapper, ['confirm-button', 'prompt-secondary'])
 
     expect(errorPrompt(wrapper).exists()).toBe(false)
-    expect(setupModal(wrapper).exists()).toBe(false)
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(false)
     expect(store.status).toBe('idle')
     expect(wrapper.find('[data-testid="step-players"]').exists()).toBe(true)
   })
@@ -679,10 +936,10 @@ describe('HomeScreen', () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await press(wrapper, ['confirm-button'])
     expect(errorPrompt(wrapper).exists()).toBe(true)
 
-    await wrapper.find('[data-testid="back-button"]').trigger('pointerdown')
+    await goBack(wrapper)
     await wrapper.find('[data-testid="mode-libre"]').trigger('pointerdown')
 
     expect(errorPrompt(wrapper).exists()).toBe(false)
@@ -694,59 +951,53 @@ describe('HomeScreen', () => {
     const store = useGameStore()
 
     await goToPlayersStep(wrapper)
-    await openSetup(wrapper, 'player1')
-    await typeHandicap(wrapper, [1, 0, 0])
-    await validateModal(wrapper)
-    await openSetup(wrapper, 'player2')
-    await typeHandicap(wrapper, [8, 0])
-    await validateModal(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await setDistances(wrapper)
+    await press(wrapper, ['confirm-button'])
 
     expect(store.player1.targetScore).toBe(100)
     expect(store.player2.targetScore).toBe(80)
   })
 
-  // Réouvrir une zone déjà réglée doit y retrouver ses valeurs, pas repartir de zéro.
-  it('reopens a zone on the values already set for it', async () => {
+  // AC4 : une distance déjà réglée est REMPLACÉE à la première frappe, pas complétée —
+  // sinon un réglage à 3 chiffres serait inéditable.
+  it('replaces an already set distance on the first keystroke', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    await openSetup(wrapper, 'player1')
-    await typeHandicap(wrapper, [4, 0])
-    await validateModal(wrapper)
-    await openSetup(wrapper, 'player1')
+    await typeDistance(wrapper, 'white', [1, 0, 0])
+    await press(wrapper, ['dock-confirm'])
+    await typeDistance(wrapper, 'white', [4, 0])
+    await press(wrapper, ['dock-confirm'])
 
-    expect(setupModal(wrapper).props('targetScore')).toBe(40)
-    expect(setupModal(wrapper).find('[data-testid="distance-value"]').text()).toBe('40')
+    expect(distanceOn(wrapper, 'left').text()).toBe('40')
   })
 
-  // AC#8 porte sur le nom autant que sur la distance : débrancher `:name` laissait
-  // auparavant la suite entièrement verte.
-  it('reopens a zone on the name already set for it', async () => {
+  // Rouvrir un champ déjà réglé doit y retrouver sa valeur, pas repartir de zéro.
+  it('reopens a field on the value already set for it', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    await openSetup(wrapper, 'player1')
-    await typeName(wrapper, 'MICHEL')
-    await validateModal(wrapper)
-    await openSetup(wrapper, 'player1')
+    await typeName(wrapper, 'white', 'MICHEL')
+    await press(wrapper, ['sheet-confirm'])
+    await focusField(wrapper, 'white', 'name')
+    await press(wrapper, ['key-backspace'])
 
-    expect(setupModal(wrapper).props('name')).toBe('MICHEL')
-    expect(setupModal(wrapper).find('[data-testid="name-value"]').text()).toBe('MICHEL')
+    expect(nameOn(wrapper, 'left').text()).toBe('MICHE')
   })
 
-  // P8 : `back()` doit refermer la modale, pas seulement la masquer par le garde `step`.
-  it('closes the setup modal when the step is abandoned', async () => {
+  // P8 : `back()` doit REFERMER la saisie, pas seulement la masquer par le garde `step` —
+  // sinon elle se rouvre d'elle-même au retour sur l'étape.
+  it('closes the running entry when the step is abandoned', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    await openSetup(wrapper, 'player1')
-    expect(setupModal(wrapper).exists()).toBe(true)
+    await focusField(wrapper, 'white', 'name')
+    expect(wrapper.find('[data-testid="alpha-keyboard-sheet"]').exists()).toBe(true)
 
-    await wrapper.find('[data-testid="back-button"]').trigger('pointerdown')
+    await goBack(wrapper)
     await wrapper.find('[data-testid="mode-libre"]').trigger('pointerdown')
 
-    expect(setupModal(wrapper).exists()).toBe(false)
+    expect(wrapper.find('[data-testid="alpha-keyboard-sheet"]').exists()).toBe(false)
   })
 
   // P9 : le libellé d'attente doit se distinguer d'un nom réellement saisi.
@@ -754,43 +1005,53 @@ describe('HomeScreen', () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    expect(wrapper.find('[data-testid="player1-name"]').classes()).toContain('opacity-40')
+    expect(nameOn(wrapper, 'left').classes().join(' ')).toContain('/25')
 
-    await openSetup(wrapper, 'player1')
-    await typeName(wrapper, 'MICHEL')
-    await validateModal(wrapper)
+    await typeName(wrapper, 'white', 'MICHEL')
+    await press(wrapper, ['sheet-confirm'])
 
-    expect(wrapper.find('[data-testid="player1-name"]').classes()).not.toContain('opacity-40')
+    expect(nameOn(wrapper, 'left').classes().join(' ')).not.toContain('/25')
   })
 
   // Même défaut que celui corrigé sur `resetGame()` en revue de la Story 1.3 : un réglage
-  // saisi pour un mode abandonné ne doit pas être silencieusement reconduit.
-  it('forgets names and handicaps when the mode is abandoned', async () => {
+  // saisi pour un mode abandonné ne doit pas être silencieusement reconduit. Depuis la
+  // 10.3, c'est ANNULER qui efface — RETOUR, lui, conserve (AC2).
+  it('forgets names and handicaps when the setup is cancelled', async () => {
     const wrapper = mount(HomeScreen)
     const store = useGameStore()
 
     await goToPlayersStep(wrapper)
-    await openSetup(wrapper, 'player1')
-    await typeName(wrapper, 'MICHEL')
-    await typeHandicap(wrapper, [1, 0, 0])
-    await validateModal(wrapper)
-    await wrapper.find('[data-testid="back-button"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="mode-cadre"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="prompt-action-cadre-47-2"]').trigger('pointerdown')
+    await typeName(wrapper, 'white', 'MICHEL')
+    await press(wrapper, ['sheet-confirm'])
+    await typeDistance(wrapper, 'white', [1, 0, 0])
+    await press(wrapper, ['dock-confirm'])
+    await wrapper.find('[data-testid="sidebar-item-cancel"]').trigger('pointerdown')
+    await goToPlayersStep(wrapper, 'cadre-47-2')
 
-    expect(wrapper.find('[data-testid="player1-name"]').text()).toBe('JOUEUR 1')
-    expect(wrapper.find('[data-testid="player1-target"]').exists()).toBe(false)
+    expect(nameOn(wrapper, 'left').text()).toBe('JOUEUR')
+    expect(distanceOn(wrapper, 'left').text()).toBe('0')
 
     // Distance obligatoire (1.10) : d'autres valeurs, pour prouver que 100 est oublié.
-    await openSetup(wrapper, 'player1')
-    await typeHandicap(wrapper, [5, 0])
-    await validateModal(wrapper)
-    await openSetup(wrapper, 'player2')
-    await typeHandicap(wrapper, [5, 0])
-    await validateModal(wrapper)
-    await wrapper.find('[data-testid="confirm-button"]').trigger('pointerdown')
+    await typeDistance(wrapper, 'white', [5, 0])
+    await press(wrapper, ['dock-confirm'])
+    await typeDistance(wrapper, 'yellow', [5, 0])
+    await press(wrapper, ['dock-confirm', 'confirm-button'])
 
     expect(store.player1.name).toBe('JOUEUR 1')
     expect(store.player1.targetScore).toBe(50)
+  })
+
+  // ANNULER remet aussi les billes et les côtés d'aplomb : rien ne doit survivre.
+  it('seats the white ball back on the left after a cancel', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await press(wrapper, ['change-side-button'])
+    expect(ballOn(wrapper, 'left')).toBe('yellow')
+
+    await wrapper.find('[data-testid="sidebar-item-cancel"]').trigger('pointerdown')
+    await goToPlayersStep(wrapper)
+
+    expect(ballOn(wrapper, 'left')).toBe('white')
   })
 })

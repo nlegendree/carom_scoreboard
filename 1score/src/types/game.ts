@@ -1,9 +1,11 @@
 export type GameStatus = 'idle' | 'playing' | 'finished'
 
-// Côté de la table, pas personne : `player1` est TOUJOURS le joueur de gauche (bille
-// blanche), `player2` celui de droite (jaune). Introduit en Story 1.10 pour remplacer
-// l'union littérale répétée ; adopté dans le nouveau code et les signatures touchées,
-// sans chasse exhaustive.
+// BILLE, pas côté ni personne (Story 10.3) : `player1` est TOUJOURS le joueur à la bille
+// BLANCHE, `player2` celui à la jaune — c'est le blanc qui ouvre la partie et les reprises
+// (AR24), quel que soit le côté où sa carte est posée à l'écran. Le côté d'affichage est
+// dit par `GameState.whiteSide` et par lui seul : aucune règle de calcul n'en dépend.
+// Introduit en Story 1.10 pour remplacer l'union littérale répétée ; adopté dans le nouveau
+// code et les signatures touchées, sans chasse exhaustive.
 export type PlayerId = 'player1' | 'player2'
 
 // Pop-up de décision attendue en fin de partie (Story 1.10). Portée par le store et non
@@ -12,9 +14,15 @@ export type PlayerId = 'player1' | 'player2'
 // reprise égalisatrice. `over` : la partie est jouée, `winner` à `null` signifie égalité.
 export type EndPrompt = { kind: 'equalizing-offer' } | { kind: 'over'; winner: PlayerId | null }
 
-// La bille est attachée à la position : joueur de gauche blanc, joueur de droite jaune.
-// Intervertir les billes revient donc à échanger les joueurs de côté (voir swapPlayers).
+// La bille est l'identité du joueur dans la partie : `player1` est blanc, `player2` jaune,
+// et ça ne bouge plus une fois la partie démarrée (Story 10.3 — `ÉCHANGER` a disparu du
+// scoreboard). Le paramétrage, lui, laisse choisir qui prend quelle bille et de quel côté
+// il s'assied, avant le démarrage.
 export type PlayerColor = 'white' | 'yellow'
+
+// Côté de l'écran où la carte de la bille blanche est posée (Story 10.3, AR24). Champ
+// d'AFFICHAGE : il ordonne les colonnes du scoreboard et du récap, rien d'autre.
+export type TableSide = 'left' | 'right'
 
 // Catalogue déclaratif des modes, et source de vérité unique des unions `GameCategoryId`
 // et `GameMode` : elles en sont dérivées plus bas, ce qui rend impossible l'ajout d'un mode
@@ -72,7 +80,6 @@ export interface GameCategoryDescriptor {
 export const GAME_CATEGORIES: readonly GameCategoryDescriptor[] = CATALOG
 
 export interface Player {
-  id: PlayerId
   name: string
   score: number
   color: PlayerColor
@@ -106,9 +113,10 @@ export interface GameState {
   // Corrections `−`/`+` tenues à part des reprises (Story 1.7). Persistées : sans elles,
   // la série suivante recalculerait le total depuis les seules reprises et les effacerait.
   scoreAdjustments: { player1: number; player2: number }
-  // Parité des côtés (Story 1.7). Persistée : les snapshots pris avant un `ÉCHANGER`
-  // doivent être restaurés dans les bonnes coordonnées après une reprise.
-  sidesSwapped: boolean
+  // Côté d'affichage de la bille blanche, choisi au paramétrage (Story 10.3). Persisté
+  // pour que la reprise après fermeture replace les joueurs là où ils étaient assis. Il ne
+  // change JAMAIS en cours de partie : il n'entre donc pas dans le snapshot d'annulation.
+  whiteSide: TableSide
   // Pile d'annulation complète (décision de Nathan, 2026-09-10) : après une reprise,
   // `ANNULER` remonte les actions d'avant la fermeture comme si rien ne s'était passé.
   history: GameSnapshot[]
@@ -129,10 +137,10 @@ export interface GameState {
 }
 
 // Photographie de l'état de partie prise AVANT chaque action annulable (Story 1.7) :
-// tout ce que les trois actions (série, main rendue, correction) peuvent toucher, plus
-// la parité des côtés (`sidesSwapped`) qui permet de restaurer un snapshot pris avant un
-// `ÉCHANGER` sans défaire l'échange. Rien de plus : `mode`, `status`, `startedAt` ne
-// bougent jamais en cours de partie. La pile de ces snapshots fait partie de `GameState`
+// tout ce que les trois actions (série, main rendue, correction) peuvent toucher. Rien de
+// plus : `mode`, `status`, `startedAt` ne bougent jamais en cours de partie, et depuis la
+// Story 10.3 `whiteSide` non plus — l'undo redevient une restauration directe, sans mise
+// en miroir. La pile de ces snapshots fait partie de `GameState`
 // et EST persistée intégralement (Story 1.12, décision de Nathan du 2026-09-10).
 // `equalizingReprise` en fait partie (Story 1.10, AC9) : annuler la série gagnante du
 // blanc défait aussi l'offre acceptée. `endPrompt`, `winner`, `finishedAt` n'y sont PAS :
@@ -145,7 +153,6 @@ export interface GameSnapshot {
   reprises: Reprise[]
   scoreAdjustments: { player1: number; player2: number }
   currentInput: { player1: string; player2: string }
-  sidesSwapped: boolean
   equalizingReprise: boolean
 }
 

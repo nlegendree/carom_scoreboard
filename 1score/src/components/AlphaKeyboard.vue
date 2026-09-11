@@ -11,6 +11,8 @@ const emit = defineEmits<{ input: [char: string]; backspace: [] }>()
 // Disposition AZERTY. La rangée de chiffres est en haut, comme sur un clavier de tablette :
 // les joueurs doivent pouvoir écrire « MICHEL 2 » sans changer de mode.
 // La 4e rangée complète WXCVBN par les accents courants des prénoms français.
+// Aucune touche existante ne bouge (DT4) : la mémoire du geste compte plus que la symétrie,
+// les ajouts de la Story 10.3 vont tous dans la 5e rangée.
 const ROWS = [
   ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
   ['A', 'Z', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -18,14 +20,31 @@ const ROWS = [
   ['W', 'X', 'C', 'V', 'B', 'N', 'É', 'È', 'À', 'Ç'],
 ] as const
 
-// Les touches se partagent la hauteur laissée par la modale (`auto-rows-fr`) : elles
-// grandissent sur un grand écran et se resserrent sur 768 px, sans jamais pousser VALIDER
-// hors de la carte. Le plancher garde une cible atteignable au format le plus petit.
-const KEY_SIZE = 'h-full min-h-[44px] text-[clamp(16px,2vw,26px)] font-semibold text-white'
+// 5e rangée (DT4) : tréma et circonflexe des prénoms français (JOËL, ANAÏS, BENOÎT,
+// JÉRÔME), puis le tiret de JEAN-PIERRE et l'apostrophe de D'ARTAGNAN. Sept touches, le ⌫
+// occupe les trois colonnes restantes.
+// Les signes portent un `data-testid` nommé : `key--` et `key-'` seraient illisibles en
+// sélecteur, et l'apostrophe y ferme la chaîne du test.
+const SIGN_ROW = [
+  { char: 'Ë', testid: 'key-Ë' },
+  { char: 'Ï', testid: 'key-Ï' },
+  { char: 'Î', testid: 'key-Î' },
+  { char: 'Ô', testid: 'key-Ô' },
+  { char: 'Û', testid: 'key-Û' },
+  { char: '-', testid: 'key-hyphen' },
+  { char: "'", testid: 'key-apostrophe' },
+] as const
+
+// Les touches se partagent la hauteur laissée par l'hôte (`auto-rows-fr`) : elles
+// grandissent sur un grand écran et se resserrent au format le plus petit, sans jamais
+// pousser VALIDER hors du bandeau. Plancher relevé à 57 px (Story 10.3) : six rangées à
+// 57 px et `gap-1` font 382 px, ce que le bandeau de `AlphaKeyboardSheet` absorbe en
+// laissant les deux cartes entières au-dessus.
+const KEY_SIZE = 'h-full min-h-[57px] text-[clamp(16px,2vw,26px)] font-semibold text-white'
 </script>
 
 <template>
-  <div class="grid h-full min-h-[288px] auto-rows-fr grid-cols-10 gap-2">
+  <div class="grid h-full min-h-[382px] auto-rows-fr grid-cols-10 gap-1">
     <template v-for="(row, rowIndex) in ROWS" :key="rowIndex">
       <button
         v-for="char in row"
@@ -40,13 +59,14 @@ const KEY_SIZE = 'h-full min-h-[44px] text-[clamp(16px,2vw,26px)] font-semibold 
     </template>
 
     <button
-      data-testid="key-space"
+      v-for="key in SIGN_ROW"
+      :key="key.char"
+      :data-testid="key.testid"
       :disabled="disabled"
       :class="[KEY_CLASSES, KEY_SIZE]"
-      class="col-span-7 tracking-[0.3em] text-white/55"
-      @pointerdown="emit('input', ' ')"
+      @pointerdown="emit('input', key.char)"
     >
-      ESPACE
+      {{ key.char }}
     </button>
 
     <button
@@ -57,6 +77,16 @@ const KEY_SIZE = 'h-full min-h-[44px] text-[clamp(16px,2vw,26px)] font-semibold 
       @pointerdown="emit('backspace')"
     >
       ⌫
+    </button>
+
+    <button
+      data-testid="key-space"
+      :disabled="disabled"
+      :class="[KEY_CLASSES, KEY_SIZE]"
+      class="col-span-10 tracking-[0.3em] text-white/55"
+      @pointerdown="emit('input', ' ')"
+    >
+      ESPACE
     </button>
   </div>
 </template>

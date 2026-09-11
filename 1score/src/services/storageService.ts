@@ -16,7 +16,10 @@ export const GAME_STORAGE_KEY = '1score:game'
 // (champ ajouté, retiré, retypé) INCRÉMENTE cette version — la garde ci-dessous ne
 // vérifie qu'un sous-ensemble de champs, une sauvegarde d'une forme antérieure passerait
 // et `resumeGame` poserait `undefined` dans une ref typée (revue 1.12).
-export const GAME_STORAGE_VERSION = 1
+// Version 2 depuis la Story 10.3 : `GameState` gagne `whiteSide`, perd `sidesSwapped`, et
+// `Player` perd son `id`. Une sauvegarde en version 1 est donc écartée au lancement —
+// aucune pop-up « PARTIE EN COURS » n'est proposée, l'entrée est supprimée.
+export const GAME_STORAGE_VERSION = 2
 
 export interface PersistedGame {
   version: number
@@ -44,7 +47,7 @@ function isPersistedGame(value: unknown): value is PersistedGame {
     Array.isArray(state.history) &&
     isRecord(state.scoreAdjustments) &&
     isRecord(state.currentInput) &&
-    typeof state.sidesSwapped === 'boolean' &&
+    (state.whiteSide === 'left' || state.whiteSide === 'right') &&
     typeof state.equalizingReprise === 'boolean' &&
     typeof state.entryOpen === 'boolean'
   )

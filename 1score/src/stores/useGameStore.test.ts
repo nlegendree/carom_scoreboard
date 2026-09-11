@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { computed, defineComponent, h, nextTick, watchEffect } from 'vue'
 import { mount } from '@vue/test-utils'
-import { MAX_SCORE_DIGITS, mirrorSnapshot, useGameStore } from './useGameStore'
+import { MAX_SCORE_DIGITS, useGameStore } from './useGameStore'
 import { GAME_STORAGE_KEY } from '../services/storageService'
 import type { GameState, PlayerId } from '../types/game'
 
@@ -79,67 +79,10 @@ describe('useGameStore', () => {
     expect(store.player2.color).toBe('yellow')
   })
 
-  it('swaps players between sides while keeping colors bound to their side', () => {
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE')
 
-    store.swapPlayers()
 
-    expect(store.player1.name).toBe('ANDRE')
-    expect(store.player2.name).toBe('MICHEL')
-    expect(store.player1.color).toBe('white')
-    expect(store.player2.color).toBe('yellow')
-    expect(store.player1.id).toBe('player1')
-    expect(store.player2.id).toBe('player2')
-  })
 
-  // AC#7 : la distance suit le joueur — comme son nom et son score — tandis que la bille
-  // reste attachée au côté. Distances dissociées pour que le test discrimine vraiment.
-  it('carries each target score with its player when sides are swapped', () => {
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 100, player2: 80 })
 
-    store.swapPlayers()
-
-    expect(store.player1.targetScore).toBe(80)
-    expect(store.player2.targetScore).toBe(100)
-    expect(store.player1.color).toBe('white')
-    expect(store.player2.color).toBe('yellow')
-  })
-
-  // Règle produit arrêtée en revue de la Story 1.3 : le tour est attaché au CÔTÉ,
-  // pas à la personne — le joueur de gauche commence, l'interversion n'y change rien.
-  it('keeps the turn on the left side when players swap', () => {
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE')
-
-    store.swapPlayers()
-
-    expect(store.activePlayer).toBe('player1')
-  })
-
-  // Règle changée le 2026-09-09 : l'interversion reste disponible TOUTE la partie, elle
-  // n'est plus refusée dès la première série. Le comportement après séries enregistrées
-  // est vérifié en détail plus bas (permutation des colonnes de reprises).
-  it('no longer refuses to swap players once a reprise has been recorded', () => {
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE')
-    store.reprises = [{ player1: 3, player2: 2, timestamp: Date.now() }]
-
-    store.swapPlayers()
-
-    expect(store.player1.name).toBe('ANDRE')
-    expect(store.player2.name).toBe('MICHEL')
-  })
-
-  it('refuses to swap players outside of a running game', () => {
-    const store = useGameStore()
-
-    store.swapPlayers()
-
-    expect(store.player1.name).toBe('')
-    expect(store.status).toBe('idle')
-  })
 
   it('restores the full initial state on reset, carrying nothing over', () => {
     const store = useGameStore()
@@ -470,7 +413,7 @@ describe('useGameStore — saisie au pavé numérique', () => {
 // --- Story 1.5 (refonte du 2026-09-09) : rendre la main sans marquer, moyenne,
 //     meilleure série, interversion disponible toute la partie ---
 
-describe('useGameStore — alternance sans score, statistiques et interversion', () => {
+describe('useGameStore — alternance sans score et statistiques', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
@@ -557,54 +500,8 @@ describe('useGameStore — alternance sans score, statistiques et interversion',
     expect(store.bestSeries.player2).toBe(0)
   })
 
-  // Le bouton ÉCHANGER reste disponible toute la partie (décision du 2026-09-09) :
-  // l'interversion ne doit donc plus être refusée dès la première série.
-  it('still swaps players once series have been recorded', () => {
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE')
-    store.addReprise('player1', 5)
 
-    store.swapPlayers()
 
-    expect(store.player1.name).toBe('ANDRE')
-    expect(store.player2.name).toBe('MICHEL')
-  })
-
-  // ⚠️ Le score est RECALCULÉ depuis `reprises`, qui range les séries par côté.
-  // Sans permutation des colonnes, chaque joueur récupérerait l'historique de l'autre
-  // au premier recalcul — et son total avec.
-  it('carries each played series with its player when sides are swapped', () => {
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE')
-    store.addReprise('player1', 5)
-    store.addReprise('player2', 2)
-    store.addReprise('player1', 4)
-
-    store.swapPlayers()
-
-    expect(store.player1.name).toBe('ANDRE')
-    expect(store.player1.score).toBe(2)
-    expect(store.player2.name).toBe('MICHEL')
-    expect(store.player2.score).toBe(9)
-    expect(store.averages.player1).toBeCloseTo(2 / 1, 6)
-    expect(store.averages.player2).toBeCloseTo(9 / 2, 6)
-    expect(store.bestSeries.player2).toBe(5)
-  })
-
-  // Un nouvel enregistrement après interversion doit repartir de l'historique permuté,
-  // et non refabriquer un total à partir de l'ancien découpage.
-  it('keeps totals correct when a series is recorded after a swap', () => {
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE')
-    store.addReprise('player1', 5)
-    store.addReprise('player2', 2)
-
-    store.swapPlayers()
-    store.addReprise('player1', 3)
-
-    expect(store.player1.score).toBe(5)
-    expect(store.player2.score).toBe(5)
-  })
 })
 
 // --- Story 1.5 (ajout du 2026-09-09) : correction manuelle du score ---
@@ -678,30 +575,6 @@ describe('useGameStore — correction du score', () => {
     expect(store.player1.score).toBe(7)
   })
 
-  // Comme les reprises, la correction appartient au JOUEUR et le suit d'un côté à l'autre.
-  // ⚠️ Prouvé non discriminant par mutation, puis corrigé : `swapPlayers` transporte le
-  // score déjà calculé dans l'objet joueur, si bien qu'une correction restée du mauvais
-  // côté ne se voit qu'au RECALCUL suivant. Il faut donc enregistrer une série après
-  // l'échange — exactement le même piège que pour les colonnes de reprises.
-  it('carries the correction with its player when sides are swapped', () => {
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE')
-    store.addReprise('player1', 5)
-    store.adjustScore('player1', 3)
-
-    store.swapPlayers()
-
-    expect(store.player2.name).toBe('MICHEL')
-    expect(store.player2.score).toBe(8)
-    expect(store.player1.score).toBe(0)
-
-    // Le recalcul qui révèle une correction mal placée.
-    store.addReprise('player2', 2)
-    store.addReprise('player1', 6)
-
-    expect(store.player2.score).toBe(10)
-    expect(store.player1.score).toBe(6)
-  })
 
   // ⚠️ Prouvé non discriminant par mutation, puis corrigé : `startGame` réécrit l'objet
   // joueur avec un score à 0, donc lire ce score ne dit RIEN de la correction résiduelle.
@@ -732,7 +605,7 @@ describe('useGameStore — correction du score', () => {
     expect(store.player1.score).toBe(4)
   })
 
-  // Cohérence avec `swapPlayers` : hors partie, aucune action de jeu ne mute l'état.
+  // Hors partie, aucune action de jeu ne mute l'état.
   it('ignores every game gesture while no game is playing', () => {
     const store = useGameStore()
 
@@ -742,7 +615,6 @@ describe('useGameStore — correction du score', () => {
     store.switchTurn()
     store.adjustScore('player1', 3)
     store.undoLastAction()
-    store.swapPlayers()
 
     expect(store.currentInput.player1).toBe('')
     expect(store.reprises).toEqual([])
@@ -771,7 +643,6 @@ describe('useGameStore — correction du score', () => {
     store.switchTurn()
     store.adjustScore('player1', 3)
     store.undoLastAction()
-    store.swapPlayers()
 
     expect(store.status).toBe('finished')
     expect(store.player1.score).toBe(10)
@@ -891,117 +762,10 @@ describe('useGameStore — undo', () => {
     expect(store.canUndo).toBe(false)
   })
 
-  // AC3 : `ÉCHANGER` n'est pas une action annulable — on rappuie dessus pour revenir.
-  it('pushes nothing on the history when players swap', () => {
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE')
 
-    store.swapPlayers()
 
-    expect(store.canUndo).toBe(false)
-  })
 
-  // AC5 — le piège de la story : le snapshot a été pris quand MICHEL était à gauche ; le
-  // restaurer tel quel ramènerait l'échange. Il est mis en miroir : les joueurs restent
-  // où ils sont, la série disparaît et la main revient à MICHEL, désormais à droite.
-  it('keeps the sides as they are when undoing a series recorded before a swap', () => {
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE')
-    validate(store, 'player1', 5)
-    store.swapPlayers()
-    expect(store.player2.score).toBe(5)
 
-    store.undoLastAction()
-
-    expect(store.reprises).toEqual([])
-    expect(store.player1.name).toBe('ANDRE')
-    expect(store.player1.id).toBe('player1')
-    expect(store.player1.color).toBe('white')
-    expect(store.player2.name).toBe('MICHEL')
-    expect(store.player2.id).toBe('player2')
-    expect(store.player2.color).toBe('yellow')
-    expect(store.player2.score).toBe(0)
-    expect(store.activePlayer).toBe('player2')
-    expect(store.sidesSwapped).toBe(true)
-    expect(store.canUndo).toBe(false)
-  })
-
-  // Deux échanges ramènent la parité d'origine : aucun miroir, aucun effet de bord.
-  it('restores the snapshot as is after two swaps', () => {
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE')
-    validate(store, 'player1', 5)
-    store.swapPlayers()
-    store.swapPlayers()
-
-    store.undoLastAction()
-
-    expect(store.reprises).toEqual([])
-    expect(store.player1.name).toBe('MICHEL')
-    expect(store.player1.score).toBe(0)
-    expect(store.player2.name).toBe('ANDRE')
-    expect(store.activePlayer).toBe('player1')
-    expect(store.sidesSwapped).toBe(false)
-  })
-
-  // La correction doit disparaître du BON joueur : MICHEL, passé à droite entre-temps.
-  it('removes an undone correction from the player who received it, wherever he sits', () => {
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE')
-    store.addReprise('player1', 5)
-    store.addReprise('player2', 2)
-    store.adjustScore('player1', 3)
-    store.swapPlayers()
-    expect(store.player2.score).toBe(8)
-
-    store.undoLastAction()
-
-    expect(store.player1.name).toBe('ANDRE')
-    expect(store.player1.score).toBe(2)
-    expect(store.player2.name).toBe('MICHEL')
-    expect(store.player2.score).toBe(5)
-
-    // Le recalcul qui révélerait une correction résiduelle mal placée.
-    store.addReprise('player2', 1)
-    expect(store.player2.score).toBe(6)
-    expect(store.player1.score).toBe(2)
-  })
-
-  it('mirrors a snapshot: columns, players (restamped), adjustments and turn', () => {
-    const mirrored = mirrorSnapshot({
-      player1: { id: 'player1', name: 'MICHEL', score: 5, color: 'white', targetScore: 100 },
-      player2: { id: 'player2', name: 'ANDRE', score: 0, color: 'yellow', targetScore: 80 },
-      activePlayer: 'player2',
-      reprises: [{ player1: 5, player2: null, timestamp: 1 }],
-      scoreAdjustments: { player1: 2, player2: 0 },
-      currentInput: { player1: '7', player2: '' },
-      sidesSwapped: false,
-      equalizingReprise: true,
-    })
-
-    expect(mirrored.reprises).toEqual([{ player1: null, player2: 5, timestamp: 1 }])
-    expect(mirrored.activePlayer).toBe('player1')
-    expect(mirrored.player1).toEqual({
-      id: 'player1',
-      name: 'ANDRE',
-      score: 0,
-      color: 'white',
-      targetScore: 80,
-    })
-    expect(mirrored.player2).toEqual({
-      id: 'player2',
-      name: 'MICHEL',
-      score: 5,
-      color: 'yellow',
-      targetScore: 100,
-    })
-    expect(mirrored.scoreAdjustments).toEqual({ player1: 0, player2: 2 })
-    expect(mirrored.currentInput).toEqual({ player1: '', player2: '7' })
-    expect(mirrored.sidesSwapped).toBe(true)
-    // Story 1.10 : la reprise égalisatrice est un fait de jeu attaché au côté droit,
-    // recopié tel quel — la parité des côtés ne le change pas.
-    expect(mirrored.equalizingReprise).toBe(true)
-  })
 
   // AC12 de la 1.5 : un `VALIDER` à vide ne fait rien — il n'empile donc rien non plus.
   it('pushes nothing on the history when validating an empty buffer', () => {
@@ -1014,28 +778,24 @@ describe('useGameStore — undo', () => {
   })
 
   // AC7 : la pile repart vide à chaque partie, la parité aussi.
-  it('starts a new game with an empty history and sides in their original parity', () => {
+  it('starts a new game with an empty history', () => {
     const store = useGameStore()
     store.startGame('libre', 'MICHEL', 'ANDRE')
     store.adjustScore('player1', 1)
-    store.swapPlayers()
 
     store.startGame('libre', 'PAUL', 'JACQUES')
 
     expect(store.canUndo).toBe(false)
-    expect(store.sidesSwapped).toBe(false)
   })
 
-  it('carries no history nor swapped parity over on reset', () => {
+  it('carries no history over on reset', () => {
     const store = useGameStore()
     store.startGame('libre', 'MICHEL', 'ANDRE')
     store.adjustScore('player1', 1)
-    store.swapPlayers()
 
     store.resetGame()
 
     expect(store.history).toEqual([])
-    expect(store.sidesSwapped).toBe(false)
   })
 
   // Anti-régression `shallowRef` (AR9) : un `push` sur `history` figerait `canUndo`, un
@@ -1246,25 +1006,6 @@ describe('useGameStore — fin de partie', () => {
     expect(store.equalizingReprise).toBe(true)
   })
 
-  // Revue 1.10 (décision de Nathan, 2026-09-10) : `ÉCHANGER` est bloqué pendant la
-  // reprise égalisatrice — le drapeau est attaché au côté droit, un échange ferait jouer
-  // l'égalisatrice au joueur qui vient d'atteindre sa distance et fabriquerait une
-  // égalité fantôme.
-  it('refuses to swap the players during the equalizing reprise', () => {
-    const store = startedGame()
-    validate(store, 'player1', 10)
-    store.acceptEqualizingReprise()
-
-    store.swapPlayers()
-
-    expect(store.player1.name).toBe('MICHEL')
-    expect(store.player1.score).toBe(10)
-    expect(store.sidesSwapped).toBe(false)
-
-    validate(store, 'player2', 3)
-
-    expect(store.endPrompt).toEqual({ kind: 'over', winner: 'player1' })
-  })
 
   // Discriminant vis-à-vis du prorata : le total du jaune, corrigé par `+` jusqu'à sa
   // distance (aucune détection, AC8), lui donnerait l'égalité au prorata. Le refus de
@@ -1347,14 +1088,12 @@ describe('useGameStore — fin de partie', () => {
   })
 
   // AC8 : seules les séries déclenchent la détection.
-  it('never ends the game on a correction nor on a swap', () => {
+  it('never ends the game on a correction', () => {
     const store = startedGame()
 
     store.adjustScore('player1', 10)
-    expect(store.player1.score).toBe(10)
-    expect(store.endPrompt).toBeNull()
 
-    store.swapPlayers()
+    expect(store.player1.score).toBe(10)
     expect(store.endPrompt).toBeNull()
   })
 
@@ -1453,18 +1192,6 @@ describe('useGameStore — fin de partie', () => {
     expect(store.activePlayer).toBe('player1')
   })
 
-  it('keeps swapped players on their current side for the rematch', () => {
-    const store = startedGame()
-    store.swapPlayers()
-    store.finishGame()
-
-    store.rematch()
-
-    expect(store.player1.name).toBe('ANDRE')
-    expect(store.player1.targetScore).toBe(8)
-    expect(store.player2.name).toBe('MICHEL')
-    expect(store.player2.targetScore).toBe(10)
-  })
 
   it('refuses a rematch while a game is still running', () => {
     const store = startedGame()
@@ -1521,20 +1248,6 @@ describe('useGameStore — fin de partie', () => {
     }
   })
 
-  // AC5 : après un `ÉCHANGER`, chacun repart du côté où il est — même règle que `rematch`.
-  it('keeps swapped players on their current side when restarting', () => {
-    const store = startedGame()
-    store.swapPlayers()
-    validate(store, 'player1', 2)
-
-    store.restartGame()
-
-    expect(store.player1.name).toBe('ANDRE')
-    expect(store.player1.targetScore).toBe(8)
-    expect(store.player2.name).toBe('MICHEL')
-    expect(store.player2.targetScore).toBe(10)
-    expect(store.sidesSwapped).toBe(false)
-  })
 
   // AC5, AC6 : injoignable au doigt (le voile de la pop-up recouvre la barre), mais c'est
   // le contrat de l'action pour un pilotage déporté — aucune fin en cours ne survit.
@@ -1738,15 +1451,6 @@ describe('useGameStore — persistance', () => {
     expect(saved().player2.score).toBe(2)
   })
 
-  it('saves after swapPlayers', async () => {
-    const store = useGameStore()
-    store.startGame('libre', 'MICHEL', 'ANDRE')
-    store.swapPlayers()
-    await nextTick()
-
-    expect(saved().sidesSwapped).toBe(true)
-    expect(saved().player1.name).toBe('ANDRE')
-  })
 
   it('saves after undoLastAction', async () => {
     const store = useGameStore()
@@ -1880,14 +1584,14 @@ describe('useGameStore — persistance', () => {
   })
 
   // AC3 : le scoreboard revient EXACTEMENT où il en était — et `ANNULER` remonte les
-  // actions d'avant la fermeture, parité des côtés comprise.
+  // actions d'avant la fermeture. Quatre actions annulables, dont une correction, pour que
+  // la pile restaurée ait de la profondeur.
   async function playedGame(): Promise<Store> {
     const store = useGameStore()
     store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 100, player2: 80 })
     validate(store, 'player1', 7)
     validate(store, 'player2', 3)
     store.adjustScore('player1', 2)
-    store.swapPlayers()
     validate(store, 'player1', 4)
     store.openScoreEntry('player2')
     store.appendScoreDigit('player2', 5)
@@ -1914,7 +1618,7 @@ describe('useGameStore — persistance', () => {
       'activePlayer',
       'reprises',
       'scoreAdjustments',
-      'sidesSwapped',
+      'whiteSide',
       'history',
       'startedAt',
       'equalizingReprise',
@@ -1931,8 +1635,9 @@ describe('useGameStore — persistance', () => {
     store.resumeGame()
 
     expect(JSON.parse(JSON.stringify(snapshotOf(store)))).toEqual(expected)
-    expect(store.player1.name).toBe('ANDRE')
-    expect(store.player2.score).toBe(9)
+    expect(store.player1.name).toBe('MICHEL')
+    expect(store.player1.score).toBe(13)
+    expect(store.player2.score).toBe(3)
     expect(store.activePlayer).toBe('player2')
     expect(store.entryOpen).toBe(true)
     expect(store.currentInput.player2).toBe('5')
@@ -1947,35 +1652,35 @@ describe('useGameStore — persistance', () => {
 
     store.validateScoreInput('player2')
 
-    // 7 (série) + 2 (correction `+`) + 5 : sans `scoreAdjustments`, on lirait 12.
-    expect(store.player2.score).toBe(14)
+    // 7 + 4 (séries) + 2 (correction `+`) : sans `scoreAdjustments`, on lirait 11.
+    expect(store.player1.score).toBe(13)
+    expect(store.player2.score).toBe(8)
     expect(store.activePlayer).toBe('player1')
   })
 
-  it('undoes actions taken before the closing, sides parity included', async () => {
+  it('undoes actions taken before the closing', async () => {
     await playedGame()
     const store = await relaunch()
     store.resumeGame()
     store.validateScoreInput('player2')
 
     store.undoLastAction()
-    expect(store.player2.score).toBe(9)
+    expect(store.player2.score).toBe(3)
     expect(store.activePlayer).toBe('player2')
 
     store.undoLastAction()
-    expect(store.player1.score).toBe(3)
+    expect(store.player1.score).toBe(9)
     expect(store.activePlayer).toBe('player1')
     expect(store.reprises).toHaveLength(1)
 
-    // Snapshot pris AVANT l'échange : mis en miroir, les joueurs restent où ils sont.
+    // Snapshot pris avant la correction : elle disparaît du joueur qui l'avait reçue.
     store.undoLastAction()
-    expect(store.player1.name).toBe('ANDRE')
-    expect(store.player1.score).toBe(3)
-    expect(store.player2.name).toBe('MICHEL')
-    expect(store.player2.score).toBe(7)
-    expect(store.activePlayer).toBe('player2')
-    expect(store.sidesSwapped).toBe(true)
-    expect(store.reprises).toEqual([{ player1: 3, player2: 7, timestamp: expect.any(Number) }])
+    expect(store.player1.name).toBe('MICHEL')
+    expect(store.player1.score).toBe(7)
+    expect(store.player2.name).toBe('ANDRE')
+    expect(store.player2.score).toBe(3)
+    expect(store.activePlayer).toBe('player1')
+    expect(store.reprises).toEqual([{ player1: 7, player2: 3, timestamp: expect.any(Number) }])
     expect(store.canUndo).toBe(true)
   })
 
@@ -2096,33 +1801,29 @@ describe('useGameStore — persistance', () => {
 
   // `id`/`color` appartiennent au côté, pas à la sauvegarde — dans la pile aussi, sinon
   // le premier `ANNULER` après reprise réinstallerait ceux de la sauvegarde.
-  it('restamps the players ids and colors on resume, in the undo stack too', async () => {
+  // `Player.id` a disparu en Story 10.3 : la bille est la seule identité restante, et
+  // c'est elle que la reprise restampe — dans la pile aussi, sinon le premier `ANNULER`
+  // réinstallerait les couleurs de la sauvegarde.
+  it('restamps the players colors on resume, in the undo stack too', async () => {
     await playedGame()
     await nextTick()
     const raw = JSON.parse(localStorage.getItem(GAME_STORAGE_KEY)!)
     raw.state.player1.color = 'yellow'
-    raw.state.player1.id = 'player2'
     for (const snapshot of raw.state.history) {
       snapshot.player1.color = 'yellow'
-      snapshot.player1.id = 'player2'
       snapshot.player2.color = 'white'
-      snapshot.player2.id = 'player1'
     }
     localStorage.setItem(GAME_STORAGE_KEY, JSON.stringify(raw))
 
     const store = await relaunch()
     store.resumeGame()
 
-    expect(store.player1.id).toBe('player1')
     expect(store.player1.color).toBe('white')
-    expect(store.player2.id).toBe('player2')
     expect(store.player2.color).toBe('yellow')
 
     store.undoLastAction()
 
-    expect(store.player1.id).toBe('player1')
     expect(store.player1.color).toBe('white')
-    expect(store.player2.id).toBe('player2')
     expect(store.player2.color).toBe('yellow')
   })
 
@@ -2378,22 +2079,6 @@ describe('useGameStore — série au point (3 Bandes)', () => {
     expect(store.activePlayer).toBe('player1')
   })
 
-  // Après un ÉCHANGER, la série ouverte suit son côté (les reprises sont rangées par
-  // côté et mises en miroir) : le tap continue de créditer le côté qui a la main.
-  it('keeps crediting the active side after the sides are swapped', () => {
-    const store = startThreeCushions()
-
-    store.incrementSeries()
-    store.passTurn()
-    store.incrementSeries() // jaune : 1
-    store.swapPlayers()
-
-    expect(store.activePlayer).toBe('player2')
-    store.incrementSeries()
-
-    expect(store.player2.score).toBe(2)
-    expect(store.player1.score).toBe(1)
-  })
 
   it('saves after a tap', async () => {
     const store = startThreeCushions()
@@ -2403,5 +2088,107 @@ describe('useGameStore — série au point (3 Bandes)', () => {
 
     const saved = JSON.parse(localStorage.getItem(GAME_STORAGE_KEY)!).state as GameState
     expect(saved.reprises).toEqual([expect.objectContaining({ player1: 1, player2: null })])
+  })
+})
+
+// --- Story 10.3 : la bille blanche ouvre, où qu'elle soit (AR24) ---
+//
+// `whiteSide` est un champ d'AFFICHAGE, pas un fait de jeu : il dit de quel côté la carte
+// blanche est posée à l'écran. `player1` reste la bille blanche et reste celui qui ouvre —
+// aucune règle de calcul ne dépend de ce champ, c'est tout l'intérêt de la forme retenue.
+describe('useGameStore — côté d\'affichage de la bille blanche', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('seats the white ball on the left by default', () => {
+    const store = useGameStore()
+
+    expect(store.whiteSide).toBe('left')
+  })
+
+  it('carries the chosen side through startGame', () => {
+    const store = useGameStore()
+
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 }, 'right')
+
+    expect(store.whiteSide).toBe('right')
+  })
+
+  // Le 5e paramètre est optionnel : tous les appels existants décrivent le même cas.
+  it('seats the white ball on the left when startGame is called without a side', () => {
+    const store = useGameStore()
+
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+
+    expect(store.whiteSide).toBe('left')
+  })
+
+  // La bille blanche ouvre, où qu'elle soit assise : le côté ne déplace pas le tour.
+  it('still opens the game with the white ball when it sits on the right', () => {
+    const store = useGameStore()
+
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 }, 'right')
+
+    expect(store.activePlayer).toBe('player1')
+    expect(store.player1.color).toBe('white')
+  })
+
+  it('keeps each player on his side for the rematch', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 }, 'right')
+    store.finishGame()
+
+    store.rematch()
+
+    expect(store.whiteSide).toBe('right')
+    expect(store.player1.name).toBe('MICHEL')
+    expect(store.player2.name).toBe('ANDRE')
+  })
+
+  it('keeps each player on his side when restarting', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 }, 'right')
+
+    store.restartGame()
+
+    expect(store.whiteSide).toBe('right')
+  })
+
+  it('seats the white ball back on the left on reset', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 }, 'right')
+
+    store.resetGame()
+
+    expect(store.whiteSide).toBe('left')
+  })
+
+  it('persists the side and restores it', async () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 }, 'right')
+    await nextTick()
+    const saved = JSON.parse(localStorage.getItem(GAME_STORAGE_KEY)!).state as GameState
+    expect(saved.whiteSide).toBe('right')
+
+    setActivePinia(createPinia())
+    const resumed = useGameStore()
+    resumed.checkSavedGame()
+    resumed.resumeGame()
+
+    expect(resumed.whiteSide).toBe('right')
+    expect(resumed.player1.color).toBe('white')
+  })
+
+  // `whiteSide` n'entre pas dans le snapshot : il ne change jamais en cours de partie,
+  // l'undo n'a rien à en faire.
+  it('leaves the side untouched by an undo', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 10, player2: 8 }, 'right')
+    store.adjustScore('player1', 3)
+
+    store.undoLastAction()
+
+    expect(store.whiteSide).toBe('right')
   })
 })

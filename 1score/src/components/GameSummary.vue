@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { GAME_MODE_LABELS, type GameMode, type Player, type PlayerId } from '../types/game'
+import {
+  GAME_MODE_LABELS,
+  type GameMode,
+  type Player,
+  type PlayerId,
+  type TableSide,
+} from '../types/game'
 
 // Écran de récapitulatif façon « battle » (Story 1.10, UX-DR13), inspiré de Billiboard :
 // bandeau `NOM / distance` VS `NOM / distance`, puis deux colonnes joueur autour d'une
@@ -23,11 +29,20 @@ const props = withDefaults(
     // État visuel « nouveau record » par joueur (AC17) : JAMAIS déclenché ici, la
     // Story 3.5 l'activera sans modifier ce composant.
     records?: PerSide<boolean>
+    // Côté d'affichage de la bille blanche (Story 10.3, AR24) : le récap CONSERVE les
+    // côtés du scoreboard, sans quoi les deux se contrediraient d'un écran à l'autre.
+    whiteSide?: TableSide
   }>(),
-  { records: () => ({ player1: false, player2: false }) },
+  { records: () => ({ player1: false, player2: false }), whiteSide: 'left' },
 )
 
-const SIDES: readonly PlayerId[] = ['player1', 'player2']
+// Ordre des colonnes, gauche puis droite. `player1` est la bille BLANCHE et non le joueur
+// de gauche : c'est `whiteSide` qui dit où sa carte est posée.
+const SIDES = computed<readonly PlayerId[]>(() =>
+  props.whiteSide === 'left' ? ['player1', 'player2'] : ['player2', 'player1'],
+)
+const leftSide = computed<PlayerId>(() => SIDES.value[0]!)
+const rightSide = computed<PlayerId>(() => SIDES.value[1]!)
 
 // Classes écrites en toutes lettres pour le scanner JIT de Tailwind v4.
 const BALL_CLASSES: Record<PlayerId, string> = {
@@ -66,17 +81,20 @@ const players = computed<Record<PlayerId, Player>>(() => ({
 
 <template>
   <div data-testid="game-summary" class="flex h-full w-full flex-col bg-bg">
-    <!-- Bandeau : NOM / distance — VS — NOM / distance. Côté conservé : gauche = blanc.
-         Le mode de jeu en surtitre discret au-dessus du VS, jamais en concurrence avec
-         les noms (AC13). -->
+    <!-- Bandeau : NOM / distance — VS — NOM / distance, dans l'ordre des côtés du
+         scoreboard. Le mode de jeu en surtitre discret au-dessus du VS, jamais en
+         concurrence avec les noms (AC13). -->
     <header
       data-testid="summary-banner"
       class="flex shrink-0 items-center justify-between gap-4 px-4 py-3"
     >
       <div class="flex min-w-0 flex-1 items-center gap-3">
-        <span aria-hidden="true" class="h-5 w-5 shrink-0 rounded-full bg-player-white" />
-        <span data-testid="summary-player1" class="truncate text-label font-black text-white">
-          {{ player1.name }} / {{ player1.targetScore }}
+        <span aria-hidden="true" class="h-5 w-5 shrink-0 rounded-full" :class="BALL_CLASSES[leftSide]" />
+        <span
+          :data-testid="`summary-${leftSide}`"
+          class="truncate text-label font-black text-white"
+        >
+          {{ players[leftSide].name }} / {{ players[leftSide].targetScore }}
         </span>
       </div>
 
@@ -88,10 +106,13 @@ const players = computed<Record<PlayerId, Player>>(() => ({
       </div>
 
       <div class="flex min-w-0 flex-1 items-center justify-end gap-3">
-        <span data-testid="summary-player2" class="truncate text-label font-black text-white">
-          {{ player2.name }} / {{ player2.targetScore }}
+        <span
+          :data-testid="`summary-${rightSide}`"
+          class="truncate text-label font-black text-white"
+        >
+          {{ players[rightSide].name }} / {{ players[rightSide].targetScore }}
         </span>
-        <span aria-hidden="true" class="h-5 w-5 shrink-0 rounded-full bg-player-yellow" />
+        <span aria-hidden="true" class="h-5 w-5 shrink-0 rounded-full" :class="BALL_CLASSES[rightSide]" />
       </div>
     </header>
 

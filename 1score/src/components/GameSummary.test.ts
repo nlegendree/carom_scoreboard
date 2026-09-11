@@ -8,8 +8,8 @@ import type { Player, PlayerId } from '../types/game'
 
 type Props = InstanceType<typeof GameSummary>['$props']
 
-const michel: Player = { id: 'player1', name: 'MICHEL', score: 42, color: 'white', targetScore: 100 }
-const andre: Player = { id: 'player2', name: 'ANDRÉ', score: 15, color: 'yellow', targetScore: 80 }
+const michel: Player = { name: 'MICHEL', score: 42, color: 'white', targetScore: 100 }
+const andre: Player = { name: 'ANDRÉ', score: 15, color: 'yellow', targetScore: 80 }
 
 function mountSummary(overrides: Partial<Props> = {}) {
   return mount(GameSummary, {
@@ -133,5 +133,29 @@ describe('GameSummary', () => {
     expect(source).not.toContain('@pointerdown')
     expect(source).not.toContain('@click')
     expect(source).not.toContain('defineEmits')
+  })
+
+  // AR24 : le récap CONSERVE les côtés du scoreboard, sans quoi les deux se contrediraient
+  // d'un écran à l'autre. `player1` est la bille BLANCHE, pas le joueur de gauche.
+  it('keeps the white ball on the left by default', () => {
+    const wrapper = mountSummary()
+    const columns = wrapper.findAll('[data-testid="summary-column"]')
+
+    expect(columns.map((c) => c.attributes('data-side'))).toEqual(['player1', 'player2'])
+    expect(wrapper.find('[data-testid="summary-player1"]').text()).toContain('MICHEL')
+  })
+
+  it('seats the white ball on the right when the scoreboard did', () => {
+    const wrapper = mountSummary({ whiteSide: 'right' })
+    const columns = wrapper.findAll('[data-testid="summary-column"]')
+
+    expect(columns.map((c) => c.attributes('data-side'))).toEqual(['player2', 'player1'])
+  })
+
+  // Le bandeau suit les colonnes : le premier nom lu est celui de la carte de gauche.
+  it('orders the banner like the columns', () => {
+    const banner = mountSummary({ whiteSide: 'right' }).find('[data-testid="summary-banner"]')
+
+    expect(banner.text().indexOf('ANDRÉ')).toBeLessThan(banner.text().indexOf('MICHEL'))
   })
 })

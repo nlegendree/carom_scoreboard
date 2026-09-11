@@ -9,6 +9,10 @@ const EXPECTED_PATH_COUNTS: Record<PictoName, number> = {
   power: 2,
   'arrow-right': 2,
   'arrow-left': 2,
+  gear: 2,
+  close: 2,
+  'swap-balls': 5,
+  'swap-sides': 3,
 }
 
 describe('PictoIcon', () => {

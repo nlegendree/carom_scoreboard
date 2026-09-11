@@ -35,6 +35,37 @@ describe('AlphaKeyboard', () => {
     }
   })
 
+  // DT4 : les accents restants des prénoms français, plus le tiret et l'apostrophe.
+  it('emits the character of every added accent and sign key', async () => {
+    const wrapper = mount(AlphaKeyboard)
+
+    for (const testid of ['key-Ë', 'key-Ï', 'key-Î', 'key-Ô', 'key-Û', 'key-hyphen', 'key-apostrophe']) {
+      await wrapper.find(`[data-testid="${testid}"]`).trigger('pointerdown')
+    }
+
+    expect(wrapper.emitted('input')).toEqual([['Ë'], ['Ï'], ['Î'], ['Ô'], ['Û'], ['-'], ["'"]])
+  })
+
+  // AC7 : chaque caractère de ces prénoms a sa touche, espace mis à part.
+  it.each(['JEAN-PIERRE', "D'ARTAGNAN", 'JOËL', 'ANAÏS', 'BENOÎT', 'JÉRÔME'])(
+    'can spell %s',
+    (name) => {
+      const wrapper = mount(AlphaKeyboard)
+      const TESTIDS: Record<string, string> = { '-': 'key-hyphen', "'": 'key-apostrophe', ' ': 'key-space' }
+
+      for (const char of name) {
+        expect(wrapper.find(`[data-testid="${TESTIDS[char] ?? `key-${char}`}"]`).exists()).toBe(true)
+      }
+    },
+  )
+
+  // UX-DR54 : le clavier reste muet — ni buffer, ni plafond, ni timer. L'hôte porte la règle.
+  it('keeps no internal state at all', () => {
+    expect(source).not.toContain('ref(')
+    expect(source).not.toContain('computed(')
+    expect(source).not.toContain('watch(')
+  })
+
   it('emits a space from the space bar', async () => {
     const wrapper = mount(AlphaKeyboard)
 

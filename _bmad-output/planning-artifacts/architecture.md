@@ -208,7 +208,7 @@ interface GameState {
   currentInput: { player1: string; player2: string }
   // Persistance (Story 1.12, 2026-09-10) — forme EXACTE de ce qui est écrit en localStorage
   scoreAdjustments: { player1: number; player2: number }  // corrections −/+ (1.7), à part des reprises
-  sidesSwapped: boolean            // parité des côtés (1.7)
+  whiteSide: 'left' | 'right'      // côté d'affichage de la bille blanche (10.3) — remplace `sidesSwapped` (1.7)
   history: GameSnapshot[]          // pile d'annulation COMPLÈTE, persistée intégralement
   startedAt: number | null
   lastSaved: string
@@ -279,7 +279,17 @@ Trois évolutions dépassent l'habillage visuel et touchent `useGameStore` :
 
 **Risque technique à lever avant la Story 10.1 :** « Fermer l'application » (item de sidebar Accueil, fonctionnel) n'a pas d'équivalent standard fiable pour une PWA installée — `window.close()` ne fonctionne que sur une fenêtre ouverte par script. Spike de faisabilité requis (piste : confirmation puis tentative de fermeture, repli sur un retour à l'accueil du système). *Reporté hors Epic 10 (Nathan, 2026-09-11, passe epics) : l'item est affiché inerte, le spike viendra avec une story ultérieure.*
 
-*Passe epics du 2026-09-11 :* le retrait d'`ÉCHANGER` du store (point 2) est livré par la **Story 10.3** avec la scission de `swapPlayers` (le modèle joueur change à ce moment-là), et non par la 10.4. Piste retenue pour la scission : conserver l'invariant « `player1` = bille blanche = celui qui ouvre » et ajouter à `GameState` un champ d'affichage persisté (ex. `whiteSide: 'left' | 'right'`) qui remplace `sidesSwapped` — aucune règle de jeu touchée, `GAME_STORAGE_VERSION` incrémenté. À confirmer et consigner ici à la livraison de la 10.3.
+*Passe epics du 2026-09-11 :* le retrait d'`ÉCHANGER` du store (point 2) est livré par la **Story 10.3** avec la scission de `swapPlayers` (le modèle joueur change à ce moment-là), et non par la 10.4. Piste retenue pour la scission : conserver l'invariant « `player1` = bille blanche = celui qui ouvre » et ajouter à `GameState` un champ d'affichage persisté (ex. `whiteSide: 'left' | 'right'`) qui remplace `sidesSwapped` — aucune règle de jeu touchée, `GAME_STORAGE_VERSION` incrémenté.
+
+***Confirmé à la livraison de la Story 10.3 (2026-09-12).*** La piste a été retenue telle quelle :
+
+- `GameState.whiteSide: 'left' | 'right'` remplace `sidesSwapped`, avec `GAME_STORAGE_VERSION = 2` (une sauvegarde en version 1 est écartée au lancement, vérifié au navigateur : aucune pop-up « PARTIE EN COURS », entrée supprimée, accueil normal).
+- `whiteSide` entre dans `GameState` mais **PAS** dans `GameSnapshot` : il ne change jamais en cours de partie, l'undo n'a rien à en faire. Effet en cascade voulu — `mirrorSnapshot`, le champ `sidesSwapped` du snapshot et la branche miroir d'`undoLastAction` sont devenus du **code mort et ont été supprimés** ; `undoLastAction` redevient une restauration directe.
+- `Player.id` est supprimé (DT5) : la **bille** est la seule identité du joueur dans la partie, `makePlayer` prend une couleur. `resumeGame` restampe `color` seule, dans la pile aussi.
+- `startGame` gagne un 5e paramètre optionnel (`whiteSide = 'left'`) ; `rematch()` et `restartGame()` le reconduisent, `resetGame()` le remet à `'left'`.
+- **Aucune règle de calcul n'a bougé** : toutes les attentes de moyenne, meilleure série, `POUR n`, égalisatrice, undo et fin de partie de `useGameStore.test.ts` passent sans retouche — seuls les cas d'interversion ont été supprimés, le mécanisme n'existant plus.
+- ⚠️ **Piège de vue, à retenir** : `player1` étant la bille blanche et non le joueur de gauche, `GameView` résout **une seule fois** `leftPlayer`/`rightPlayer` (et `leftId`/`rightId`) et en fait dériver **l'ordre des panneaux ET la colonne du CTA** de la barre basse. Les faire dériver séparément place le CTA sous la carte du joueur qui a la main — l'inverse exact de la règle (c'est l'**assis** qui compte pour celui qui joue). Même vigilance dans `GameSummary`, dont `SIDES` est devenu un `computed` ordonné par `whiteSide` (AR24 : le récap conserve les côtés du scoreboard).
+- **Composant hors spec §10.4, consigné ici** : `PlayerSetupCard.vue` — carte de paramétrage purement présentationnelle, rendue deux fois par `HomeScreen`, sortie de la réécriture de l'étape joueurs comme `PictoIcon` était sorti de la 10.1.
 
 *Livré en Story 10.1 (2026-09-11)* : `SideBar` (props `items`/`exitItem`, type `SideBarItem` dans `types/ui.ts`, contenu fourni par l'écran, sortie calée en bas), `ModeTile` (tuile de mode, état BIENTÔT `disabled` + garde), `PictoIcon` (jeu de pictos SVG inline, tracés Lucide ISC, étendu par les stories suivantes — ajouté hors liste de la spec §10.4 pour ne pas dupliquer les SVG entre `SideBar`, `ModeTile` et `IconAction`), tokens de l'epic en `@theme static` dans `main.css`, `--color-cloth` `#0573BB`, logo `public/logo.png`. Dégradé `--gradient-bg` appliqué écran par écran : l'accueil (étape `category`) seulement en 10.1, les étapes `mode`/`players` gardent `ActionBar`. « Fermer l'application » affiché inerte (BIENTÔT), sans spike. *Passe de rendu (Nathan) :*
 - paysage uniquement ;

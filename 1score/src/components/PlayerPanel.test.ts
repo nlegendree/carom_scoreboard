@@ -7,7 +7,7 @@ import PlayerPanel from './PlayerPanel.vue'
 import type { Player } from '../types/game'
 
 function makePlayer(overrides: Partial<Player> = {}): Player {
-  return { id: 'player1', name: 'MICHEL', score: 0, color: 'white', targetScore: 0, ...overrides }
+  return { name: 'MICHEL', score: 0, color: 'white', targetScore: 0, ...overrides }
 }
 
 function mountPanel(player: Player, active = false) {
@@ -35,7 +35,7 @@ describe('PlayerPanel', () => {
   // Deux distances dissociées ne doivent pas s'afficher l'une à la place de l'autre.
   it('never shows the other player distance', () => {
     const white = mountPanel(makePlayer({ targetScore: 100 }))
-    const yellow = mountPanel(makePlayer({ id: 'player2', color: 'yellow', targetScore: 80 }))
+    const yellow = mountPanel(makePlayer({ color: 'yellow', targetScore: 80 }))
 
     expect(white.find('[data-testid="target-score"]').text()).toBe('100')
     expect(yellow.find('[data-testid="target-score"]').text()).toBe('80')
@@ -58,7 +58,7 @@ describe('PlayerPanel', () => {
     expect(white.classes()).toContain('bg-player-white')
     expect(white.classes()).toContain('text-on-player-white')
 
-    const yellow = mountPanel(makePlayer({ id: 'player2', color: 'yellow' }))
+    const yellow = mountPanel(makePlayer({ color: 'yellow' }))
     expect(yellow.classes()).toContain('bg-player-yellow')
     expect(yellow.classes()).toContain('text-on-player-yellow')
   })

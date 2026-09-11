@@ -7,15 +7,19 @@ import type {
   GameState,
   GameStatus,
   Player,
+  PlayerColor,
   PlayerId,
   Reprise,
+  TableSide,
 } from '../types/game'
 import { clearGameState, loadGameState, saveGameState } from '../services/storageService'
 
 const DEFAULT_MODE: GameMode = 'libre'
 // Plafond de saisie repris de la contrainte de série (FR7) : une distance de 4 chiffres
 // n'a pas de réalité en carambole. 0 signifie « distance libre » (aucun objectif).
-const MAX_TARGET_SCORE = 999
+// Exporté depuis la Story 10.3 (DT1) : `NumericPadDock` en dérive son plafond de chiffres,
+// au lieu de redéclarer un `MAX_DIGITS` qui pouvait diverger. Une seule source.
+export const MAX_TARGET_SCORE = 999
 // Plafond de la saisie d'une série, en NOMBRE DE CHIFFRES (FR7 : 999 points au plus).
 // Définition unique, exportée : `ScoreEntryModal` l'importe pour décider localement de
 // l'accusé de réception ou du refus, au lieu de réécrire la règle dans son template.
@@ -48,53 +52,22 @@ function normalizeTargetScore(raw: number): number {
   return Math.min(Math.max(Math.trunc(raw), 0), MAX_TARGET_SCORE)
 }
 
-function makePlayer(id: PlayerId): Player {
+// Prend une BILLE et non un identifiant de côté (Story 10.3) : `Player.id` a disparu, la
+// couleur est désormais la seule identité du joueur dans la partie.
+function makePlayer(color: PlayerColor): Player {
   return {
-    id,
     name: '',
     score: 0,
-    color: id === 'player1' ? 'white' : 'yellow',
+    color,
     targetScore: 0,
-  }
-}
-
-// Ré-exprime un snapshot dans des coordonnées de côtés inversées (Story 1.7, Décision 7).
-// Sert à restaurer un snapshot pris AVANT un `ÉCHANGER` sans défaire l'échange : les
-// joueurs restent où ils sont, seul l'état de jeu recule. Même permutation que
-// `swapPlayers` (colonnes, joueurs restampés, buffers, corrections) — à une différence
-// près, voulue : `activePlayer` est inversé lui aussi, car c'est le MÊME joueur qui
-// retrouve la main, simplement de l'autre côté. Ne pas « harmoniser » les deux : l'échange
-// en direct déplace des joueurs sous un tour attaché au côté ; le miroir traduit un état.
-// Fonction pure, exportée pour être testée seule.
-export function mirrorSnapshot(snapshot: GameSnapshot): GameSnapshot {
-  return {
-    player1: { ...snapshot.player2, id: 'player1', color: 'white' },
-    player2: { ...snapshot.player1, id: 'player2', color: 'yellow' },
-    activePlayer: snapshot.activePlayer === 'player1' ? 'player2' : 'player1',
-    reprises: snapshot.reprises.map((reprise) => ({
-      player1: reprise.player2,
-      player2: reprise.player1,
-      timestamp: reprise.timestamp,
-    })),
-    scoreAdjustments: {
-      player1: snapshot.scoreAdjustments.player2,
-      player2: snapshot.scoreAdjustments.player1,
-    },
-    currentInput: {
-      player1: snapshot.currentInput.player2,
-      player2: snapshot.currentInput.player1,
-    },
-    sidesSwapped: !snapshot.sidesSwapped,
-    // Fait de jeu attaché au côté droit, pas à une personne : recopié tel quel.
-    equalizingReprise: snapshot.equalizingReprise,
   }
 }
 
 export const useGameStore = defineStore('game', () => {
   const mode = ref<GameMode>(DEFAULT_MODE)
   const status = ref<GameStatus>('idle')
-  const player1 = ref<Player>(makePlayer('player1'))
-  const player2 = ref<Player>(makePlayer('player2'))
+  const player1 = ref<Player>(makePlayer('white'))
+  const player2 = ref<Player>(makePlayer('yellow'))
   const activePlayer = ref<PlayerId>('player1')
   // AR9 : `shallowRef` évite la réactivité profonde sur les sessions longues.
   // Conséquence à respecter impérativement : toute évolution de `reprises` doit REMPLACER
@@ -124,11 +97,8 @@ export const useGameStore = defineStore('game', () => {
   const winner = ref<PlayerId | null>(null)
   const finishedAt = ref<number | null>(null)
   // ⚠️ Porte sur le CÔTÉ DROIT (`player2`), pas sur une personne — cohérent avec le tour
-  // attaché au côté (Décision 15 de la 1.5). `swapPlayers` est donc BLOQUÉ tant qu'elle
-  // dure (revue 1.10, décision de Nathan du 2026-09-10) : sinon le joueur déjà à sa
-  // distance passerait à droite, sa série serait plafonnée à 0 et `checkEndOfGame`
-  // déclarerait une égalité fantôme. Dans le snapshot (AC9) : annuler la série gagnante
-  // du blanc défait l'offre. Conservé tel quel en `finished` : il dit si la partie s'est
+  // attaché à la bille (Décision 15 de la 1.5, relue en 10.3 : `player2` est le jaune).
+  // Dans le snapshot (AC9) : annuler la série gagnante du blanc défait l'offre. Conservé tel quel en `finished` : il dit si la partie s'est
   // jouée jusqu'à l'égalisatrice (historique 3.1, persistance 1.12).
   const equalizingReprise = ref(false)
   // Pop-up de décision attendue ; `null` = aucune. Vit ici et non dans la vue pour qu'un
@@ -142,14 +112,14 @@ export const useGameStore = defineStore('game', () => {
   // AR9 : `shallowRef` REMPLACÉ à chaque évolution, jamais `push` — un `push` figerait
   // `canUndo` sans qu'aucun test naïf ne le voie.
   const history = shallowRef<GameSnapshot[]>([])
-  // Parité des côtés, basculée par `swapPlayers`. C'est ce qui empêche `ANNULER` de défaire
-  // un échange par effet de bord (Décision 7) : un snapshot dont la parité diffère de la
-  // parité courante est mis en miroir avant restauration. Jamais restaurée par l'undo.
-  const sidesSwapped = ref(false)
+  // Côté d'affichage de la bille blanche (Story 10.3, AR24), choisi au paramétrage et fixe
+  // pour toute la partie. Champ d'AFFICHAGE : `GameView` et `GameSummary` en tirent l'ordre
+  // de leurs colonnes, aucune règle de score ne le lit. Hors snapshot, donc hors undo.
+  const whiteSide = ref<TableSide>('left')
 
   // INVARIANTE à maintenir : `player1`, `player2` et `reprises` sont capturés PAR RÉFÉRENCE
   // parce qu'ils sont toujours REMPLACÉS, jamais mutés en place (`recomputeScore`,
-  // `swapPlayers`, `addReprise`, `startGame`). Toute action future qui muterait un joueur
+  // `addReprise`, `startGame`). Toute action future qui muterait un joueur
   // ou une reprise en place (ex. renommage, Story 1.14) doit soit le remplacer, soit copier
   // ici. `scoreAdjustments` et `currentInput` sont mutés en place par `adjustScore` et
   // `appendScoreDigit` : ils sont COPIÉS, à la prise comme à la restauration.
@@ -161,37 +131,40 @@ export const useGameStore = defineStore('game', () => {
       reprises: reprises.value,
       scoreAdjustments: { ...scoreAdjustments.value },
       currentInput: { ...currentInput.value },
-      sidesSwapped: sidesSwapped.value,
       equalizingReprise: equalizingReprise.value,
     }
   }
 
   // Appelée en tête de chacune des TROIS actions annulables (série validée, main rendue,
-  // correction), après leurs gardes — jamais dans `swapPlayers` (décision produit), ni
-  // dans `addReprise`/`switchTurn` (primitives : une action = un snapshot).
+  // correction), après leurs gardes — jamais dans `addReprise`/`switchTurn` (primitives :
+  // une action = un snapshot).
   function pushHistory(): void {
     history.value = [...history.value, takeSnapshot()].slice(-MAX_UNDO_DEPTH)
   }
 
   const canUndo = computed(() => history.value.length > 0)
 
-  // Le 4e paramètre reste optionnel : sans réglage de format, le parcours de démarrage
-  // de la Story 1.3 est strictement inchangé et les deux joueurs jouent en distance
-  // libre. La distance appartient au joueur (handicap), pas à la partie.
+  // Les 4e et 5e paramètres restent optionnels : sans réglage de format ni choix de côté,
+  // le parcours de démarrage de la Story 1.3 est strictement inchangé — les deux joueurs
+  // jouent en distance libre, le blanc est assis à gauche. La distance appartient au joueur
+  // (handicap), pas à la partie.
+  // `player1Name` est le joueur à la bille BLANCHE et `player2Name` celui à la jaune
+  // (Story 10.3) : c'est la bille qui nomme les paramètres, plus le côté.
   function startGame(
     newMode: GameMode,
     player1Name: string,
     player2Name: string,
     targetScores: TargetScores = NO_TARGET_SCORES,
+    newWhiteSide: TableSide = 'left',
   ): void {
     mode.value = newMode
     player1.value = {
-      ...makePlayer('player1'),
+      ...makePlayer('white'),
       name: player1Name,
       targetScore: normalizeTargetScore(targetScores.player1),
     }
     player2.value = {
-      ...makePlayer('player2'),
+      ...makePlayer('yellow'),
       name: player2Name,
       targetScore: normalizeTargetScore(targetScores.player2),
     }
@@ -204,52 +177,11 @@ export const useGameStore = defineStore('game', () => {
     pendingRestore.value = null
     scoreAdjustments.value = { player1: 0, player2: 0 }
     history.value = []
-    sidesSwapped.value = false
+    whiteSide.value = newWhiteSide
     winner.value = null
     finishedAt.value = null
     equalizingReprise.value = false
     endPrompt.value = null
-    lastSaved.value = new Date().toISOString()
-  }
-
-  // La bille reste attachée au côté (gauche blanc, droite jaune) : intervertir les billes
-  // consiste donc à échanger les joueurs de côté, pas à repeindre les panneaux.
-  // Le spread transporte tout ce qui appartient au joueur — nom, score et distance —
-  // et seuls `id`/`color`, attachés au côté, sont réécrits.
-  // Le tour reste lui aussi attaché au côté : `activePlayer` n'est volontairement pas
-  // déplacé (règle produit arrêtée en revue de la Story 1.3 — le joueur de gauche commence).
-  // Disponible pendant TOUTE la partie depuis le 2026-09-09 (le bouton ÉCHANGER ne
-  // disparaît plus à la première série). Conséquence directe : `reprises` range les séries
-  // par CÔTÉ et le score en est recalculé — sans permuter aussi les colonnes, chaque joueur
-  // hériterait de l'historique de l'autre, et donc de son total, de sa moyenne et de sa
-  // meilleure série.
-  // Hors pile d'annulation (Story 1.7, décision produit) : pour revenir, on rappuie. Seule
-  // la parité `sidesSwapped` est basculée, pour que les snapshots antérieurs restent
-  // restaurables sans défaire l'échange.
-  // Bloqué pendant la reprise égalisatrice : le drapeau est attaché au côté droit, un
-  // échange ferait jouer l'égalisatrice au joueur qui vient d'atteindre sa distance.
-  function swapPlayers(): void {
-    if (status.value !== 'playing' || equalizingReprise.value) return
-
-    sidesSwapped.value = !sidesSwapped.value
-    reprises.value = reprises.value.map((reprise) => ({
-      player1: reprise.player2,
-      player2: reprise.player1,
-      timestamp: reprise.timestamp,
-    }))
-
-    const previousPlayer1 = player1.value
-
-    player1.value = { ...player2.value, id: 'player1', color: 'white' }
-    player2.value = { ...previousPlayer1, id: 'player2', color: 'yellow' }
-    currentInput.value = {
-      player1: currentInput.value.player2,
-      player2: currentInput.value.player1,
-    }
-    scoreAdjustments.value = {
-      player1: scoreAdjustments.value.player2,
-      player2: scoreAdjustments.value.player1,
-    }
     lastSaved.value = new Date().toISOString()
   }
 
@@ -273,7 +205,7 @@ export const useGameStore = defineStore('game', () => {
 
   // Correction manuelle du total (boutons − / + du panneau). Volontairement NON bornée :
   // un score peut légitimement descendre sous zéro au carambole (pénalités, Story 1.9).
-  // Garde `playing` comme `swapPlayers` : hors partie, aucune action ne doit muter l'état
+  // Garde `playing` : hors partie, aucune action ne doit muter l'état
   // (revue de code du 2026-09-09, appliqué à toutes les actions de jeu ci-dessous).
   // Un appui = une action annulable (Story 1.7, Décision 8) : cinq `+` = cinq `ANNULER`.
   function adjustScore(playerId: PlayerId, delta: number): void {
@@ -476,7 +408,7 @@ export const useGameStore = defineStore('game', () => {
   // droit à UNE série pour égaliser. Le jaune, lui, gagne immédiatement s'il atteint le
   // premier : les deux ont alors joué le même nombre de reprises.
   // Appelée en FIN des deux actions de série (`validateScoreInput`, `passTurn`) et
-  // d'elles seules (AC8) : ni `adjustScore`, ni `addReprise`, ni `swapPlayers`.
+  // d'elles seules (AC8) : ni `adjustScore`, ni `addReprise`.
   // Le premier cas passe AVANT les autres : en égalisatrice, la série du jaune termine
   // la partie même s'il n'atteint pas sa distance.
   function checkEndOfGame(playerId: PlayerId): void {
@@ -546,13 +478,16 @@ export const useGameStore = defineStore('game', () => {
   }
 
   // `UNE PARTIE DE PLUS` : même mode, mêmes noms, mêmes distances, chacun du côté où il
-  // est. Passe par `startGame`, qui réassigne tout (pile, parité, état de fin).
+  // est. Passe par `startGame`, qui réassigne tout (pile, côté d'affichage, état de fin).
   function rematch(): void {
     if (status.value !== 'finished') return
-    startGame(mode.value, player1.value.name, player2.value.name, {
-      player1: player1.value.targetScore,
-      player2: player2.value.targetScore,
-    })
+    startGame(
+      mode.value,
+      player1.value.name,
+      player2.value.name,
+      { player1: player1.value.targetScore, player2: player2.value.targetScore },
+      whiteSide.value,
+    )
   }
 
   // Picto RECOMMENCER (Story 1.15) : la partie repart de zéro SANS passer par
@@ -560,10 +495,13 @@ export const useGameStore = defineStore('game', () => {
   // recette que `rematch()`, gardée sur `playing` : chacun repart du côté où il est.
   function restartGame(): void {
     if (status.value !== 'playing') return
-    startGame(mode.value, player1.value.name, player2.value.name, {
-      player1: player1.value.targetScore,
-      player2: player2.value.targetScore,
-    })
+    startGame(
+      mode.value,
+      player1.value.name,
+      player2.value.name,
+      { player1: player1.value.targetScore, player2: player2.value.targetScore },
+      whiteSide.value,
+    )
   }
 
   // `ANNULER` : revient d'UNE action en arrière à chaque appel (FR9, UX-DR16). Action
@@ -579,16 +517,17 @@ export const useGameStore = defineStore('game', () => {
     if (previous === undefined) return
 
     history.value = history.value.slice(0, -1)
-    const snapshot =
-      previous.sidesSwapped === sidesSwapped.value ? previous : mirrorSnapshot(previous)
+    // Restauration DIRECTE depuis la Story 10.3 : sans `ÉCHANGER` en cours de partie, la
+    // parité des côtés ne varie plus et la mise en miroir d'un snapshot (`mirrorSnapshot`)
+    // est devenue du code mort — supprimée, pas gardée « au cas où ».
+    const snapshot = previous
 
     player1.value = snapshot.player1
     player2.value = snapshot.player2
     activePlayer.value = snapshot.activePlayer
     reprises.value = snapshot.reprises
     // Copies défensives : l'état vivant ne doit jamais aliaser un objet de snapshot —
-    // `adjustScore` et `appendScoreDigit` mutent ces trois objets en place, et un miroir
-    // partage les siens avec le snapshot dépilé.
+    // `adjustScore` et `appendScoreDigit` mutent ces deux objets en place.
     scoreAdjustments.value = { ...snapshot.scoreAdjustments }
     currentInput.value = { ...snapshot.currentInput }
     equalizingReprise.value = snapshot.equalizingReprise
@@ -645,15 +584,15 @@ export const useGameStore = defineStore('game', () => {
   function resetGame(): void {
     mode.value = DEFAULT_MODE
     status.value = 'idle'
-    player1.value = makePlayer('player1')
-    player2.value = makePlayer('player2')
+    player1.value = makePlayer('white')
+    player2.value = makePlayer('yellow')
     activePlayer.value = 'player1'
     reprises.value = []
     currentInput.value = { player1: '', player2: '' }
     entryOpen.value = false
     scoreAdjustments.value = { player1: 0, player2: 0 }
     history.value = []
-    sidesSwapped.value = false
+    whiteSide.value = 'left'
     winner.value = null
     finishedAt.value = null
     equalizingReprise.value = false
@@ -680,7 +619,7 @@ export const useGameStore = defineStore('game', () => {
     reprises: reprises.value,
     currentInput: { ...currentInput.value },
     scoreAdjustments: { ...scoreAdjustments.value },
-    sidesSwapped: sidesSwapped.value,
+    whiteSide: whiteSide.value,
     history: history.value,
     startedAt: startedAt.value,
     lastSaved: lastSaved.value,
@@ -709,10 +648,10 @@ export const useGameStore = defineStore('game', () => {
   }
 
   // `REPRENDRE LA PARTIE` : le scoreboard revient exactement où il en était. Les joueurs
-  // sont RESTAMPÉS (`id`/`color` appartiennent au côté, pas à la sauvegarde) — dans la
-  // pile aussi, sinon le premier `ANNULER` réinstallerait ceux de la sauvegarde. La pile
-  // est REMPLACÉE (`shallowRef`, jamais `push`), et `sidesSwapped` restauré avec elle —
-  // sans lui, les snapshots pris avant un `ÉCHANGER` seraient remis du mauvais côté.
+  // sont RESTAMPÉS (`color` appartient au rang `player1`/`player2`, pas à la sauvegarde) —
+  // dans la pile aussi, sinon le premier `ANNULER` réinstallerait ceux de la sauvegarde. La
+  // pile est REMPLACÉE (`shallowRef`, jamais `push`). `whiteSide` est restauré pour que les
+  // joueurs retrouvent le côté où ils étaient assis.
   // `status` est posé EN DERNIER : c'est lui qui fait basculer `GameView`, tout le reste
   // doit être en place avant. Le `watch` réécrit ensuite le même état (nouvelle enveloppe).
   function resumeGame(): void {
@@ -720,18 +659,18 @@ export const useGameStore = defineStore('game', () => {
     if (saved === null || status.value !== 'idle') return
 
     mode.value = saved.mode
-    player1.value = { ...saved.player1, id: 'player1', color: 'white' }
-    player2.value = { ...saved.player2, id: 'player2', color: 'yellow' }
+    player1.value = { ...saved.player1, color: 'white' }
+    player2.value = { ...saved.player2, color: 'yellow' }
     activePlayer.value = saved.activePlayer
     reprises.value = saved.reprises
     currentInput.value = { ...saved.currentInput }
     entryOpen.value = saved.entryOpen
     scoreAdjustments.value = { ...saved.scoreAdjustments }
-    sidesSwapped.value = saved.sidesSwapped
+    whiteSide.value = saved.whiteSide
     history.value = saved.history.map((snapshot) => ({
       ...snapshot,
-      player1: { ...snapshot.player1, id: 'player1', color: 'white' },
-      player2: { ...snapshot.player2, id: 'player2', color: 'yellow' },
+      player1: { ...snapshot.player1, color: 'white' },
+      player2: { ...snapshot.player2, color: 'yellow' },
     }))
     startedAt.value = saved.startedAt
     lastSaved.value = saved.lastSaved
@@ -764,7 +703,7 @@ export const useGameStore = defineStore('game', () => {
     lastSaved,
     // Exposés en lecture (tests, pilotage déporté) — jamais à muter depuis un composant (AR17).
     history,
-    sidesSwapped,
+    whiteSide,
     scoreAdjustments,
     canUndo,
     completedReprises,
@@ -777,7 +716,6 @@ export const useGameStore = defineStore('game', () => {
     endPrompt,
     pendingRestore,
     startGame,
-    swapPlayers,
     resetGame,
     appendScoreDigit,
     clearScoreInput,

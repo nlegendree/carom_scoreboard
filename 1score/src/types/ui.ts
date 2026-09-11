@@ -2,7 +2,16 @@
 // reste dans `game.ts` : rien ici ne touche au store.
 
 // Noms du jeu de pictos de `PictoIcon`. Les stories suivantes y ajoutent les leurs.
-export type PictoName = 'training' | 'signup' | 'power' | 'arrow-right' | 'arrow-left'
+export type PictoName =
+  | 'training'
+  | 'signup'
+  | 'power'
+  | 'arrow-right'
+  | 'arrow-left'
+  | 'gear'
+  | 'close'
+  | 'swap-balls'
+  | 'swap-sides'
 
 // `soon` : fonction affichée mais pas encore livrée (état BIENTÔT, inerte).
 export type ItemState = 'normal' | 'soon'

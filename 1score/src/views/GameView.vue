@@ -30,6 +30,7 @@ const {
   endPrompt,
   winner,
   pendingRestore,
+  whiteSide,
 } = storeToRefs(gameStore)
 
 // AC15 : la reprise est OUVERTE par le joueur blanc. Le numéro affiché compte donc les
@@ -64,6 +65,16 @@ const ctaLabel = computed(() => (isThreeCushions.value ? '+1 POINT' : 'AJOUTER L
 
 // La saisie porte toujours sur le joueur qui a la main.
 const entryPlayer = computed(() => (activePlayer.value === 'player1' ? player1.value : player2.value))
+
+// ⚠️ Résolution UNIQUE des côtés d'écran (Story 10.3). `player1` est la bille BLANCHE, pas
+// le joueur de gauche : avec `whiteSide === 'right'`, il est assis à DROITE. L'ordre des
+// panneaux ET la colonne du CTA de la barre basse dérivent tous deux d'ici — les faire
+// dériver séparément mettrait le CTA sous la carte du joueur qui a la main, l'inverse
+// exact de la règle (c'est l'ASSIS qui compte pour celui qui joue).
+const leftId = computed<PlayerId>(() => (whiteSide.value === 'left' ? 'player1' : 'player2'))
+const rightId = computed<PlayerId>(() => (whiteSide.value === 'left' ? 'player2' : 'player1'))
+const leftPlayer = computed(() => (leftId.value === 'player1' ? player1.value : player2.value))
+const rightPlayer = computed(() => (rightId.value === 'player1' ? player1.value : player2.value))
 
 // ⚠️ Le CTA se place du côté du joueur qui N'A PAS la main : au billard, c'est
 // l'adversaire assis qui compte les points de celui qui joue. Le bouton est donc à
@@ -122,11 +133,6 @@ function adjustScore(playerId: PlayerId, delta: number): void {
 function undoLastAction(): void {
   if (!panelsAcceptInput()) return
   gameStore.undoLastAction()
-}
-
-function swapPlayers(): void {
-  if (!panelsAcceptInput()) return
-  gameStore.swapPlayers()
 }
 
 function openEntry(): void {
@@ -255,29 +261,28 @@ function confirmRestart(): void {
         <!-- On rend la main en tapant la zone de l'ADVERSAIRE : le panneau inactif émet,
              celui qui a déjà la main reste inerte (garde dans `PlayerPanel`). -->
         <PlayerPanel
-          :player="player1"
-          :active="activePlayer === 'player1'"
-          :average="averages.player1"
-          :bestSeries="bestSeries.player1"
+          :player="leftPlayer"
+          :active="activePlayer === leftId"
+          :average="averages[leftId]"
+          :bestSeries="bestSeries[leftId]"
           :showRemaining="isThreeCushions"
           @pass-turn="passTurn"
-          @adjust-score="adjustScore('player1', $event)"
+          @adjust-score="adjustScore(leftId, $event)"
         />
         <CenterPanel
           :repriseNumber="repriseNumber"
           :canUndo="canUndo"
           :secondsRemaining="shotClockSeconds"
           @undo="undoLastAction"
-          @swap-players="swapPlayers"
         />
         <PlayerPanel
-          :player="player2"
-          :active="activePlayer === 'player2'"
-          :average="averages.player2"
-          :bestSeries="bestSeries.player2"
+          :player="rightPlayer"
+          :active="activePlayer === rightId"
+          :average="averages[rightId]"
+          :bestSeries="bestSeries[rightId]"
           :showRemaining="isThreeCushions"
           @pass-turn="passTurn"
-          @adjust-score="adjustScore('player2', $event)"
+          @adjust-score="adjustScore(rightId, $event)"
         />
       </div>
 
@@ -293,9 +298,9 @@ function confirmRestart(): void {
           <div class="-mx-4 flex flex-1 items-center">
             <div class="flex w-2/5 justify-start gap-2">
               <button
-                v-if="entrySide === 'player1'"
+                v-if="entrySide === leftId"
                 :data-testid="ctaTestId"
-                data-side="player1"
+                :data-side="leftId"
                 class="flex w-full min-h-[var(--size-touch-target)] items-center justify-center rounded-2xl px-4 text-label font-black tracking-[0.1em] bg-accent text-on-accent touch-manipulation select-none active:brightness-90"
                 @pointerdown="pressCta"
               >
@@ -307,7 +312,7 @@ function confirmRestart(): void {
               <template v-else>
                 <button
                   data-testid="exit-button"
-                  data-side="player1"
+                  :data-side="leftId"
                   aria-label="Quitter la partie"
                   class="ml-4"
                   :class="PICTO_BUTTON_CLASSES"
@@ -330,7 +335,7 @@ function confirmRestart(): void {
                 </button>
                 <button
                   data-testid="restart-button"
-                  data-side="player1"
+                  :data-side="leftId"
                   aria-label="Recommencer la partie"
                   :disabled="!canUndo"
                   class="disabled:opacity-30"
@@ -358,9 +363,9 @@ function confirmRestart(): void {
 
             <div class="flex w-2/5 justify-end gap-2">
               <button
-                v-if="entrySide === 'player2'"
+                v-if="entrySide === rightId"
                 :data-testid="ctaTestId"
-                data-side="player2"
+                :data-side="rightId"
                 class="flex w-full min-h-[var(--size-touch-target)] items-center justify-center rounded-2xl px-4 text-label font-black tracking-[0.1em] bg-accent text-on-accent touch-manipulation select-none active:brightness-90"
                 @pointerdown="pressCta"
               >
@@ -369,7 +374,7 @@ function confirmRestart(): void {
               <template v-else>
                 <button
                   data-testid="restart-button"
-                  data-side="player2"
+                  :data-side="rightId"
                   aria-label="Recommencer la partie"
                   :disabled="!canUndo"
                   class="disabled:opacity-30"
@@ -392,7 +397,7 @@ function confirmRestart(): void {
                 </button>
                 <button
                   data-testid="exit-button"
-                  data-side="player2"
+                  :data-side="rightId"
                   aria-label="Quitter la partie"
                   class="mr-4"
                   :class="PICTO_BUTTON_CLASSES"
@@ -486,6 +491,7 @@ function confirmRestart(): void {
         :bestSeries="bestSeries"
         :repriseCounts="repriseCounts"
         :winner="winner"
+        :whiteSide="whiteSide"
       />
 
       <ActionBar :showBack="false">

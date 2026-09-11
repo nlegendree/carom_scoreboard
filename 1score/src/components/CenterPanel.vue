@@ -15,7 +15,10 @@ defineProps<{
 // `undo` : `ANNULER` revient d'UNE action en arrière à chaque appui (Story 1.7) ; la vue
 // le branche sur `undoLastAction()`. Grisé (`disabled`) à pile vide, jamais inerte en
 // silence.
-const emit = defineEmits<{ undo: []; 'swap-players': [] }>()
+// `ÉCHANGER` a disparu en Story 10.3 (AR22, DT7) : le choix du côté et de la bille se fait
+// une fois pour toutes au paramétrage, et plus rien ne déplace les joueurs en cours de
+// partie. `undo` reste le seul emit de la console.
+const emit = defineEmits<{ undo: [] }>()
 </script>
 
 <template>
@@ -46,18 +49,6 @@ const emit = defineEmits<{ undo: []; 'swap-players': [] }>()
       @pointerdown="emit('undo')"
     >
       ANNULER
-    </button>
-
-    <!-- Disponible pendant TOUTE la partie : il ne disparaît plus à la première série,
-         pour permettre de corriger un côté à tout moment. Hors pile d'annulation : il est
-         son propre inverse, on rappuie dessus pour revenir (décision du 2026-09-09).
-         Un mot, pas de glyphe — comme ANNULER. -->
-    <button
-      data-testid="swap-players-button"
-      class="flex min-h-[var(--size-touch-target)] w-full items-center justify-center rounded-lg px-4 text-stat font-bold text-on-accent bg-accent touch-manipulation select-none"
-      @pointerdown="emit('swap-players')"
-    >
-      ÉCHANGER
     </button>
   </div>
 </template>
