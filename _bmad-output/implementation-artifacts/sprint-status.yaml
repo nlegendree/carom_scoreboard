@@ -63,12 +63,12 @@ development_status:
   1-17-detecter-linactivite-prolongee-et-alerter-lutilisateur: done # annulée sans code — une série de JDS peut durer 1 h+, l'inactivité de partie n'est pas un signal ; veille tablette = sujet d'accueil (décision de Nathan, 2026-09-10)
   epic-1-retrospective: done
 
-  epic-2: in-progress
+  epic-2: done
   2-1-selectionner-le-mode-3-bandes-et-demarrer-une-partie-avec-chronometre-actif: done
   2-2-incrementer-le-score-point-par-point-tap-du-joueur-assis: done
   2-3-saisir-un-score-global-en-fin-de-serie-backup-pave-numerique: done # annulée sans code — pas de pavé de secours au 3 Bandes, le +1 suffit (décision de Nathan, 2026-09-11)
   2-4-afficher-le-compte-a-rebours-pour-n-en-3-bandes: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
 
   epic-3: backlog
   3-1-sauvegarder-automatiquement-une-partie-terminee-dans-lhistorique: backlog
