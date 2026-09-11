@@ -36,7 +36,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-09-08
-last_updated: 2026-09-10
+last_updated: 2026-09-11
 project: explore
 project_key: NOKEY
 tracking_system: file-system
@@ -64,7 +64,7 @@ development_status:
   epic-1-retrospective: done
 
   epic-2: in-progress
-  2-1-selectionner-le-mode-3-bandes-et-demarrer-une-partie-avec-chronometre-actif: in-progress
+  2-1-selectionner-le-mode-3-bandes-et-demarrer-une-partie-avec-chronometre-actif: review
   2-2-incrementer-le-score-point-par-point-tap-du-joueur-assis: backlog
   2-3-saisir-un-score-global-en-fin-de-serie-backup-pave-numerique: backlog
   epic-2-retrospective: optional
