@@ -7,7 +7,7 @@ Créé le 2026-09-10 en fin de dev-story. À traiter au moment de la code-review
 ## 1. Rattacher le dépôt GitHub au site Netlify (AR11)
 
 - [ ] Se connecter sur Netlify › **Add new site** › **Import an existing project** › **GitHub** › choisir `nlegendree/carom_scoreboard`, branche `main`.
-- [ ] Vérifier que Netlify a lu `netlify.toml` (base `carom-scoreboard`, publish `dist`, commande `npm run build`). Ne rien saisir à la main dans le formulaire si ces valeurs sont déjà remplies.
+- [ ] Vérifier que Netlify a lu `netlify.toml` (base `1score`, publish `dist`, commande `npm run build`). Ne rien saisir à la main dans le formulaire si ces valeurs sont déjà remplies.
 - [ ] Lancer le premier déploiement et lire le log de build.
   - Si le build échoue sur la version de Node (`.nvmrc` = 26.8.1), ajouter dans `netlify.toml` :
     ```toml

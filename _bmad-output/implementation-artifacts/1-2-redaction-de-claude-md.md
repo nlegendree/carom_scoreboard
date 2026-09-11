@@ -12,12 +12,12 @@ so that chaque session de code IA génère un code cohérent avec l'architecture
 
 ## Acceptance Criteria
 
-1. **Given** le projet initialisé (Story 1.1) **When** je crée `CLAUDE.md` à la racine du sous-dossier applicatif `carom-scoreboard/` **Then** le fichier documente : les conventions de nommage (AR15), la règle Pointer Events (AR8), la gestion d'erreurs storage en couche service (AR12), les règles Pinia (AR17, AR18), les tests co-localisés (AR16) et les breakpoints Tailwind (AR19).
+1. **Given** le projet initialisé (Story 1.1) **When** je crée `CLAUDE.md` à la racine du sous-dossier applicatif `1score/` **Then** le fichier documente : les conventions de nommage (AR15), la règle Pointer Events (AR8), la gestion d'erreurs storage en couche service (AR12), les règles Pinia (AR17, AR18), les tests co-localisés (AR16) et les breakpoints Tailwind (AR19).
 2. **Given** `CLAUDE.md` rédigé **When** un futur agent IA l'utilise comme référence avant de coder **Then** il dispose de toutes les règles obligatoires de l'architecture sans consulter un autre document.
 
 ## Tasks / Subtasks
 
-- [x] Task 1 : Créer `carom-scoreboard/CLAUDE.md` (AC: #1)
+- [x] Task 1 : Créer `1score/CLAUDE.md` (AC: #1)
   - [x] Subtask 1.1 : Section conventions de nommage — composants Vue PascalCase, stores/composables `use`+camelCase, services camelCase+suffixe `Service`, types PascalCase sans préfixe `I`, tests `Component.test.ts`, vues PascalCase+suffixe `View`, emits Vue kebab-case, actions Pinia verbe+nom, exports nommés uniquement (jamais de default export pour composables/services) (AR15)
   - [x] Subtask 1.2 : Section règle Pointer Events — `@pointerdown` obligatoire sur tout élément tactile interactif, jamais `@touchstart` ni `@click` seul ; rappel du CSS global obligatoire (`touch-action: manipulation`, `user-select: none`, `-webkit-tap-highlight-color: transparent`) (AR8)
   - [x] Subtask 1.3 : Section gestion d'erreurs storage — `try/catch` + `console.error` exclusivement dans la couche service (`storageService.ts`, `databaseService.ts`), jamais dans les composants (AR12)
@@ -31,15 +31,15 @@ so that chaque session de code IA génère un code cohérent avec l'architecture
 
 ### Review Findings
 
-- [x] [Review][Decision] Contradiction interne AR12 vs exemple AR18 — Résolu : l'exemple AR18 (`loadHistory`) a été réécrit pour déléguer l'appel Dexie à une fonction `databaseService.ts` (`fetchRecentGames`) qui porte le `try/catch`/`console.error`, conformément à l'« exclusivement » d'AR12 ; le store se contente désormais d'`await` sans son propre `try/catch`. [carom-scoreboard/CLAUDE.md:88-104]
-- [x] [Review][Patch] Classe Tailwind invalide dans l'exemple AR8 (`touch-action-manipulation` n'existe pas ; la vraie classe est `touch-manipulation`) [carom-scoreboard/CLAUDE.md:39] — corrigé
-- [x] [Review][Patch] Tension rédactionnelle entre l'affirmation d'auto-suffisance totale de l'intro et la section « En cas de divergence » qui renvoie vers `architecture.md` — reformulé pour clarifier que l'auto-suffisance vaut pour l'usage quotidien, l'architecture ne faisant foi qu'en cas de divergence future [carom-scoreboard/CLAUDE.md:3] — corrigé
-- [x] [Review][Patch] Le CSS global obligatoire (AR8) ne cible que `button, [role="button"]`, alors que la règle textuelle exige `@pointerdown` sur « tout élément tactile/interactif critique » — ajouté une précision : tout élément interactif custom doit porter `role="button"` [carom-scoreboard/CLAUDE.md:44-49] — corrigé
-- [x] [Review][Defer] Formule « élimine le délai 300ms iPad/Android » (AR8) potentiellement obsolète sur navigateurs modernes — héritée telle quelle de la formulation source `architecture.md`, à corriger au niveau de la source [carom-scoreboard/CLAUDE.md:35] — deferred, pre-existing
-- [x] [Review][Defer] Breakpoint `lg:` documenté à ≥1280px ne correspond pas à la valeur par défaut Tailwind (1024px = `lg`, 1280px = `xl` par défaut) et aucun breakpoint explicite ne couvre la plage 768–1280px — hérité tel quel d'AR19 dans `architecture.md` [carom-scoreboard/CLAUDE.md:112-119] — deferred, pre-existing
-- [x] [Review][Defer] L'exemple d'emit `update:score` (convention « kebab-case », AR15) contient un `:` non kebab-case — incohérence héritée de la formulation source [carom-scoreboard/CLAUDE.md:30] — deferred, pre-existing
-- [x] [Review][Defer] Plusieurs règles (AR12 storage, AR17 mutations, AR18 async, AR16 tests, AR8 « élément critique ») sont formulées avec un périmètre strict (composant / store Pinia / fichiers nommés explicitement) laissant des zones grises pour les composables, les futurs fichiers `*Service.ts`, ou les tests de store/service — ambiguïtés héritées de la formulation exacte d'`architecture.md`, à traiter lors d'une story future touchant concrètement ces couches [carom-scoreboard/CLAUDE.md:16-119] — deferred, pre-existing
-- [x] [Review][Defer] Aucune convention documentée pour l'identifiant de store Pinia (`defineStore('id', ...)`) ni pour les fichiers utilitaires génériques non préfixés `use` — absents du tableau de nommage source (AR15) [carom-scoreboard/CLAUDE.md:16-31] — deferred, pre-existing
+- [x] [Review][Decision] Contradiction interne AR12 vs exemple AR18 — Résolu : l'exemple AR18 (`loadHistory`) a été réécrit pour déléguer l'appel Dexie à une fonction `databaseService.ts` (`fetchRecentGames`) qui porte le `try/catch`/`console.error`, conformément à l'« exclusivement » d'AR12 ; le store se contente désormais d'`await` sans son propre `try/catch`. [1score/CLAUDE.md:88-104]
+- [x] [Review][Patch] Classe Tailwind invalide dans l'exemple AR8 (`touch-action-manipulation` n'existe pas ; la vraie classe est `touch-manipulation`) [1score/CLAUDE.md:39] — corrigé
+- [x] [Review][Patch] Tension rédactionnelle entre l'affirmation d'auto-suffisance totale de l'intro et la section « En cas de divergence » qui renvoie vers `architecture.md` — reformulé pour clarifier que l'auto-suffisance vaut pour l'usage quotidien, l'architecture ne faisant foi qu'en cas de divergence future [1score/CLAUDE.md:3] — corrigé
+- [x] [Review][Patch] Le CSS global obligatoire (AR8) ne cible que `button, [role="button"]`, alors que la règle textuelle exige `@pointerdown` sur « tout élément tactile/interactif critique » — ajouté une précision : tout élément interactif custom doit porter `role="button"` [1score/CLAUDE.md:44-49] — corrigé
+- [x] [Review][Defer] Formule « élimine le délai 300ms iPad/Android » (AR8) potentiellement obsolète sur navigateurs modernes — héritée telle quelle de la formulation source `architecture.md`, à corriger au niveau de la source [1score/CLAUDE.md:35] — deferred, pre-existing
+- [x] [Review][Defer] Breakpoint `lg:` documenté à ≥1280px ne correspond pas à la valeur par défaut Tailwind (1024px = `lg`, 1280px = `xl` par défaut) et aucun breakpoint explicite ne couvre la plage 768–1280px — hérité tel quel d'AR19 dans `architecture.md` [1score/CLAUDE.md:112-119] — deferred, pre-existing
+- [x] [Review][Defer] L'exemple d'emit `update:score` (convention « kebab-case », AR15) contient un `:` non kebab-case — incohérence héritée de la formulation source [1score/CLAUDE.md:30] — deferred, pre-existing
+- [x] [Review][Defer] Plusieurs règles (AR12 storage, AR17 mutations, AR18 async, AR16 tests, AR8 « élément critique ») sont formulées avec un périmètre strict (composant / store Pinia / fichiers nommés explicitement) laissant des zones grises pour les composables, les futurs fichiers `*Service.ts`, ou les tests de store/service — ambiguïtés héritées de la formulation exacte d'`architecture.md`, à traiter lors d'une story future touchant concrètement ces couches [1score/CLAUDE.md:16-119] — deferred, pre-existing
+- [x] [Review][Defer] Aucune convention documentée pour l'identifiant de store Pinia (`defineStore('id', ...)`) ni pour les fichiers utilitaires génériques non préfixés `use` — absents du tableau de nommage source (AR15) [1score/CLAUDE.md:16-31] — deferred, pre-existing
 
 ## Dev Notes
 
@@ -49,7 +49,7 @@ Cette story ne produit aucun code fonctionnel : un unique fichier Markdown. Aucu
 
 ### Emplacement de CLAUDE.md — décision actée
 
-La Story 1.1 avait explicitement laissé cette décision ouverte ("Emplacement exact (racine du dépôt vs racine de `carom-scoreboard/`) à trancher dans cette story 1.2"). L'arborescence complète de l'architecture tranche sans ambiguïté : `CLAUDE.md` est à la racine du sous-dossier applicatif `carom-scoreboard/`, pas à la racine du dépôt Git (qui héberge aussi `_bmad/`, `_bmad-output/`, `docs/`, `explore/`, non concernés par ces conventions de code). [Source: architecture.md#Arborescence Complète (L415-417)]
+La Story 1.1 avait explicitement laissé cette décision ouverte ("Emplacement exact (racine du dépôt vs racine de `1score/`) à trancher dans cette story 1.2"). L'arborescence complète de l'architecture tranche sans ambiguïté : `CLAUDE.md` est à la racine du sous-dossier applicatif `1score/`, pas à la racine du dépôt Git (qui héberge aussi `_bmad/`, `_bmad-output/`, `docs/`, `explore/`, non concernés par ces conventions de code). [Source: architecture.md#Arborescence Complète (L415-417)]
 
 ### Contenu obligatoire — 6 règles, ni plus ni moins pour l'AC
 
@@ -77,7 +77,7 @@ Copier fidèlement le sens de ces règles, déjà validées et sourcées — ne 
 
 ### Source tree components to touch
 
-Un seul fichier à créer : `carom-scoreboard/CLAUDE.md`. Aucun autre fichier du scaffold Story 1.1 ne doit être modifié.
+Un seul fichier à créer : `1score/CLAUDE.md`. Aucun autre fichier du scaffold Story 1.1 ne doit être modifié.
 
 ### Testing standards summary
 
@@ -85,7 +85,7 @@ Aucun test à écrire — story purement documentaire, aucune logique exécutabl
 
 ### Project Structure Notes
 
-- Confirme et clôt la décision d'emplacement laissée ouverte par la Story 1.1 : `carom-scoreboard/CLAUDE.md` (pas de conflit avec l'arborescence architecture, qui l'avait déjà positionné ainsi dans le diagramme complet).
+- Confirme et clôt la décision d'emplacement laissée ouverte par la Story 1.1 : `1score/CLAUDE.md` (pas de conflit avec l'arborescence architecture, qui l'avait déjà positionné ainsi dans le diagramme complet).
 - Aucune divergence détectée avec la structure de projet actée.
 
 ### References
@@ -108,8 +108,8 @@ Aucun — story documentaire, aucune exécution de code requise.
 
 ### Completion Notes List
 
-- Créé `carom-scoreboard/CLAUDE.md` documentant les 6 règles obligatoires listées à l'AC1 (AR15, AR8, AR12, AR17, AR18, AR16, AR19), avec leur formulation exacte reprise d'`architecture.md` (nommage, Pointer Events, erreurs storage en couche service, mutations/réactivité Pinia, async/await exclusif, tests co-localisés, breakpoints Tailwind mobile-first).
-- Emplacement conforme à la décision actée : racine du sous-dossier applicatif `carom-scoreboard/`, pas la racine du dépôt Git.
+- Créé `1score/CLAUDE.md` documentant les 6 règles obligatoires listées à l'AC1 (AR15, AR8, AR12, AR17, AR18, AR16, AR19), avec leur formulation exacte reprise d'`architecture.md` (nommage, Pointer Events, erreurs storage en couche service, mutations/réactivité Pinia, async/await exclusif, tests co-localisés, breakpoints Tailwind mobile-first).
+- Emplacement conforme à la décision actée : racine du sous-dossier applicatif `1score/`, pas la racine du dépôt Git.
 - Ajout d'un minimum de framing en tête de fichier (stack technique, commandes `npm run dev`/`npm run build`/`npm test`) sans effort disproportionné par rapport aux 6 règles obligatoires, conformément aux Dev Notes.
 - Relecture du document du point de vue d'un agent IA sans accès à `architecture.md`/`epics.md` (Subtask 2.1) : les 6 règles sont présentes, non ambiguës, avec exemples de code ✅/❌ pour chacune. Aucune règle hors périmètre (AR9, AR10, AR13, AR14) n'a été ajoutée.
 - Vérification de non-contradiction avec `architecture.md` (Subtask 2.2) : les formulations sont reprises fidèlement des sections sourcées (L278-404), aucune divergence constatée.
@@ -117,8 +117,8 @@ Aucun — story documentaire, aucune exécution de code requise.
 
 ### File List
 
-- `carom-scoreboard/CLAUDE.md` (créé)
+- `1score/CLAUDE.md` (créé)
 
 ## Change Log
 
-- 2026-09-08 : Création de `carom-scoreboard/CLAUDE.md` documentant les règles obligatoires AR8, AR12, AR15, AR16, AR17, AR18, AR19 (Story 1.2). Statut → review.
+- 2026-09-08 : Création de `1score/CLAUDE.md` documentant les règles obligatoires AR8, AR12, AR15, AR16, AR17, AR18, AR19 (Story 1.2). Statut → review.

@@ -1,9 +1,9 @@
-# Story 1.13 (AR11) — le site Netlify pointe sur le sous-dossier `carom-scoreboard/`.
+# Story 1.13 (AR11) — le site Netlify pointe sur le sous-dossier `1score/`.
 # Pas d'en-têtes Cache-Control : Netlify sert déjà les fichiers non hachés (sw.js,
 # manifest.webmanifest) en `max-age=0, must-revalidate`, et les assets hachés sont
 # révisionnés par le précache du Service Worker.
 [build]
-  base = "carom-scoreboard"
+  base = "1score"
   publish = "dist"
   command = "npm run build"
 

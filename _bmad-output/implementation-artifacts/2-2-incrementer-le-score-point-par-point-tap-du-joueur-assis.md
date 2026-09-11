@@ -107,14 +107,14 @@ claude-fable-5-1 (Claude Fable 5.1)
 
 ### File List
 
-- `carom-scoreboard/src/stores/useGameStore.ts` (modifié — `writeLastReprise`, `openSeriesValue`, `incrementSeries`, `passTurn`)
-- `carom-scoreboard/src/stores/useGameStore.test.ts` (modifié)
-- `carom-scoreboard/src/composables/useTimer.ts` (modifié — `SHOT_CLOCK_GRACE_MS`, garde par mode)
-- `carom-scoreboard/src/composables/useTimer.test.ts` (modifié)
-- `carom-scoreboard/src/views/GameView.vue` (modifié — CTA `+1 POINT`, `addPoint`, relances)
-- `carom-scoreboard/src/views/GameView.test.ts` (modifié)
+- `1score/src/stores/useGameStore.ts` (modifié — `writeLastReprise`, `openSeriesValue`, `incrementSeries`, `passTurn`)
+- `1score/src/stores/useGameStore.test.ts` (modifié)
+- `1score/src/composables/useTimer.ts` (modifié — `SHOT_CLOCK_GRACE_MS`, garde par mode)
+- `1score/src/composables/useTimer.test.ts` (modifié)
+- `1score/src/views/GameView.vue` (modifié — CTA `+1 POINT`, `addPoint`, relances)
+- `1score/src/views/GameView.test.ts` (modifié)
 - `_bmad-output/planning-artifacts/epics.md` (modifié)
 - `_bmad-output/planning-artifacts/ux-design-specification.md` (modifié)
 - `_bmad-output/implementation-artifacts/deferred-work.md` (modifié)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modifié)
-- Temporaire (créé puis supprimé) : `carom-scoreboard/public/_viewport-harness.html`
+- Temporaire (créé puis supprimé) : `1score/public/_viewport-harness.html`

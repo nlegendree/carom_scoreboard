@@ -36,7 +36,7 @@ so that fermer ou recharger l'application ne fasse jamais perdre ma progression 
   - [x] 1.2 `useGameStore.ts` : retirer `isNegative` (l. 78-81 `mirrorSnapshot`, 100, 139, 149, 189, 234-237, 505, 563, 583). `useGameStore.test.ts` « mirrors a snapshot… » (l. 977, 1000) sans `isNegative`.
 
 - [x] **Task 2 — `storageService.ts` (AC: 1, 5, 6)**
-  - [x] 2.1 Créer `src/services/storageService.ts` (supprimer `.gitkeep`). Exports nommés : `GAME_STORAGE_KEY = 'carom-scoreboard:game'`, `GAME_STORAGE_VERSION = 1`, `interface PersistedGame { version: number; savedAt: number; state: GameState }`, `saveGameState(state)` (pattern exact de CLAUDE.md §3), `loadGameState(): GameState | null` (`getItem` → `JSON.parse` → garde `isPersistedGame` ; illisible → `console.warn` + `clearGameState()` + `null` ; exception → `console.error` + `clearGameState()` + `null`), `clearGameState()` (`removeItem` sous `try/catch`). Garde structurelle minimale, pas de Zod : `version === 1`, `state.status ∈ {'playing','finished'}`, `player1`/`player2` objets, `Array.isArray(reprises)`, `Array.isArray(history)`, `scoreAdjustments` objet, `typeof sidesSwapped/equalizingReprise/entryOpen === 'boolean'`.
+  - [x] 2.1 Créer `src/services/storageService.ts` (supprimer `.gitkeep`). Exports nommés : `GAME_STORAGE_KEY = '1score:game'`, `GAME_STORAGE_VERSION = 1`, `interface PersistedGame { version: number; savedAt: number; state: GameState }`, `saveGameState(state)` (pattern exact de CLAUDE.md §3), `loadGameState(): GameState | null` (`getItem` → `JSON.parse` → garde `isPersistedGame` ; illisible → `console.warn` + `clearGameState()` + `null` ; exception → `console.error` + `clearGameState()` + `null`), `clearGameState()` (`removeItem` sous `try/catch`). Garde structurelle minimale, pas de Zod : `version === 1`, `state.status ∈ {'playing','finished'}`, `player1`/`player2` objets, `Array.isArray(reprises)`, `Array.isArray(history)`, `scoreAdjustments` objet, `typeof sidesSwapped/equalizingReprise/entryOpen === 'boolean'`.
   - [x] 2.2 Tests `storageService.test.ts` (`beforeEach: localStorage.clear(); vi.restoreAllMocks()`, spies `console.*` avec `mockImplementation(() => {})`) : aller-retour `toEqual` ; enveloppe `version`/`savedAt` ; `null` si vide ; JSON corrompu, version 0, `status: 'idle'`, `reprises: 'x'` → `null` + clé supprimée ; `setItem` qui lève (`QuotaExceededError`) → pas d'exception, `console.error` ; `getItem` qui lève → `null` ; `?raw` sur `GameView.vue`, `HomeScreen.vue`, `useGameStore.ts` : `not.toContain('localStorage')`.
 
 - [x] **Task 3 — Store (AC: 1, 3, 4, 5, 7)**
@@ -100,7 +100,7 @@ Nouveaux : `src/services/storageService.ts`, `src/services/storageService.test.t
 - [Source: prd.md l. 66, 281, 380, 456] ; [architecture.md#Architecture des Données, #Patterns Gestion d'État & Erreurs, #Résultats de Validation « watchers store »]
 - [Source: ux-design-specification.md#Flow 1, #Journey Patterns « Reprise après interruption », #PromptModal]
 - [Source: deferred-work.md — revues 1.3 (surrogates, `Player.id`), 1.7 (`isNegative`), 1.10 (`endPrompt`)]
-- [Source: carom-scoreboard/src/stores/useGameStore.ts:88-133, 141-162, 167-198, 555-573 ; src/types/game.ts:98-135 ; src/views/GameView.vue:39-113 (`entryOpen`, `openEntry`, `closeEntry`) ; src/main.ts]
+- [Source: 1score/src/stores/useGameStore.ts:88-133, 141-162, 167-198, 555-573 ; src/types/game.ts:98-135 ; src/views/GameView.vue:39-113 (`entryOpen`, `openEntry`, `closeEntry`) ; src/main.ts]
 - [Source: explore/resources/MECHANICS.md#Persistance] ; [CLAUDE.md §1, §3, §4, §6, §9] ; [mémoires « gros-cta-plutot-que-croix », « raisonner-en-tactile-tablette »]
 
 ## Change Log
@@ -140,16 +140,16 @@ Claude Fable 5.1 (claude-fable-5-1), session bmad-dev-story du 2026-09-10.
 ### File List
 
 Nouveaux :
-- `carom-scoreboard/src/services/storageService.ts`
-- `carom-scoreboard/src/services/storageService.test.ts`
+- `1score/src/services/storageService.ts`
+- `1score/src/services/storageService.test.ts`
 
 Modifiés :
-- `carom-scoreboard/src/types/game.ts`
-- `carom-scoreboard/src/stores/useGameStore.ts`
-- `carom-scoreboard/src/stores/useGameStore.test.ts`
-- `carom-scoreboard/src/main.ts`
-- `carom-scoreboard/src/views/GameView.vue`
-- `carom-scoreboard/src/views/GameView.test.ts`
+- `1score/src/types/game.ts`
+- `1score/src/stores/useGameStore.ts`
+- `1score/src/stores/useGameStore.test.ts`
+- `1score/src/main.ts`
+- `1score/src/views/GameView.vue`
+- `1score/src/views/GameView.test.ts`
 - `_bmad-output/planning-artifacts/architecture.md`
 - `_bmad-output/planning-artifacts/epics.md`
 - `_bmad-output/planning-artifacts/ux-design-specification.md`
@@ -158,4 +158,4 @@ Modifiés :
 - `_bmad-output/implementation-artifacts/1-12-preserver-letat-de-la-partie-en-cas-de-fermeture-accidentelle.md`
 
 Supprimé :
-- `carom-scoreboard/src/services/.gitkeep`
+- `1score/src/services/.gitkeep`

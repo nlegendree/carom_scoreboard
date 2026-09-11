@@ -108,22 +108,22 @@ so that j'enregistre mon résultat sans calcul mental ni ambiguïté sur la vali
 
 > Revue de code du 2026-09-09 (Blind Hunter + Edge Case Hunter + Acceptance Auditor). Suite : 191 tests verts, `vue-tsc` vert.
 
-- [x] [Review][Defer] `ÉCHANGER` en pleine reprise laisse le tour au même joueur physique et orpheline la reprise entamée — `swapPlayers` permute les colonnes mais `activePlayer` reste attaché au côté (règle 1.3, prise quand l'échange n'était possible qu'avant la première série). Séquence : blanc valide 5 → `[{5,null}]`, tour au jaune ; échange → `[{null,5}]`, le côté droit est maintenant le joueur qui vient de jouer et il a la main. Sa prochaine série ouvre une nouvelle ligne (`last.player2 !== null`), la ligne 1 reste `{null,5}` pour toujours et `completedReprises` accuse un retard d'une unité jusqu'à la fin de la partie. Aucun test ne couvre un échange pendant une reprise ouverte suivi d'une série. [carom-scoreboard/src/stores/useGameStore.ts:99-124,181-199] — deferred, décision de Nathan (2026-09-09) : comportement accepté et documenté (Décision 15), le tour reste attaché au côté ; `ANNULER` (1.8) sera le chemin de rattrapage
-- [x] [Review][Patch] Tap fantôme à travers la pop-up qui disparaît à l'auto-validation — à 3 s, la pop-up se démonte et le tour bascule ; un doigt qui arrive quelques ms plus tard sur l'emplacement d'une touche atterrit sur le `PlayerPanel` en dessous, qui émet `pass-turn` : série de 0 pour le nouveau joueur actif et rebascule du tour, sans `ANNULER` disponible avant la 1.8. Corrigé : grâce de 300 ms après toute fermeture de la pop-up pendant laquelle `GameView` ignore `pass-turn` et `adjust-score` (choix de Nathan, 2026-09-09) ; test « ignores a tap on the panels right after the popup closed by itself ». [carom-scoreboard/src/views/GameView.vue]
-- [x] [Review][Patch] `VALIDER` sur saisie vide referme la pop-up alors que l'AC12 dit « rien ne se passe » — `validateEntry` force `entryOpen = false` sans condition ; aucun test `GameView` ne couvre ce chemin [carom-scoreboard/src/views/GameView.vue:56-59]
-- [x] [Review][Patch] La pulsation de refus joue à chaque ouverture de la pop-up — `animate-input-reject` est inconditionnelle sur le `span` keyé par `rejectKey` (0 au montage), le signal AC7 est dilué [carom-scoreboard/src/components/ScoreEntryModal.vue:157]
-- [x] [Review][Patch] AC6/AC7 sans test discriminant dans `ScoreEntryModal.test.ts` — `tap()`/`reject()` jamais vérifiés (aucun mock de `navigator.vibrate` côté composant), `data-reject`/`data-flash` assertés nulle part, classe couleur de la valeur non vérifiée ; retirer `reject()`, `rejectKey += 1` ou `flashKey += 1` laisse la suite verte. Au passage : le test « swallows a keystroke once the ceiling is reached » monte avec 3 chiffres en timers réels sans démonter (timer de 3 s vivant après le test), et `mountPanel` de `PlayerPanel.test.ts` passe encore une prop `currentInput` que le composant ne déclare plus [carom-scoreboard/src/components/ScoreEntryModal.test.ts:27-33 ; carom-scoreboard/src/components/PlayerPanel.test.ts:13-15]
-- [x] [Review][Patch] Drapeau `backdropPressed` figé après un `pointercancel` ou en multi-touch — pas de `@pointercancel` ni de suivi du `pointerId` : un appui de paume annulé laisse le voile armé, et le prochain relâchement qui glisse hors de la carte jette la saisie. Idem dans `PlayerSetupModal` [carom-scoreboard/src/components/ScoreEntryModal.vue:126-127 ; carom-scoreboard/src/components/PlayerSetupModal.vue:127-128]
-- [x] [Review][Patch] Aucune garde `status === 'playing'` sur les nouvelles actions, contrairement à `swapPlayers` — `addReprise`, `passTurn`, `adjustScore`, `switchTurn`, `validateScoreInput` mutent librement un store `idle` (`passTurn()` y pousse une reprise). Inatteignable par l'UI aujourd'hui, mais incohérent avec la garde existante [carom-scoreboard/src/stores/useGameStore.ts:147-232]
-- [x] [Review][Patch] Durée de l'auto-validation dupliquée en nombre magique — `AUTO_VALIDATE_DELAY_MS = 3000` et `input-countdown 3000ms` ne sont liés que par un commentaire ; lier `animation-duration` à la constante [carom-scoreboard/src/components/ScoreEntryModal.vue:29,195 ; carom-scoreboard/src/assets/main.css:74]
-- [x] [Review][Patch] Commentaires périmés qui contredisent le code — `main.css` décrit un « assombrissement sur le bloc joueur » alors que le flash est un `bg-white/25` sur la carte sombre de la modale ; le store dit que `PlayerPanel` importe `MAX_SCORE_DIGITS` (c'est `ScoreEntryModal`) et que le `boolean` de `appendScoreDigit` « distingue les deux haptiques » alors qu'aucun appelant ne le lit (la modale décide localement, choix justifié en Task 3.2) ; neuf références `AC#n` dans store/modale/CSS/composable utilisent l'ancienne numérotation d'avant la réécriture des AC [carom-scoreboard/src/assets/main.css:55 ; carom-scoreboard/src/stores/useGameStore.ts:10,153]
+- [x] [Review][Defer] `ÉCHANGER` en pleine reprise laisse le tour au même joueur physique et orpheline la reprise entamée — `swapPlayers` permute les colonnes mais `activePlayer` reste attaché au côté (règle 1.3, prise quand l'échange n'était possible qu'avant la première série). Séquence : blanc valide 5 → `[{5,null}]`, tour au jaune ; échange → `[{null,5}]`, le côté droit est maintenant le joueur qui vient de jouer et il a la main. Sa prochaine série ouvre une nouvelle ligne (`last.player2 !== null`), la ligne 1 reste `{null,5}` pour toujours et `completedReprises` accuse un retard d'une unité jusqu'à la fin de la partie. Aucun test ne couvre un échange pendant une reprise ouverte suivi d'une série. [1score/src/stores/useGameStore.ts:99-124,181-199] — deferred, décision de Nathan (2026-09-09) : comportement accepté et documenté (Décision 15), le tour reste attaché au côté ; `ANNULER` (1.8) sera le chemin de rattrapage
+- [x] [Review][Patch] Tap fantôme à travers la pop-up qui disparaît à l'auto-validation — à 3 s, la pop-up se démonte et le tour bascule ; un doigt qui arrive quelques ms plus tard sur l'emplacement d'une touche atterrit sur le `PlayerPanel` en dessous, qui émet `pass-turn` : série de 0 pour le nouveau joueur actif et rebascule du tour, sans `ANNULER` disponible avant la 1.8. Corrigé : grâce de 300 ms après toute fermeture de la pop-up pendant laquelle `GameView` ignore `pass-turn` et `adjust-score` (choix de Nathan, 2026-09-09) ; test « ignores a tap on the panels right after the popup closed by itself ». [1score/src/views/GameView.vue]
+- [x] [Review][Patch] `VALIDER` sur saisie vide referme la pop-up alors que l'AC12 dit « rien ne se passe » — `validateEntry` force `entryOpen = false` sans condition ; aucun test `GameView` ne couvre ce chemin [1score/src/views/GameView.vue:56-59]
+- [x] [Review][Patch] La pulsation de refus joue à chaque ouverture de la pop-up — `animate-input-reject` est inconditionnelle sur le `span` keyé par `rejectKey` (0 au montage), le signal AC7 est dilué [1score/src/components/ScoreEntryModal.vue:157]
+- [x] [Review][Patch] AC6/AC7 sans test discriminant dans `ScoreEntryModal.test.ts` — `tap()`/`reject()` jamais vérifiés (aucun mock de `navigator.vibrate` côté composant), `data-reject`/`data-flash` assertés nulle part, classe couleur de la valeur non vérifiée ; retirer `reject()`, `rejectKey += 1` ou `flashKey += 1` laisse la suite verte. Au passage : le test « swallows a keystroke once the ceiling is reached » monte avec 3 chiffres en timers réels sans démonter (timer de 3 s vivant après le test), et `mountPanel` de `PlayerPanel.test.ts` passe encore une prop `currentInput` que le composant ne déclare plus [1score/src/components/ScoreEntryModal.test.ts:27-33 ; 1score/src/components/PlayerPanel.test.ts:13-15]
+- [x] [Review][Patch] Drapeau `backdropPressed` figé après un `pointercancel` ou en multi-touch — pas de `@pointercancel` ni de suivi du `pointerId` : un appui de paume annulé laisse le voile armé, et le prochain relâchement qui glisse hors de la carte jette la saisie. Idem dans `PlayerSetupModal` [1score/src/components/ScoreEntryModal.vue:126-127 ; 1score/src/components/PlayerSetupModal.vue:127-128]
+- [x] [Review][Patch] Aucune garde `status === 'playing'` sur les nouvelles actions, contrairement à `swapPlayers` — `addReprise`, `passTurn`, `adjustScore`, `switchTurn`, `validateScoreInput` mutent librement un store `idle` (`passTurn()` y pousse une reprise). Inatteignable par l'UI aujourd'hui, mais incohérent avec la garde existante [1score/src/stores/useGameStore.ts:147-232]
+- [x] [Review][Patch] Durée de l'auto-validation dupliquée en nombre magique — `AUTO_VALIDATE_DELAY_MS = 3000` et `input-countdown 3000ms` ne sont liés que par un commentaire ; lier `animation-duration` à la constante [1score/src/components/ScoreEntryModal.vue:29,195 ; 1score/src/assets/main.css:74]
+- [x] [Review][Patch] Commentaires périmés qui contredisent le code — `main.css` décrit un « assombrissement sur le bloc joueur » alors que le flash est un `bg-white/25` sur la carte sombre de la modale ; le store dit que `PlayerPanel` importe `MAX_SCORE_DIGITS` (c'est `ScoreEntryModal`) et que le `boolean` de `appendScoreDigit` « distingue les deux haptiques » alors qu'aucun appelant ne le lit (la modale décide localement, choix justifié en Task 3.2) ; neuf références `AC#n` dans store/modale/CSS/composable utilisent l'ancienne numérotation d'avant la réécriture des AC [1score/src/assets/main.css:55 ; 1score/src/stores/useGameStore.ts:10,153]
 - [x] [Review][Patch] Incohérences de la story avec le diff — la File List omet `PlayerSetupModal.vue`/`.test.ts` (modifiés) et les Completion Notes de la 2ᵉ refonte disent encore « laissée hors périmètre » ; les Dev Notes « Hors périmètre » interdisent toute zone tapable sur les panneaux (livrée par AC14) ; le tableau « État du code au démarrage » annonce `CenterPanel` inchangé, « rien à faire » sur `startGame`/`swapPlayers`/`resetGame` et un seul fichier nouveau (il y en a quatre, dont `ScoreEntryModal.vue` que les Project Structure Notes interdisent de créer) [_bmad-output/implementation-artifacts/1-5-saisir-le-score-dune-serie-au-pave-numerique.md]
-- [x] [Review][Defer] Sortie destructive sur `pointerdown` sans confirmation, et qui change de colonne à chaque tour [carom-scoreboard/src/views/GameView.vue:113,145] — deferred, confirmation prévue Story 1.15 ; l'alternance est la décision produit AC4
-- [x] [Review][Defer] Panneau entier en `role="button"` englobant deux vrais `<button>` (contenu interactif imbriqué interdit par ARIA), sans `tabindex`, ni `aria-disabled` quand il est inerte ; un appui de paume sur la carte adverse enregistre une série de 0 [carom-scoreboard/src/components/PlayerPanel.vue:100-105] — deferred, geste décidé par AC14, accessibilité clavier déjà hors cible (revue 1.4)
-- [x] [Review][Defer] Pop-up sans `role="dialog"`/`aria-modal`, sans gestion du focus, et animations sans `prefers-reduced-motion` [carom-scoreboard/src/components/ScoreEntryModal.vue:120-130 ; carom-scoreboard/src/assets/main.css:52-79] — deferred, pré-existant sur `PlayerSetupModal`, même arbitrage borne fixe
-- [x] [Review][Defer] Voile de pop-up avec handlers pointer sans `role="button"` (CLAUDE.md §2) [carom-scoreboard/src/components/ScoreEntryModal.vue:120] — deferred, pré-existant sur `PlayerSetupModal` ; la règle mérite une exception explicite pour les voiles plutôt qu'un rôle ARIA erroné
-- [x] [Review][Defer] Quarante lignes de CTA + SVG de sortie dupliquées pour les deux colonnes, et alignement dépendant du `px-4` d'`ActionBar` via `-mx-4`/`ml-4`/`mr-4` [carom-scoreboard/src/views/GameView.vue:106-176] — deferred, nettoyage sans impact fonctionnel
-- [x] [Review][Defer] `MAX_TARGET_SCORE = 999` et `MAX_SCORE_DIGITS = 3` encodent FR7 indépendamment [carom-scoreboard/src/stores/useGameStore.ts:8-12] — deferred, pre-existing (déjà différé en revue 1.4, réconciliation hors périmètre par décision de la story)
+- [x] [Review][Defer] Sortie destructive sur `pointerdown` sans confirmation, et qui change de colonne à chaque tour [1score/src/views/GameView.vue:113,145] — deferred, confirmation prévue Story 1.15 ; l'alternance est la décision produit AC4
+- [x] [Review][Defer] Panneau entier en `role="button"` englobant deux vrais `<button>` (contenu interactif imbriqué interdit par ARIA), sans `tabindex`, ni `aria-disabled` quand il est inerte ; un appui de paume sur la carte adverse enregistre une série de 0 [1score/src/components/PlayerPanel.vue:100-105] — deferred, geste décidé par AC14, accessibilité clavier déjà hors cible (revue 1.4)
+- [x] [Review][Defer] Pop-up sans `role="dialog"`/`aria-modal`, sans gestion du focus, et animations sans `prefers-reduced-motion` [1score/src/components/ScoreEntryModal.vue:120-130 ; 1score/src/assets/main.css:52-79] — deferred, pré-existant sur `PlayerSetupModal`, même arbitrage borne fixe
+- [x] [Review][Defer] Voile de pop-up avec handlers pointer sans `role="button"` (CLAUDE.md §2) [1score/src/components/ScoreEntryModal.vue:120] — deferred, pré-existant sur `PlayerSetupModal` ; la règle mérite une exception explicite pour les voiles plutôt qu'un rôle ARIA erroné
+- [x] [Review][Defer] Quarante lignes de CTA + SVG de sortie dupliquées pour les deux colonnes, et alignement dépendant du `px-4` d'`ActionBar` via `-mx-4`/`ml-4`/`mr-4` [1score/src/views/GameView.vue:106-176] — deferred, nettoyage sans impact fonctionnel
+- [x] [Review][Defer] `MAX_TARGET_SCORE = 999` et `MAX_SCORE_DIGITS = 3` encodent FR7 indépendamment [1score/src/stores/useGameStore.ts:8-12] — deferred, pre-existing (déjà différé en revue 1.4, réconciliation hors périmètre par décision de la story)
 
 ## Dev Notes
 
@@ -254,7 +254,7 @@ Les trois questions ouvertes à la création de la story ont été arbitrées et
 - [Source: deferred-work.md#Deferred from code review of 1-4] — plafond défini deux fois, à ne pas aggraver
 - [Source: explore/scoreboard_test/scoreboard/src/components/PlayerScore.vue:168-305] — prototype d'origine : `addDigit`, plafond à 3 chiffres, `startAutoValidateTimer` à 3000 ms, `validateSeries`
 - [Source: explore/scoreboard_test/scoreboard/src/components/ReprisesDisplay.vue:27-50] — barre de progression de l'auto-validation du prototype
-- [Source: carom-scoreboard/CLAUDE.md §1, §2, §4, §6, §7, §8, §9]
+- [Source: 1score/CLAUDE.md §1, §2, §4, §6, §7, §8, §9]
 
 ## Change Log
 
@@ -341,29 +341,29 @@ Sur décision produit de Nathan, l'écran de partie a été repensé après la p
 ### File List
 
 **Nouveaux**
-- `carom-scoreboard/src/components/ScoreEntryModal.vue`
-- `carom-scoreboard/src/components/ScoreEntryModal.test.ts`
-- `carom-scoreboard/src/composables/useHaptics.ts`
-- `carom-scoreboard/src/composables/useHaptics.test.ts`
+- `1score/src/components/ScoreEntryModal.vue`
+- `1score/src/components/ScoreEntryModal.test.ts`
+- `1score/src/composables/useHaptics.ts`
+- `1score/src/composables/useHaptics.test.ts`
 
 **Modifiés**
-- `carom-scoreboard/src/stores/useGameStore.ts`
-- `carom-scoreboard/src/stores/useGameStore.test.ts`
-- `carom-scoreboard/src/components/PlayerPanel.vue`
-- `carom-scoreboard/src/components/PlayerPanel.test.ts`
-- `carom-scoreboard/src/components/PlayerSetupModal.vue`
-- `carom-scoreboard/src/components/PlayerSetupModal.test.ts`
-- `carom-scoreboard/src/components/NumericPad.vue`
-- `carom-scoreboard/src/components/NumericPad.test.ts`
-- `carom-scoreboard/src/components/CenterPanel.vue`
-- `carom-scoreboard/src/components/CenterPanel.test.ts`
-- `carom-scoreboard/src/components/ActionBar.vue`
-- `carom-scoreboard/src/views/GameView.vue`
-- `carom-scoreboard/src/views/GameView.test.ts`
-- `carom-scoreboard/src/assets/main.css`
+- `1score/src/stores/useGameStore.ts`
+- `1score/src/stores/useGameStore.test.ts`
+- `1score/src/components/PlayerPanel.vue`
+- `1score/src/components/PlayerPanel.test.ts`
+- `1score/src/components/PlayerSetupModal.vue`
+- `1score/src/components/PlayerSetupModal.test.ts`
+- `1score/src/components/NumericPad.vue`
+- `1score/src/components/NumericPad.test.ts`
+- `1score/src/components/CenterPanel.vue`
+- `1score/src/components/CenterPanel.test.ts`
+- `1score/src/components/ActionBar.vue`
+- `1score/src/views/GameView.vue`
+- `1score/src/views/GameView.test.ts`
+- `1score/src/assets/main.css`
 - `_bmad-output/planning-artifacts/ux-design-specification.md`
 - `_bmad-output/planning-artifacts/epics.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
 
 **Créés puis supprimés**
-- `carom-scoreboard/public/_viewport-harness.html` (harnais de la passe visuelle, Task 6.3)
+- `1score/public/_viewport-harness.html` (harnais de la passe visuelle, Task 6.3)

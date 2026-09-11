@@ -12,7 +12,7 @@ so that chaque story suivante dispose d'une base fonctionnelle, buildable et ins
 
 ## Acceptance Criteria
 
-1. **Given** un environnement Node.js configuré, exécuté depuis la racine du dépôt Git **When** j'exécute `npm create @vite-pwa/pwa@latest carom-scoreboard -- --template vue-ts` **Then** un projet Vue 3 + TypeScript + Vite est créé, dans le sous-dossier `carom-scoreboard/` du dépôt, avec le plugin PWA configuré (AR1).
+1. **Given** un environnement Node.js configuré, exécuté depuis la racine du dépôt Git **When** j'exécute `npm create @vite-pwa/pwa@latest 1score -- --template vue-ts` **Then** un projet Vue 3 + TypeScript + Vite est créé, dans le sous-dossier `1score/` du dépôt, avec le plugin PWA configuré (AR1).
 2. **Given** le projet scaffoldé **When** j'installe les dépendances complémentaires (Tailwind CSS v4, `@tailwindcss/vite`, Pinia, vue-router@4, Dexie, Vitest, Vue Test Utils, happy-dom) **Then** `npm install` se termine sans erreur et `npm run build` produit un build fonctionnel (AR3).
 3. **Given** la structure de fichiers définie en architecture **When** le projet est initialisé **Then** l'arborescence `src/types`, `src/stores`, `src/services`, `src/composables`, `src/components`, `src/views`, `src/router` est créée conformément à l'architecture.
 4. **Given** la configuration Tailwind CSS v4 **When** je définis les tokens de fondation visuelle (`@theme` CSS) **Then** elle inclut la palette couleur (fond sombre, 4 couleurs joueur, accent bleu système, alerte rouge, victoire or — UX-DR1, UX-DR3, UX-DR5), l'échelle typographique fluide `clamp()` (UX-DR6), l'unité de base d'espacement 8px (UX-DR7), la taille minimale de zone tactile 90×90px (UX-DR8) et les 3 breakpoints responsive (UX-DR21).
@@ -22,11 +22,11 @@ so that chaque story suivante dispose d'une base fonctionnelle, buildable et ins
 ## Tasks / Subtasks
 
 - [x] **Task 1: Scaffolder le projet Vue 3 + Vite PWA** (AC: 1)
-  - [x] 1.1 Depuis la **racine du dépôt Git** (`/Users/nathan/Developer/04_Projets/carom_scoreboard`), exécuter : `npm create @vite-pwa/pwa@latest carom-scoreboard -- --template vue-ts`. Le CLI crée le sous-dossier `carom-scoreboard/` directement au bon endroit — pas de déplacement de fichiers nécessaire (repo layout monorepo : bmad à la racine, code applicatif dans `carom-scoreboard/`, cf. `architecture.md#Repository Layout`).
-  - [x] 1.2 Si le scaffold a initialisé son propre `.git/` **à l'intérieur** de `carom-scoreboard/`, le supprimer — un seul dépôt Git doit subsister (celui déjà présent à la racine du repo).
-  - [x] 1.3 Le `.gitignore` généré par le scaffold reste **local à `carom-scoreboard/`** (node_modules, dist, etc.) — ne pas le fusionner avec le `.gitignore` racine, qui gère un périmètre différent (`.DS_Store`, `./explore/scoreboard_test/`). Les deux coexistent, chacun scope à son dossier.
-  - [x] 1.4 Vérifier `git status` depuis la racine : un seul dépôt, pas de repo imbriqué, tous les fichiers générés apparaissent sous `carom-scoreboard/`.
-  - [x] 1.5 Toutes les commandes des Tasks suivantes (`npm install`, `npm run build`, `npm run dev`, etc.) s'exécutent avec `carom-scoreboard/` comme working directory.
+  - [x] 1.1 Depuis la **racine du dépôt Git** (`/Users/nathan/Developer/04_Projets/carom_scoreboard`), exécuter : `npm create @vite-pwa/pwa@latest 1score -- --template vue-ts`. Le CLI crée le sous-dossier `1score/` directement au bon endroit — pas de déplacement de fichiers nécessaire (repo layout monorepo : bmad à la racine, code applicatif dans `1score/`, cf. `architecture.md#Repository Layout`).
+  - [x] 1.2 Si le scaffold a initialisé son propre `.git/` **à l'intérieur** de `1score/`, le supprimer — un seul dépôt Git doit subsister (celui déjà présent à la racine du repo).
+  - [x] 1.3 Le `.gitignore` généré par le scaffold reste **local à `1score/`** (node_modules, dist, etc.) — ne pas le fusionner avec le `.gitignore` racine, qui gère un périmètre différent (`.DS_Store`, `./explore/scoreboard_test/`). Les deux coexistent, chacun scope à son dossier.
+  - [x] 1.4 Vérifier `git status` depuis la racine : un seul dépôt, pas de repo imbriqué, tous les fichiers générés apparaissent sous `1score/`.
+  - [x] 1.5 Toutes les commandes des Tasks suivantes (`npm install`, `npm run build`, `npm run dev`, etc.) s'exécutent avec `1score/` comme working directory.
 
 - [x] **Task 2: Installer et configurer les dépendances complémentaires** (AC: 2)
   - [x] 2.1 `npm install -D tailwindcss @tailwindcss/vite`
@@ -58,16 +58,16 @@ so that chaque story suivante dispose d'une base fonctionnelle, buildable et ins
 
 ### Review Findings
 
-- [x] [Review][Decision] Ajouter `.nvmrc` pour figer la version Node — résolu : Nathan a choisi de l'ajouter immédiatement. Créé avec la version Node du poste de dev (`26.8.1`). [carom-scoreboard/.nvmrc]
-- [x] [Review][Patch] Appliquer réellement le token `--color-bg` (#0D1117) et retirer le CSS clair hérité du starter qui l'annule (règle `:root` avec `background-color: #242424` et le bloc `@media (prefers-color-scheme: light)`) — sans ce correctif le fond sombre validé pour le contraste AA n'est jamais rendu à l'écran. [carom-scoreboard/src/assets/main.css]
-- [x] [Review][Patch] Ajouter les tokens `--color-on-alert` et `--color-on-victory-gold`, manquants dans le bloc `@theme` alors que toutes les autres couleurs de marque ont leur paire de contraste AA (`--color-on-*`). [carom-scoreboard/src/assets/main.css]
-- [x] [Review][Patch] Aligner `theme_color` (et ajouter `background_color`) du manifest PWA sur `--color-bg`, et compléter `display`/`start_url`/`scope` — le manifest garde actuellement les valeurs par défaut du starter (`theme_color: '#ffffff'`), en contradiction avec le thème sombre. [carom-scoreboard/vite.config.ts]
-- [x] [Review][Patch] Ajouter `vitest.config.ts` et `pwa-assets.config.ts` au tableau `include` de `tsconfig.node.json` — ces fichiers créés/générés par cette story ne sont couverts par aucun tsconfig et échappent donc à `vue-tsc -b` et à l'IDE. [carom-scoreboard/tsconfig.node.json]
-- [x] [Review][Patch] Corriger le formatage mineur : retour à la ligne final manquant en fin de fichier, ligne blanche parasite dans `index.html`. [carom-scoreboard/vite.config.ts, carom-scoreboard/index.html]
-- [x] [Review][Defer] Durcir la gestion d'erreurs de `PWABadge.vue` (fetch/`r.update()` sans `.catch()`, statut HTTP non-200 ignoré, `setInterval` jamais nettoyé au démontage, pas de callback `onRegisterError`, listener `statechange` non retiré après activation) — deferred, pre-existing (composant généré tel quel par le starter, hors périmètre de cette story). [carom-scoreboard/src/components/PWABadge.vue]
-- [x] [Review][Defer] Compléter `workbox.globPatterns` (polices `woff`/`woff2`) et fournir un `navigateFallback` de production une fois le routing en place (actuellement seul `devOptions.navigateFallback` est défini, et `devOptions.enabled` est `false`) — deferred, pre-existing (routing hors périmètre de cette story). [carom-scoreboard/vite.config.ts:14-22]
-- [x] [Review][Defer] Résoudre l'incohérence `<html lang="en">` vs. commentaires/contenu en français, une fois le contenu réel de l'application introduit — deferred, pre-existing. [carom-scoreboard/index.html]
-- [x] [Review][Defer] Ajouter un outillage lint/format (ESLint/Prettier) pour faire respecter mécaniquement les règles TypeScript strictes déjà activées — deferred, pre-existing. [carom-scoreboard/]
+- [x] [Review][Decision] Ajouter `.nvmrc` pour figer la version Node — résolu : Nathan a choisi de l'ajouter immédiatement. Créé avec la version Node du poste de dev (`26.8.1`). [1score/.nvmrc]
+- [x] [Review][Patch] Appliquer réellement le token `--color-bg` (#0D1117) et retirer le CSS clair hérité du starter qui l'annule (règle `:root` avec `background-color: #242424` et le bloc `@media (prefers-color-scheme: light)`) — sans ce correctif le fond sombre validé pour le contraste AA n'est jamais rendu à l'écran. [1score/src/assets/main.css]
+- [x] [Review][Patch] Ajouter les tokens `--color-on-alert` et `--color-on-victory-gold`, manquants dans le bloc `@theme` alors que toutes les autres couleurs de marque ont leur paire de contraste AA (`--color-on-*`). [1score/src/assets/main.css]
+- [x] [Review][Patch] Aligner `theme_color` (et ajouter `background_color`) du manifest PWA sur `--color-bg`, et compléter `display`/`start_url`/`scope` — le manifest garde actuellement les valeurs par défaut du starter (`theme_color: '#ffffff'`), en contradiction avec le thème sombre. [1score/vite.config.ts]
+- [x] [Review][Patch] Ajouter `vitest.config.ts` et `pwa-assets.config.ts` au tableau `include` de `tsconfig.node.json` — ces fichiers créés/générés par cette story ne sont couverts par aucun tsconfig et échappent donc à `vue-tsc -b` et à l'IDE. [1score/tsconfig.node.json]
+- [x] [Review][Patch] Corriger le formatage mineur : retour à la ligne final manquant en fin de fichier, ligne blanche parasite dans `index.html`. [1score/vite.config.ts, 1score/index.html]
+- [x] [Review][Defer] Durcir la gestion d'erreurs de `PWABadge.vue` (fetch/`r.update()` sans `.catch()`, statut HTTP non-200 ignoré, `setInterval` jamais nettoyé au démontage, pas de callback `onRegisterError`, listener `statechange` non retiré après activation) — deferred, pre-existing (composant généré tel quel par le starter, hors périmètre de cette story). [1score/src/components/PWABadge.vue]
+- [x] [Review][Defer] Compléter `workbox.globPatterns` (polices `woff`/`woff2`) et fournir un `navigateFallback` de production une fois le routing en place (actuellement seul `devOptions.navigateFallback` est défini, et `devOptions.enabled` est `false`) — deferred, pre-existing (routing hors périmètre de cette story). [1score/vite.config.ts:14-22]
+- [x] [Review][Defer] Résoudre l'incohérence `<html lang="en">` vs. commentaires/contenu en français, une fois le contenu réel de l'application introduit — deferred, pre-existing. [1score/index.html]
+- [x] [Review][Defer] Ajouter un outillage lint/format (ESLint/Prettier) pour faire respecter mécaniquement les règles TypeScript strictes déjà activées — deferred, pre-existing. [1score/]
 
 ## Dev Notes
 
@@ -76,7 +76,7 @@ so that chaque story suivante dispose d'une base fonctionnelle, buildable et ins
 - Routing (3 routes `/`, `/history`, `/history/:id`) — `src/router` reste un dossier vide, l'implémentation est pour une story ultérieure.
 - Stores Pinia (`useGameStore`, `useHistoryStore`) — dossier vide uniquement.
 - Types TypeScript (`game.ts`, `history.ts`) — dossier vide uniquement.
-- `CLAUDE.md` — c'est la **Story 1.2**, immédiatement après celle-ci, avant tout code fonctionnel. Emplacement exact (racine du dépôt vs racine de `carom-scoreboard/`) à trancher dans cette story 1.2, pas ici.
+- `CLAUDE.md` — c'est la **Story 1.2**, immédiatement après celle-ci, avant tout code fonctionnel. Emplacement exact (racine du dépôt vs racine de `1score/`) à trancher dans cette story 1.2, pas ici.
 - Tout composant Vue au-delà de ceux générés par le starter (`PlayerPanel`, `NumericPad`, etc.) — stories ultérieures.
 - Déploiement Netlify (`netlify.toml`) — non couvert explicitement par une story d'Epic 1 identifiée ; à signaler au PM si besoin, ne pas l'ajouter ici de sa propre initiative. *Livré en Story 1.13 (2026-09-10) : `netlify.toml` à la racine du dépôt.*
 
@@ -91,11 +91,11 @@ so that chaque story suivante dispose d'une base fonctionnelle, buildable et ins
 
 ### Source tree components to touch
 
-Tout se trouve sous `carom-scoreboard/` (sous-dossier applicatif du dépôt, cf. Repository Layout ci-dessous), jamais à la racine du dépôt Git.
+Tout se trouve sous `1score/` (sous-dossier applicatif du dépôt, cf. Repository Layout ci-dessous), jamais à la racine du dépôt Git.
 
-`carom-scoreboard/` : `package.json`, `package-lock.json`, `tsconfig.json`, `tsconfig.node.json`, `vite.config.ts`, `vitest.config.ts`, `.gitignore` (généré par le scaffold, local à ce dossier), `.nvmrc`, `public/manifest.json`, `public/favicon*`.
+`1score/` : `package.json`, `package-lock.json`, `tsconfig.json`, `tsconfig.node.json`, `vite.config.ts`, `vitest.config.ts`, `.gitignore` (généré par le scaffold, local à ce dossier), `.nvmrc`, `public/manifest.json`, `public/favicon*`.
 
-`carom-scoreboard/src/` : `main.ts`, `App.vue`, `assets/main.css` (tokens Tailwind), et les 7 dossiers vides listés en Task 3 (`.gitkeep`).
+`1score/src/` : `main.ts`, `App.vue`, `assets/main.css` (tokens Tailwind), et les 7 dossiers vides listés en Task 3 (`.gitkeep`).
 
 [Source: architecture.md#Repository Layout, #Arborescence Complète]
 
@@ -105,8 +105,8 @@ Vitest + Vue Test Utils + happy-dom installés et configurés (`vitest.config.ts
 
 ### Project Structure Notes
 
-- **Repository Layout (monorepo)** : le dépôt Git racine contient déjà `_bmad/`, `_bmad-output/`, `docs/`, `explore/`, `.claude/`, etc. — tout est poussé sur le remote, y compris les artefacts BMad, pour rester synchronisé entre les deux postes de travail de Nathan. Le code applicatif ne vit **pas** à la racine du dépôt : il est isolé dans `carom-scoreboard/`, créé directement à cet emplacement par la commande de scaffold (Task 1) — aucune fusion/déplacement de fichiers n'est nécessaire. [Source: architecture.md#Repository Layout]
-- `src/assets/` (sous `carom-scoreboard/`) n'est pas listé explicitement dans l'AC 3 (qui ne cite que types/stores/services/composables/components/views/router) mais existe déjà via le starter et est réutilisé pour les tokens Tailwind (Task 4) — pas un conflit, un ajout cohérent avec l'arborescence complète de l'architecture.
+- **Repository Layout (monorepo)** : le dépôt Git racine contient déjà `_bmad/`, `_bmad-output/`, `docs/`, `explore/`, `.claude/`, etc. — tout est poussé sur le remote, y compris les artefacts BMad, pour rester synchronisé entre les deux postes de travail de Nathan. Le code applicatif ne vit **pas** à la racine du dépôt : il est isolé dans `1score/`, créé directement à cet emplacement par la commande de scaffold (Task 1) — aucune fusion/déplacement de fichiers n'est nécessaire. [Source: architecture.md#Repository Layout]
+- `src/assets/` (sous `1score/`) n'est pas listé explicitement dans l'AC 3 (qui ne cite que types/stores/services/composables/components/views/router) mais existe déjà via le starter et est réutilisé pour les tokens Tailwind (Task 4) — pas un conflit, un ajout cohérent avec l'arborescence complète de l'architecture.
 - Le prototype `explore/scoreboard_test/scoreboard/` (Vue 3 + Vite, dépôt Git et `node_modules` séparés, exclu du `.gitignore`) est une **référence visuelle/mécanique uniquement** — ne pas copier son code ni le modifier.
 
 ### References
@@ -129,14 +129,14 @@ Claude Sonnet 5 (claude-sonnet-5)
 
 ### Debug Log References
 
-- `npm create @vite-pwa/pwa@latest carom-scoreboard -- --template vue-ts` est un CLI interactif (prompts en mode raw TTY) — un premier essai de résolution automatique via `npx` a résolu le mauvais package (`create-pwa` non scopé au lieu de `@vite-pwa/create-pwa`), générant des fichiers parasites (`config.xml`, `manifest.json`, `service-worker.js`, dossiers `favicons/`, `icons/`, `launch-screens/`) à la racine du dépôt. Nettoyés avant de relancer avec la commande exacte de l'AC1, pilotée via un script `expect` pour répondre aux prompts (valeurs par défaut, génération d'assets PWA différée).
+- `npm create @vite-pwa/pwa@latest 1score -- --template vue-ts` est un CLI interactif (prompts en mode raw TTY) — un premier essai de résolution automatique via `npx` a résolu le mauvais package (`create-pwa` non scopé au lieu de `@vite-pwa/create-pwa`), générant des fichiers parasites (`config.xml`, `manifest.json`, `service-worker.js`, dossiers `favicons/`, `icons/`, `launch-screens/`) à la racine du dépôt. Nettoyés avant de relancer avec la commande exacte de l'AC1, pilotée via un script `expect` pour répondre aux prompts (valeurs par défaut, génération d'assets PWA différée).
 - `npm run build` : succès, bundle CSS passé de 1.76 kB à 8.71 kB après ajout du bloc `@theme` Tailwind (confirme la compilation des tokens).
 - `npm run dev` : serveur démarré sur un port de test, `curl` renvoie HTTP 200 sur `/` et `/src/main.ts`, aucune erreur dans les logs Vite.
 - `npx vitest run` : « No test files found » (attendu — aucun test à écrire dans cette story, cf. Testing standards summary).
 
 ### Completion Notes List
 
-- Scaffold Vue 3 + TypeScript + Vite créé dans `carom-scoreboard/` via le starter officiel `@vite-pwa/pwa` (variant `vue-ts`), sans dépôt Git imbriqué (un seul `.git` à la racine).
+- Scaffold Vue 3 + TypeScript + Vite créé dans `1score/` via le starter officiel `@vite-pwa/pwa` (variant `vue-ts`), sans dépôt Git imbriqué (un seul `.git` à la racine).
 - Dépendances complémentaires installées : Tailwind CSS v4 + `@tailwindcss/vite` (plugin ajouté dans `vite.config.ts`, pas de `tailwind.config.js` — config CSS-first), Pinia, vue-router@4, Dexie, Vitest + Vue Test Utils + happy-dom (config isolée dans `vitest.config.ts`).
 - Arborescence `src/types`, `src/stores`, `src/services`, `src/composables`, `src/views`, `src/router` créée avec `.gitkeep` ; `src/components` déjà présent (starter) conservé avec `.gitkeep` ajouté également. `src/assets/` conservé et réutilisé pour les tokens visuels.
 - CSS d'entrée renommé `src/style.css` → `src/assets/main.css` (import mis à jour dans `main.ts`) et enrichi d'un bloc `@theme` Tailwind v4 : couleurs joueur, accent, alerte, victoire, fond sombre `#0D1117`, échelle typographique fluide (`--font-size-score/label/stat`), `--spacing: 8px`, `--size-touch-target: 90px`, surcharge `--breakpoint-lg: 1280px`, reset tactile global (AR8). Le CSS de démonstration généré par le starter (styles du composant `HelloWorld`) a été conservé tel quel — hors périmètre de cette story.
@@ -157,33 +157,33 @@ Claude Sonnet 5 (claude-sonnet-5)
 
 ### File List
 
-- `carom-scoreboard/.gitignore` (généré par le scaffold)
-- `carom-scoreboard/.vscode/extensions.json` (généré par le scaffold)
-- `carom-scoreboard/README.md` (généré par le scaffold)
-- `carom-scoreboard/index.html` (généré par le scaffold)
-- `carom-scoreboard/package.json` (généré + dépendances ajoutées + script `test`)
-- `carom-scoreboard/package-lock.json` (généré)
-- `carom-scoreboard/public/favicon.svg` (généré par le scaffold)
-- `carom-scoreboard/pwa-assets.config.ts` (généré par le scaffold)
-- `carom-scoreboard/tsconfig.json` (généré par le scaffold)
-- `carom-scoreboard/tsconfig.app.json` (généré par le scaffold)
-- `carom-scoreboard/tsconfig.node.json` (généré par le scaffold)
-- `carom-scoreboard/vite.config.ts` (généré + plugin `tailwindcss()` ajouté)
-- `carom-scoreboard/vitest.config.ts` (créé)
-- `carom-scoreboard/src/main.ts` (import CSS mis à jour)
-- `carom-scoreboard/src/App.vue` (généré par le scaffold, non modifié)
-- `carom-scoreboard/src/vite-env.d.ts` (généré par le scaffold)
-- `carom-scoreboard/src/assets/main.css` (renommé depuis `style.css` + tokens `@theme` + reset tactile)
-- `carom-scoreboard/src/assets/vue.svg` (généré par le scaffold)
-- `carom-scoreboard/src/components/HelloWorld.vue` (généré par le scaffold, non modifié)
-- `carom-scoreboard/src/components/PWABadge.vue` (généré par le scaffold, non modifié)
-- `carom-scoreboard/src/components/.gitkeep` (créé)
-- `carom-scoreboard/src/types/.gitkeep` (créé)
-- `carom-scoreboard/src/stores/.gitkeep` (créé)
-- `carom-scoreboard/src/services/.gitkeep` (créé)
-- `carom-scoreboard/src/composables/.gitkeep` (créé)
-- `carom-scoreboard/src/views/.gitkeep` (créé)
-- `carom-scoreboard/src/router/.gitkeep` (créé)
+- `1score/.gitignore` (généré par le scaffold)
+- `1score/.vscode/extensions.json` (généré par le scaffold)
+- `1score/README.md` (généré par le scaffold)
+- `1score/index.html` (généré par le scaffold)
+- `1score/package.json` (généré + dépendances ajoutées + script `test`)
+- `1score/package-lock.json` (généré)
+- `1score/public/favicon.svg` (généré par le scaffold)
+- `1score/pwa-assets.config.ts` (généré par le scaffold)
+- `1score/tsconfig.json` (généré par le scaffold)
+- `1score/tsconfig.app.json` (généré par le scaffold)
+- `1score/tsconfig.node.json` (généré par le scaffold)
+- `1score/vite.config.ts` (généré + plugin `tailwindcss()` ajouté)
+- `1score/vitest.config.ts` (créé)
+- `1score/src/main.ts` (import CSS mis à jour)
+- `1score/src/App.vue` (généré par le scaffold, non modifié)
+- `1score/src/vite-env.d.ts` (généré par le scaffold)
+- `1score/src/assets/main.css` (renommé depuis `style.css` + tokens `@theme` + reset tactile)
+- `1score/src/assets/vue.svg` (généré par le scaffold)
+- `1score/src/components/HelloWorld.vue` (généré par le scaffold, non modifié)
+- `1score/src/components/PWABadge.vue` (généré par le scaffold, non modifié)
+- `1score/src/components/.gitkeep` (créé)
+- `1score/src/types/.gitkeep` (créé)
+- `1score/src/stores/.gitkeep` (créé)
+- `1score/src/services/.gitkeep` (créé)
+- `1score/src/composables/.gitkeep` (créé)
+- `1score/src/views/.gitkeep` (créé)
+- `1score/src/router/.gitkeep` (créé)
 
 ## Change Log
 

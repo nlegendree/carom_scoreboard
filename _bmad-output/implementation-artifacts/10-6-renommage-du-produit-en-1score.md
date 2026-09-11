@@ -12,6 +12,8 @@ so that le nom du produit est cohérent avant que l'interface premium ne s'affic
 
 > **Cadrage (bmad-create-story, 2026-09-11) — story courte, transverse, sans écran.** Première story de l'Epic 10 (ordre 10.6 → 10.1 → …) : la sidebar de la 10.1 affiche le mot `1Score`. Le PRD et la spec UX sont **déjà** renommés. Aucune règle de jeu, aucun état, aucune persistance ne change. Aucune référence visuelle à fournir (pas d'écran). Exigence : **AR27** (`epics.md`).
 
+> **Révision (2026-09-11, Nathan, après la revue) — renommage étendu.** En dev, rien à préserver : le dossier applicatif devient `1score/` et la clé de sauvegarde `1score:game`, sans migration. Cela annule l'AC2 et la partie « dossier / clé » de l'AC4 ci-dessous. Restent à l'ancien nom, à renommer plus tard (`deferred-work.md`) : le dépôt GitHub `nlegendree/carom_scoreboard`, le dossier local `carom_scoreboard` et le site Netlify. Les chemins `carom-scoreboard/…` de cette fiche sont ceux d'avant la révision.
+
 ## Acceptance Criteria
 
 1. **Given** le dépôt **When** la story est livrée **Then** le produit se nomme « 1Score » dans : le manifest PWA de `vite.config.ts` (`name: '1Score'`, `short_name: '1Score'`), `index.html` (`<title>1Score</title>`), `package.json` (`"name": "1score"` — **minuscules imposées par npm**, voir Dev Notes) et `package-lock.json` (mêmes deux champs `name`), `README.md` et `CLAUDE.md` (titre et mentions) ; l'`alt` du logo de `HomeScreen.vue` vaut `1Score` et son test suit ; `grep -ri "carom scoreboard" carom-scoreboard/src carom-scoreboard/index.html carom-scoreboard/vite.config.ts` ne renvoie **rien**.

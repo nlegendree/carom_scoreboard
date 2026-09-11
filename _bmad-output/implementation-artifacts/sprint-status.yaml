@@ -79,7 +79,7 @@ development_status:
 
   epic-10: in-progress # ajoutée le 2026-09-11 — « Refonte UI/UX Premium (1Score) », jalon V1.1, EXÉCUTÉE ICI (juste après l'Epic 2, avant l'Epic 4) malgré son numéro (sprint-change-proposal-2026-09-11-refonte-ui.md)
   # Stories listées dans l'ordre d'exécution d'epics.md (10.6 → 10.1 → 10.2 → 10.3 → 10.4 → 10.5 → 10.7), pas dans l'ordre des numéros
-  10-6-renommage-du-produit-en-1score: done # EN PREMIER — la sidebar de la 10.1 affiche « 1Score » ; package.json, manifest, index.html, README, CLAUDE.md ; clé localStorage, dossier et Netlify non renommés
+  10-6-renommage-du-produit-en-1score: done # EN PREMIER — la sidebar de la 10.1 affiche « 1Score » ; package.json, manifest, index.html, README, CLAUDE.md ; dossier applicatif et clé localStorage renommés en 1score après revue ; dépôt GitHub, dossier local et site Netlify plus tard
   10-1-refonte-de-laccueil-barre-laterale-tuiles-de-mode-fond-degrade: backlog # tokens + dégradé, SideBar (API complète), ModeTile, état BIENTÔT ; « Fermer l'application » affiché mais inerte, sans spike (décision de Nathan, 2026-09-11)
   10-2-refonte-de-la-selection-des-modes-jds-tuiles-et-choix-cadre: backlog # tuiles JDS, PromptModal variante « liste » pour Cadre 47/2·47/1·71/2
   10-3-refonte-du-parametrage-joueurs-saisie-en-place-bille-et-cote-dissocies: backlog # NumericPadDock, AlphaKeyboardSheet, CHANGER DE BILLE / CHANGER DE CÔTÉ, PlayerSetupModal supprimé, ÉCHANGER retiré du jeu (DT1, DT4, DT5, DT7)

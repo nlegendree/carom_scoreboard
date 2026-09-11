@@ -159,7 +159,7 @@ so that la fin de partie soit le moment le plus gratifiant de la session — « 
   - [x] 8.5 `sprint-status.yaml` : `1-11-…` → `done # absorbée par 1-10 (décision de Nathan, 2026-09-10)` ; `1-10-…` → `review` en fin de story.
 
 - [x] **Task 9 — Vérification qualité**
-  - [x] 9.1 `npm test`, `npx vue-tsc -b`, `npm run build` verts depuis `carom-scoreboard/` ; aucune régression sur les **228 tests** de départ (hors réécritures explicitement listées : « returns to the home screen from the exit control », tests `HomeScreen` démarrant sans distance) ; aucune dépendance ajoutée.
+  - [x] 9.1 `npm test`, `npx vue-tsc -b`, `npm run build` verts depuis `1score/` ; aucune régression sur les **228 tests** de départ (hors réécritures explicitement listées : « returns to the home screen from the exit control », tests `HomeScreen` démarrant sans distance) ; aucune dépendance ajoutée.
 
 ### Review Findings
 
@@ -170,16 +170,16 @@ so that la fin de partie soit le moment le plus gratifiant de la session — « 
 - [x] [Review][Patch] (décision de Nathan, 2026-09-10 : **supprimer**) `closable` / croix / `close` de `PromptModal` : code mort qui contredit la règle « pas de croix » — l'amendement dit « `closable` n'a plus d'usage », la fiche UX dit « la croix n'est utilisée nulle part », mais la prop, le bouton `✕`, trois tests et la mention « croix optionnelle » d'`architecture.md:273` restent. Supprimer (recommandé) ou garder comme option (`PromptModal.vue:14-27,42-50`, `PromptModal.test.ts`).
 - [x] [Review][Dismissed] (décision de Nathan, 2026-09-10 : **garder les deux libellés**) Même libellé `FIN DE PARTIE` pour deux actions opposées — sur l'offre d'égalisatrice il signifie « le blanc gagne, récap » (`GameView.vue:295`), sur le récap « retour à l'accueil, partie jetée » (`GameView.vue:343`), sans confirmation. Les deux libellés viennent de Nathan ; la collision mérite un arbitrage.
 - [x] [Review][Patch] (décision de Nathan, 2026-09-10 : **conserver le drapeau** en `finished`) `finishGame()` remet `equalizingReprise` à `false`, hors Task 2.6 et non documenté — en `finished`, `GameState` ne dit plus si la partie s'est jouée jusqu'à l'égalisatrice (info utile à l'historique 3.1 et à la persistance 1.12). Retirer la ligne et le test qui l'exige (recommandé), ou documenter l'écart (`useGameStore.ts:456`).
-- [x] [Review][Patch] Grâce anti-tap fantôme : absente après `<NOM> JOUE` (`acceptEqualizingReprise` sans `lockPanels()`, le CTA est au-dessus des panneaux comme `ANNULER` de sortie) et non prouvée sur `ANNULER` de sortie (le test avance de 300 ms avant tout geste : retirer `lockPanels()` de `closeExitPrompt` laisse la suite verte, la mutation 5.6 survit) [carom-scoreboard/src/views/GameView.vue:288-296 ; carom-scoreboard/src/views/GameView.test.ts:876-883]
-- [x] [Review][Patch] Commentaires de code et specs qui décrivent encore la croix supprimée comme filet de correction [carom-scoreboard/src/stores/useGameStore.ts:358,419-421,477 ; carom-scoreboard/src/views/GameView.vue:317 ; carom-scoreboard/src/components/PromptModal.vue:6 ; carom-scoreboard/src/stores/useGameStore.test.ts:1276,1299 ; _bmad-output/planning-artifacts/epics.md:606 ; _bmad-output/planning-artifacts/ux-design-specification.md:332,416 ; _bmad-output/planning-artifacts/architecture.md:273 ; Dev Agent Record de cette story (« Écart mineur » Task 5, note Task 7 « croix 90×90 »)]
-- [x] [Review][Patch] Passe visuelle (CLAUDE.md §9, Task 7) non refaite après les amendements alors que des éléments ont été ajoutés : CTA secondaire `ANNULER` (+ 90 px et `gap-3`) sur « TERMINER LA PARTIE ? » et « DISTANCE MANQUANTE », libellé `<NOM> JOUE` avec un nom jusqu'à 20 caractères sans `truncate` — à revérifier en 1024×768 et 768×1024 [carom-scoreboard/src/views/GameView.vue:288-311 ; carom-scoreboard/src/components/HomeScreen.vue:311-318]
-- [x] [Review][Patch] Test dupliqué sous le même nom « leaves straight to the home screen when nothing was played », mêmes assertions dans les deux `describe` [carom-scoreboard/src/views/GameView.test.ts:49,894]
+- [x] [Review][Patch] Grâce anti-tap fantôme : absente après `<NOM> JOUE` (`acceptEqualizingReprise` sans `lockPanels()`, le CTA est au-dessus des panneaux comme `ANNULER` de sortie) et non prouvée sur `ANNULER` de sortie (le test avance de 300 ms avant tout geste : retirer `lockPanels()` de `closeExitPrompt` laisse la suite verte, la mutation 5.6 survit) [1score/src/views/GameView.vue:288-296 ; 1score/src/views/GameView.test.ts:876-883]
+- [x] [Review][Patch] Commentaires de code et specs qui décrivent encore la croix supprimée comme filet de correction [1score/src/stores/useGameStore.ts:358,419-421,477 ; 1score/src/views/GameView.vue:317 ; 1score/src/components/PromptModal.vue:6 ; 1score/src/stores/useGameStore.test.ts:1276,1299 ; _bmad-output/planning-artifacts/epics.md:606 ; _bmad-output/planning-artifacts/ux-design-specification.md:332,416 ; _bmad-output/planning-artifacts/architecture.md:273 ; Dev Agent Record de cette story (« Écart mineur » Task 5, note Task 7 « croix 90×90 »)]
+- [x] [Review][Patch] Passe visuelle (CLAUDE.md §9, Task 7) non refaite après les amendements alors que des éléments ont été ajoutés : CTA secondaire `ANNULER` (+ 90 px et `gap-3`) sur « TERMINER LA PARTIE ? » et « DISTANCE MANQUANTE », libellé `<NOM> JOUE` avec un nom jusqu'à 20 caractères sans `truncate` — à revérifier en 1024×768 et 768×1024 [1score/src/views/GameView.vue:288-311 ; 1score/src/components/HomeScreen.vue:311-318]
+- [x] [Review][Patch] Test dupliqué sous le même nom « leaves straight to the home screen when nothing was played », mêmes assertions dans les deux `describe` [1score/src/views/GameView.test.ts:49,894]
 - [x] [Review][Patch] Story : la Décision 14 dit « plafonnement dans l'action, **avant** le snapshot », le code et la Task 2.2 font l'inverse (`pushHistory()` puis `capToRemainingDistance`) — corriger le texte de la Décision 14 [_bmad-output/implementation-artifacts/1-10-…md, Dev Notes, Décision 14]
-- [x] [Review][Patch] `PlayerId` non adopté dans le nouveau code de test (Décision 16) [carom-scoreboard/src/stores/useGameStore.test.ts:1104 ; carom-scoreboard/src/views/GameView.test.ts:689]
+- [x] [Review][Patch] `PlayerId` non adopté dans le nouveau code de test (Décision 16) [1score/src/stores/useGameStore.test.ts:1104 ; 1score/src/views/GameView.test.ts:689]
 - [x] [Review][Patch] Passe visuelle refaite après les correctifs (1024×768 et 768×1024, harnais iframe recréé puis supprimé) : « DISTANCE MANQUANTE », offre d'égalisatrice avec un nom de 20 caractères (`WWWWWWWWWWWWWWWWWWWW JOUE` tient sur une ligne dans les deux formats), « PARTIE TERMINÉE », « TERMINER LA PARTIE ? » — cartes centrées, CTA 606×90, aucun débordement ; `ÉCHANGER` inerte pendant l'égalisatrice ; sortie après un seul `+` → confirmation ; récap ruban rouge, barre basse à deux CTA de 90 px ; console vierge. *Observation, non bloquante* : dans le bandeau du récap, un nom de 20 lettres larges est tronqué par l'ellipse et masque « / distance » — cas extrême, consigné dans `deferred-work.md`.
-- [x] [Review][Defer] Store non durci contre les actions reçues pendant une pop-up ouverte (pilotage déporté V2+) : `checkEndOfGame` écrase un `endPrompt` existant ; `undoLastAction`/`adjustScore`/`swapPlayers` ne ferment pas la pop-up ; après `dismissEndPrompt` en égalisatrice, le blanc peut revalider et déclencher une seconde offre ; `finishGame` par la sortie pendant une offre vaut refus de l'égalisatrice. Injoignable au doigt (voile plein écran, aucun bouton pour `dismissEndPrompt`) [carom-scoreboard/src/stores/useGameStore.ts:399-408,444-461] — deferred, pre-existing (même famille que le différé « undo par pilotage déporté » de la 1.7)
-- [x] [Review][Defer] `endPrompt` absent de `GameState` alors que le commentaire du store promet sa persistance en 1.12 ; une restauration en pleine offre d'égalisatrice retomberait sur un scoreboard sans pop-up [carom-scoreboard/src/types/game.ts:98-113 ; carom-scoreboard/src/stores/useGameStore.ts:115-118] — deferred, à fixer avec le format persisté (1.12)
-- [x] [Review][Defer] `PromptModal` sans sémantique de dialogue (`role="dialog"`, `aria-modal`, `aria-labelledby`, focus) [carom-scoreboard/src/components/PromptModal.vue:38-46] — deferred, pre-existing (même arbitrage « borne fixe » que `ScoreEntryModal`/`PlayerSetupModal`, deferred-work.md revue 1.5)
+- [x] [Review][Defer] Store non durci contre les actions reçues pendant une pop-up ouverte (pilotage déporté V2+) : `checkEndOfGame` écrase un `endPrompt` existant ; `undoLastAction`/`adjustScore`/`swapPlayers` ne ferment pas la pop-up ; après `dismissEndPrompt` en égalisatrice, le blanc peut revalider et déclencher une seconde offre ; `finishGame` par la sortie pendant une offre vaut refus de l'égalisatrice. Injoignable au doigt (voile plein écran, aucun bouton pour `dismissEndPrompt`) [1score/src/stores/useGameStore.ts:399-408,444-461] — deferred, pre-existing (même famille que le différé « undo par pilotage déporté » de la 1.7)
+- [x] [Review][Defer] `endPrompt` absent de `GameState` alors que le commentaire du store promet sa persistance en 1.12 ; une restauration en pleine offre d'égalisatrice retomberait sur un scoreboard sans pop-up [1score/src/types/game.ts:98-113 ; 1score/src/stores/useGameStore.ts:115-118] — deferred, à fixer avec le format persisté (1.12)
+- [x] [Review][Defer] `PromptModal` sans sémantique de dialogue (`role="dialog"`, `aria-modal`, `aria-labelledby`, focus) [1score/src/components/PromptModal.vue:38-46] — deferred, pre-existing (même arbitrage « borne fixe » que `ScoreEntryModal`/`PlayerSetupModal`, deferred-work.md revue 1.5)
 
 ## Dev Notes
 
@@ -250,24 +250,24 @@ Suite au démarrage : **228 tests, 11 fichiers, verts** ; `vue-tsc -b` et `build
 Nouveaux fichiers (architecture : composants flat, tests co-localisés — AR16) :
 
 ```
-carom-scoreboard/src/components/PromptModal.vue
-carom-scoreboard/src/components/PromptModal.test.ts
-carom-scoreboard/src/components/GameSummary.vue          (prévu par l'architecture)
-carom-scoreboard/src/components/GameSummary.test.ts
+1score/src/components/PromptModal.vue
+1score/src/components/PromptModal.test.ts
+1score/src/components/GameSummary.vue          (prévu par l'architecture)
+1score/src/components/GameSummary.test.ts
 ```
 
 Modifiés :
 
 ```
-carom-scoreboard/src/types/game.ts
-carom-scoreboard/src/stores/useGameStore.ts
-carom-scoreboard/src/stores/useGameStore.test.ts
-carom-scoreboard/src/views/GameView.vue
-carom-scoreboard/src/views/GameView.test.ts
-carom-scoreboard/src/components/HomeScreen.vue
-carom-scoreboard/src/components/HomeScreen.test.ts
-carom-scoreboard/src/components/PlayerSetupModal.vue     (prop initialField)
-carom-scoreboard/src/components/PlayerSetupModal.test.ts
+1score/src/types/game.ts
+1score/src/stores/useGameStore.ts
+1score/src/stores/useGameStore.test.ts
+1score/src/views/GameView.vue
+1score/src/views/GameView.test.ts
+1score/src/components/HomeScreen.vue
+1score/src/components/HomeScreen.test.ts
+1score/src/components/PlayerSetupModal.vue     (prop initialField)
+1score/src/components/PlayerSetupModal.test.ts
 _bmad-output/planning-artifacts/epics.md                 (1.4, 1.10, 1.11, 1.15, UX-DR13)
 _bmad-output/planning-artifacts/ux-design-specification.md
 _bmad-output/planning-artifacts/architecture.md
@@ -302,12 +302,12 @@ Aucune question ouverte ne reste à la création.
 - [Source: 1-5-saisir-le-score-dune-serie-au-pave-numerique.md#Dev Notes — Décisions 6, 7, 15, 16]
 - [Source: 1-4-configurer-les-parametres-du-match-avant-de-demarrer.md — distance optionnelle, `PlayerSetupModal`]
 - [Source: deferred-work.md — revue 1.3 « `finished` sans branche de rendu » ; revue 1.5 « sortie destructive » ; revue 1.7 « undo refusé hors `playing` »]
-- [Source: carom-scoreboard/src/stores/useGameStore.ts:309-336,342-362,367-369,402-416] — `validateScoreInput`, `passTurn`, `undoLastAction`, `playedReprises`, `resetGame`
-- [Source: carom-scoreboard/src/views/GameView.vue:109-111,116-118,233-243] — `leaveGame`, branches de statut, montage de la modale
-- [Source: carom-scoreboard/src/components/HomeScreen.vue:30,114-121,247-255] — `targetScores`, `confirm`, `PlayerSetupModal`
-- [Source: carom-scoreboard/src/components/ScoreEntryModal.vue:140-152] — coquille de pop-up à reprendre
-- [Source: carom-scoreboard/src/assets/main.css:22-25] — tokens victoire
-- [Source: carom-scoreboard/CLAUDE.md §1, §2, §4, §6, §7, §8, §9]
+- [Source: 1score/src/stores/useGameStore.ts:309-336,342-362,367-369,402-416] — `validateScoreInput`, `passTurn`, `undoLastAction`, `playedReprises`, `resetGame`
+- [Source: 1score/src/views/GameView.vue:109-111,116-118,233-243] — `leaveGame`, branches de statut, montage de la modale
+- [Source: 1score/src/components/HomeScreen.vue:30,114-121,247-255] — `targetScores`, `confirm`, `PlayerSetupModal`
+- [Source: 1score/src/components/ScoreEntryModal.vue:140-152] — coquille de pop-up à reprendre
+- [Source: 1score/src/assets/main.css:22-25] — tokens victoire
+- [Source: 1score/CLAUDE.md §1, §2, §4, §6, §7, §8, §9]
 - [Source: mémoire projet « raisonner-en-tactile-tablette »]
 
 ## Change Log
@@ -354,21 +354,21 @@ Claude Fable 5.1 (claude-fable-5-1) — session bmad-dev-story du 2026-09-10.
 ### File List
 
 Nouveaux :
-- `carom-scoreboard/src/components/PromptModal.vue`
-- `carom-scoreboard/src/components/PromptModal.test.ts`
-- `carom-scoreboard/src/components/GameSummary.vue`
-- `carom-scoreboard/src/components/GameSummary.test.ts`
+- `1score/src/components/PromptModal.vue`
+- `1score/src/components/PromptModal.test.ts`
+- `1score/src/components/GameSummary.vue`
+- `1score/src/components/GameSummary.test.ts`
 
 Modifiés :
-- `carom-scoreboard/src/types/game.ts`
-- `carom-scoreboard/src/stores/useGameStore.ts`
-- `carom-scoreboard/src/stores/useGameStore.test.ts`
-- `carom-scoreboard/src/views/GameView.vue`
-- `carom-scoreboard/src/views/GameView.test.ts`
-- `carom-scoreboard/src/components/HomeScreen.vue`
-- `carom-scoreboard/src/components/HomeScreen.test.ts`
-- `carom-scoreboard/src/components/PlayerSetupModal.vue`
-- `carom-scoreboard/src/components/PlayerSetupModal.test.ts`
+- `1score/src/types/game.ts`
+- `1score/src/stores/useGameStore.ts`
+- `1score/src/stores/useGameStore.test.ts`
+- `1score/src/views/GameView.vue`
+- `1score/src/views/GameView.test.ts`
+- `1score/src/components/HomeScreen.vue`
+- `1score/src/components/HomeScreen.test.ts`
+- `1score/src/components/PlayerSetupModal.vue`
+- `1score/src/components/PlayerSetupModal.test.ts`
 - `_bmad-output/planning-artifacts/epics.md`
 - `_bmad-output/planning-artifacts/ux-design-specification.md`
 - `_bmad-output/planning-artifacts/architecture.md`
@@ -376,4 +376,4 @@ Modifiés :
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
 - `_bmad-output/implementation-artifacts/1-10-terminer-une-partie-et-consulter-le-recapitulatif-automatique.md`
 
-Temporaire (créé puis supprimé) : `carom-scoreboard/public/_viewport-harness.html`.
+Temporaire (créé puis supprimé) : `1score/public/_viewport-harness.html`.

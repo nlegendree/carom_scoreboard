@@ -1234,7 +1234,7 @@ describe('GameView — reprise après fermeture', () => {
     expect(prompt(wrapper).exists()).toBe(false)
     expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
     expect(store.status).toBe('idle')
-    expect(localStorage.getItem('carom-scoreboard:game')).toBeNull()
+    expect(localStorage.getItem('1score:game')).toBeNull()
   })
 
   // Décision 3 : fermeture pendant la saisie → la pop-up de saisie se rouvre, chiffres compris.
@@ -1294,14 +1294,14 @@ describe('GameView — reprise après fermeture', () => {
 
   it('shows no prompt and drops a corrupted save', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {})
-    localStorage.setItem('carom-scoreboard:game', '{oops')
+    localStorage.setItem('1score:game', '{oops')
     const store = useGameStore()
     store.checkSavedGame()
     const wrapper = mount(GameView)
     await wrapper.vm.$nextTick()
 
     expect(prompt(wrapper).exists()).toBe(false)
-    expect(localStorage.getItem('carom-scoreboard:game')).toBeNull()
+    expect(localStorage.getItem('1score:game')).toBeNull()
   })
 
   // Le store porte désormais `entryOpen` : ouvrir et fermer la saisie passe par lui.

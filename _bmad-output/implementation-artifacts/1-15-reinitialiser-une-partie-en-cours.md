@@ -112,14 +112,14 @@ so that un faux départ ou une partie d'échauffement se corrige sur place, sans
 *Revue de code adversariale du 2026-09-10 (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 28 findings bruts, 9 écartés comme bruit après vérification (mocks restaurés par `beforeEach`, compte à rebours d'auto-validation annulé au démontage, `MAX_UNDO_DEPTH` = 1000 théorique, largeur < 530 px hors périmètre tablette, tests/`vue-tsc`/build revérifiés au vert, références de lignes historiques de `deferred-work.md`, motif `advanceTimersByTime(300)` établi depuis la 1.5, test de reprise via le store autorisé par la Task 3.3, duplication des handlers couverte par la dette « markup dupliqué »).*
 
 - [x] [Review][Decision] Task 4 cochée alors que le glyphe n'est pas tranché — **résolu (Nathan, 2026-09-10) : flèche seule, picto grisé et libellé conservés ; consigné dans la Task 4, les Completion Notes et les questions ouvertes.** Détail initial : — la tâche dit « Nathan tranche le glyphe à ce moment » et les Completion Notes le laissent « à trancher » ; les questions ouvertes 2 (grisé vs masqué) et 3 (libellé « RECOMMENCER LA PARTIE ? » vs « REPARTIR DE ZÉRO ? ») restent aussi sans réponse consignée. Choix à prendre : flèche seule (livrée) ou flèche + croix centrale (`M9 9l6 6M15 9l-6 6`, `stroke-width="1.5"`).
-- [x] [Review][Patch] La garde `canUndo` d'`askRestart` n'est prouvée par aucun test : `trigger('pointerdown')` de Vue Test Utils ne dispatch rien sur un bouton `disabled`, donc le test AC2 passe avec ou sans la garde, contrairement à la note « le test AC2 vérifie l'un et l'autre » ; happy-dom délivre bien un `dispatchEvent(new Event('pointerdown'))` natif au bouton désactivé (vérifié), c'est ce qu'il faut dispatcher pour prouver la garde [carom-scoreboard/src/views/GameView.test.ts:941]
-- [x] [Review][Patch] Test store principal en partie tautologique : `entryOpen`, `currentInput`, `endPrompt`, `winner`, `finishedAt` ne sont jamais sortis de leur valeur par défaut avant `restartGame()` ; seule l'offre `equalizing-offer` est couverte, jamais la pop-up `over` ; la branche `finished` de « refuses to restart » ne vérifie ni `startedAt`, ni `finishedAt`, ni les scores ; aucun test n'est annoté AC8 [carom-scoreboard/src/stores/useGameStore.test.ts:1483-1583]
-- [x] [Review][Patch] `saves after restart` démarre sans distances et ne vérifie pas `targetScore` dans la sauvegarde — le seul champ que `restartGame` doit réinjecter à la main [carom-scoreboard/src/stores/useGameStore.test.ts:1798]
-- [x] [Review][Patch] `aria-label` non épinglé (`toBeTruthy()` seulement) alors que la spec fixe « Recommencer la partie » ; un copier-coller de « Quitter la partie » passerait [carom-scoreboard/src/views/GameView.test.ts:311]
-- [x] [Review][Patch] AC5 « moyenne et meilleure série à leur état initial » non vérifié par le test de vue après RECOMMENCER (`data-testid="average"` / `"best-series"` disponibles dans `PlayerPanel`) [carom-scoreboard/src/views/GameView.test.ts:993]
-- [x] [Review][Patch] Indentation cassée dans les deux `<template v-else>` : `<button` au niveau du `<template>`, attributs et enfants quatre espaces plus loin (pas de formateur dans le projet, à réindenter à la main) [carom-scoreboard/src/views/GameView.vue:266-384]
+- [x] [Review][Patch] La garde `canUndo` d'`askRestart` n'est prouvée par aucun test : `trigger('pointerdown')` de Vue Test Utils ne dispatch rien sur un bouton `disabled`, donc le test AC2 passe avec ou sans la garde, contrairement à la note « le test AC2 vérifie l'un et l'autre » ; happy-dom délivre bien un `dispatchEvent(new Event('pointerdown'))` natif au bouton désactivé (vérifié), c'est ce qu'il faut dispatcher pour prouver la garde [1score/src/views/GameView.test.ts:941]
+- [x] [Review][Patch] Test store principal en partie tautologique : `entryOpen`, `currentInput`, `endPrompt`, `winner`, `finishedAt` ne sont jamais sortis de leur valeur par défaut avant `restartGame()` ; seule l'offre `equalizing-offer` est couverte, jamais la pop-up `over` ; la branche `finished` de « refuses to restart » ne vérifie ni `startedAt`, ni `finishedAt`, ni les scores ; aucun test n'est annoté AC8 [1score/src/stores/useGameStore.test.ts:1483-1583]
+- [x] [Review][Patch] `saves after restart` démarre sans distances et ne vérifie pas `targetScore` dans la sauvegarde — le seul champ que `restartGame` doit réinjecter à la main [1score/src/stores/useGameStore.test.ts:1798]
+- [x] [Review][Patch] `aria-label` non épinglé (`toBeTruthy()` seulement) alors que la spec fixe « Recommencer la partie » ; un copier-coller de « Quitter la partie » passerait [1score/src/views/GameView.test.ts:311]
+- [x] [Review][Patch] AC5 « moyenne et meilleure série à leur état initial » non vérifié par le test de vue après RECOMMENCER (`data-testid="average"` / `"best-series"` disponibles dans `PlayerPanel`) [1score/src/views/GameView.test.ts:993]
+- [x] [Review][Patch] Indentation cassée dans les deux `<template v-else>` : `<button` au niveau du `<template>`, attributs et enfants quatre espaces plus loin (pas de formateur dans le projet, à réindenter à la main) [1score/src/views/GameView.vue:266-384]
 - [x] [Review][Patch] Note Story 3.1 d'`epics.md` inexacte : « le seul chemin de sortie d'une partie entamée passe par le récap » — deux sorties sans récap existent (picto de sortie sur scoreboard intact → accueil direct ; « PARTIE EN COURS » › `ANNULER` jette une sauvegarde avec séries) ; l'Epic 3 serait planifié sur une prémisse fausse [_bmad-output/planning-artifacts/epics.md:853]
-- [x] [Review][Defer] État local des pop-ups (`restartPromptOpen`, `exitPromptOpen`) non réconcilié avec le store en pilotage déporté : rien ne les referme quand `status` quitte `playing` ou qu'une partie neuve démarre, pas d'exclusion mutuelle entre les deux pop-ups, `confirmRestart` ne revérifie pas `canUndo`, et un `restartGame()` reçu pendant `entryOpen` referme le pavé sans grâce anti-tap fantôme [carom-scoreboard/src/views/GameView.vue:137-193] — deferred, pre-existing (famille « store non durci pendant une pop-up », différée en 1.7/1.10 ; injoignable au doigt : le voile recouvre la barre ; explicitement hors périmètre de la story)
+- [x] [Review][Defer] État local des pop-ups (`restartPromptOpen`, `exitPromptOpen`) non réconcilié avec le store en pilotage déporté : rien ne les referme quand `status` quitte `playing` ou qu'une partie neuve démarre, pas d'exclusion mutuelle entre les deux pop-ups, `confirmRestart` ne revérifie pas `canUndo`, et un `restartGame()` reçu pendant `entryOpen` referme le pavé sans grâce anti-tap fantôme [1score/src/views/GameView.vue:137-193] — deferred, pre-existing (famille « store non durci pendant une pop-up », différée en 1.7/1.10 ; injoignable au doigt : le voile recouvre la barre ; explicitement hors périmètre de la story)
 
 ## Dev Notes
 
@@ -174,7 +174,7 @@ so that un faux départ ou une partie d'échauffement se corrige sur place, sans
 
 ### Project Structure Notes
 
-- Aucun fichier nouveau. Modifiés : `carom-scoreboard/src/stores/useGameStore.ts`, `useGameStore.test.ts`, `src/views/GameView.vue`, `GameView.test.ts` ; specs `_bmad-output/planning-artifacts/{epics,ux-design-specification,architecture}.md`, `_bmad-output/implementation-artifacts/{deferred-work.md,sprint-status.yaml}`.
+- Aucun fichier nouveau. Modifiés : `1score/src/stores/useGameStore.ts`, `useGameStore.test.ts`, `src/views/GameView.vue`, `GameView.test.ts` ; specs `_bmad-output/planning-artifacts/{epics,ux-design-specification,architecture}.md`, `_bmad-output/implementation-artifacts/{deferred-work.md,sprint-status.yaml}`.
 - Nommage (AR15) : action `restartGame` (verbe + nom, cohérent avec `resetGame`/`finishGame`/`rematch`), `data-testid="restart-button"`, `restartPromptOpen`.
 - Stack inchangée : Vue 3.5 `<script setup>`, Pinia 4, Tailwind 4 (`--spacing: 8px`), Vitest 5 + happy-dom 20. Aucune dépendance ajoutée, aucune ressource réseau (garde de test 1.13 : le SVG est inline).
 
@@ -194,7 +194,7 @@ so that un faux départ ou une partie d'échauffement se corrige sur place, sans
 - [Source: 1-10 story — Décisions 3, 9, 11 ; Review Findings « sortie sur `!canUndo` », « grâce sur `<NOM> JOUE` » ; Completion Notes Task 5]
 - [Source: 1-12 story — cadrage (pop-up de reprise, pile persistée, `entryOpen` dans le store, confirmation locale à la vue)]
 - [Source: deferred-work.md — revue 1.3 « QUITTER destructif » ; revue 1.5 « sortie destructive » (traité 1.10), « markup dupliqué dans la barre basse » ; revue 1.10 « store non durci pendant une pop-up »]
-- [Source: carom-scoreboard/CLAUDE.md §2 (pointer), §4 (Pinia), §6 (tests), §7 (`--spacing: 8px`), §9 (validation)]
+- [Source: 1score/CLAUDE.md §2 (pointer), §4 (Pinia), §6 (tests), §7 (`--spacing: 8px`), §9 (validation)]
 - [Source: code — `useGameStore.ts` (`startGame`, `rematch`, `resetGame`, `persistedState`), `GameView.vue` (barre basse, `exitPromptOpen`, `lockPanels`), `CenterPanel.vue` (`disabled:opacity-30`), `PromptModal.vue`, `GameView.test.ts` (helpers « fin de partie »), `useGameStore.test.ts` (tests `rematch`, `saves after rematch`)]
 
 ## Change Log
@@ -227,10 +227,10 @@ Claude Fable 5.1 (claude-fable-5-1), session bmad-dev-story du 2026-09-10.
 
 ### File List
 
-- `carom-scoreboard/src/stores/useGameStore.ts` — action `restartGame()`, commentaire `resetGame`, export
-- `carom-scoreboard/src/stores/useGameStore.test.ts` — 4 tests `restartGame` (fin de partie) + `saves after restart` (persistance)
-- `carom-scoreboard/src/views/GameView.vue` — picto RECOMMENCER ×2, `restartPromptOpen`/`askRestart`/`closeRestartPrompt`/`confirmRestart`, `PromptModal` « RECOMMENCER LA PARTIE ? », `PICTO_BUTTON_CLASSES`, commentaires
-- `carom-scoreboard/src/views/GameView.test.ts` — 5 tests (voisinage des pictos, picto inerte, ANNULER + grâce, RECOMMENCER + grâce, reprise après fermeture)
+- `1score/src/stores/useGameStore.ts` — action `restartGame()`, commentaire `resetGame`, export
+- `1score/src/stores/useGameStore.test.ts` — 4 tests `restartGame` (fin de partie) + `saves after restart` (persistance)
+- `1score/src/views/GameView.vue` — picto RECOMMENCER ×2, `restartPromptOpen`/`askRestart`/`closeRestartPrompt`/`confirmRestart`, `PromptModal` « RECOMMENCER LA PARTIE ? », `PICTO_BUTTON_CLASSES`, commentaires
+- `1score/src/views/GameView.test.ts` — 5 tests (voisinage des pictos, picto inerte, ANNULER + grâce, RECOMMENCER + grâce, reprise après fermeture)
 - `_bmad-output/planning-artifacts/epics.md` — notes Story 1.15 et Story 3.1
 - `_bmad-output/planning-artifacts/ux-design-specification.md` — §2.5, fiches `ActionBar` et `PromptModal`
 - `_bmad-output/planning-artifacts/architecture.md` — note store, fiche `PromptModal.vue`

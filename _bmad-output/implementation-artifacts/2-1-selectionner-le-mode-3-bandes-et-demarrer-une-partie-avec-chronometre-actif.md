@@ -206,7 +206,7 @@ So that je joue avec un chronomètre de série toujours actif, cohérent avec le
 
 ### Project Structure Notes
 
-- Nouveaux : `carom-scoreboard/src/composables/useTimer.ts`, `src/composables/useTimer.test.ts`, `src/components/ShotClock.vue`, `src/components/ShotClock.test.ts`.
+- Nouveaux : `1score/src/composables/useTimer.ts`, `src/composables/useTimer.test.ts`, `src/components/ShotClock.vue`, `src/components/ShotClock.test.ts`.
 - Modifiés : `src/types/game.ts` (1 ligne), `src/components/CenterPanel.vue` + test, `src/views/GameView.vue` + test, `src/components/HomeScreen.test.ts` (1 test ajouté) ; specs `_bmad-output/planning-artifacts/{epics,architecture,ux-design-specification}.md`, `_bmad-output/implementation-artifacts/{deferred-work.md,sprint-status.yaml}`.
 - Nommage (AR15) : `useTimer` (composable, pas de store — pas d'état de partie), fonction verbe+nom (`resetTimer`), constante `SHOT_CLOCK_SECONDS` en export nommé ; `ShotClock` (composant PascalCase) ; `data-testid="shot-clock"`/`"shot-clock-label"`/`"shot-clock-value"`.
 - Stack inchangée : Vue 3.5 `<script setup>`, Pinia 4, Tailwind 4, Vitest 5 + happy-dom 20. Aucune dépendance ajoutée — `setInterval` et SVG natifs, pas de librairie de graphique circulaire.
@@ -273,19 +273,19 @@ claude-fable-5-1 (Claude Fable 5.1)
 
 ### File List
 
-- `carom-scoreboard/src/types/game.ts` (modifié — `available: true`)
-- `carom-scoreboard/src/composables/useTimer.ts` (nouveau)
-- `carom-scoreboard/src/composables/useTimer.test.ts` (nouveau)
-- `carom-scoreboard/src/components/ShotClock.vue` (nouveau ; revu le 2026-09-11 — taille fluide, fondu de couleur)
-- `carom-scoreboard/src/components/ShotClock.test.ts` (nouveau)
-- `carom-scoreboard/src/components/CenterPanel.vue` (modifié)
-- `carom-scoreboard/src/components/CenterPanel.test.ts` (modifié)
-- `carom-scoreboard/src/components/HomeScreen.test.ts` (modifié)
-- `carom-scoreboard/src/views/GameView.vue` (modifié)
-- `carom-scoreboard/src/views/GameView.test.ts` (modifié)
+- `1score/src/types/game.ts` (modifié — `available: true`)
+- `1score/src/composables/useTimer.ts` (nouveau)
+- `1score/src/composables/useTimer.test.ts` (nouveau)
+- `1score/src/components/ShotClock.vue` (nouveau ; revu le 2026-09-11 — taille fluide, fondu de couleur)
+- `1score/src/components/ShotClock.test.ts` (nouveau)
+- `1score/src/components/CenterPanel.vue` (modifié)
+- `1score/src/components/CenterPanel.test.ts` (modifié)
+- `1score/src/components/HomeScreen.test.ts` (modifié)
+- `1score/src/views/GameView.vue` (modifié)
+- `1score/src/views/GameView.test.ts` (modifié)
 - `_bmad-output/planning-artifacts/epics.md` (modifié)
 - `_bmad-output/planning-artifacts/architecture.md` (modifié)
 - `_bmad-output/planning-artifacts/ux-design-specification.md` (modifié)
 - `_bmad-output/implementation-artifacts/deferred-work.md` (modifié)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modifié)
-- Temporaire (créé puis supprimé) : `carom-scoreboard/public/_viewport-harness.html`
+- Temporaire (créé puis supprimé) : `1score/public/_viewport-harness.html`

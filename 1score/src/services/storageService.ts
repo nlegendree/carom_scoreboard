@@ -8,8 +8,8 @@ import type { GameState } from '../types/game'
 // et personne d'autre (AR12 — `try/catch` + `console.error` ici, jamais dans le store ni
 // un composant : la partie continue en mémoire, sans message au joueur).
 
-// Ancien nom conservé à dessein (Story 10.6) : le renommer ferait perdre la partie sauvegardée à la mise à jour.
-export const GAME_STORAGE_KEY = 'carom-scoreboard:game'
+// Changer la clé sans migration ferait perdre la partie sauvegardée à la mise à jour.
+export const GAME_STORAGE_KEY = '1score:game'
 // Enveloppe versionnée : une autre version est jetée, pas migrée (rien à migrer pour un
 // filet de sécurité — la partie perdue est celle du rechargement qui suit une mise à jour
 // incompatible, et c'est acceptable). RÈGLE : tout changement de forme de `GameState`

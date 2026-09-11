@@ -79,7 +79,7 @@ Suite au démarrage : **204 tests, 12 fichiers, verts** ; `vue-tsc -b` et `build
 - [Source: ux-design-specification.md#UX Pattern Analysis — Billizone, « score restant vers l'objectif »]
 - [Source: ux-design-specification.md#Custom Components — PlayerPanel]
 - [Source: 1-5-saisir-le-score-dune-serie-au-pave-numerique.md#Dev Notes — Décisions 5, 12, 16 ; Pièges]
-- [Source: carom-scoreboard/CLAUDE.md §6, §9]
+- [Source: 1score/CLAUDE.md §6, §9]
 
 ## Change Log
 
@@ -112,8 +112,8 @@ Claude Fable 5.1 (claude-fable-5-1)
 
 ### File List
 
-- `carom-scoreboard/src/views/GameView.test.ts` (modifié, +1 test)
-- `carom-scoreboard/src/components/PlayerPanel.test.ts` (modifié, +1 test)
+- `1score/src/views/GameView.test.ts` (modifié, +1 test)
+- `1score/src/components/PlayerPanel.test.ts` (modifié, +1 test)
 - `_bmad-output/planning-artifacts/epics.md` (modifié, Stories 1.6 et 2.2)
 - `_bmad-output/planning-artifacts/ux-design-specification.md` (modifié, §UX Pattern Analysis ×3, fiche `PlayerPanel`)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modifié, `1-6` → review)

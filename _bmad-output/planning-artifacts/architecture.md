@@ -67,7 +67,7 @@ Vue 3, React, SvelteKit, Solid.js — Vue 3 sélectionné : bundle 34KB (< React
 ### Starter Sélectionné : `@vite-pwa/create-pwa` (template vue-ts)
 
 ```bash
-npm create @vite-pwa/pwa@latest carom-scoreboard -- --template vue-ts
+npm create @vite-pwa/pwa@latest 1score -- --template vue-ts
 ```
 
 **Dépendances complémentaires :**
@@ -226,7 +226,7 @@ interface GameState {
 *Note (2026-09-10, Story 1.10)* : `PlayerId = 'player1' | 'player2'` est un type nommé de `game.ts`. La détection de fin vit dans le **store** (`checkEndOfGame` en fin des actions de série), qui expose une pop-up de décision `endPrompt: EndPrompt | null` (`equalizing-offer` ou `over` avec `winner`) ; `GameView` ne fait que l'afficher et appeler `finishGame()`, seule action de clôture, qui déduit le vainqueur du contexte (pop-up ou prorata). *(Note 2026-09-10, Story 1.15 : `restartGame()` = `startGame(...)` avec le mode, les noms et les distances courants, gardée sur `playing` — même recette que `rematch()`, gardée sur `finished`. Une partie recommencée ne passe **jamais** par `finished` : ni récap, ni vainqueur, ni ligne d'historique.)* `equalizingReprise` fait partie de `GameSnapshot` (annuler la série gagnante défait l'offre acceptée) ; `endPrompt`, `winner` et `finishedAt` n'y sont pas — le récap est terminal, `undoLastAction` reste un no-op hors `playing`. `endPrompt` fait en revanche partie de `GameState` et est **restauré en 1.12**.
 
 **Persistance (Story 1.12, 2026-09-10)** — filet de sécurité pour une tablette qui tourne 24 h/24 : la fermeture accidentelle est rare, le cas réel est le **rechargement** (mise à jour de la PWA par le Service Worker, `⌘R`, onglet tué par l'OS).
-- `storageService.ts` est le **seul** point de contact avec `localStorage` (AR12, vérifié par test `?raw` sur `GameView`, `HomeScreen`, `useGameStore`). Clé `carom-scoreboard:game`, enveloppe versionnée `{ version: 1, savedAt, state: GameState }` ; une autre version ou une forme inattendue est **jetée** (`console.warn` + suppression), pas migrée. Un stockage qui lève est absorbé (`console.error`), la partie continue en mémoire sans message au joueur.
+- `storageService.ts` est le **seul** point de contact avec `localStorage` (AR12, vérifié par test `?raw` sur `GameView`, `HomeScreen`, `useGameStore`). Clé `1score:game`, enveloppe versionnée `{ version: 1, savedAt, state: GameState }` ; une autre version ou une forme inattendue est **jetée** (`console.warn` + suppression), pas migrée. Un stockage qui lève est absorbé (`console.error`), la partie continue en mémoire sans message au joueur.
 - Le store construit `persistedState = computed<GameState>` (complet par typage) et un `watch` (flush `pre`, ni `immediate` ni `sync`) écrit **une fois par action, dans le même tick** ; un état `idle` n'est jamais écrit — `resetGame()` **supprime** l'entrée. Aucun `beforeunload`/`pagehide`. Pas de debounce (le prototype `explore/` en avait un de 500 ms).
 - La **pile d'annulation est persistée intégralement** (décision de Nathan) : après une reprise, `ANNULER` remonte les actions d'avant la fermeture, parité des côtés respectée. Coût : ≈ 52 octets par reprise et par snapshot en JSON (≈ 350 Ko pour 100 actions sur 60 reprises), au-dessus du repère « < 50 Ko » d'AR4 mais loin du quota ; à revoir avec le `+1` par point du 3 Bandes (Epic 2), un bornage à l'écriture est une ligne.
 - `entryOpen` monte de la vue dans le store : une fermeture pendant la saisie rouvre la pop-up de saisie avec ses chiffres (le compte à rebours de 3 s repart).
@@ -320,7 +320,7 @@ Réglages en V1 : modales inline sur `GameView`, pas de route dédiée.
 
 **CI/CD :** Netlify built-in — pas de GitHub Actions nécessaire pour V1.
 
-*Note (Story 1.13, 2026-09-10)* : livré — `netlify.toml` **à la racine du dépôt** (`base = "carom-scoreboard"`, `publish = "dist"`, `command = "npm run build"`, redirection SPA `/* → /index.html 200`). Le rattachement du dépôt GitHub `nlegendree/carom_scoreboard` au site Netlify est une action manuelle, hors code.
+*Note (Story 1.13, 2026-09-10)* : livré — `netlify.toml` **à la racine du dépôt** (`base = "1score"`, `publish = "dist"`, `command = "npm run build"`, redirection SPA `/* → /index.html 200`). Le rattachement du dépôt GitHub `nlegendree/carom_scoreboard` au site Netlify est une action manuelle, hors code.
 
 **Monitoring V1 :** `try/catch` sur opérations storage + `console.error`.
 **Monitoring V2+ (différé) :** Sentry (erreurs) + Plausible (analytics RGPD-friendly, sans cookie).
@@ -479,12 +479,12 @@ async function loadHistory(): Promise<void> {
 
 ### Repository Layout
 
-Le dépôt Git racine (déjà existant, contient `_bmad/`, `_bmad-output/`, `docs/`, `explore/`, `.claude/`) héberge tout — artefacts BMad inclus — pour rester synchronisé entre les deux postes de travail de Nathan. Le code applicatif ne vit pas à la racine du dépôt : il est isolé dans un sous-dossier dédié `carom-scoreboard/`, dont l'arborescence complète est détaillée ci-dessous. Toute commande `npm`/`vite`/`vitest` s'exécute avec ce sous-dossier comme working directory.
+Le dépôt Git racine (déjà existant, contient `_bmad/`, `_bmad-output/`, `docs/`, `explore/`, `.claude/`) héberge tout — artefacts BMad inclus — pour rester synchronisé entre les deux postes de travail de Nathan. Le code applicatif ne vit pas à la racine du dépôt : il est isolé dans un sous-dossier dédié `1score/`, dont l'arborescence complète est détaillée ci-dessous. Toute commande `npm`/`vite`/`vitest` s'exécute avec ce sous-dossier comme working directory.
 
 ### Arborescence Complète
 
 ```
-carom-scoreboard/               ← sous-dossier applicatif, PAS la racine du dépôt Git
+1score/               ← sous-dossier applicatif, PAS la racine du dépôt Git
 │
 ├── CLAUDE.md                    ← 🔑 Guide IA (premier fichier créé)
 ├── README.md
@@ -496,7 +496,7 @@ carom-scoreboard/               ← sous-dossier applicatif, PAS la racine du d�
 ├── vitest.config.ts
 ├── .gitignore
 ├── .nvmrc                       ← Node version fixée
-├── netlify.toml                 ← Config déploiement Netlify (Story 1.13 : remonté à la RACINE du dépôt, `base` désigne carom-scoreboard/)
+├── netlify.toml                 ← Config déploiement Netlify (Story 1.13 : remonté à la RACINE du dépôt, `base` désigne 1score/)
 │
 ├── public/
 │   ├── manifest.json            ← PWA manifest (icônes, nom, display standalone)
@@ -670,4 +670,4 @@ src/composables/
 
 **Points forts :** Stack battle-tested connue des modèles IA, patterns explicites sans ambiguïté, progressive enhancement clair V1a→V1b→V2+, compatibilité multi-plateforme validée (iPad EU ✅, Android signage ✅).
 
-**Prochaine étape :** Créer `CLAUDE.md` + initialiser le projet avec `npm create @vite-pwa/pwa@latest carom-scoreboard -- --template vue-ts`.
+**Prochaine étape :** Créer `CLAUDE.md` + initialiser le projet avec `npm create @vite-pwa/pwa@latest 1score -- --template vue-ts`.

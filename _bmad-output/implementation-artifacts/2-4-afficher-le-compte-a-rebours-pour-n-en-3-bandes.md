@@ -56,8 +56,8 @@ claude-fable-5-1 (Claude Fable 5.1)
 
 ### File List
 
-- `carom-scoreboard/src/components/PlayerPanel.vue` (modifié)
-- `carom-scoreboard/src/components/PlayerPanel.test.ts` (modifié)
-- `carom-scoreboard/src/views/GameView.vue` (modifié)
-- `carom-scoreboard/src/views/GameView.test.ts` (modifié)
+- `1score/src/components/PlayerPanel.vue` (modifié)
+- `1score/src/components/PlayerPanel.test.ts` (modifié)
+- `1score/src/views/GameView.vue` (modifié)
+- `1score/src/views/GameView.test.ts` (modifié)
 - `_bmad-output/planning-artifacts/epics.md`, `ux-design-specification.md`, `_bmad-output/implementation-artifacts/deferred-work.md`, `sprint-status.yaml` (modifiés)

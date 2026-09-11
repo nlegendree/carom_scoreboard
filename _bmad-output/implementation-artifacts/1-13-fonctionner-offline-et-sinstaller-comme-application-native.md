@@ -23,7 +23,7 @@ so that le scoreboard soit toujours disponible sur les tablettes de club, sans n
 3. **Given** une nouvelle version déployée **When** la vérification périodique (60 min, en ligne) ou un lancement la détecte **Then** elle est appliquée par rechargement **seulement** quand `status === 'idle'` : tout de suite si l'accueil est affiché, sinon dès le retour à l'accueil après la partie ; jamais pendant `playing` ni `finished`. Toute erreur (enregistrement, vérification, hors ligne) est absorbée avec `console.error('[pwa] …')`, sans message au joueur. Plus aucun `PWABadge`, plus aucun texte anglais.
 4. **Given** le manifest **When** je l'inspecte (Chrome DevTools › Application › Manifest, Lighthouse « Installable ») **Then** il porte `name: 'Carom Scoreboard'`, `short_name: 'Carom'`, `description` en français, `lang: 'fr'`, `id: '/'`, `start_url: '/'`, `scope: '/'`, `display: 'standalone'`, `theme_color` et `background_color` `#0D1117`, les icônes 64/192/512 + maskable, **sans avertissement d'installabilité** ; `index.html` est en `lang="fr"`, titré « Carom Scoreboard », avec `apple-mobile-web-app-capable` et `apple-mobile-web-app-status-bar-style="black"`.
 5. **Given** l'application déployée en HTTPS **When** j'utilise « Installer l'application » (Chrome Android 10+) ou « Sur l'écran d'accueil » (Safari iPadOS 15+) **Then** elle se lance en **standalone**, sans barre de navigateur, sur fond sombre, et fonctionne hors ligne — **vérification sur appareil réel par Nathan**, seule étape de la story qui ne peut pas être faite en local (FR46).
-6. **Given** le dépôt **When** je lis `netlify.toml` à sa racine **Then** il fixe `base = "carom-scoreboard"`, `publish = "dist"`, `command = "npm run build"` et la redirection SPA `/* → /index.html 200` (indispensable pour `createWebHistory` et les routes `/history` de l'Epic 3). Le rattachement du dépôt GitHub `nlegendree/carom_scoreboard` au site Netlify est une action manuelle de Nathan, hors code (AR11).
+6. **Given** le dépôt **When** je lis `netlify.toml` à sa racine **Then** il fixe `base = "1score"`, `publish = "dist"`, `command = "npm run build"` et la redirection SPA `/* → /index.html 200` (indispensable pour `createWebHistory` et les routes `/history` de l'Epic 3). Le rattachement du dépôt GitHub `nlegendree/carom_scoreboard` au site Netlify est une action manuelle de Nathan, hors code (AR11).
 7. **Given** les specs **When** je lis `architecture.md`, `epics.md`, `CLAUDE.md`, `deferred-work.md` **Then** les décisions ci-dessus y sont consignées par notes datées (voir Task 7).
 
 ## Tasks / Subtasks
@@ -63,10 +63,10 @@ so that le scoreboard soit toujours disponible sur les tablettes de club, sans n
   - [x] 4.2 `CLAUDE.md` › section « Stack technique », une ligne : « **Offline** : aucune ressource réseau au runtime — polices auto-hébergées (`.woff2` dans `src/assets/`), jamais de CDN ni Google Fonts (FR45, NFR13). Le SW précache tout le build ; la mise à jour s'applique à l'accueil via `usePwaUpdate.ts`. »
 
 - [x] **Task 5 — Netlify (AC: 6)**
-  - [x] 5.1 Créer `netlify.toml` **à la racine du dépôt** (pas dans `carom-scoreboard/` : c'est `base` qui désigne le sous-dossier, Netlify lit d'abord le fichier racine) :
+  - [x] 5.1 Créer `netlify.toml` **à la racine du dépôt** (pas dans `1score/` : c'est `base` qui désigne le sous-dossier, Netlify lit d'abord le fichier racine) :
     ```toml
     [build]
-      base = "carom-scoreboard"
+      base = "1score"
       publish = "dist"
       command = "npm run build"
 
@@ -76,8 +76,8 @@ so that le scoreboard soit toujours disponible sur les tablettes de club, sans n
       status = 200
     ```
     Pas d'en-têtes `Cache-Control` : Netlify sert déjà les fichiers non hachés en `max-age=0, must-revalidate` (donc `sw.js` et `manifest.webmanifest` sont revalidés à chaque vérification), et les assets hachés sont révisionnés par le précache.
-  - [x] 5.2 Netlify lira `carom-scoreboard/.nvmrc` (`26.8.1`). Le poste qui a fait les 1.5 → 1.12 tourne en **24.13.0** ; les deux versions passent `npm run build` (Vite 7). Si le build Netlify échoue sur la version Node, ajouter `[build.environment] NODE_VERSION = "24"` — ne pas toucher `.nvmrc` sans Nathan (choix explicite de la revue 1.1).
-  - [x] 5.3 Annoter `architecture.md` › Arborescence : `netlify.toml` remonte de `carom-scoreboard/` à la racine du dépôt (note datée). Le rattachement du site (Netlify › Add new site › Import from GitHub › `nlegendree/carom_scoreboard`, branche `main`) est **manuel**, à faire par Nathan ; la story ne le bloque pas.
+  - [x] 5.2 Netlify lira `1score/.nvmrc` (`26.8.1`). Le poste qui a fait les 1.5 → 1.12 tourne en **24.13.0** ; les deux versions passent `npm run build` (Vite 7). Si le build Netlify échoue sur la version Node, ajouter `[build.environment] NODE_VERSION = "24"` — ne pas toucher `.nvmrc` sans Nathan (choix explicite de la revue 1.1).
+  - [x] 5.3 Annoter `architecture.md` › Arborescence : `netlify.toml` remonte de `1score/` à la racine du dépôt (note datée). Le rattachement du site (Netlify › Add new site › Import from GitHub › `nlegendree/carom_scoreboard`, branche `main`) est **manuel**, à faire par Nathan ; la story ne le bloque pas.
 
 - [x] **Task 6 — Vérification hors ligne, installabilité et mise à jour (AC: 1, 2, 3, 4, 5 — CLAUDE.md §9, une seule passe)**
   - [x] 6.1 `npm run build && npm run preview` (le SW n'existe **pas** en `npm run dev` : `devOptions.enabled: false`, à laisser ainsi). Chrome (extension Claude for Chrome) sur l'URL de preview : DevTools › Application › Service Workers → `activated and is running` ; › Manifest → aucun avertissement, bouton d'installation présent ; Lighthouse › « Installable ».
@@ -110,7 +110,7 @@ so that le scoreboard soit toujours disponible sur les tablettes de club, sans n
 
 ### Project Structure Notes
 
-Nouveaux : `carom-scoreboard/src/composables/usePwaUpdate.ts`, `carom-scoreboard/src/composables/usePwaUpdate.test.ts`, `netlify.toml` (racine du dépôt). Modifiés : `carom-scoreboard/vite.config.ts`, `carom-scoreboard/vitest.config.ts`, `carom-scoreboard/index.html`, `carom-scoreboard/src/App.vue`, `carom-scoreboard/CLAUDE.md`, `architecture.md`, `epics.md`, `ux-design-specification.md`, `deferred-work.md`, `sprint-status.yaml`. Supprimés : `carom-scoreboard/src/components/PWABadge.vue`, `carom-scoreboard/src/composables/.gitkeep`. Écart d'arborescence assumé : `netlify.toml` à la racine du dépôt et non dans `carom-scoreboard/` (Task 5.3).
+Nouveaux : `1score/src/composables/usePwaUpdate.ts`, `1score/src/composables/usePwaUpdate.test.ts`, `netlify.toml` (racine du dépôt). Modifiés : `1score/vite.config.ts`, `1score/vitest.config.ts`, `1score/index.html`, `1score/src/App.vue`, `1score/CLAUDE.md`, `architecture.md`, `epics.md`, `ux-design-specification.md`, `deferred-work.md`, `sprint-status.yaml`. Supprimés : `1score/src/components/PWABadge.vue`, `1score/src/composables/.gitkeep`. Écart d'arborescence assumé : `netlify.toml` à la racine du dépôt et non dans `1score/` (Task 5.3).
 
 ### References
 
@@ -121,7 +121,7 @@ Nouveaux : `carom-scoreboard/src/composables/usePwaUpdate.ts`, `carom-scoreboard
 - [Source: 1-12-preserver-letat-de-la-partie-en-cas-de-fermeture-accidentelle.md — cadrage « mise à jour de la PWA par le Service Worker » comme cas réel de rechargement, recette `?raw`, passe visuelle par iframe]
 - [Source: 1-1-initialisation-du-projet.md — Review Findings différés (`PWABadge`, `globPatterns`/`navigateFallback`, `lang="en"`), Dev Notes « Netlify à signaler au PM »]
 - [Source: deferred-work.md — revue 1.1 (quatre entrées à clore)]
-- [Source: carom-scoreboard/vite.config.ts, vitest.config.ts, index.html, pwa-assets.config.ts, src/App.vue, src/components/PWABadge.vue, src/router/index.ts (`createWebHistory` + catch-all), src/stores/useGameStore.ts (`status`, `resetGame`, `finishGame`), src/services/storageService.test.ts (recette `?raw`), dist/sw.js et dist/manifest.webmanifest du build courant]
+- [Source: 1score/vite.config.ts, vitest.config.ts, index.html, pwa-assets.config.ts, src/App.vue, src/components/PWABadge.vue, src/router/index.ts (`createWebHistory` + catch-all), src/stores/useGameStore.ts (`status`, `resetGame`, `finishGame`), src/services/storageService.test.ts (recette `?raw`), dist/sw.js et dist/manifest.webmanifest du build courant]
 - [Source: sondes du 2026-09-10 — `vi.mock` seul échoue sur le module virtuel ; `VitePWA()` dans `vitest.config.ts` le résout ; alias vers `client/build/vue.js` échoue ; `npm view` : vite-plugin-pwa 1.3.0, workbox-window 7.4.1, assets-generator 1.0.2 = versions installées]
 - [Source: mémoires « tablette-allumee-h24-resilience-filet-de-securite », « gros-cta-plutot-que-croix », « raisonner-en-tactile-tablette »]
 
@@ -163,15 +163,15 @@ Claude Fable 5.1 (claude-fable-5-1) — session bmad-dev-story du 2026-09-10.
 
 Nouveaux :
 - `netlify.toml`
-- `carom-scoreboard/src/composables/usePwaUpdate.ts`
-- `carom-scoreboard/src/composables/usePwaUpdate.test.ts`
+- `1score/src/composables/usePwaUpdate.ts`
+- `1score/src/composables/usePwaUpdate.test.ts`
 
 Modifiés :
-- `carom-scoreboard/vite.config.ts`
-- `carom-scoreboard/vitest.config.ts`
-- `carom-scoreboard/index.html`
-- `carom-scoreboard/src/App.vue`
-- `carom-scoreboard/CLAUDE.md`
+- `1score/vite.config.ts`
+- `1score/vitest.config.ts`
+- `1score/index.html`
+- `1score/src/App.vue`
+- `1score/CLAUDE.md`
 - `_bmad-output/planning-artifacts/architecture.md`
 - `_bmad-output/planning-artifacts/epics.md`
 - `_bmad-output/planning-artifacts/ux-design-specification.md`
@@ -181,5 +181,5 @@ Modifiés :
 - `_bmad-output/implementation-artifacts/1-13-fonctionner-offline-et-sinstaller-comme-application-native.md`
 
 Supprimés :
-- `carom-scoreboard/src/components/PWABadge.vue`
-- `carom-scoreboard/src/composables/.gitkeep`
+- `1score/src/components/PWABadge.vue`
+- `1score/src/composables/.gitkeep`

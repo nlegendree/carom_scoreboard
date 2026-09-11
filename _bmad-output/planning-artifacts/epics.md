@@ -130,7 +130,7 @@ This document provides the complete epic and story breakdown for Carom Scoreboar
 ### Additional Requirements
 
 **Starter Template (impacte Epic 1 / Story 1) :** Architecture spécifie explicitement l'initialisation du projet via le starter `@vite-pwa/create-pwa` (template `vue-ts`) :
-`npm create @vite-pwa/pwa@latest carom-scoreboard -- --template vue-ts`
+`npm create @vite-pwa/pwa@latest 1score -- --template vue-ts`
 Ceci doit être la toute première story d'implémentation, suivie immédiatement par la création de `CLAUDE.md`.
 
 - AR1 : Initialiser le projet avec le starter Vue 3 + Vite PWA (`@vite-pwa/create-pwa`, template vue-ts) — première story d'implémentation.
@@ -162,7 +162,7 @@ Ceci doit être la toute première story d'implémentation, suivie immédiatemen
 - AR24 : Règle de jeu réécrite : **« la bille blanche ouvre, où qu'elle soit »** — le compteur de reprises avance quand le joueur **à la bille blanche** reprend la main, la reprise égalisatrice appartient au joueur **à la bille jaune**, et le récap conserve les côtés du scoreboard. « Gauche = blanc » n'est plus une invariante du store (conséquence d'AR21).
 - AR25 : `PlayerPanel` reçoit un champ **dérivé** `RESTANT = max(distance − score, 0)`, permanent, tous modes, masqué sans distance — calculé comme `POUR n` l'est déjà, **aucun nouvel état persisté**, `GameState` inchangé.
 - AR26 : **Spike de faisabilité « Fermer l'application »** à mener avant la Story 10.1 : aucune API standard fiable ne ferme une PWA installée (`window.close()` ne fonctionne que sur une fenêtre ouverte par script). Cible = fermeture de la fenêtre après confirmation ; **repli documenté** = retour à l'accueil de l'application, la pop-up de confirmation restant identique. Le libellé ne promet rien de plus que ce que le spike confirme. **Décision de Nathan (2026-09-11, passe epics) : non prioritaire** — en Epic 10, l'item est **affiché dans la sidebar mais inerte** (état BIENTÔT, UX-DR30), **sans spike ni pop-up** ; le spike et le comportement réel sont reportés à une story ultérieure, hors Epic 10.
-- AR27 : **Renommage « Carom Scoreboard » → « 1Score »** en un seul passage transverse : `CLAUDE.md`, manifest PWA (`name`, `short_name`, titre), `package.json`, titres d'écran et `<title>`. Le PRD est déjà renommé (2026-09-11). Le dossier `carom-scoreboard/` et le dépôt ne sont pas renommés (aucun bénéfice, risque de casser Netlify).
+- AR27 : **Renommage « Carom Scoreboard » → « 1Score »** en un seul passage transverse : `CLAUDE.md`, manifest PWA (`name`, `short_name`, titre), `package.json`, titres d'écran et `<title>`. Le PRD est déjà renommé (2026-09-11). Le dossier `carom-scoreboard/` et le dépôt ne sont pas renommés (aucun bénéfice, risque de casser Netlify). *Révisé le 2026-09-11 après la revue de la 10.6 (Nathan, en dev) : dossier applicatif renommé `1score/` et clé de sauvegarde `1score:game` ; dépôt GitHub, dossier local et site Netlify à renommer plus tard (`deferred-work.md`).*
 
 ### UX Design Requirements
 
@@ -391,7 +391,7 @@ So that chaque story suivante dispose d'une base fonctionnelle, buildable et ins
 **Acceptance Criteria:**
 
 **Given** un environnement Node.js configuré
-**When** j'exécute `npm create @vite-pwa/pwa@latest carom-scoreboard -- --template vue-ts`
+**When** j'exécute `npm create @vite-pwa/pwa@latest 1score -- --template vue-ts`
 **Then** un projet Vue 3 + TypeScript + Vite est créé avec le plugin PWA configuré (AR1)
 
 **Given** le projet scaffoldé
@@ -762,7 +762,7 @@ So that fermer l'application accidentellement ne fasse jamais perdre ma progress
 3. **Fermeture pendant la saisie** : la pop-up de saisie se rouvre avec les chiffres déjà tapés (`entryOpen` monte de `GameView` dans le store).
 4. **Aucune limite d'âge** : une sauvegarde de la veille est proposée telle quelle.
 
-Au passage, la story **fixe le format persisté** : `GameState` = `+ scoreAdjustments, sidesSwapped, history, endPrompt, entryOpen`, `− isNegative`. Clé `carom-scoreboard:game`, enveloppe versionnée (version inconnue ou forme inattendue → jetée avec `console.warn`, pas de migration). Écriture par `watch` du store, une par action, jamais en `idle` (`resetGame` supprime l'entrée).
+Au passage, la story **fixe le format persisté** : `GameState` = `+ scoreAdjustments, sidesSwapped, history, endPrompt, entryOpen`, `− isNegative`. Clé `1score:game`, enveloppe versionnée (version inconnue ou forme inattendue → jetée avec `console.warn`, pas de migration). Écriture par `watch` du store, une par action, jamais en `idle` (`resetGame` supprime l'entrée).
 
 ### Story 1.13: Fonctionner offline et s'installer comme application native
 
@@ -1777,11 +1777,12 @@ So that le nom du produit est cohérent avant que l'interface premium ne s'affic
 
 **Given** le dépôt
 **When** la story est livrée
-**Then** `package.json` (`name`), le manifest PWA de `vite.config.ts` (`name: '1Score'`, `short_name: '1Score'`), `index.html` (`<title>`), `README.md` et `CLAUDE.md` (titre et mentions) portent « 1Score » ; plus aucune occurrence de « Carom Scoreboard » ne subsiste dans `carom-scoreboard/src`, les tests compris (l'`alt` du logo de `HomeScreen` est remplacé par le nouveau nom)
+**Then** `package.json` (`name`), le manifest PWA de `vite.config.ts` (`name: '1Score'`, `short_name: '1Score'`), `index.html` (`<title>`), `README.md` et `CLAUDE.md` (titre et mentions) portent « 1Score » ; plus aucune occurrence de « Carom Scoreboard » ne subsiste dans `1score/src`, les tests compris (l'`alt` du logo de `HomeScreen` est remplacé par le nouveau nom)
 
 **Given** une tablette avec une partie sauvegardée
 **When** l'application se met à jour
 **Then** la sauvegarde est retrouvée : la clé `carom-scoreboard:game` de `localStorage` **n'est pas renommée** (décision assumée, sans migration)
+*(Révisé le 2026-09-11 après la revue : clé renommée `1score:game`, sans migration — rien à préserver en dev.)*
 
 **Given** une PWA déjà installée sous l'ancien nom
 **When** elle se met à jour
@@ -1791,6 +1792,7 @@ So that le nom du produit est cohérent avant que l'interface premium ne s'affic
 **Given** le déploiement
 **When** la story est livrée
 **Then** le dossier `carom-scoreboard/`, le dépôt Git, `netlify.toml` et le site Netlify ne sont **pas** renommés (aucun bénéfice utilisateur, risque sur le déploiement) ; `npm run build` et les tests passent
+*(Révisé le 2026-09-11 après la revue : dossier renommé `1score/`, `netlify.toml` suit ; dépôt GitHub, dossier local et site Netlify à renommer plus tard.)*
 
 ### Story 10.7: Finition transverse — sémantique des pop-ups, `reduced-motion`, contraste et portrait
 

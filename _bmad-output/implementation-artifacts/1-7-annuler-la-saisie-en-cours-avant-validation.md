@@ -86,22 +86,22 @@ so that aucune erreur — série mal saisie, main rendue par mégarde, correctio
 
 _Revue de code du 2026-09-09 (bmad-code-review : Blind Hunter, Edge Case Hunter, Acceptance Auditor). Base : `git diff HEAD`, 11 fichiers, +637/−25. Vérifié par le reviewer : 226 tests verts, `vue-tsc -b` et `npm run build` verts, harnais absent de `public/`, `package*.json` intacts._
 
-- [x] [Review][Patch] Plafond `MAX_UNDO_DEPTH` relevé de 200 à 1000 [carom-scoreboard/src/stores/useGameStore.ts:13] — décision de Nathan (revue du 2026-09-09) : 200 contredisait la promesse « jusqu'au début de la partie » des notes de spec (un `+` = une action, 3 Bandes à venir) ; un snapshot ne porte que des références, le coût est négligeable. Adapter le commentaire, le test « keeps at most 200 snapshots » et la Décision 11.
-- [x] [Review][Patch] Tap fantôme sur `ANNULER`/`ÉCHANGER` après l'auto-validation : la grâce de 300 ms ne couvre pas la console centrale [carom-scoreboard/src/views/GameView.vue:121] — la carte de la pop-up (`max-w-2xl`, centrée) recouvre la colonne centrale ; à la fermeture automatique, un doigt qui arrive sur l'emplacement d'une touche peut atterrir sur `ANNULER` et défaire la série qui vient d'être validée (ou sur `ÉCHANGER`). Passer `@undo` et `@swap-players` par `panelsAcceptInput()` comme `passTurn`/`adjustScore`, et le verrouiller par un test `GameView` (fake timers : auto-validation puis `pointerdown` immédiat sur `undo-button` → série conservée ; après 300 ms → annulée).
-- [x] [Review][Patch] Expression du plafond fragile : `slice(-(MAX_UNDO_DEPTH - 1))` [carom-scoreboard/src/stores/useGameStore.ts:130] — `slice(-0)` renvoie le tableau entier si la constante vaut 1. Écrire `history.value = [...history.value, takeSnapshot()].slice(-MAX_UNDO_DEPTH)`, plus lisible et robuste.
-- [x] [Review][Patch] Test du plafond non discriminant [carom-scoreboard/src/stores/useGameStore.test.ts:393-401] — seuls `toHaveLength(200)` et `history[0]` sont vérifiés. Ajouter : `history[199].scoreAdjustments.player1 === 200`, un `undoLastAction()` → `player1.score === 200`, puis 200 appuis au total → `canUndo` faux et `player1.score === 1` (le plus ancien état, `0`, a bien été abandonné).
-- [x] [Review][Patch] Extension du test hors partie sans assertion propre à la pile [carom-scoreboard/src/stores/useGameStore.test.ts:705-712] — `undoLastAction()` en `idle` est appelé mais rien ne vérifie `history`/`canUndo`. Ajouter `expect(store.history).toEqual([])` : verrouille un `pushHistory` placé avant la garde `status` dans `adjustScore`/`passTurn`/`validateScoreInput`. (La garde d'`undoLastAction` elle-même reste indiscriminable tant qu'aucun état `finished` n'existe — 1.11.)
-- [x] [Review][Patch] AC3 : la fermeture de la pop-up sans valider n'est couverte par aucun test [carom-scoreboard/src/views/GameView.test.ts:686] — ouvrir la saisie, taper un chiffre, fermer par `modal-close-button` puis (second cas) par un tap sur `modal-backdrop` → `undo-button` `disabled` et `store.canUndo` faux. Une mutation « `pushHistory` dans `clearScoreInput` » resterait verte aujourd'hui.
-- [x] [Review][Patch] `toContain('REP')` non discriminant [carom-scoreboard/src/components/CenterPanel.test.ts:26] — passe avec `REPRISE`, `PREP`… ; seul le `not.toContain('REPRISE')` fait le travail, et rien ne vérifie l'élément. Poser `data-testid="reprise-label"` sur le `<span>` (`CenterPanel.vue:18`) et asserter `toBe('REP')`.
-- [x] [Review][Patch] Commentaire de restauration erroné [carom-scoreboard/src/stores/useGameStore.ts:352-353] — « le snapshot restant dans la pile ne doit pas être corrompu » : le snapshot vient d'être dépilé (`:346`), il n'est plus dans la pile. La copie reste utile (ne pas aliaser l'état vivant avec l'objet du snapshot, miroir ou non), mais la justification doit être exacte.
+- [x] [Review][Patch] Plafond `MAX_UNDO_DEPTH` relevé de 200 à 1000 [1score/src/stores/useGameStore.ts:13] — décision de Nathan (revue du 2026-09-09) : 200 contredisait la promesse « jusqu'au début de la partie » des notes de spec (un `+` = une action, 3 Bandes à venir) ; un snapshot ne porte que des références, le coût est négligeable. Adapter le commentaire, le test « keeps at most 200 snapshots » et la Décision 11.
+- [x] [Review][Patch] Tap fantôme sur `ANNULER`/`ÉCHANGER` après l'auto-validation : la grâce de 300 ms ne couvre pas la console centrale [1score/src/views/GameView.vue:121] — la carte de la pop-up (`max-w-2xl`, centrée) recouvre la colonne centrale ; à la fermeture automatique, un doigt qui arrive sur l'emplacement d'une touche peut atterrir sur `ANNULER` et défaire la série qui vient d'être validée (ou sur `ÉCHANGER`). Passer `@undo` et `@swap-players` par `panelsAcceptInput()` comme `passTurn`/`adjustScore`, et le verrouiller par un test `GameView` (fake timers : auto-validation puis `pointerdown` immédiat sur `undo-button` → série conservée ; après 300 ms → annulée).
+- [x] [Review][Patch] Expression du plafond fragile : `slice(-(MAX_UNDO_DEPTH - 1))` [1score/src/stores/useGameStore.ts:130] — `slice(-0)` renvoie le tableau entier si la constante vaut 1. Écrire `history.value = [...history.value, takeSnapshot()].slice(-MAX_UNDO_DEPTH)`, plus lisible et robuste.
+- [x] [Review][Patch] Test du plafond non discriminant [1score/src/stores/useGameStore.test.ts:393-401] — seuls `toHaveLength(200)` et `history[0]` sont vérifiés. Ajouter : `history[199].scoreAdjustments.player1 === 200`, un `undoLastAction()` → `player1.score === 200`, puis 200 appuis au total → `canUndo` faux et `player1.score === 1` (le plus ancien état, `0`, a bien été abandonné).
+- [x] [Review][Patch] Extension du test hors partie sans assertion propre à la pile [1score/src/stores/useGameStore.test.ts:705-712] — `undoLastAction()` en `idle` est appelé mais rien ne vérifie `history`/`canUndo`. Ajouter `expect(store.history).toEqual([])` : verrouille un `pushHistory` placé avant la garde `status` dans `adjustScore`/`passTurn`/`validateScoreInput`. (La garde d'`undoLastAction` elle-même reste indiscriminable tant qu'aucun état `finished` n'existe — 1.11.)
+- [x] [Review][Patch] AC3 : la fermeture de la pop-up sans valider n'est couverte par aucun test [1score/src/views/GameView.test.ts:686] — ouvrir la saisie, taper un chiffre, fermer par `modal-close-button` puis (second cas) par un tap sur `modal-backdrop` → `undo-button` `disabled` et `store.canUndo` faux. Une mutation « `pushHistory` dans `clearScoreInput` » resterait verte aujourd'hui.
+- [x] [Review][Patch] `toContain('REP')` non discriminant [1score/src/components/CenterPanel.test.ts:26] — passe avec `REPRISE`, `PREP`… ; seul le `not.toContain('REPRISE')` fait le travail, et rien ne vérifie l'élément. Poser `data-testid="reprise-label"` sur le `<span>` (`CenterPanel.vue:18`) et asserter `toBe('REP')`.
+- [x] [Review][Patch] Commentaire de restauration erroné [1score/src/stores/useGameStore.ts:352-353] — « le snapshot restant dans la pile ne doit pas être corrompu » : le snapshot vient d'être dépilé (`:346`), il n'est plus dans la pile. La copie reste utile (ne pas aliaser l'état vivant avec l'objet du snapshot, miroir ou non), mais la justification doit être exacte.
 - [x] [Review][Patch] Renvoi périmé « ANNULER (Story 1.8) » sans note datée [_bmad-output/planning-artifacts/ux-design-specification.md:199] — §2.5 « Une seule saisie à la fois » pointe encore vers la 1.8 ; le paragraphe voisin (l. 202) et l'équivalent d'`epics.md` (l. 489) ont reçu leur note, celui-ci non (AC9, Task 4.4). Ajouter *(absorbée par la Story 1.7, 2026-09-09)*.
 - [x] [Review][Patch] Décision 9 et Task 1.3 non alignées sur le code [_bmad-output/implementation-artifacts/1-7-annuler-la-saisie-en-cours-avant-validation.md — Dev Notes, Décision 9] — « ils valent `''`/`false` au moment d'une action » n'est vrai pour `validateScoreInput` que parce que le buffer est vidé AVANT `pushHistory()` (Debug Log). Amender la Décision 9 pour le dire.
-- [x] [Review][Patch] Ligne de commentaire de 103 caractères, rewrap cassé par la réécriture [carom-scoreboard/src/views/GameView.vue:48] — les voisines font ~90.
-- [x] [Review][Defer] `undoLastAction()` appelé par pilotage déporté pendant la pop-up ouverte écrase le buffer en cours de frappe [carom-scoreboard/src/stores/useGameStore.ts:340-357] — deferred, injoignable depuis l'UI (voile plein écran) ; à traiter avec le pilotage V2+ (fermer la pop-up avant l'undo dans `GameView`).
-- [x] [Review][Defer] `isNegative` n'est pas remis à zéro avant le snapshot, contrairement à `currentInput` [carom-scoreboard/src/stores/useGameStore.ts:317-318] — deferred, sans effet tant que rien ne pose le drapeau ; à traiter en Story 1.9 (même piège `53` pour le signe).
-- [x] [Review][Defer] Undo refusé hors `playing` : une série gagnante mal saisie qui ferait passer `status` à `finished` serait irrattrapable [carom-scoreboard/src/stores/useGameStore.ts:341] — deferred, `finished` n'existe pas encore (AC7 voulu aujourd'hui) ; à trancher en Story 1.11.
-- [x] [Review][Defer] Le snapshot porte `name`/`targetScore` : un renommage ou changement de distance en partie serait défait par l'undo [carom-scoreboard/src/stores/useGameStore.ts:118-127,349-350] — deferred, aucune édition en partie n'existe ; à traiter en Story 1.14 (ne restaurer que le score, ou ré-appliquer l'édition).
-- [x] [Review][Defer] Deux pointeurs simultanés (paume + doigt) sur `ANNULER` déclenchent deux `pointerdown`, donc deux annulations [carom-scoreboard/src/components/CenterPanel.vue:32] — deferred, cas rare, pas de `usePointerEvents.ts` encore ; garde `isPrimary` à prévoir avec ce composable.
+- [x] [Review][Patch] Ligne de commentaire de 103 caractères, rewrap cassé par la réécriture [1score/src/views/GameView.vue:48] — les voisines font ~90.
+- [x] [Review][Defer] `undoLastAction()` appelé par pilotage déporté pendant la pop-up ouverte écrase le buffer en cours de frappe [1score/src/stores/useGameStore.ts:340-357] — deferred, injoignable depuis l'UI (voile plein écran) ; à traiter avec le pilotage V2+ (fermer la pop-up avant l'undo dans `GameView`).
+- [x] [Review][Defer] `isNegative` n'est pas remis à zéro avant le snapshot, contrairement à `currentInput` [1score/src/stores/useGameStore.ts:317-318] — deferred, sans effet tant que rien ne pose le drapeau ; à traiter en Story 1.9 (même piège `53` pour le signe).
+- [x] [Review][Defer] Undo refusé hors `playing` : une série gagnante mal saisie qui ferait passer `status` à `finished` serait irrattrapable [1score/src/stores/useGameStore.ts:341] — deferred, `finished` n'existe pas encore (AC7 voulu aujourd'hui) ; à trancher en Story 1.11.
+- [x] [Review][Defer] Le snapshot porte `name`/`targetScore` : un renommage ou changement de distance en partie serait défait par l'undo [1score/src/stores/useGameStore.ts:118-127,349-350] — deferred, aucune édition en partie n'existe ; à traiter en Story 1.14 (ne restaurer que le score, ou ré-appliquer l'édition).
+- [x] [Review][Defer] Deux pointeurs simultanés (paume + doigt) sur `ANNULER` déclenchent deux `pointerdown`, donc deux annulations [1score/src/components/CenterPanel.vue:32] — deferred, cas rare, pas de `usePointerEvents.ts` encore ; garde `isPrimary` à prévoir avec ce composable.
 
 ## Dev Notes
 
@@ -167,13 +167,13 @@ Suite au démarrage : **206 tests, 11 fichiers, verts** ; `vue-tsc -b` et `build
 Aucun fichier nouveau. Modifiés :
 
 ```
-carom-scoreboard/src/types/game.ts                  (GameSnapshot)
-carom-scoreboard/src/stores/useGameStore.ts         (history, sidesSwapped, mirrorSnapshot, undoLastAction, canUndo)
-carom-scoreboard/src/stores/useGameStore.test.ts
-carom-scoreboard/src/components/CenterPanel.vue     (REP, libellés sans picto)
-carom-scoreboard/src/components/CenterPanel.test.ts
-carom-scoreboard/src/views/GameView.vue             (canUndo du store, @undo)
-carom-scoreboard/src/views/GameView.test.ts
+1score/src/types/game.ts                  (GameSnapshot)
+1score/src/stores/useGameStore.ts         (history, sidesSwapped, mirrorSnapshot, undoLastAction, canUndo)
+1score/src/stores/useGameStore.test.ts
+1score/src/components/CenterPanel.vue     (REP, libellés sans picto)
+1score/src/components/CenterPanel.test.ts
+1score/src/views/GameView.vue             (canUndo du store, @undo)
+1score/src/views/GameView.test.ts
 _bmad-output/planning-artifacts/epics.md            (1.7, 1.8, UX-DR16)
 _bmad-output/planning-artifacts/ux-design-specification.md (CenterPanel, Flow 2)
 _bmad-output/implementation-artifacts/deferred-work.md
@@ -204,10 +204,10 @@ Ne pas créer `services/`, ne pas toucher au routeur ni à `main.css`. Aucune d�
 - [Source: 1-5-saisir-le-score-dune-serie-au-pave-numerique.md#Dev Notes — Décisions 5, 12, 13, 15 ; Review Findings ; Debug Log « valeurs transportées »]
 - [Source: deferred-work.md#Deferred from code review of 1-5] — échange en pleine reprise
 - [Source: deferred-work.md#Deferred from code review of 1-3] — `shallowRef` : « toujours réassigner, jamais muter »
-- [Source: carom-scoreboard/src/stores/useGameStore.ts:99-125] — `swapPlayers`, modèle du miroir
-- [Source: carom-scoreboard/src/components/CenterPanel.vue:17,27-44] — libellé `REPRISE`, boutons avec pictos
-- [Source: carom-scoreboard/src/views/GameView.vue:29,117-121] — `canUndo` local, `CenterPanel` sans `@undo`
-- [Source: carom-scoreboard/CLAUDE.md §1, §2, §4, §6, §7, §8, §9]
+- [Source: 1score/src/stores/useGameStore.ts:99-125] — `swapPlayers`, modèle du miroir
+- [Source: 1score/src/components/CenterPanel.vue:17,27-44] — libellé `REPRISE`, boutons avec pictos
+- [Source: 1score/src/views/GameView.vue:29,117-121] — `canUndo` local, `CenterPanel` sans `@undo`
+- [Source: 1score/CLAUDE.md §1, §2, §4, §6, §7, §8, §9]
 
 ## Change Log
 
@@ -230,7 +230,7 @@ Claude Fable 5.1 (`claude-fable-5-1`), workflow `bmad-dev-story`, 2026-09-09.
 - **Buffer restauré par l'undo (démasqué par le test « brings the game back to before a validated series »).** Première implémentation : `pushHistory()` placé juste après la garde `buffer === ''`, donc AVANT la remise à vide du buffer. Le snapshot portait `currentInput.player1 = '5'` ; après l'undo, la ressaisie de `3` donnait `53`. La Décision 9 (« ils valent `''`/`false` au moment d'une action ») n'était donc pas vraie par construction pour `validateScoreInput`. Correction : vider le buffer **avant** `pushHistory()` — la saisie en cours n'est pas un état de partie. Invisible depuis l'UI (`openEntry` vide le buffer), mais faux pour le contrat du store et le pilotage déporté (AC8).
 - **Mutations 1.9 (store)** — chacune fait rougir au moins un test : `push` sur `history` → « notifies computeds… » et « keeps at most 200 » ; snapshot aliasé → « undoes one correction at a time » et « removes an undone correction… » ; miroir omis → « keeps the sides… » ; miroir sans inversion d'`activePlayer` → « keeps the sides… » et « mirrors a snapshot » ; `pushHistory` avant la garde → 5 tests dont « pushes nothing… empty buffer » ; `pushHistory` dans `swapPlayers` → 4 tests ; `history = []` oublié dans `resetGame` → « carries no history… on reset ».
 - **Mutations 2.5 (vue)** — `@undo` → `resetGame()` : 4 tests rouges ; `canUndo` local rétabli : « enables ANNULER after a mere correction » rouge, seul — c'est bien ce test qui verrouille la Décision 10.
-- **Passe visuelle** : un serveur Vite d'une session précédente tournait déjà sur `:5173` depuis `carom-scoreboard/` (servi à chaud, réutilisé). Paysage 1024×768 : colonne 205 px, boutons 173×90 px. Portrait 768×1024 : colonne 154 px, boutons 122×90 px, `ÉCHANGER` 79 px de large (14 px, `text-stat`) centré et entièrement dans le bouton (mesuré par `Range.getBoundingClientRect()`, pas `scrollWidth`) — plus large que la zone de contenu après `px-4` (58 px), sans effet visible ; c'était déjà le cas avant la story (le picto élargissait encore le texte). Parcours AC1 → AC5 déroulé au `pointerdown` dans l'iframe : série 12 / undo, série-série-correction / 3 undos + 4ᵉ inerte, main rendue / undo, série-échange-undo (joueurs en place, main rendue à droite). Console vierge dans les deux formats. Harnais supprimé.
+- **Passe visuelle** : un serveur Vite d'une session précédente tournait déjà sur `:5173` depuis `1score/` (servi à chaud, réutilisé). Paysage 1024×768 : colonne 205 px, boutons 173×90 px. Portrait 768×1024 : colonne 154 px, boutons 122×90 px, `ÉCHANGER` 79 px de large (14 px, `text-stat`) centré et entièrement dans le bouton (mesuré par `Range.getBoundingClientRect()`, pas `scrollWidth`) — plus large que la zone de contenu après `px-4` (58 px), sans effet visible ; c'était déjà le cas avant la story (le picto élargissait encore le texte). Parcours AC1 → AC5 déroulé au `pointerdown` dans l'iframe : série 12 / undo, série-série-correction / 3 undos + 4ᵉ inerte, main rendue / undo, série-échange-undo (joueurs en place, main rendue à droite). Console vierge dans les deux formats. Harnais supprimé.
 
 ### Completion Notes List
 
@@ -243,16 +243,16 @@ Claude Fable 5.1 (`claude-fable-5-1`), workflow `bmad-dev-story`, 2026-09-09.
 
 ### File List
 
-- `carom-scoreboard/src/types/game.ts` — `GameSnapshot`
-- `carom-scoreboard/src/stores/useGameStore.ts` — pile d'annulation, `mirrorSnapshot`, `undoLastAction`, `canUndo`, `sidesSwapped`, `MAX_UNDO_DEPTH`
-- `carom-scoreboard/src/stores/useGameStore.test.ts` — `describe('useGameStore — undo')` (14 tests), test hors partie étendu
-- `carom-scoreboard/src/components/CenterPanel.vue` — `REP`, libellés sans picto
-- `carom-scoreboard/src/components/CenterPanel.test.ts` — test des libellés stricts, commentaire retiré
-- `carom-scoreboard/src/views/GameView.vue` — `canUndo` du store, `@undo`
-- `carom-scoreboard/src/views/GameView.test.ts` — `describe('GameView — annulation')` (5 tests)
+- `1score/src/types/game.ts` — `GameSnapshot`
+- `1score/src/stores/useGameStore.ts` — pile d'annulation, `mirrorSnapshot`, `undoLastAction`, `canUndo`, `sidesSwapped`, `MAX_UNDO_DEPTH`
+- `1score/src/stores/useGameStore.test.ts` — `describe('useGameStore — undo')` (14 tests), test hors partie étendu
+- `1score/src/components/CenterPanel.vue` — `REP`, libellés sans picto
+- `1score/src/components/CenterPanel.test.ts` — test des libellés stricts, commentaire retiré
+- `1score/src/views/GameView.vue` — `canUndo` du store, `@undo`
+- `1score/src/views/GameView.test.ts` — `describe('GameView — annulation')` (5 tests)
 - `_bmad-output/planning-artifacts/epics.md` — notes 1.7, 1.8, UX-DR16, AC15 de la 1.5
 - `_bmad-output/planning-artifacts/ux-design-specification.md` — `CenterPanel`, Flow 2, §2.5
 - `_bmad-output/implementation-artifacts/deferred-work.md` — entrée 1.5 précisée
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — `1-7` → `review`, `1-8` → `done`
 - `_bmad-output/implementation-artifacts/1-7-annuler-la-saisie-en-cours-avant-validation.md` — ce fichier
-- `carom-scoreboard/public/_viewport-harness.html` — créé puis **supprimé** (passe visuelle)
+- `1score/public/_viewport-harness.html` — créé puis **supprimé** (passe visuelle)

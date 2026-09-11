@@ -65,9 +65,8 @@ describe('storageService', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
-  // Ancien nom conservé à dessein (Story 10.6) : le renommer ferait perdre la partie sauvegardée à la mise à jour.
-  it('keeps the pre-1Score storage key', () => {
-    expect(GAME_STORAGE_KEY).toBe('carom-scoreboard:game')
+  it('pins the storage key', () => {
+    expect(GAME_STORAGE_KEY).toBe('1score:game')
   })
 
   it('round-trips a full game state', () => {

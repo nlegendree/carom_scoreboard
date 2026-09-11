@@ -197,7 +197,7 @@ La première implémentation (bouton `FORMAT` dans la barre d'action ouvrant une
 
 ### Project Structure Notes
 
-Nouveaux fichiers, tous sous `carom-scoreboard/src/`, conformes à l'arborescence d'`architecture.md` :
+Nouveaux fichiers, tous sous `1score/src/`, conformes à l'arborescence d'`architecture.md` :
 
 ```
 src/components/
@@ -239,7 +239,7 @@ src/components/
 - [Source: sprint-change-proposal-2026-09-08.md#4.2(b) Story 1.4] — AC de pré-remplissage, **superseded** (Task 7.8)
 - [Source: 1-3-selectionner-un-mode-jds-et-demarrer-une-partie.md#Review Findings + Dev Notes] — pièges et conventions repris ci-dessus
 - [Source: deferred-work.md#Deferred from code review of 1-3] — `shallowRef`, normalisation des noms, ordre des classes Tailwind
-- [Source: carom-scoreboard/CLAUDE.md §2, §4, §6, §7, §9]
+- [Source: 1score/CLAUDE.md §2, §4, §6, §7, §9]
 
 ## Change Log
 
@@ -297,31 +297,31 @@ src/components/
 
 **Créés**
 
-- `carom-scoreboard/src/components/NumericPad.vue`
-- `carom-scoreboard/src/components/NumericPad.test.ts`
-- `carom-scoreboard/src/components/AlphaKeyboard.vue`
-- `carom-scoreboard/src/components/AlphaKeyboard.test.ts`
-- `carom-scoreboard/src/components/PlayerSetupModal.vue`
-- `carom-scoreboard/src/components/PlayerSetupModal.test.ts`
-- `carom-scoreboard/src/components/keyClasses.ts`
+- `1score/src/components/NumericPad.vue`
+- `1score/src/components/NumericPad.test.ts`
+- `1score/src/components/AlphaKeyboard.vue`
+- `1score/src/components/AlphaKeyboard.test.ts`
+- `1score/src/components/PlayerSetupModal.vue`
+- `1score/src/components/PlayerSetupModal.test.ts`
+- `1score/src/components/keyClasses.ts`
 
 **Créé puis supprimé** (première UX, abandonnée le 2026-09-09)
 
-- `carom-scoreboard/src/components/MatchFormatModal.vue`
-- `carom-scoreboard/src/components/MatchFormatModal.test.ts`
+- `1score/src/components/MatchFormatModal.vue`
+- `1score/src/components/MatchFormatModal.test.ts`
 
 **Modifiés — code**
 
-- `carom-scoreboard/src/types/game.ts`
-- `carom-scoreboard/src/stores/useGameStore.ts`
-- `carom-scoreboard/src/stores/useGameStore.test.ts`
-- `carom-scoreboard/src/components/HomeScreen.vue`
-- `carom-scoreboard/src/components/HomeScreen.test.ts`
-- `carom-scoreboard/src/components/PlayerPanel.vue`
-- `carom-scoreboard/src/components/PlayerPanel.test.ts`
-- `carom-scoreboard/src/views/GameView.vue`
-- `carom-scoreboard/src/views/GameView.test.ts`
-- `carom-scoreboard/package-lock.json` (effet de bord de `npm install`, aucune dépendance modifiée)
+- `1score/src/types/game.ts`
+- `1score/src/stores/useGameStore.ts`
+- `1score/src/stores/useGameStore.test.ts`
+- `1score/src/components/HomeScreen.vue`
+- `1score/src/components/HomeScreen.test.ts`
+- `1score/src/components/PlayerPanel.vue`
+- `1score/src/components/PlayerPanel.test.ts`
+- `1score/src/views/GameView.vue`
+- `1score/src/views/GameView.test.ts`
+- `1score/package-lock.json` (effet de bord de `npm install`, aucune dépendance modifiée)
 
 **Modifiés — specs**
 
