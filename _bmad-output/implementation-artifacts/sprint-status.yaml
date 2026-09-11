@@ -1,5 +1,5 @@
 # generated: 2026-09-08
-# last_updated: 2026-09-08
+# last_updated: 2026-09-11
 
 # project: explore
 # project_key: NOKEY
@@ -45,6 +45,10 @@ story_location: "{project-root}/_bmad-output/implementation-artifacts"
 # ORDRE D'EXÉCUTION révisé le 2026-09-11 (sprint-change-proposal-2026-09-11.md, approuvé par Nathan) :
 #   Epic 1 → 2 (livrés) → consolidation V1 jeu → Epic 4 (profil joueur, V2a) → Epic 3 redéfini
 #   (parties rattachées au profil, V2a) → 5 → 6 → 7 → 8 → 9. Les numéros d'epic sont conservés.
+# ORDRE D'EXÉCUTION amendé le 2026-09-11 (sprint-change-proposal-2026-09-11-refonte-ui.md, approuvé
+#   par Nathan) : Epic 10 (Refonte UI/UX Premium « 1Score ») s'intercale juste après l'Epic 2, avant
+#   l'Epic 4 — jalon V1.1 « vitrine ». Numéro 10 choisi pour ne renommer aucun fichier de story
+#   existant ; l'ordre d'exécution réel est : 1 → 2 → 10 → 4 → 3 → 5 → 6 → 7 → 8 → 9.
 development_status:
   epic-1: in-progress
   1-1-initialisation-du-projet: done
@@ -72,6 +76,17 @@ development_status:
   2-3-saisir-un-score-global-en-fin-de-serie-backup-pave-numerique: done # annulée sans code — pas de pavé de secours au 3 Bandes, le +1 suffit (décision de Nathan, 2026-09-11)
   2-4-afficher-le-compte-a-rebours-pour-n-en-3-bandes: done
   epic-2-retrospective: done
+
+  epic-10: in-progress # ajoutée le 2026-09-11 — « Refonte UI/UX Premium (1Score) », jalon V1.1, EXÉCUTÉE ICI (juste après l'Epic 2, avant l'Epic 4) malgré son numéro (sprint-change-proposal-2026-09-11-refonte-ui.md)
+  # Stories listées dans l'ordre d'exécution d'epics.md (10.6 → 10.1 → 10.2 → 10.3 → 10.4 → 10.5 → 10.7), pas dans l'ordre des numéros
+  10-6-renommage-du-produit-en-1score: backlog # EN PREMIER — la sidebar de la 10.1 affiche « 1Score » ; package.json, manifest, index.html, README, CLAUDE.md ; clé localStorage, dossier et Netlify non renommés
+  10-1-refonte-de-laccueil-barre-laterale-tuiles-de-mode-fond-degrade: backlog # tokens + dégradé, SideBar (API complète), ModeTile, état BIENTÔT ; « Fermer l'application » affiché mais inerte, sans spike (décision de Nathan, 2026-09-11)
+  10-2-refonte-de-la-selection-des-modes-jds-tuiles-et-choix-cadre: backlog # tuiles JDS, PromptModal variante « liste » pour Cadre 47/2·47/1·71/2
+  10-3-refonte-du-parametrage-joueurs-saisie-en-place-bille-et-cote-dissocies: backlog # NumericPadDock, AlphaKeyboardSheet, CHANGER DE BILLE / CHANGER DE CÔTÉ, PlayerSetupModal supprimé, ÉCHANGER retiré du jeu (DT1, DT4, DT5, DT7)
+  10-4-refonte-du-scoreboard-carte-joueur-passer-le-tour-dock-de-saisie-barre-basse-en-pictos: backlog # la plus grosse, gardée entière (décision de Nathan, 2026-09-11) — IconAction, PASSER LE TOUR, ScoreEntryDock, RESTANT, ActionBar en markup unique (DT2)
+  10-5-refonte-du-recap-barre-laterale-et-bandeau-corrige: backlog # SideBar QUITTER / RECOMMENCER, nom et distance séparés (DT6), côtés du scoreboard
+  10-7-finition-transverse-semantique-des-pop-ups-reduced-motion-contraste-et-portrait: backlog # EN DERNIER — rôles de dialogue, garde reduced-motion, contraste AA, passe portrait, CLAUDE.md à jour (DT3)
+  epic-10-retrospective: optional
 
   epic-3: backlog # recadré le 2026-09-11 → « Parties rattachées au profil joueur (V2a) », APRÈS l'Epic 4 — stories à réécrire (sprint-change-proposal-2026-09-11.md)
   3-1-sauvegarder-automatiquement-une-partie-terminee-dans-lhistorique: backlog # recadrée le 2026-09-11 — non lancée ; à réécrire après l'Epic 4 comme file locale de sync avec l'identité des joueurs

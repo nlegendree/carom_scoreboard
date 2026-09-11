@@ -17,7 +17,9 @@ classification:
 contextNotes: 'scoreboard_test = exemple open source trouvé sur internet. Photos = expérience personnelle Nathan en Corée du Sud avec systèmes coréens. Identité visuelle à définir séparément par Nathan.'
 ---
 
-# Product Requirements Document — Carom Scoreboard
+# Product Requirements Document — 1Score
+
+*(Renommé le 2026-09-11 — anciennement « Carom Scoreboard », `sprint-change-proposal-2026-09-11-refonte-ui.md`.)*
 
 **Auteur :** Nathan
 **Date :** 2026-05-19
@@ -26,7 +28,7 @@ contextNotes: 'scoreboard_test = exemple open source trouvé sur internet. Photo
 
 ## Résumé Exécutif
 
-Le billard carambole français compte des milliers de clubs et de joueurs qui scorent encore sur papier. La fédération ressaisit les résultats manuellement. Aucun produit n'a adressé ce marché avec une approche produit moderne. **Carom Scoreboard** résout d'abord le problème immédiat — scorer une partie correctement, sans friction — tout en posant les fondations d'une plateforme de données pour l'ensemble du sport français.
+Le billard carambole français compte des milliers de clubs et de joueurs qui scorent encore sur papier. La fédération ressaisit les résultats manuellement. Aucun produit n'a adressé ce marché avec une approche produit moderne. **1Score** résout d'abord le problème immédiat — scorer une partie correctement, sans friction — tout en posant les fondations d'une plateforme de données pour l'ensemble du sport français.
 
 Le client primaire est le club (bundle tablette + abonnement SaaS, ou abonnement seul). Le joueur individuel est un client secondaire et un vecteur de croissance organique. La trajectoire va du scoreboard autonome (V1) à l'infrastructure numérique officielle de la fédération française (V4), avec quatre étapes bornées, chacune finançant la suivante.
 
@@ -119,6 +121,18 @@ Ajoute uniquement :
 - Pause/reprise timer (fondation pour l'arbitre V2)
 
 *V1b est un jalon distinct — le timer est la feature la plus complexe du V1. Valider l'UX V1a d'abord.*
+
+### V1.1 — Refonte UI/UX Premium *(ajouté le 2026-09-11, `sprint-change-proposal-2026-09-11-refonte-ui.md`)*
+
+Une V1 « vitrine » avant le chantier profil joueur : interface premium et cohérente sur tous les écrans du jeu déjà livré (Epics 1-2), sans changement des règles de score. Porté par l'**Epic 10**, exécuté juste après l'Epic 2, avant l'Epic 4 :
+- Renommage du produit en **1Score**
+- Navigation en barre latérale, contextuelle par écran (remplace la barre d'action basse hors-jeu)
+- Style visuel premium : contours et conteneurs, fond imagé/dégradé à l'accueil — raffinement de la direction « Bloc Plein », pas un remplacement
+- Carte joueur réorganisée (champ RESTANT permanent, tous modes ; MOY/SÉRIE sous le score)
+- Deux évolutions de mécanique : passage de tour par CTA dédiée `PASSER LE TOUR` (remplace le tap sur la carte adverse) ; interversion bille/côté au paramétrage scindée en deux actions indépendantes (`ÉCHANGER` est retiré du jeu en cours de partie)
+- Pavé numérique retravaillé, clavier alphabétique complété, nettoyage de dette UI ciblée
+
+*Le jeu (règles, stores, persistance) n'est pas modifié — seule la couche présentation et les deux mécaniques ci-dessus évoluent.*
 
 ### V2a — Profil joueur & parties *(ajouté le 2026-09-11, `sprint-change-proposal-2026-09-11.md`)*
 

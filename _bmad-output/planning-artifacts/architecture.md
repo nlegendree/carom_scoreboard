@@ -266,6 +266,21 @@ V2a *(avancé le 2026-09-11, décision de Nathan)* : ID court joueur sans mot de
 
 *Section ouverte le 2026-09-11 (`sprint-change-proposal-2026-09-11.md`), à remplir par une passe Architecte avant la Story 4.0.* Doit fixer : la plateforme et son hébergement en Europe (NFR15), le chiffrement (NFR14), le modèle d'authentification (FR32, FR33), le modèle de données joueur/partie (`GameRecord` avec identifiant joueur par côté, `null` = invité, statut de synchronisation), la stratégie de synchronisation (file locale Dexie → API, reprise après coupure, NFR7), la couche réseau de la PWA (`services/`, erreurs absorbées en couche service — AR12), la configuration d'environnement (variables, secrets Netlify) et les obligations RGPD (consentement, suppression en < 3 actions — NFR16). Invariant non négociable : **le jeu reste 100 % offline** (NFR6).
 
+### Navigation & Shell (Epic 10, V1.1) — *ajouté le 2026-09-11*
+
+*Section ouverte par `sprint-change-proposal-2026-09-11-refonte-ui.md`, à détailler par une passe `bmad-create-ux-design` avant la Story 10.1.* Remplace `ActionBar` par une barre latérale sur les écrans hors-jeu, **contextuelle par écran** (contenu différent sur l'Accueil, la sélection JDS, le paramétrage joueurs et le récap — voir `epics.md` Epic 10). Sur l'écran de jeu, `ActionBar` est conservée mais ses CTA passent en picto + libellé court, et `ANNULER` la rejoint depuis `CenterPanel`.
+
+Trois évolutions dépassent l'habillage visuel et touchent `useGameStore` :
+1. **Interversion bille/côté dissociée** — l'action `swapPlayers()` actuelle (échange simultané) est scindée en deux actions indépendantes (bille seule, côté seul). À traiter avec le nettoyage déjà noté du champ `Player.id` redondant (toujours égal au nom du champ qui le contient), puisque le modèle joueur est de toute façon retouché.
+2. **`ÉCHANGER` retiré du jeu en cours de partie** — l'interversion (sous ses deux nouvelles formes) n'est disponible qu'au paramétrage, avant `DÉMARRER`. Effet de bord : le backlog « `ÉCHANGER` pendant une reprise entamée casse la déduction de la série ouverte » devient sans objet.
+3. **Passage de tour par CTA dédiée** — le tap sur la carte du joueur adverse comme geste de passage de tour est retiré ; une CTA centrale `PASSER LE TOUR` devient l'unique déclencheur, en JDS comme en 3 Bandes. L'état « tapable pour rendre la main » de `PlayerPanel` disparaît.
+
+`PlayerPanel` reçoit en plus un champ **dérivé** RESTANT (`distance − score`, permanent, tous modes) — pas de nouvel état persisté, calculé comme `POUR n` (3 Bandes) l'est déjà. MOY/SÉRIE quittent le bandeau du haut pour se placer sous le score central.
+
+**Risque technique à lever avant la Story 10.1 :** « Fermer l'application » (item de sidebar Accueil, fonctionnel) n'a pas d'équivalent standard fiable pour une PWA installée — `window.close()` ne fonctionne que sur une fenêtre ouverte par script. Spike de faisabilité requis (piste : confirmation puis tentative de fermeture, repli sur un retour à l'accueil du système). *Reporté hors Epic 10 (Nathan, 2026-09-11, passe epics) : l'item est affiché inerte, le spike viendra avec une story ultérieure.*
+
+*Passe epics du 2026-09-11 :* le retrait d'`ÉCHANGER` du store (point 2) est livré par la **Story 10.3** avec la scission de `swapPlayers` (le modèle joueur change à ce moment-là), et non par la 10.4. Piste retenue pour la scission : conserver l'invariant « `player1` = bille blanche = celui qui ouvre » et ajouter à `GameState` un champ d'affichage persisté (ex. `whiteSide: 'left' | 'right'`) qui remplace `sidesSwapped` — aucune règle de jeu touchée, `GAME_STORAGE_VERSION` incrémenté. À confirmer et consigner ici à la livraison de la 10.3.
+
 ### Architecture Frontend
 
 **Routing V1 (Vue Router 4) :**

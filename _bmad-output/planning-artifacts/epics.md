@@ -2,13 +2,22 @@
 stepsCompleted: ['step-01-validate-prerequisites', 'step-02-design-epics', 'step-03-create-stories', 'step-04-final-validation']
 workflow_completed: true
 completed_at: '2026-09-08'
+revisions:
+  - date: '2026-09-11'
+    scope: 'Epic 10 — Refonte UI/UX Premium (1Score) : exigences AR20-AR27 et UX-DR25-UX-DR56 ajoutées, supersessions annotées, section Epic 10 et stories 10.1-10.7'
+    stepsCompleted: ['step-01-validate-prerequisites', 'step-02-design-epics', 'step-03-create-stories', 'step-04-final-validation']
+    completed_at: '2026-09-11'
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/architecture.md'
   - '_bmad-output/planning-artifacts/ux-design-specification.md'
+  - '_bmad-output/planning-artifacts/sprint-change-proposal-2026-09-11-refonte-ui.md'
+  - 'explore/basic-ui-brainstorming-2026-09-11.md'
+  - '_bmad-output/implementation-artifacts/deferred-work.md'
+  - 'explore/resources/billiboard_*, cueuny_* (références visuelles, fournies par Nathan story par story)'
 ---
 
-# Carom Scoreboard - Epic Breakdown
+# Carom Scoreboard → 1Score - Epic Breakdown *(renommé le 2026-09-11, Epic 10)*
 
 ## Overview
 
@@ -144,33 +153,105 @@ Ceci doit être la toute première story d'implémentation, suivie immédiatemen
 - AR18 : Utiliser `async/await` exclusivement pour toute logique asynchrone des stores Pinia — jamais `.then().catch()`.
 - AR19 : Appliquer Tailwind CSS en mobile-first avec les 3 breakpoints définis (défaut < 768px, `md:` ≥ 768px, `lg:` ≥ 1280px).
 
+**Ajoutés le 2026-09-11 — Epic 10, Refonte UI/UX Premium (1Score)** *(`architecture.md` › « Navigation & Shell (Epic 10, V1.1) », `sprint-change-proposal-2026-09-11-refonte-ui.md`)* :
+
+- AR20 : Introduire un primitif de coquille d'écran `SideBar`, **contextuel par écran** (contenu différent à l'Accueil, à la sélection JDS, au paramétrage joueurs et au récap), qui remplace `ActionBar` sur tous les écrans hors jeu. `ActionBar` **subsiste uniquement sur le scoreboard**, ses CTA passent en picto + libellé court, et `ANNULER` la rejoint depuis `CenterPanel`. Les routes Vue Router ne changent pas.
+- AR21 : Scinder l'action `swapPlayers()` de `useGameStore` en **deux actions indépendantes** — bille seule (ex. `swapBallColors`) et côté seul (ex. `swapSides`) — disponibles **avant `DÉMARRER` uniquement**. Supprimer dans la même passe le champ `Player.id` positionnel redondant (toujours égal au nom du champ qui le contient, restampé manuellement à chaque échange).
+- AR22 : Retirer `ÉCHANGER` du store **en cours de partie** : l'interversion n'existe plus qu'au paramétrage. Le backlog « `ÉCHANGER` pendant une reprise entamée casse la déduction de la série ouverte » (`deferred-work.md`, revue 2.1+2.2+2.4) est **clos, pas corrigé**. Retirer les tests qui vérifient la disponibilité d'`ÉCHANGER` en jeu.
+- AR23 : Retirer le tap sur la carte du joueur adverse comme déclencheur de passage de tour ; une CTA centrale `PASSER LE TOUR` devient **l'unique déclencheur**, en JDS comme en 3 Bandes. L'action de store existante déclenchée par le tap est **remplacée, pas dupliquée** ; l'état « tapable pour rendre la main » de `PlayerPanel` disparaît ; les tests qui simulent ce tap sont convertis en déclenchement de `PASSER LE TOUR`. Toute action reste nommée et pilotable sans geste tactile (UX-DR23).
+- AR24 : Règle de jeu réécrite : **« la bille blanche ouvre, où qu'elle soit »** — le compteur de reprises avance quand le joueur **à la bille blanche** reprend la main, la reprise égalisatrice appartient au joueur **à la bille jaune**, et le récap conserve les côtés du scoreboard. « Gauche = blanc » n'est plus une invariante du store (conséquence d'AR21).
+- AR25 : `PlayerPanel` reçoit un champ **dérivé** `RESTANT = max(distance − score, 0)`, permanent, tous modes, masqué sans distance — calculé comme `POUR n` l'est déjà, **aucun nouvel état persisté**, `GameState` inchangé.
+- AR26 : **Spike de faisabilité « Fermer l'application »** à mener avant la Story 10.1 : aucune API standard fiable ne ferme une PWA installée (`window.close()` ne fonctionne que sur une fenêtre ouverte par script). Cible = fermeture de la fenêtre après confirmation ; **repli documenté** = retour à l'accueil de l'application, la pop-up de confirmation restant identique. Le libellé ne promet rien de plus que ce que le spike confirme. **Décision de Nathan (2026-09-11, passe epics) : non prioritaire** — en Epic 10, l'item est **affiché dans la sidebar mais inerte** (état BIENTÔT, UX-DR30), **sans spike ni pop-up** ; le spike et le comportement réel sont reportés à une story ultérieure, hors Epic 10.
+- AR27 : **Renommage « Carom Scoreboard » → « 1Score »** en un seul passage transverse : `CLAUDE.md`, manifest PWA (`name`, `short_name`, titre), `package.json`, titres d'écran et `<title>`. Le PRD est déjà renommé (2026-09-11). Le dossier `carom-scoreboard/` et le dépôt ne sont pas renommés (aucun bénéfice, risque de casser Netlify).
+
 ### UX Design Requirements
 
-- UX-DR1 : Implémenter la direction visuelle "Bloc Plein" — blocs pleine couleur par panneau joueur, chiffre de score géant comme unique élément dominant, console centrale minimale (uniquement mode + numéro de reprise).
-- UX-DR2 : Implémenter la convention de bille fixe par côté, conforme au carambole et aux scoreboards coréens de référence : **joueur de gauche = bille blanche** (bloc blanc `#FFFFFF`, chiffres noirs), **joueur de droite = bille jaune** (bloc jaune plein `#FFC72C`, chiffres noirs). Un bouton d'interversion permet d'échanger les deux joueurs de côté avant la première reprise ; la bille reste attachée au côté, jamais au joueur. *(Révisé le 2026-09-08 : remplace la règle initiale d'attribution dynamique à 4 couleurs, qui ne correspondait ni au matériel réel ni aux références CUESCO/Billiboard.)*
+- UX-DR1 : Implémenter la direction visuelle "Bloc Plein" — blocs pleine couleur par panneau joueur, chiffre de score géant comme unique élément dominant, console centrale minimale (uniquement mode + numéro de reprise). *(**Raffiné le 2026-09-11, Epic 10** en « Bloc Plein contenu » : mêmes blocs, chacun dans un conteneur à contour sur un dégradé drap → noir — voir UX-DR25/26.)*
+- UX-DR2 : Implémenter la convention de bille fixe par côté, conforme au carambole et aux scoreboards coréens de référence : **joueur de gauche = bille blanche** (bloc blanc `#FFFFFF`, chiffres noirs), **joueur de droite = bille jaune** (bloc jaune plein `#FFC72C`, chiffres noirs). Un bouton d'interversion permet d'échanger les deux joueurs de côté avant la première reprise ; la bille reste attachée au côté, jamais au joueur. *(Révisé le 2026-09-08 : remplace la règle initiale d'attribution dynamique à 4 couleurs, qui ne correspondait ni au matériel réel ni aux références CUESCO/Billiboard.)* **Supersédé le 2026-09-11 (Epic 10, Story 10.3, `sprint-change-proposal-2026-09-11-refonte-ui.md`) :** l'interversion unique devient deux actions indépendantes au paramétrage (`CHANGER DE BILLE`, `CHANGER DE CÔTÉ` — la bille peut désormais changer sans déplacer le joueur à l'écran, et inversement) ; `ÉCHANGER` disparaît en cours de partie, il ne subsiste qu'avant `DÉMARRER`.
 - UX-DR3 : Réserver la couleur d'accent système (bleu `#1E88E5`) exclusivement aux actions neutres/système (+1, Valider) — jamais réutilisée comme couleur joueur, pour ne jamais confondre "marquer un point" et "action système".
 - UX-DR4 : Implémenter la couleur d'alerte/urgence (rouge LED `#FF3B30` sur fond noir) pour l'affichage du chrono/décompte (périmètre V1b).
 - UX-DR5 : Implémenter l'habillage victoire/récompense (or `#FFD54A` + ruban rouge `#E63946`) pour la médaille/mise en avant de l'écran de fin de partie.
 - UX-DR6 : Implémenter le système typographique — sans-serif très grasse (800-900, ex. Barlow Condensed Black ou Rajdhani Bold) pour le chiffre de score géant ; sans-serif medium/bold (600-700, ex. Inter ou Manrope) pour les labels (nom joueur, AVG, HR, score restant) ; échelle fluide `clamp()` (score ~120-200px+, labels ~16-24px, stats secondaires ~14-18px).
 - UX-DR7 : Appliquer une unité de base d'espacement de 8px ; les blocs joueur occupent quasiment 100% de leur colonne sans marge décorative — la densité vient de la taille des éléments, pas de leur nombre.
 - UX-DR8 : Imposer une taille minimale de zone tactile de 90×90px sur tous les éléments interactifs (NFR9), plus stricte que le minimum WCAG 44×44px, pour l'accessibilité du public senior. **Exception unique, arbitrée le 2026-09-09 (Story 1.4) : les touches des claviers intégrés** (`AlphaKeyboard`, `NumericPad`). Aucun clavier alphabétique ne peut tenir 10 colonnes à 90px dans une pop-up — celui de l'iPad tourne autour de 65px. Plancher retenu : 44px pour les lettres, 60px pour les chiffres. La règle reste entière pour **toutes** les commandes de jeu, qui la respectent.
-- UX-DR9 : Construire le composant `PlayerPanel` (×2, strictement symétrique) — chaque panneau autonome avec ses propres contrôles de saisie (pavé numérique, bouton +1 le cas échéant) ; aucune action affectant le score centralisée dans `CenterPanel`.
+- UX-DR9 : Construire le composant `PlayerPanel` (×2, strictement symétrique) — chaque panneau autonome avec ses propres contrôles de saisie (pavé numérique, bouton +1 le cas échéant) ; aucune action affectant le score centralisée dans `CenterPanel`. *(**Supersédé le 2026-09-11, Epic 10, Story 10.4** : le panneau ne porte plus ni pavé ni geste de bascule — il **lit** l'état du joueur et garde seulement `−`/`+` ; la saisie passe par le dock central et le CTA de barre basse, le passage de tour par `PASSER LE TOUR` — voir UX-DR45 à UX-DR50.)*
 - UX-DR10 : Construire le composant `NumericPad` avec les états : vide, saisie active, valeur hors limites (> 999, refus de saisie avec retour haptique court distinct, sans bloquer l'écran par un message).
-- UX-DR11 : Construire le composant `CenterPanel` limité au contexte neutre/partagé (mode de jeu, numéro de reprise, alerte d'inactivité) et aux actions **symétriques**, qui s'appliquent identiquement aux deux joueurs : annulation de la dernière série (ANNULER) et interversion des billes. Jamais une action qui favorise un joueur ni une saisie de score, qui restent portées par chaque `PlayerPanel`. *(Amendé en revue de la Story 1.3, 2026-09-08 : la console centrale façon Billiboard/CUESCO porte ANNULER et l'interversion — la symétrie exigée porte sur l'absence de biais entre joueurs, pas sur l'absence de toute action.)*
-- UX-DR12 : Construire l'écran d'accueil `HomeScreen` — plein écran, fusionnant veille et sélection de mode, zones tactiles aussi grandes que le reste de l'interface, navigation à deux niveaux (catégorie → mode) sans fermeture accidentelle possible. *(Révisé le 2026-09-08 : remplace la modale `ModeSelector` initiale.)*
-- UX-DR13 : Construire le composant `GameSummary` façon "battle" — bandeau VS, médaille winner/loser, stats comparées côte à côte, état de mise en avant explicite en cas de nouveau record personnel. *Précisé le 2026-09-10 (Story 1.10) — **format Billiboard** : bandeau `NOM / distance` **VS** `NOM / distance` (mode de jeu en surtitre discret), deux colonnes joueur autour d'une colonne de libellés (`RÉSULTAT`, `POINTS`, `MOY`, `SÉRIE`, `REPRISES`), la **colonne du vainqueur mise en couleur** (ruban rouge) avec le mot `VICTOIRE` — c'est cette colonne colorée qui tient lieu de « médaille » —, et deux boutons en bas : `FIN DE PARTIE` et `UNE PARTIE DE PLUS`. L'état « nouveau record » existe par joueur, non déclenché avant la Story 3.5.*
+- UX-DR11 : Construire le composant `CenterPanel` limité au contexte neutre/partagé (mode de jeu, numéro de reprise, alerte d'inactivité) et aux actions **symétriques**, qui s'appliquent identiquement aux deux joueurs : annulation de la dernière série (ANNULER) et interversion des billes. Jamais une action qui favorise un joueur ni une saisie de score, qui restent portées par chaque `PlayerPanel`. *(Amendé en revue de la Story 1.3, 2026-09-08 : la console centrale façon Billiboard/CUESCO porte ANNULER et l'interversion — la symétrie exigée porte sur l'absence de biais entre joueurs, pas sur l'absence de toute action.)* *(**Supersédé le 2026-09-11, Epic 10, Story 10.4** : `CenterPanel` **perd `ANNULER`** (→ barre basse) **et `ÉCHANGER`** (retiré du jeu), **gagne `PASSER LE TOUR`** — action symétrique, elle rend la main quel que soit le joueur actif — et héberge le dock de saisie le temps d'une saisie, sans y écrire de score. Voir UX-DR48/49.)*
+- UX-DR12 : Construire l'écran d'accueil `HomeScreen` — plein écran, fusionnant veille et sélection de mode, zones tactiles aussi grandes que le reste de l'interface, navigation à deux niveaux (catégorie → mode) sans fermeture accidentelle possible. *(Révisé le 2026-09-08 : remplace la modale `ModeSelector` initiale.)* *(**Supersédé le 2026-09-11, Epic 10, Stories 10.1/10.2/10.3** : sidebar contextuelle, accroche display, tuiles `ModeTile` colorées, état joueurs réécrit en cartes + colonne de réglages — voir UX-DR33 à UX-DR44 ; la navigation à deux niveaux et l'absence de fermeture accidentelle restent.)*
+- UX-DR13 : Construire le composant `GameSummary` façon "battle" — bandeau VS, médaille winner/loser, stats comparées côte à côte, état de mise en avant explicite en cas de nouveau record personnel. *Précisé le 2026-09-10 (Story 1.10) — **format Billiboard** : bandeau `NOM / distance` **VS** `NOM / distance` (mode de jeu en surtitre discret), deux colonnes joueur autour d'une colonne de libellés (`RÉSULTAT`, `POINTS`, `MOY`, `SÉRIE`, `REPRISES`), la **colonne du vainqueur mise en couleur** (ruban rouge) avec le mot `VICTOIRE` — c'est cette colonne colorée qui tient lieu de « médaille » —, et deux boutons en bas : `FIN DE PARTIE` et `UNE PARTIE DE PLUS`. L'état « nouveau record » existe par joueur, non déclenché avant la Story 3.5.* *(**Supersédé le 2026-09-11, Epic 10, Story 10.5** : les deux boutons du bas disparaissent au profit de la sidebar `QUITTER` / `RECOMMENCER` ; conteneur à contour ; nom et distance en deux éléments — voir UX-DR53.)*
 - UX-DR14 : Implémenter un indicateur de tour actif non-dépendant de la seule teinte (daltonisme) : le panneau du joueur qui doit jouer est encadré d'un liseré rouge épais (`--color-turn-active`, convention CUESCO/Billiboard). Le signal est la **présence du cadre**, perceptible indépendamment de la perception des couleurs et à distance.
 - UX-DR15 : Implémenter la validation hybride du score — tap explicite sur "Valider" OU validation automatique après 3 secondes d'inactivité suivant la dernière frappe ; les deux chemins doivent aboutir au même état résultant.
 - UX-DR16 : Implémenter la correction avec le même poids visuel que la validation — bouton Corriger/Annuler toujours visible avec la même prominence que le pavé de saisie, jamais dans un sous-menu, accessible pendant la saisie (efface la saisie en cours) et après validation (annule la dernière série validée).
-  - *Précision (Story 1.7, 2026-09-09)* : « pendant la saisie » est couvert par `C`, `⌫` et la croix de `ScoreEntryModal` (jugé suffisant, pas de bouton `CORRIGER` distinct) ; « après validation » est le bouton `ANNULER` de la console centrale, qui remonte d'**une action** à chaque appui — séries validées, mains rendues sans marquer, corrections `−`/`+` — jamais l'échange de côtés (`ÉCHANGER` est son propre inverse).
+  - *Précision (Story 1.7, 2026-09-09)* : « pendant la saisie » est couvert par `C`, `⌫` et la croix de `ScoreEntryModal` (jugé suffisant, pas de bouton `CORRIGER` distinct) ; « après validation » est le bouton `ANNULER` de la console centrale, qui remonte d'**une action** à chaque appui — séries validées, mains rendues sans marquer, corrections `−`/`+` — jamais l'échange de côtés (`ÉCHANGER` est son propre inverse). *(**2026-09-11, Epic 10, Story 10.4** : « après validation » = `ANNULER` en **barre basse**, picto + libellé, même mécanisme d'undo ; `ÉCHANGER` n'existe plus en jeu — voir UX-DR51.)*
 - UX-DR17 : Implémenter le retour haptique + visuel sur chaque tap, < 100ms (NFR1) — retour de succès affiché directement sur le bloc joueur concerné (flash bref), pas de toast/notification textuelle.
 - UX-DR18 : Implémenter l'alerte d'inactivité (FR43) comme une notification douce et non-intrusive dans `CenterPanel` — jamais en plein écran, jamais une interruption brutale de la partie en cours.
-- UX-DR19 : Implémenter la saisie du nom du joueur par **pop-up et claviers intégrés** — tap sur la zone du joueur pour ouvrir sa modale (`PlayerSetupModal`), saisie exclusivement au clavier applicatif (`AlphaKeyboard`), majuscules automatiques, limite 20 caractères, application à la validation. *Réécrit le 2026-09-09 (Story 1.4) : la version antérieure imposait une édition **inline sans modale séparée**. L'écran cible étant une **borne fixe** (décision produit du 2026-09-09), aucun champ natif ne doit exister — c'est ce qui empêche structurellement le clavier du système de monter par-dessus l'interface. L'édition inline supposait un `<input>` natif, donc exactement ce que la décision proscrit.*
+- UX-DR19 : Implémenter la saisie du nom du joueur par **pop-up et claviers intégrés** — tap sur la zone du joueur pour ouvrir sa modale (`PlayerSetupModal`), saisie exclusivement au clavier applicatif (`AlphaKeyboard`), majuscules automatiques, limite 20 caractères, application à la validation. *Réécrit le 2026-09-09 (Story 1.4) : la version antérieure imposait une édition **inline sans modale séparée**. L'écran cible étant une **borne fixe** (décision produit du 2026-09-09), aucun champ natif ne doit exister — c'est ce qui empêche structurellement le clavier du système de monter par-dessus l'interface. L'édition inline supposait un `<input>` natif, donc exactement ce que la décision proscrit.* *(**Supersédé le 2026-09-11, Epic 10, Story 10.3** : `PlayerSetupModal` **supprimé** — chaque champ se règle **en place**, le nom via `AlphaKeyboardSheet` en bandeau bas, la distance via `NumericPadDock` en colonne centrale ; toujours **aucun champ natif**, majuscules automatiques, 20 caractères — voir UX-DR39 à UX-DR41.)*
 - UX-DR20 : Implémenter l'état vide de la liste d'historique au premier lancement — message simple + invitation explicite à jouer une première partie (jamais un écran vide non expliqué). *(2026-09-11 : devient « aucune partie sur ce profil », joueur identifié — Epic 3 redéfini.)*
 - UX-DR21 : Implémenter le layout responsive selon 3 breakpoints — signage/desktop ≥1280px et tablette 768-1279px : layout 3 colonnes paysage identique (tablette = cible primaire) ; smartphone <768px : layout empilé vertical (fallback).
 - UX-DR22 : Assurer un contraste couleur WCAG AA (4.5:1 minimum) sur tous les blocs joueur et la console centrale, validé sur la palette finale (jaune/blanc/orange/rose sur fond sombre).
 - UX-DR23 : Exposer toute action affectant le score comme une action Pinia nommée du store (ex. `addReprise()`, `undoLastSeries()`) jamais couplée exclusivement à un event handler tactile — contrainte architecturale pour la compatibilité future avec un pilotage à distance (V2+), s'applique à tout le travail UI lié au score en V1.
-- UX-DR24 : Implémenter l'interaction tap-incrémental du mode 3 Bandes — le joueur assis (non-actif) tape sur sa propre zone pour ajouter un point à l'adversaire en train de jouer ; le pavé numérique reste disponible en backup pour saisir une série complète directement (périmètre V1b).
+- UX-DR24 : Implémenter l'interaction tap-incrémental du mode 3 Bandes — le joueur assis (non-actif) tape sur sa propre zone pour ajouter un point à l'adversaire en train de jouer ; le pavé numérique reste disponible en backup pour saisir une série complète directement (périmètre V1b). *(Backup pavé **annulé** en Story 2.3, 2026-09-11.)* *(**Supersédé le 2026-09-11, Epic 10, Story 10.4** : le crédit d'un point passe par le CTA de barre basse `+1 ADVERSAIRE` côté assis (mécanique Story 2.2 inchangée) ; le geste **rendre la main** n'est plus un tap sur la carte mais la CTA `PASSER LE TOUR` — voir UX-DR49/51.)*
+
+**Ajoutés le 2026-09-11 — Epic 10, Refonte UI/UX Premium (1Score)** *(`ux-design-specification.md` › « Refonte UI/UX Premium — 1Score », §10.0 à §10.8, qui **prime** sur les fiches antérieures ; références visuelles Cueuny et Billiboard dans `explore/resources/`, fournies par Nathan story par story)* :
+
+*Fondations (transverses, Stories 10.1 à 10.5)*
+
+- UX-DR25 : Implémenter la direction **« Bloc Plein contenu »** — les blocs gardent leur couleur pleine, mais **chaque élément vit dans un conteneur à contour** (`--color-border`, 2 px, `--radius-container`) : carte joueur, tuile, CTA, pavé, colonne centrale, barre latérale, et l'écran lui-même (marge de 16 px sur ses quatre bords, dégradé visible autour).
+- UX-DR26 : Implémenter le **fond dégradé drap → noir** sur tous les écrans (`--gradient-bg`, indicatif `linear-gradient(160deg, var(--color-cloth) 0%, #0B1B33 55%, #000 100%)`), avec une **variante assombrie** sur le scoreboard (départ à 60 % de luminosité). **Aucune image de fond** (zéro asset, zéro poids offline) ; un emplacement image reste réservé à l'accueil. `--color-cloth` ≈ `#2F6FB8`, à pixel-picker sur l'image du drap Simonis Prestige fournie par Nathan avant de figer.
+- UX-DR27 : Ajouter les tokens : `--color-cloth`, `--gradient-bg`, `--color-surface` (`rgba(255,255,255,0.06)`), `--color-border` (`rgba(255,255,255,0.18)`), `--color-border-strong` (`rgba(255,255,255,0.40)`), `--radius-container` (20 px), `--radius-cta` (16 px), `--color-tile-3b` (= cloth), `--color-tile-jds` (`#1E8A5A`), `--color-tile-quilles` (`#E8842B`), `--color-tile-casin` (`#7B4FD1`), `--color-panel-white-band` (`#ECECEC`), `--color-panel-yellow-band` (`#E6B000`). Inchangés : blanc/jaune de bille, accent bleu, rouge de tour actif, fondu du chrono, rouge/or de victoire. **Le bleu drap n'est jamais utilisé sur un bouton** — l'accent reste réservé aux CTA de saisie et de démarrage.
+- UX-DR28 : Typographie et pictos — l'accroche d'accueil et le mot `1Score` en police display du score (Barlow Condensed Black ou équivalent), le reste en Inter/Manrope ; libellés de picto 11 à 12 px, majuscules, espacement +0,04 em. **Jeu de pictos unique** : trait 2 px, sans remplissage, 32 à 36 px, **SVG inline** (aucune police d'icônes), table de correspondance action → picto → libellé en §10.7 de la spec UX.
+- UX-DR29 : Construire le composant **`SideBar`** — colonne **gauche**, largeur fixe 120 px en paysage (96 px en portrait, libellés sur deux lignes autorisés), conteneur à contour sur toute la hauteur, fond `--color-surface`. **En-tête** logo (asset à fournir ; repli : rond `--color-cloth` portant « 1 ») + mot `1Score`, hauteur 96 px, **tap sans effet**. **Items** empilés, picto au-dessus d'un libellé court, ≥ 90×90 px, pleine largeur, séparés de 12 px. L'item de **sortie** (croix, « Fermer l'application », « Quitter ») est toujours **calé en bas**, isolé du reste.
+- UX-DR30 : Implémenter l'état **« BIENTÔT »** (sidebar, tuiles, `IconAction`) : picto et libellé à 45 % d'opacité, petit badge `BIENTÔT` sous le libellé, **tap sans effet, sans pop-up** — visible, atténué, inerte.
+- UX-DR31 : Contenu de la `SideBar` par écran — **Accueil** : `MODE ENTRAÎNEMENT` (BIENTÔT), `INSCRIPTION` (BIENTÔT) ; sortie `FERMER L'APPLICATION` (**inerte, état BIENTÔT** — décision de Nathan, 2026-09-11 : non prioritaire, voir AR26). **Sélection JDS** : `RETOUR` → accueil. **Paramétrage joueurs** : `RETOUR` → écran précédent (sélection JDS, ou accueil pour le 3 Bandes) **saisies conservées**, `CONFIGURATION` (BIENTÔT) ; sortie croix `ANNULER` → accueil, saisies effacées. **Scoreboard : pas de barre latérale.** **Récap** : `QUITTER` → accueil (ex-`FIN DE PARTIE`), `RECOMMENCER` → revanche immédiate, mêmes joueurs et distances (ex-`UNE PARTIE DE PLUS`).
+- UX-DR32 : `FERMER L'APPLICATION` ouvre un `PromptModal` **« FERMER 1SCORE ? »** avec `FERMER` / `ANNULER` ; le comportement de `FERMER` est celui validé par le spike AR26 (fermeture de la fenêtre, ou repli : retour à l'accueil de l'application, pop-up identique). **Reporté hors Epic 10** (décision de Nathan, 2026-09-11) : en Epic 10 l'item est un placeholder inerte, aucune pop-up n'est construite.
+
+*Accueil et sélection JDS (Stories 10.1, 10.2)*
+
+- UX-DR33 : Réécrire l'**Accueil** en sidebar complète + zone principale en deux bandes : **accroche** en haut (une phrase courte en display, 40 à 56 px fluide, blanc sur le dégradé, alignée à gauche avec 32 px de marge, sans sous-texte, libellé final à choisir par Nathan) et **tuiles** en bas. L'accueil reste **l'écran de veille** : rien n'y bouge, rien n'y clignote. La pop-up « PARTIE EN COURS » au lancement est inchangée.
+- UX-DR34 : Construire le composant **`ModeTile`** — conteneur à contour, fond dans sa couleur `--color-tile-*` à 85 % d'opacité, titre (28 à 36 px, gras), **accroche** d'une ligne (16 à 18 px), **flèche `→`** en bas à droite. État BIENTÔT : fond à 45 %, flèche remplacée par le badge, tap sans effet. Rangée de tuiles de hauteur égale (≈ 34 % de la hauteur utile, ≥ 180 px).
+- UX-DR35 : Accueil = 4 tuiles `3 BANDES` · `JEUX DE SÉRIES` · `QUILLES` (BIENTÔT) · `CASIN` (BIENTÔT), avec accroches (ex. « Le jeu des champions », « Libre, cadre, bande, 4 billes », « Bientôt sur 1Score »). **`3 BANDES` → paramétrage joueurs directement** ; `JEUX DE SÉRIES` → sélection JDS.
+- UX-DR36 : **Sélection JDS** — sidebar réduite (`RETOUR`), titre `JEUX DE SÉRIES` en display, 4 tuiles `LIBRE` · `BANDE` · `CADRE` · `4 BILLES` (même gabarit, toutes en `--color-tile-jds`, accroches « Sans contrainte », « Une bande avant le second point », « 47/2 · 47/1 · 71/2 », « Deux billes rouges »). Aucun nouveau mode : FR12 inchangée.
+- UX-DR37 : `CADRE` ouvre une **variante « liste » de `PromptModal`** à *n* CTA empilés — `47/2` · `47/1` · `71/2`, puis `ANNULER` neutre en dernier — voile inerte, aucune croix (règle PromptModal). Le choix mène au paramétrage joueurs.
+
+*Paramétrage joueurs (Story 10.3)*
+
+- UX-DR38 : Réécrire le paramétrage en **trois colonnes** (2/5 · 1/5 · 2/5 de la zone principale, hors sidebar) : carte du joueur **à la bille blanche** à gauche par défaut, **colonne de réglages** au centre, carte du joueur **à la bille jaune** à droite par défaut. **Carte joueur (paramétrage)** : conteneur à contour, fond plein couleur de bille, **médaillon de bille** en haut (rond de 64 px, blanc ou jaune sur fond sombre, avec liseré — il rend la bille lisible même quand les cartes ont changé de côté), puis deux **champs** centrés, chacun un conteneur à contour tapable : `NOM` (libellé d'attente `JOUEUR`, gris) et `DISTANCE` (libellé d'attente `0`, gris). Le champ **visé** porte le liseré rouge (présence, pas teinte).
+- UX-DR39 : Construire **`NumericPadDock`** — le tap sur `DISTANCE` ouvre le **pavé numérique nu** (`NumericPad` sans carte ni en-tête) **dans la colonne centrale**, à la place des CTA de réglage ; le reste de l'écran passe sous un **voile léger flouté** (blur 4 px, 30 % noir) **sauf la carte visée**, nette, dont le champ `DISTANCE` **s'actualise à chaque touche**. Sous le pavé, `VALIDER` accent pleine largeur de colonne ; `AC`/`C`, `⌫` inchangés. Fermeture par `VALIDER`, par la croix en haut du dock, ou par un **geste complet** sur le voile (appui **et** relâchement) — ces deux dernières abandonnent et restaurent la valeur précédente. Plafond 3 chiffres, frappe ignorée avec pulsation ; **plafond unique** `MAX_TARGET_SCORE` qui redescend vers le pavé (dette reprise). Le dock est l'**hôte** du buffer, du plafond et de l'haptique ; `NumericPad` reste muet.
+- UX-DR40 : Construire **`AlphaKeyboardSheet`** — le tap sur `NOM` ouvre l'`AlphaKeyboard` en **bandeau bas pleine largeur** (≈ 45 % de la hauteur, conteneur à contour, croix à gauche, `VALIDER` à droite), même voile flouté, carte visée nette, champ `NOM` actualisé en direct. Clavier **complété** : tiret, apostrophe, `Ë Ï Î Ô Û` (dette reprise, avancée depuis l'Epic 4). Touches ≥ 57 px (exception UX-DR8 inchangée). Majuscules automatiques, 20 caractères.
+- UX-DR41 : **Supprimer `PlayerSetupModal`** : plus de pop-up « joueur » regroupant nom et distance, chaque champ se règle en place. Le rattrapage **« DISTANCE MANQUANTE »** (Story 1.10) subsiste : `RÉGLER LA DISTANCE` **ouvre directement le dock sur le champ `DISTANCE` du premier joueur sans distance**, puis du second à la suite si elle manque encore.
+- UX-DR42 : **Colonne centrale (état repos)** : titre du mode en surtitre discret (ex. `CADRE 47/2`), puis **une ligne de deux CTA neutres à contour** de demi-largeur — **`CHANGER DE BILLE`** (picto ⇄ sur deux billes) et **`CHANGER DE CÔTÉ`** (picto ⇄ horizontal) — puis **`DÉMARRER`** accent, pleine largeur, ≥ 110 px de haut. Modèle : Cueuny.
+- UX-DR43 : **Mécanique dissociée bille/côté** — `CHANGER DE BILLE` : **les billes s'échangent, les joueurs restent en place** (la carte de gauche devient jaune — fond, bandeau, médaillon — celle de droite blanche ; noms et distances ne bougent pas). `CHANGER DE CÔTÉ` : **les cartes s'échangent de place, tout compris** (nom, distance, bille). Chacune est **son propre inverse**, disponible **jusqu'à `DÉMARRER` seulement**, jamais en cours de partie. Conséquence : « gauche = blanc » n'est plus une invariante ; la carte blanche reste le repère visuel de « celui qui ouvre » (AR24).
+- UX-DR44 : Sidebar du paramétrage : `RETOUR` **conserve les saisies** ; croix `ANNULER` → accueil, joueurs effacés, **sans confirmation** (rien d'irréversible : pas de partie commencée) ; `CONFIGURATION` en BIENTÔT.
+
+*Scoreboard, JDS et 3 Bandes (Story 10.4)*
+
+- UX-DR45 : Réorganiser **`PlayerPanel`** en conteneur à contour, fond plein couleur de bille, **quatre zones** de haut en bas : (1) **bandeau** (22 % de la carte, fond `--color-panel-*-band`, ou à défaut une ligne de 1 px) avec **`NOM`** en haut à gauche (gras, **deux lignes max** puis troncature — seul le nom se tronque, jamais une valeur chiffrée), **`DISTANCE`** en haut à droite (libellé petit + valeur) et **`RESTANT`** juste sous le nom ; (2) **score** géant centré, règles de taille par nombre de chiffres inchangées, paliers ajustés (le bandeau et la ligne MOY/SÉRIE reprennent ≈ 10 % de hauteur) ; (3) **`MOY` · `SÉRIE`** sur une ligne sous le score (18 à 22 px, séparés par un point médian) ; (4) **pied** : `−` à gauche, `+` à droite (≥ 90×90 px, inchangés) et, entre les deux, la **zone de série** : série en cours en 3 Bandes, `POUR n` temporaire (3 Bandes, inchangé), **valeur en cours de saisie** en JDS quand le dock est ouvert, rien sinon.
+- UX-DR46 : **`RESTANT = max(distance − score, 0)`**, permanent, **tous modes**, masqué sans distance, champ dérivé (AR25). Cohabitation avec `POUR n` en 3 Bandes pendant les 3 derniers points **assumée** : `RESTANT` est l'information de fond, `POUR n` l'annonce d'arbitre.
+- UX-DR47 : **Le tap sur la carte n'a plus aucun effet** : l'état « tapable pour rendre la main » est retiré, `PlayerPanel` n'a plus que deux états, *repos* et *actif*. Tour actif = **liseré rouge épais sur le conteneur** (présence, pas teinte, UX-DR14 inchangée).
+- UX-DR48 : Réduire **`CenterPanel`** (conteneur à contour, fond `--color-surface`) à trois éléments empilés : **`REP`** + compteur en haut, **chrono** (3 Bandes uniquement ; en JDS l'espace reste vide et `PASSER LE TOUR` remonte), **`PASSER LE TOUR`** en bas (CTA neutre à contour fort, pleine largeur de colonne, ≥ 90 px de haut, libellé sur deux lignes si besoin). **`ANNULER` et `ÉCHANGER` en sortent.** Le chrono (anneau, fondu vert → rouge, taille fluide, inchangé) **peut déborder** sur les cartes voisines de 12 à 20 px (au-dessus des cartes en `z-index`, cartes réservant une marge intérieure sur ce bord) — **facultatif** : si la colonne offre déjà un anneau ≥ 160 px, il ne déborde pas ; à valider au rendu.
+- UX-DR49 : **`PASSER LE TOUR`**, unique geste de passage **sans marquer** : en **JDS**, enregistre une **série de 0** et bascule ; en **3 Bandes**, clôture la série comptée par les `+1` et bascule, le chrono repart à 40 avec ses 2 s de latence. **Une action dans la pile d'undo** (`ANNULER` la défait). **Toujours disponible** en partie ; masqué sous le dock quand le pavé est ouvert ; inerte pendant les pop-ups de fin. Rentrer une série au pavé (`VALIDER`, auto-validation) **continue de basculer automatiquement**.
+- UX-DR50 : **Saisie de série en JDS par dock central** (`ScoreEntryModal` → `ScoreEntryDock`, hébergé par `NumericPadDock`, **même contrat**) : le CTA de la barre basse ouvre le pavé nu dans la colonne centrale (croix en haut, `NumericPad`, `VALIDER` accent en pied avec son compte à rebours de 3 s), qui **recouvre `REP` et `PASSER LE TOUR`** le temps de la saisie. Voile flouté léger sur le reste, **sauf la carte du joueur qui a la main**, nette, où la valeur tapée s'affiche **entre `−` et `+`** en grand (même taille que `POUR n`), dans la couleur d'encre de la carte. Largeur minimale du dock **220 px** (débordement sur les bords intérieurs des cartes floutées accepté en portrait). Issues : `VALIDER`, auto-validation à 3 s, croix, geste complet sur le voile. « Une seule saisie à la fois » reste entière.
+- UX-DR51 : Reconstruire **`ActionBar`** (scoreboard uniquement, calée sur les colonnes des cartes, deux groupes qui **échangent de côté à chaque bascule**, inchangé) : **côté du joueur assis**, le CTA de saisie accent large comme la carte — **`+ POINTS ADVERSAIRE`** en JDS (ouvre le dock), **`+1 ADVERSAIRE`** en 3 Bandes (crédite un point, haptique, chrono relancé — Story 2.2 inchangée) ; **côté opposé**, **quatre `IconAction`** du bord **extérieur** vers l'intérieur : **`QUITTER`** (porte) · **`PARAMÈTRES`** (engrenage, **BIENTÔT**) · **`RECOMMENCER`** (flèche circulaire) · **`ANNULER`** (flèche retour courbe). Comportements inchangés (`QUITTER` → « TERMINER LA PARTIE ? » ou accueil direct sans série ; `RECOMMENCER` → « RECOMMENCER LA PARTIE ? », grisé sur scoreboard intact ; `ANNULER` = undo multi-niveaux, grisé à pile vide). En **portrait**, libellés masqués, pictos à 72 px. **Un seul markup pour les deux côtés** (ordre inversé par `flex-direction`) — fin de la duplication (dette reprise).
+- UX-DR52 : Construire le composant **`IconAction`** — picto + libellé, ≥ 90×90 px libellé compris, fond `--color-surface`, contour, `--radius-cta`, séparés de 12 px ; états **normal / grisé / BIENTÔT**.
+
+*Récap et transverse (Stories 10.5, 10.7)*
+
+- UX-DR53 : **`GameSummary`** — style Billiboard conservé (bandeau VS, trois colonnes, colonne du vainqueur en couleur victoire), désormais dans un **conteneur à contour** sur le dégradé, avec la **sidebar** `QUITTER` · `RECOMMENCER` ; la barre basse `FIN DE PARTIE` / `UNE PARTIE DE PLUS` **disparaît**. **Bandeau** : nom et distance dans **deux éléments distincts** — le nom se tronque seul (ellipse), la distance n'est **jamais** masquée (dette reprise). Côtés = ceux du scoreboard (la carte blanche peut être à droite). Toujours **terminal**.
+- UX-DR54 : `NumericPad` et `AlphaKeyboard` passent en **style contour** (tokens UX-DR27), partagent toujours `keyClasses.ts`, et **restent muets** (ni buffer, ni plafond, ni timer, ni haptique — portés par leurs hôtes dock/sheet).
+- UX-DR55 : **Sémantique de dialogue** sur toutes les pop-ups, dock et sheet (`PromptModal`, `NumericPadDock`, `AlphaKeyboardSheet`) : `role="dialog"`, `aria-modal`, `aria-labelledby` vers le titre ; **garde `prefers-reduced-motion`** sur les animations d'ouverture/fermeture (dette reprise). L'arbitrage « borne fixe » reste : pas de gestion du focus clavier au-delà de ce qui est gratuit.
+- UX-DR56 : **Contraste WCAG AA** à vérifier sur le bandeau jaune foncé (`#E6B000` + encre noire) et sur les libellés de picto sur `--color-surface` (UX-DR22). **Règles conservées** (spec §10.6), à ne pas perdre dans la refonte : bille fixe **à la carte** ; tour actif par présence d'un liseré ; zones tactiles ≥ 90×90 px hors claviers ; claviers intégrés, jamais le clavier système ; haptique + visuel < 100 ms ; `VALIDER` ou 3 s ; une seule saisie à la fois ; undo multi-niveaux grisé à pile vide ; pop-ups de décision sans croix, retour toujours nommé `ANNULER` ; règles de fin de partie, égalisatrice, `POUR n`, chrono 40 s en fondu ; aucune alerte d'inactivité ; mise à jour de l'app à l'accueil seulement.
+
+**Reste à trancher, non bloquant** (spec §10.8, à porter par les stories concernées) : hex exact de `--color-cloth` (10.1) ; libellé de l'accroche d'accueil et les quatre accroches de tuiles (10.1) ; logo 1Score en SVG (10.1, repli prévu) ; débordement du chrono (10.4, option). *Le spike « Fermer l'application » sort de l'epic (item inerte en 10.1).*
+
+### Dette reprise par l'Epic 10 *(ajouté le 2026-09-11, `deferred-work.md`)*
+
+- DT1 : Plafond de distance défini deux fois (`MAX_DIGITS = 3` dans `PlayerSetupModal`, `MAX_TARGET_SCORE = 999` dans `useGameStore`) et `MAX_SCORE_DIGITS` encodant FR7 indépendamment — **une seule source**, qui redescend vers le pavé (Story 10.3, avec UX-DR39).
+- DT2 : Markup dupliqué de la barre basse (`GameView.vue`, CTA/SVG copiés par colonne, alignement dépendant de `-mx-4`/`ml-4`/`mr-4`, aggravé par RECOMMENCER) — **markup unique** (Story 10.4, avec UX-DR51).
+- DT3 : Pop-ups sans sémantique de dialogue ni garde `prefers-reduced-motion` (`ScoreEntryModal`, `PlayerSetupModal`, `PromptModal`, `main.css`) — traité d'un bloc (Story 10.7, avec UX-DR55). Le voile plein écran garde ses handlers pointer **sans** `role="button"` : exception explicite à CLAUDE.md §2 à consigner.
+- DT4 : Clavier alphabétique incomplet (tiret, apostrophe, `Ë Ï Î Ô Û`) — complété (Story 10.3, avec UX-DR40), avancé depuis la Story 4.2.
+- DT5 : `Player.id` positionnel redondant — supprimé avec la scission de `swapPlayers` (Story 10.3, avec AR21).
+- DT6 : Bandeau du récap : un nom de 20 lettres larges masque la distance — corrigé (Story 10.5, avec UX-DR53).
+- DT7 : **Clos sans code** : « `ÉCHANGER` pendant une reprise entamée casse la déduction de la série ouverte » — le mécanisme n'existe plus en jeu (Story 10.4, AR22). **Non repris** (restent dans leur file) : chrono non ancré sur l'horloge (consolidation technique V1), deux joueurs de même nom et renommage en partie (Epic 4), `PlayerPanel` en `role="button"` englobant deux `<button>` (disparaît de fait avec UX-DR47 — à vérifier en revue de la 10.4).
 
 ### FR Coverage Map
 
@@ -221,6 +302,8 @@ FR44: Epic 6 - Signalisation visuelle des moments clés
 FR45: Epic 1 - Fonctionnement sans connexion réseau
 FR46: Epic 1 - Installation comme application native
 
+*Epic 10 (2026-09-11) : aucune FR nouvelle — refonte de présentation des FR1, FR2, FR4, FR7, FR8, FR9, FR11, FR12, FR13, FR14, FR17, FR40, FR41 déjà livrées (Epics 1-2), plus AR20-AR27, UX-DR25-UX-DR56 et DT1-DT7.*
+
 ## Epic List
 
 ### Epic 1: Démarrer et Jouer une Partie JDS (V1a)
@@ -268,6 +351,30 @@ Un organisateur peut créer un tournoi, assigner les matchs aux tables disponibl
 Le système exporte les résultats des parties dans un format compatible avec les systèmes de la fédération française de billard carambole, pour alimenter automatiquement le futur classement national.
 **FRs couverts :** FR38
 **Notes d'implémentation :** Format d'import fédération inconnu à ce stade — export générique JSON/CSV adaptable (architecture V3).
+
+### Epic 10: Refonte UI/UX Premium (1Score) (V1.1) — *ajouté le 2026-09-11, structure approuvée par Nathan le 2026-09-11*
+
+> ⚠️ **Numéro conservé en fin de liste pour ne renommer aucun fichier de story existant, mais s'exécute EN RÉALITÉ juste après l'Epic 2, avant l'Epic 4** (`sprint-change-proposal-2026-09-11-refonte-ui.md`, approuvé par Nathan). Voir `sprint-status.yaml` pour l'ordre d'exécution réel.
+
+Un club qui découvre le produit voit une interface premium et cohérente sur les cinq écrans du jeu déjà livré (accueil, sélection de mode, paramétrage joueurs, scoreboard, récap), sous le nom **1Score**, sans changement des règles de calcul de score. Deux mécaniques d'interaction évoluent : le passage de tour par une CTA dédiée `PASSER LE TOUR`, et l'interversion bille/côté dissociée en deux actions au paramétrage.
+**FRs couverts :** aucune nouvelle FR — refonte de présentation des FR1, FR2, FR4, FR7, FR8, FR9, FR11, FR12, FR13, FR14, FR17, FR40, FR41 (Epics 1 et 2, livrées). Exigences propres : **AR20 à AR27, UX-DR25 à UX-DR56, DT1 à DT7.**
+**Notes d'implémentation :** Découpage **par écran**, à la demande de Nathan. Chaque story laisse l'application complète et jouable : les anciens composants ne sont retirés que par la story qui les remplace. Ce que chaque story **crée** et ce qu'elle rattache :
+
+| Story | Écran | Crée | Exigences |
+|---|---|---|---|
+| 10.6 | Renommage 1Score | rien de visuel (`CLAUDE.md`, manifest, `package.json`, titres) | AR27 |
+| 10.1 | Accueil | tokens et dégradé, `SideBar`, `ModeTile`, état BIENTÔT, item « FERMER L'APPLICATION » **inerte** | AR20, AR26, UX-DR25 à UX-DR35 |
+| 10.2 | Sélection JDS | variante « liste » de `PromptModal` (choix Cadre) | UX-DR36, UX-DR37 |
+| 10.3 | Paramétrage joueurs | `NumericPadDock`, `AlphaKeyboardSheet`, actions bille/côté, suppression de `PlayerSetupModal`, retrait d'`ÉCHANGER` du jeu | AR21, AR22, AR24, UX-DR38 à UX-DR44, UX-DR54, DT1, DT4, DT5, DT7 |
+| 10.4 | Scoreboard (JDS et 3 Bandes) | `IconAction`, `PASSER LE TOUR`, `ScoreEntryDock`, carte réorganisée, `CenterPanel` réduit, `ActionBar` reconstruite | AR23, AR25, UX-DR45 à UX-DR52, DT2 |
+| 10.5 | Récap | rien de nouveau — réutilise `SideBar` | UX-DR53, DT6 |
+| 10.7 | Finition transverse | sémantique de dialogue et garde `reduced-motion` sur toutes les pop-ups, contrôle de contraste AA, passe portrait | UX-DR55, UX-DR56, DT3 |
+
+**Ordre d'exécution : 10.6 → 10.1 → 10.2 → 10.3 → 10.4 → 10.5 → 10.7.** Le renommage passe en premier parce que la sidebar affiche le mot « 1Score » dès l'accueil. Les numéros restent ceux déjà cités dans le PRD, l'architecture, la spec UX et `sprint-status.yaml`.
+
+**Décisions de Nathan à cette passe (2026-09-11) :** « Fermer l'application » n'est pas prioritaire — item de sidebar affiché mais inerte, sans spike ni pop-up (AR26/UX-DR32 reportés hors epic) ; la Story 10.4 reste **entière** malgré sa taille (fidélité au découpage par écran) ; la 10.7 est allégée à la finition transverse, la dette par écran étant portée par les 10.3, 10.4 et 10.5.
+
+**Effet de bord :** en retirant `ÉCHANGER` du jeu en cours de partie, le backlog « `ÉCHANGER` pendant une reprise entamée casse la déduction de la série ouverte » (`deferred-work.md`, revue 2.1+2.2+2.4) devient sans objet — clos, pas corrigé (DT7).
 
 ---
 
@@ -492,7 +599,7 @@ So that j'enregistre mon résultat sans calcul mental ni ambiguïté sur la vali
 **⚠️ Risque résiduel ouvert :** un seul CTA de saisie signifie qu'on ne peut plus saisir pour le joueur qui n'a pas la main. Le rattrapage d'une série oubliée passe donc par ANNULER — **Story 1.8, pas encore branchée**. Tant qu'elle ne l'est pas, un oubli n'est pas récupérable en partie. *(Levé par la Story 1.7, 2026-09-09 : `ANNULER` est branché.)*
 
 **Règle produit de portée générale — alternance et moyenne** *(décision de Nathan, 2026-09-09 ; consignée ici et dans `ux-design-specification.md` §2.5)*. Elle **dépasse le cadre de la Story 1.5** et conditionne les Stories 1.6, 1.10, 1.11 et tout l'Epic 2 :
-1. **Rentrer sa série, c'est rendre la main.** Dans les modes qui passent par le pavé (JDS), valider une série bascule le joueur actif — par le bouton comme par l'auto-validation à 3 s, qui devient donc aussi le *fallback* de bascule. Rendre la main **sans marquer** se fait au tap sur la zone de l'adversaire, ce qui enregistre une série de 0. En 3 Bandes, où la série ne passe pas par un pavé, la bascule reste un geste explicite — **les AC de l'Epic 2 ne la décrivent pas encore** et ne distinguent pas le geste « créditer +1 » du geste « rendre la main », qui visent la même zone (à préciser avant la Story 2.2).
+1. **Rentrer sa série, c'est rendre la main.** Dans les modes qui passent par le pavé (JDS), valider une série bascule le joueur actif — par le bouton comme par l'auto-validation à 3 s, qui devient donc aussi le *fallback* de bascule. Rendre la main **sans marquer** se fait au tap sur la zone de l'adversaire, ce qui enregistre une série de 0. En 3 Bandes, où la série ne passe pas par un pavé, la bascule reste un geste explicite — **les AC de l'Epic 2 ne la décrivent pas encore** et ne distinguent pas le geste « créditer +1 » du geste « rendre la main », qui visent la même zone (à préciser avant la Story 2.2). **Supersédé le 2026-09-11 (Epic 10, Story 10.4) :** le tap sur la zone de l'adversaire comme geste de passage de tour est **retiré** — une CTA centrale dédiée `PASSER LE TOUR` devient l'unique façon de rendre la main, en JDS comme en 3 Bandes. Rentrer une série au pavé continue de basculer automatiquement le joueur actif ; seul le geste de passage **sans marquer** change de forme.
 2. **La reprise est ouverte par le joueur blanc.** Le compteur de reprise avance quand le joueur de gauche **reprend** la main, pas quand il la rend.
 3. **La moyenne d'un joueur se fige quand il rend la main** : celle du blanc quand il rend la main, celle du jaune quand le blanc la reprend. Une reprise entamée mais non terminée par un joueur n'entre pas dans sa moyenne. **Une reprise blanchie, elle, compte** — sans quoi la moyenne monterait artificiellement.
 
@@ -536,7 +643,7 @@ So that une erreur de frappe ne devient jamais un score faux.
 
 **⚠️ Impact de la Story 1.5 (2026-09-09) — story à réexaminer, elle est peut-être sans objet.** La saisie ayant quitté le panneau pour une pop-up, trois chemins d'annulation existent déjà et sont testés : la touche `C` (vide la saisie), la touche `⌫` (efface le dernier chiffre) et la **fermeture de la pop-up** par la croix ou par un tap en dehors, qui n'enregistre rien et ne laisse aucun buffer résiduel. Le besoin d'origine — « une erreur de frappe ne devient jamais un score faux » — est donc couvert. Reste à arbitrer avec Nathan : faut-il encore un bouton `CORRIGER` distinct dans la pop-up, et que ferait-il de plus que `C` ? Le second AC (poids visuel égal à `VALIDER`, UX-DR16) n'a plus de sujet tant que ce bouton n'existe pas.
 
-**✅ Recadrage de Nathan (2026-09-09) — story livrée sous ce titre, mais avec un autre sujet.** Le bouton `CORRIGER` en pop-up est **sans objet** : `C`, `⌫` et la croix couvrent FR8, il n'apporterait rien. La story livre à la place le bouton **`ANNULER` de la console centrale** (présent depuis la 1.3, événement `undo` jusque-là sans écouteur) : à chaque appui, la partie **revient d'une action en arrière** — un *undo* multi-niveaux jusqu'au début de la partie, grisé à pile vide. Une action = une **série validée** (`VALIDER` ou auto-validation), une **main rendue sans marquer**, ou une **correction `−`/`+`** (un appui = une action). **`ÉCHANGER` n'est pas annulable** : on rappuie dessus pour revenir, et une annulation postérieure à un échange ne le défait jamais par effet de bord (les joueurs restent où ils sont, la main revient au joueur concerné là où il se trouve). Exposé comme action Pinia `undoLastAction()` + `canUndo`. Au passage : les pictos `↩`/`⇄` sont retirés d'`ANNULER`/`ÉCHANGER` (un mot, pas de glyphe), et `REPRISE` devient **`REP`**. La Story 1.8 est absorbée (voir ci-dessous).
+**✅ Recadrage de Nathan (2026-09-09) — story livrée sous ce titre, mais avec un autre sujet.** Le bouton `CORRIGER` en pop-up est **sans objet** : `C`, `⌫` et la croix couvrent FR8, il n'apporterait rien. La story livre à la place le bouton **`ANNULER` de la console centrale** (présent depuis la 1.3, événement `undo` jusque-là sans écouteur) : à chaque appui, la partie **revient d'une action en arrière** — un *undo* multi-niveaux jusqu'au début de la partie, grisé à pile vide. Une action = une **série validée** (`VALIDER` ou auto-validation), une **main rendue sans marquer**, ou une **correction `−`/`+`** (un appui = une action). **`ÉCHANGER` n'est pas annulable** : on rappuie dessus pour revenir, et une annulation postérieure à un échange ne le défait jamais par effet de bord (les joueurs restent où ils sont, la main revient au joueur concerné là où il se trouve). Exposé comme action Pinia `undoLastAction()` + `canUndo`. Au passage : les pictos `↩`/`⇄` sont retirés d'`ANNULER`/`ÉCHANGER` (un mot, pas de glyphe), et `REPRISE` devient **`REP`**. La Story 1.8 est absorbée (voir ci-dessous). **Supersédé le 2026-09-11 (Epic 10, Story 10.4) :** `ANNULER` quitte la console centrale pour la barre basse, en **picto + petit libellé** (aux côtés de `QUITTER`/`RECOMMENCER`/`PARAMÈTRES`) — le mécanisme d'undo ne change pas. `ÉCHANGER` est **retiré du jeu en cours de partie** (voir note de la Story 1.3/UX-DR2 ci-dessus) : les précisions ci-dessus sur son inversibilité restent vraies pour la fenêtre d'avant `DÉMARRER` où il subsiste sous les CTA `CHANGER DE BILLE`/`CHANGER DE CÔTÉ`.
 
 ### Story 1.8: Annuler la dernière série validée
 
@@ -1379,3 +1486,344 @@ So that la fédération peut intégrer nos données sans ressaisie manuelle.
 **Given** un export réalisé
 **When** je le partage ou le transmets
 **Then** il inclut a minima : identité des joueurs, mode de jeu, scores, date, club — les données nécessaires à un futur classement national (roadmap PRD V4)
+
+---
+
+## Epic 10: Refonte UI/UX Premium (1Score) (V1.1)
+
+*Section ajoutée le 2026-09-11 (`sprint-change-proposal-2026-09-11-refonte-ui.md`, spec UX §10.0-10.8). S'exécute **juste après l'Epic 2, avant l'Epic 4**, dans l'ordre **10.6 → 10.1 → 10.2 → 10.3 → 10.4 → 10.5 → 10.7**. Chaque story laisse l'application complète et jouable : un composant ancien n'est retiré que par la story qui le remplace, et les écrans non encore refondus gardent leur rendu actuel (barre basse comprise) jusqu'à leur story. Références visuelles : Nathan indique, à la création de chaque story, quelles captures de `explore/resources/` prendre en référence.*
+
+Un club qui découvre le produit voit une interface premium et cohérente sur les cinq écrans du jeu déjà livré, sous le nom **1Score**, sans changement des règles de calcul de score. Deux mécaniques d'interaction évoluent : le passage de tour par `PASSER LE TOUR`, et l'interversion bille/côté dissociée au paramétrage.
+
+**Constat de code (2026-09-11, à la rédaction des stories) :** l'interversion n'existe aujourd'hui **qu'en partie** — `swapPlayers()` refuse tout état autre que `playing` — et le paramétrage garde noms et distances en **état local de `HomeScreen`**, transmis à `startGame()`. Le modèle du store pose `player1` = joueur de gauche = bille blanche, et toute la logique de jeu (ouverture de reprise, égalisatrice, `openSeriesValue`) s'appuie sur « `player1` ouvre ». La Story 10.3 en tient compte : elle **conserve l'invariant « `player1` = bille blanche = celui qui ouvre »** et rend le **côté d'affichage** indépendant, plutôt que de rendre la couleur variable dans la logique de jeu.
+
+### Story 10.1: Refonte de l'accueil — barre latérale, tuiles de mode, fond dégradé
+
+As a joueur qui arrive devant la tablette du club,
+I want un accueil 1Score premium — barre latérale, accroche, quatre tuiles de mode colorées sur un fond dégradé,
+So that je reconnais le produit au premier regard et je choisis mon jeu d'un seul tap, sans rien lire (NFR12).
+
+*Fondations posées ici pour toute l'epic : tokens et dégradé (UX-DR25 à UX-DR28), `SideBar` (UX-DR29 à UX-DR31), `ModeTile` (UX-DR34), état BIENTÔT (UX-DR30). Périmètre : l'étape `category` de `HomeScreen` uniquement — les étapes `mode` et `players` gardent leur rendu actuel (barre basse comprise) jusqu'aux Stories 10.2 et 10.3.*
+
+**Exigences :** AR20 (`SideBar`), AR26 (item inerte), UX-DR25, UX-DR26, UX-DR27, UX-DR28, UX-DR29, UX-DR30, UX-DR31, UX-DR32 (reporté), UX-DR33, UX-DR34, UX-DR35.
+
+**Acceptance Criteria:**
+
+**Given** n'importe quel écran de l'application
+**When** il s'affiche
+**Then** le fond est le dégradé drap → noir (`--gradient-bg`, départ `--color-cloth`), sans aucune image, et les tokens UX-DR27 sont déclarés dans la feuille de tokens existante (`--color-cloth`, `--color-surface`, `--color-border`, `--color-border-strong`, `--radius-container`, `--radius-cta`, `--color-tile-*`, `--color-panel-*-band`)
+**And** l'écran garde une marge de 16 px sur ses quatre bords, dégradé visible autour, sans défilement ni débordement en paysage comme en portrait (768×1024 et 1024×768)
+
+**Given** l'accueil
+**When** il s'affiche
+**Then** une barre latérale `SideBar` occupe la colonne gauche (120 px en paysage, 96 px en portrait), conteneur à contour sur toute la hauteur, fond `--color-surface`
+**And** son en-tête (96 px) porte le logo — repli : rond `--color-cloth` avec « 1 » tant que l'asset n'est pas fourni — et le mot `1Score` en police display ; un tap sur l'en-tête n'a aucun effet
+**And** les items `ENTRAÎNEMENT` et `INSCRIPTION` sont empilés sous l'en-tête (picto au-dessus d'un libellé court, ≥ 90×90 px, pleine largeur, 12 px d'écart), tous deux en état BIENTÔT
+**And** l'item `FERMER L'APPLICATION` (picto marche/arrêt, libellé sur deux lignes) est calé **en bas** de la colonne, isolé du reste, **en état BIENTÔT** — décision de Nathan du 2026-09-11 : affiché, inerte, aucun spike ni pop-up dans cette epic (AR26/UX-DR32 reportés)
+
+**Given** un item, une tuile ou un picto en état BIENTÔT
+**When** il s'affiche puis qu'on le tape
+**Then** picto et libellé sont rendus à 45 % d'opacité avec un petit badge `BIENTÔT` sous le libellé, et le tap n'a **aucun effet** — ni navigation, ni pop-up, ni haptique
+
+**Given** l'accueil
+**When** il s'affiche
+**Then** la zone principale montre en haut une accroche d'une phrase en police display (40 à 56 px fluide, blanc, alignée à gauche, marge 32 px, sans sous-texte — libellé provisoire « À vous de jouer. » jusqu'au choix de Nathan)
+**And** en bas une rangée de quatre `ModeTile` de hauteur égale (≈ 34 % de la hauteur utile, ≥ 180 px) : `3 BANDES` (`--color-tile-3b`), `JEUX DE SÉRIES` (`--color-tile-jds`), `QUILLES` (`--color-tile-quilles`), `CASIN` (`--color-tile-casin`), chacune en conteneur à contour, fond de sa couleur à 85 %, avec un titre (28 à 36 px, gras), une accroche d'une ligne (16 à 18 px) et une flèche `→` en bas à droite
+**And** `QUILLES` et `CASIN` sont en état BIENTÔT (fond à 45 %, badge à la place de la flèche)
+**And** rien ne bouge ni ne clignote : l'accueil reste l'écran de veille
+
+**Given** l'accueil
+**When** je tape `3 BANDES`
+**Then** j'arrive directement à l'étape joueurs (mode `3bandes`), sans écran intermédiaire
+
+**Given** l'accueil
+**When** je tape `JEUX DE SÉRIES`
+**Then** j'arrive à l'étape de sélection des modes JDS (rendu actuel jusqu'à la Story 10.2)
+
+**Given** une sauvegarde de partie au lancement
+**When** l'accueil s'affiche
+**Then** la pop-up « PARTIE EN COURS » se comporte exactement comme aujourd'hui (Story 1.12), par-dessus le nouvel accueil
+
+**Given** l'accueil refondu
+**When** il s'affiche
+**Then** la barre d'action basse n'y est plus ; l'ancien `img[alt]` du logo et les tests de `HomeScreen` sont adaptés, `SideBar` et `ModeTile` ont chacun leur fichier de test co-localisé (AR16), et le rendu est vérifié dans Chrome en paysage et en portrait
+
+**Note de périmètre :** `SideBar` est construit dès cette story avec son API complète (en-tête, liste d'items typés `{ picto, label, state: 'normal' | 'soon', action }`, item de sortie), pour que les Stories 10.2, 10.3 et 10.5 n'aient qu'à la nourrir. Le contenu de chaque écran (UX-DR31) est fourni par l'écran, pas codé dans la barre. L'hex de `--color-cloth` est pris au pixel-picker sur l'image du drap fournie par Nathan ; à défaut `#2F6FB8`.
+
+### Story 10.2: Refonte de la sélection des modes JDS — tuiles et choix Cadre
+
+As a joueur de jeux de séries,
+I want choisir Libre, 1 Bande, Cadre (47/2, 47/1 ou 71/2) ou 4 Billes sur des tuiles du même style que l'accueil,
+So that le parcours reste « catégorie → mode → joueurs » en moins de 30 secondes, avec la même lisibilité que l'accueil (FR12, NFR12).
+
+*Périmètre : l'étape `mode` de `HomeScreen`. Aucun nouveau mode — FR12 inchangée ; seule la navigation regroupe les trois cadres.*
+
+**Exigences :** UX-DR31 (contenu sidebar), UX-DR36, UX-DR37.
+
+**Acceptance Criteria:**
+
+**Given** l'étape de sélection JDS
+**When** elle s'affiche
+**Then** la `SideBar` ne porte que l'en-tête et l'item `RETOUR` (flèche gauche), qui ramène à l'accueil
+**And** la barre d'action basse n'y est plus
+
+**Given** l'étape de sélection JDS
+**When** elle s'affiche
+**Then** la zone principale titre `JEUX DE SÉRIES` en police display, puis quatre `ModeTile` de même gabarit que l'accueil, toutes en `--color-tile-jds` : `LIBRE` (« Sans contrainte »), `1 BANDE` (« Une bande avant le second point »), `CADRE` (« 47/2 · 47/1 · 71/2 »), `4 BILLES` (« Deux billes rouges ») — libellé `1 BANDE` confirmé par Nathan le 2026-09-11, le catalogue reste tel quel
+
+**Given** l'étape de sélection JDS
+**When** je tape `LIBRE`, `1 BANDE` ou `4 BILLES`
+**Then** j'arrive à l'étape joueurs avec le mode correspondant (`libre`, `bande`, `4billes`), comme aujourd'hui
+
+**Given** l'étape de sélection JDS
+**When** je tape `CADRE`
+**Then** une pop-up `PromptModal` en **variante « liste »** s'ouvre avec, empilés, les CTA `47/2`, `47/1`, `71/2`, puis `ANNULER` neutre en dernier ; voile inerte, aucune croix, aucun message (règle PromptModal)
+**And** taper un cadre mène à l'étape joueurs avec le mode correspondant (`cadre-47-2`, `cadre-47-1`, `cadre-71-2`) ; `ANNULER` referme la pop-up sans rien changer
+
+**Given** `PromptModal`
+**When** il reçoit une liste de *n* actions
+**Then** il les rend empilées, toutes ≥ 90 px de haut, la première en accent et les suivantes neutres sauf indication contraire, sans casser ses usages existants à un ou deux CTA (tests `PromptModal.test.ts` étendus, usages « PARTIE EN COURS », « DISTANCE MANQUANTE », fins de partie inchangés)
+
+**Given** l'étape joueurs atteinte depuis un cadre
+**When** elle s'affiche
+**Then** le surtitre du mode (rendu actuel, puis colonne centrale en 10.3) affiche le libellé complet (`CADRE 47/2`, etc.) — les libellés et identifiants du catalogue `types/game.ts` ne changent pas
+
+**Note de périmètre :** le retour depuis l'étape joueurs vers cette étape (item `RETOUR` de la 10.3) doit retrouver l'étape `mode` pour un JDS et l'accueil pour le 3 Bandes — la 10.2 laisse `step` et `selectedCategory` tels quels pour que la 10.3 n'ait rien à réinventer.
+
+### Story 10.3: Refonte du paramétrage joueurs — saisie en place, bille et côté dissociés
+
+As a joueur qui prépare une partie,
+I want régler mon nom et ma distance directement sur ma carte, changer de bille ou de côté d'un tap, puis démarrer,
+So that la table est prête sans pop-up ni écran supplémentaire, et la répartition des billes correspond à la réalité de la table (FR1, FR41).
+
+*Périmètre : l'étape `players` de `HomeScreen`. Crée `NumericPadDock` et `AlphaKeyboardSheet`, supprime `PlayerSetupModal`, scinde l'interversion en deux actions et **retire `ÉCHANGER` du jeu** (AR22 — avancé ici depuis la 10.4 : le modèle joueur change dans cette story, l'ancien `swapPlayers` n'a plus de sens). Reprend DT1 (plafond unique), DT4 (clavier complété), DT5 (`Player.id`).*
+
+**Exigences :** AR21, AR22, AR24, UX-DR31 (contenu sidebar), UX-DR38, UX-DR39, UX-DR40, UX-DR41, UX-DR42, UX-DR43, UX-DR44, UX-DR54, DT1, DT4, DT5, DT7.
+
+**Acceptance Criteria:**
+
+**Given** l'étape joueurs
+**When** elle s'affiche
+**Then** la `SideBar` porte `RETOUR` (→ sélection JDS pour un jeu de série, → accueil pour le 3 Bandes, **saisies conservées**), `CONFIGURATION` (engrenage, BIENTÔT), et en bas la croix `ANNULER` (→ accueil, noms et distances effacés, sans confirmation)
+**And** la barre d'action basse n'y est plus ; `DÉMARRER` vit dans la colonne centrale
+
+**Given** l'étape joueurs
+**When** elle s'affiche
+**Then** la zone principale est en trois colonnes 2/5 · 1/5 · 2/5 : carte du joueur à la bille **blanche** à gauche par défaut, colonne de réglages au centre, carte du joueur à la bille **jaune** à droite par défaut
+**And** chaque carte est un conteneur à contour, fond plein couleur de bille, avec un **médaillon de bille** en haut (rond de 64 px, liseré, blanc ou jaune sur fond sombre) puis deux champs centrés en conteneurs à contour tapables : `NOM` (attente `JOUEUR`, gris) et `DISTANCE` (attente `0`, gris)
+**And** le champ visé porte le liseré rouge (`--color-turn-active`, présence et non teinte)
+
+**Given** une carte joueur
+**When** je tape `DISTANCE`
+**Then** le pavé numérique nu (`NumericPad`, sans carte ni en-tête) s'ouvre **dans la colonne centrale** à la place des CTA, hébergé par `NumericPadDock` (croix en haut, `VALIDER` accent pleine largeur en pied), le reste de l'écran passe sous un voile flouté léger (blur 4 px, 30 % noir) **sauf la carte visée**, nette, dont le champ `DISTANCE` s'actualise à chaque touche
+**And** `AC`/`C` et `⌫` se comportent comme aujourd'hui ; le plafond de 3 chiffres ignore la frappe avec pulsation ; ce plafond a **une seule source** (`MAX_TARGET_SCORE` du store, exposé au dock — `MAX_DIGITS` de `PlayerSetupModal` disparaît avec lui, DT1)
+**And** `VALIDER` applique ; la croix ou un **geste complet** sur le voile (appui **et** relâchement) abandonne et restaure la valeur précédente
+
+**Given** une carte joueur
+**When** je tape `NOM`
+**Then** l'`AlphaKeyboard` s'ouvre en **bandeau bas pleine largeur** (`AlphaKeyboardSheet`, ≈ 45 % de la hauteur, conteneur à contour, croix à gauche, `VALIDER` à droite), même voile flouté, carte visée nette, champ `NOM` actualisé en direct, majuscules automatiques, 20 caractères, touches ≥ 57 px
+**And** `NumericPad` et `AlphaKeyboard` passent en style contour (tokens de la 10.1, `keyClasses.ts` partagé) et restent muets (UX-DR54)
+**And** le clavier est **complété** du tiret, de l'apostrophe et de `Ë Ï Î Ô Û` (DT4) — `JEAN-PIERRE`, `D'ARTAGNAN`, `JOËL`, `ANAÏS`, `BENOÎT`, `JÉRÔME` sont saisissables
+**And** `VALIDER` applique ; la croix ou un geste complet sur le voile abandonne
+
+**Given** `PlayerSetupModal`
+**When** la story est livrée
+**Then** le composant et son test sont **supprimés** ; toute saisie passe par le dock et le bandeau ; aucun champ natif n'existe (règle « borne fixe », UX-DR19)
+
+**Given** `DÉMARRER` tapé alors qu'au moins une distance vaut 0
+**When** la pop-up « DISTANCE MANQUANTE » propose `RÉGLER LA DISTANCE`
+**Then** ce CTA ouvre **directement le dock sur le champ `DISTANCE`** du premier joueur sans distance, puis, après validation, celui du second s'il en manque encore — un seul geste de rattrapage, comme en Story 1.10
+
+**Given** la colonne centrale au repos
+**When** elle s'affiche
+**Then** elle porte le surtitre du mode (ex. `CADRE 47/2`), une ligne de deux CTA neutres à contour de demi-largeur — `CHANGER DE BILLE` (picto deux ronds ⇄) et `CHANGER DE CÔTÉ` (picto ⇄ horizontal) — puis `DÉMARRER` accent, pleine largeur, ≥ 110 px de haut
+
+**Given** deux joueurs saisis, blanc à gauche
+**When** je tape `CHANGER DE BILLE`
+**Then** **les billes s'échangent, les joueurs restent en place** : la carte de gauche devient jaune (fond, bandeau, médaillon), celle de droite blanche ; noms et distances ne bougent pas
+**And** un second tap remet les billes en place (action inverse d'elle-même)
+
+**Given** deux joueurs saisis
+**When** je tape `CHANGER DE CÔTÉ`
+**Then** **les cartes s'échangent de place, tout compris** (nom, distance, bille) ; un second tap les remet en place
+
+**Given** n'importe quelle combinaison des deux actions
+**When** je tape `DÉMARRER`
+**Then** le scoreboard affiche chaque joueur du côté et avec la bille choisis, et **le joueur à la bille blanche ouvre la partie** (a la main, ouvre les reprises), **où qu'il soit à l'écran** (AR24) ; la reprise égalisatrice appartient au joueur à la bille jaune ; moyenne, meilleure série, `POUR n`, undo et fin de partie sont inchangés (tests du store verts sans modification de leurs attentes de calcul)
+
+**Given** une partie en cours
+**When** le scoreboard s'affiche
+**Then** `ÉCHANGER` n'existe plus (bouton retiré de `CenterPanel`, `swapPlayers()` et `sidesSwapped` retirés du store et de `GameState`, tests correspondants retirés — AR22, DT7 clos) ; le rendu du reste du scoreboard est celui d'aujourd'hui jusqu'à la Story 10.4
+
+**Given** `GameState`
+**When** son format change (côté d'affichage ajouté, `sidesSwapped` et `Player.id` retirés — DT5)
+**Then** `GAME_STORAGE_VERSION` est incrémenté et une sauvegarde de l'ancien format est écartée proprement au lancement, comme le prévoit déjà la garde de lecture (Story 1.12)
+
+**Given** la story livrée
+**When** les tests tournent
+**Then** `NumericPadDock`, `AlphaKeyboardSheet` et les nouvelles actions ont leurs tests co-localisés ; `HomeScreen.test.ts`, `GameView.test.ts` et `useGameStore.test.ts` sont adaptés ; le rendu est vérifié dans Chrome en paysage et en portrait, dock ouvert et bandeau ouvert
+
+**Piste d'implémentation recommandée (à confirmer par le dev) :** conserver l'invariant du store « `player1` = bille blanche = celui qui ouvre » (`player2` = jaune) pour ne toucher **aucune** règle de jeu, et ajouter à `GameState` un seul champ d'affichage persisté (ex. `whiteSide: 'left' | 'right'`), qui remplace `sidesSwapped`. Au paramétrage, l'état reste local à `HomeScreen` comme aujourd'hui : `CHANGER DE BILLE` permute les noms/distances entre les deux emplacements **et** bascule `whiteSide` (les cartes ne bougent pas visuellement), `CHANGER DE CÔTÉ` bascule seulement `whiteSide` ; `startGame()` reçoit les deux joueurs résolus (blanc, jaune) et `whiteSide`. `GameView` et `GameSummary` placent `player1` à gauche ou à droite selon `whiteSide`. Le libellé « action de store dédiée » de la spec est ainsi porté par `startGame` et par le champ d'état, sans phase de paramétrage dans le store — l'écart est assumé, à consigner dans `architecture.md` à la livraison. `PlayerId` garde sa valeur de « côté de la partie » pour les reprises ; son commentaire dans `types/game.ts` est réécrit.
+
+### Story 10.4: Refonte du scoreboard — carte joueur, `PASSER LE TOUR`, dock de saisie, barre basse en pictos
+
+As a joueur en partie (JDS ou 3 Bandes),
+I want une carte joueur qui montre mon nom, ma distance, mon restant, mon score, ma moyenne et ma série, une colonne centrale réduite à l'essentiel avec `PASSER LE TOUR`, et une barre basse en pictos,
+So that je lis tout à 2 mètres et je passe la main par un geste explicite, sans jamais toucher une carte par erreur (FR2, FR3, FR7, FR8, FR9, FR13, FR14, NFR10).
+
+*Périmètre : `GameView` et ses composants (`PlayerPanel`, `CenterPanel`, `ShotClock`, `ActionBar`, `ScoreEntryModal` → `ScoreEntryDock`). Crée `IconAction`, réutilise `NumericPadDock` (10.3). Reprend DT2 (markup unique). Aucune règle de score ne change. Story volontairement entière (décision de Nathan, 2026-09-11) : la plus grosse de l'epic.*
+
+**Exigences :** AR20 (`ActionBar` scoreboard), AR23, AR25, UX-DR28 (pictos), UX-DR45, UX-DR46, UX-DR47, UX-DR48, UX-DR49, UX-DR50, UX-DR51, UX-DR52, DT2.
+
+**Acceptance Criteria:**
+
+**Given** une partie en cours
+**When** une carte joueur s'affiche
+**Then** elle est un conteneur à contour, fond plein couleur de bille, en quatre zones : (1) un **bandeau** (22 % de la carte, fond `--color-panel-white-band` ou `--color-panel-yellow-band`) avec `NOM` en haut à gauche (gras, deux lignes max puis ellipse — jamais une valeur chiffrée tronquée), `DISTANCE` en haut à droite (libellé petit + valeur), `RESTANT` sous le nom (libellé petit + valeur) ; (2) le **score** géant centré, paliers de taille par nombre de chiffres ajustés à la hauteur restante ; (3) `MOY · SÉRIE` sur une ligne sous le score (18 à 22 px) ; (4) le **pied** `−` / zone de série / `+` (≥ 90×90 px)
+**And** `RESTANT = max(distance − score, 0)` est affiché **dans tous les modes**, masqué sans distance, calculé dans le panneau (AR25) ; `POUR n` reste propre au 3 Bandes et s'affiche dans la zone de série comme aujourd'hui (Story 2.4), redondance avec `RESTANT` assumée
+
+**Given** une carte joueur
+**When** je la tape (n'importe où hors `−`/`+`)
+**Then** **rien ne se passe** : l'état « tapable pour rendre la main » et l'émission `pass-turn` sont retirés de `PlayerPanel` ; le tour actif se lit au liseré rouge épais du conteneur (présence, pas teinte)
+
+**Given** la colonne centrale
+**When** elle s'affiche
+**Then** elle est un conteneur à contour (`--color-surface`) réduit à `REP` + compteur en haut, le chrono en 3 Bandes (anneau et fondu inchangés ; en JDS l'espace reste vide et `PASSER LE TOUR` remonte), et `PASSER LE TOUR` en bas (CTA neutre à contour fort, pleine largeur, ≥ 90 px, libellé sur deux lignes si besoin) ; `ANNULER` et `ÉCHANGER` n'y sont plus
+**And** le débordement de l'anneau sur les cartes (12 à 20 px, `z-index`, marge intérieure réservée) est **optionnel** : appliqué seulement si la colonne offre moins de 160 px d'anneau, à valider au rendu avec Nathan
+
+**Given** une partie en JDS, le joueur actif n'ayant rien saisi
+**When** je tape `PASSER LE TOUR`
+**Then** une **série de 0** est enregistrée pour lui et la main passe (règle d'alternance inchangée, seul le geste change)
+
+**Given** une partie en 3 Bandes, des `+1` comptés pour le joueur actif
+**When** je tape `PASSER LE TOUR`
+**Then** la série comptée est clôturée, la main passe, le chrono repart à 40 avec ses 2 s de latence (Story 2.2)
+
+**Given** `PASSER LE TOUR`
+**When** j'y ai recours
+**Then** c'est une action dans la pile d'undo (`ANNULER` la défait) ; il est toujours disponible en partie, masqué sous le dock pendant une saisie, inerte pendant les pop-ups de fin ; l'action de store `passTurn()` est **réutilisée** (AR23), les tests qui simulaient le tap sur la carte sont convertis en déclenchement de `PASSER LE TOUR`
+**And** valider une série au pavé (`VALIDER`, auto-validation) continue de basculer la main sans passer par `PASSER LE TOUR`
+
+**Given** une partie en JDS
+**When** je tape `+ POINTS ADVERSAIRE` dans la barre basse
+**Then** le pavé nu s'ouvre **dans la colonne centrale** (`ScoreEntryDock` = `NumericPadDock` avec croix, `NumericPad`, `VALIDER` accent et son compte à rebours de 3 s), recouvrant `REP` et `PASSER LE TOUR` ; le reste passe sous le voile flouté **sauf la carte du joueur qui a la main**, nette, où la valeur tapée s'affiche **entre `−` et `+`** dans la zone de série, à la taille de `POUR n`, couleur d'encre de la carte ; largeur minimale du dock 220 px (débordement sur les bords intérieurs des cartes floutées accepté en portrait)
+**And** `VALIDER`, l'auto-validation à 3 s, la croix et le geste complet sur le voile ont **exactement** les sémantiques de `ScoreEntryModal` (Story 1.5) ; `entryOpen` et `currentInput` restent persistés et restaurés (Story 1.12) ; `ScoreEntryModal` et son test sont supprimés, ses tests migrés vers `ScoreEntryDock`
+
+**Given** une partie en 3 Bandes
+**When** je tape `+1 ADVERSAIRE` dans la barre basse
+**Then** un point est crédité à celui qui joue, avec haptique et relance du chrono, exactement comme `+1 POINT` aujourd'hui (Story 2.2) ; aucun pavé ne s'ouvre
+
+**Given** la barre basse
+**When** elle s'affiche
+**Then** elle reste calée sur les colonnes des cartes et ses deux groupes **échangent de côté à chaque bascule de tour** (inchangé) : côté du joueur **assis**, le CTA de saisie accent large comme la carte (`+ POINTS ADVERSAIRE` en JDS, `+1 ADVERSAIRE` en 3 Bandes) ; côté opposé, quatre `IconAction` du bord extérieur vers l'intérieur : `QUITTER` (porte), `PARAMÈTRES` (engrenage, **BIENTÔT**), `RECOMMENCER` (flèche circulaire), `ANNULER` (flèche retour courbe)
+**And** `QUITTER` ouvre « TERMINER LA PARTIE ? » (ou ramène à l'accueil sans série), `RECOMMENCER` ouvre « RECOMMENCER LA PARTIE ? » (grisé sur scoreboard intact), `ANNULER` est l'undo multi-niveaux grisé à pile vide — comportements inchangés (Stories 1.7, 1.10, 1.15)
+**And** en portrait, les libellés sont masqués et les pictos passent à 72 px pour tenir dans 307 px
+**And** **un seul markup** rend les deux côtés (ordre inversé par `flex-direction`), fin de la duplication de `GameView.vue` (DT2)
+
+**Given** `IconAction`
+**When** il est utilisé
+**Then** c'est un composant picto + libellé ≥ 90×90 px libellé compris, fond `--color-surface`, contour, `--radius-cta`, avec les états normal / grisé / BIENTÔT, testé isolément ; les pictos sont des SVG inline au trait 2 px (UX-DR28), table §10.7 de la spec UX
+
+**Given** la story livrée
+**When** les tests tournent
+**Then** `PlayerPanel`, `CenterPanel`, `ActionBar`, `GameView`, `ShotClock` et le store ont leurs tests adaptés (aucun test ne cible plus le tap de passage ni `ÉCHANGER`, ni les libellés texte devenus pictos) ; le rendu est vérifié dans Chrome en paysage et en portrait, en JDS et en 3 Bandes, dock ouvert et fermé, pendant une offre d'égalisatrice
+
+**Note de périmètre :** le `role="button"` englobant de `PlayerPanel` (dette revue 1.5) disparaît de fait avec le retrait du tap — à vérifier en revue. La cohabitation `RESTANT` / `POUR n` n'est pas un bug. Aucune nouvelle action de score (UX-DR23).
+
+### Story 10.5: Refonte du récap — barre latérale et bandeau corrigé
+
+As a joueur en fin de partie,
+I want le récap dans le même habillage que le reste de l'application, avec `QUITTER` et `RECOMMENCER` dans la barre latérale,
+So that la fin de partie est aussi soignée que le jeu et que je relance une revanche d'un tap (FR4, FR17).
+
+*Périmètre : `GameSummary` et l'état « récap » de `GameView`. Reprend DT6 (troncature du nom). Réutilise `SideBar` (10.1).*
+
+**Exigences :** UX-DR31 (contenu sidebar), UX-DR53, DT6.
+
+**Acceptance Criteria:**
+
+**Given** une partie terminée
+**When** le récap s'affiche
+**Then** il garde son format Billiboard (bandeau VS, trois colonnes, colonne du vainqueur en couleur victoire, `ÉGALITÉ` des deux côtés le cas échéant) dans un **conteneur à contour** sur le dégradé
+**And** la `SideBar` porte `QUITTER` (porte, → accueil, ex-`FIN DE PARTIE`) et `RECOMMENCER` (flèche circulaire, → revanche immédiate, mêmes joueurs et distances, ex-`UNE PARTIE DE PLUS`) ; la barre basse et ses deux CTA disparaissent du récap
+
+**Given** un nom de 20 caractères larges (ex. « WWWWWWWWWWWWWWWWWWWW »)
+**When** le bandeau s'affiche
+**Then** le nom et la distance sont deux éléments distincts : le nom se tronque seul (ellipse), la distance est **toujours** visible (DT6), dans les deux orientations
+
+**Given** des billes changées au paramétrage (carte blanche à droite)
+**When** le récap s'affiche
+**Then** les côtés sont ceux du scoreboard : la colonne de gauche est le joueur affiché à gauche pendant la partie
+
+**Given** le récap
+**When** je tape n'importe où hors sidebar
+**Then** rien ne se passe : le récap reste terminal, sans interaction dans le composant
+
+**Given** la story livrée
+**When** les tests tournent
+**Then** `GameSummary.test.ts` et `GameView.test.ts` (état récap) sont adaptés ; le rendu est vérifié dans Chrome en paysage et en portrait, victoire à gauche, à droite et égalité
+
+### Story 10.6: Renommage du produit en 1Score
+
+As a club qui installe l'application,
+I want voir « 1Score » partout où le produit se nomme — icône d'accueil, onglet, manifest, documentation,
+So that le nom du produit est cohérent avant que l'interface premium ne s'affiche.
+
+*Périmètre transverse, sans écran : à exécuter **en premier** dans l'epic (la sidebar de la 10.1 affiche le mot). Le PRD est déjà renommé.*
+
+**Exigences :** AR27.
+
+**Acceptance Criteria:**
+
+**Given** le dépôt
+**When** la story est livrée
+**Then** `package.json` (`name`), le manifest PWA de `vite.config.ts` (`name: '1Score'`, `short_name: '1Score'`), `index.html` (`<title>`), `README.md` et `CLAUDE.md` (titre et mentions) portent « 1Score » ; plus aucune occurrence de « Carom Scoreboard » ne subsiste dans `carom-scoreboard/src`, les tests compris (l'`alt` du logo de `HomeScreen` est remplacé par le nouveau nom)
+
+**Given** une tablette avec une partie sauvegardée
+**When** l'application se met à jour
+**Then** la sauvegarde est retrouvée : la clé `carom-scoreboard:game` de `localStorage` **n'est pas renommée** (décision assumée, sans migration)
+
+**Given** une PWA déjà installée sous l'ancien nom
+**When** elle se met à jour
+**Then** aucun comportement ne casse ; le nom affiché sous l'icône ne changera qu'à la réinstallation — limite documentée dans `CLAUDE.md`, pas de contournement
+*(Précisé le 2026-09-11 à la création de la story : vrai sur iPadOS ; sur Android, Chrome relit le manifest d'une PWA installée et met son nom à jour de lui-même dans les jours qui suivent un lancement, `id` inchangé — web.dev, « How Chrome handles updates to the web app manifest ». La limite documentée distingue les deux plateformes.)*
+
+**Given** le déploiement
+**When** la story est livrée
+**Then** le dossier `carom-scoreboard/`, le dépôt Git, `netlify.toml` et le site Netlify ne sont **pas** renommés (aucun bénéfice utilisateur, risque sur le déploiement) ; `npm run build` et les tests passent
+
+### Story 10.7: Finition transverse — sémantique des pop-ups, `reduced-motion`, contraste et portrait
+
+As a joueur, y compris avec une sensibilité aux animations ou une vision réduite,
+I want que toutes les pop-ups, le dock et le bandeau clavier soient correctement annoncés, que rien n'anime si je l'ai désactivé, et que tout reste lisible en portrait,
+So that l'interface premium est aussi propre sous le capot qu'à l'écran (NFR10, UX-DR22).
+
+*Dernière story de l'epic : contrôle transverse une fois les cinq écrans refondus. Reprend DT3. Périmètre volontairement limité (décision de Nathan, 2026-09-11) : la dette par écran est portée par les Stories 10.3, 10.4 et 10.5.*
+
+**Exigences :** UX-DR55, UX-DR56, DT3.
+
+**Acceptance Criteria:**
+
+**Given** `PromptModal`, `NumericPadDock` (dock de distance et de série) et `AlphaKeyboardSheet`
+**When** ils sont ouverts
+**Then** chacun porte `role="dialog"`, `aria-modal="true"` et `aria-labelledby` vers son titre (ou `aria-label` quand il n'y a pas de titre visible), testé ; aucune gestion du focus clavier au-delà de ce qui est gratuit (arbitrage « borne fixe » inchangé)
+**And** le voile plein écran garde ses handlers pointer **sans** `role="button"` : exception explicite à CLAUDE.md §2, consignée dans `CLAUDE.md`
+
+**Given** `prefers-reduced-motion: reduce`
+**When** une pop-up, le dock ou le bandeau s'ouvre ou se ferme
+**Then** aucune animation ni transition ne joue (garde CSS globale sur les animations d'ouverture/fermeture et sur la pulsation de plafond) ; le fondu du chrono, qui porte une information, reste
+
+**Given** la palette finale
+**When** on mesure les contrastes
+**Then** l'encre noire sur `--color-panel-yellow-band` (`#E6B000`), les libellés de picto sur `--color-surface` au-dessus du dégradé, l'accroche et les titres de tuiles sur leur fond à 85 % atteignent WCAG AA (4.5:1 texte courant, 3:1 texte ≥ 24 px gras) ; toute valeur en échec est corrigée dans les tokens, résultat consigné dans la story
+
+**Given** les cinq écrans refondus
+**When** on les passe en revue dans Chrome en portrait (768×1024) et en paysage (1024×768)
+**Then** aucun débordement horizontal, aucune zone tactile < 90×90 px hors claviers, aucun libellé coupé ; les écarts relevés sont corrigés dans cette story s'ils tiennent en une retouche, sinon consignés dans `deferred-work.md`
+
+**Given** `CLAUDE.md`
+**When** la story est livrée
+**Then** il décrit les nouveaux composants et conventions de l'epic (`SideBar` contextuelle nourrie par l'écran, `ModeTile`, `IconAction`, `NumericPadDock`/`AlphaKeyboardSheet` hôtes de la saisie, tokens de conteneur, jeu de pictos SVG inline) et retire les mentions de `PlayerSetupModal`, `ScoreEntryModal` et `ÉCHANGER`
+
+**Note de périmètre :** pas d'ARIA au-delà des rôles de dialogue, pas de navigation clavier (hors scope V1). Le `focus-visible` sans chemin clavier (dette revue 1.4) reste tel quel.
+
