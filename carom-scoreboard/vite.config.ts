@@ -19,8 +19,8 @@ export default defineConfig({
     // Pas d'`orientation` : les deux formats tablette sont supportés (CLAUDE.md §9).
     // Les `icons` sont injectées par `pwaAssets` (pwa-assets.config.ts), pas listées ici.
     manifest: {
-      name: 'Carom Scoreboard',
-      short_name: 'Carom',
+      name: '1Score',
+      short_name: '1Score',
       description: 'Scoreboard tactile pour billard carambole',
       lang: 'fr',
       id: '/',

@@ -140,7 +140,7 @@ src/
 - **Android signage 22"** : Chrome Android, PWA installable, touch natif ✅
 - **Desktop** : souris + clavier, Pointer Events unifient les deux ✅
 - **iOS 26** : standalone PWA universel par défaut (à venir)
-- *Note (Story 1.13, 2026-09-10)* : manifest `Carom Scoreboard` / `Carom`, `lang: 'fr'`, `id: '/'`, `display: 'standalone'`, **sans `orientation`** (les deux formats tablette sont supportés) ; `index.html` en `lang="fr"` avec `apple-mobile-web-app-capable` / `apple-mobile-web-app-status-bar-style="black"`. Installabilité sur iPad et Android à vérifier sur appareil réel après déploiement Netlify.
+- *Note (Story 1.13, 2026-09-10)* : manifest `Carom Scoreboard` / `Carom`, `lang: 'fr'`, `id: '/'`, `display: 'standalone'`, **sans `orientation`** (les deux formats tablette sont supportés) ; `index.html` en `lang="fr"` avec `apple-mobile-web-app-capable` / `apple-mobile-web-app-status-bar-style="black"`. Installabilité sur iPad et Android à vérifier sur appareil réel après déploiement Netlify. *Renommé `1Score` / `1Score` le 2026-09-11 (Story 10.6, AR27).*
 
 ### Note d'Initialisation
 

@@ -1,4 +1,4 @@
-# CLAUDE.md — Carom Scoreboard
+# CLAUDE.md — 1Score
 
 Ce fichier documente les conventions obligatoires du projet pour toute session de code assistée par IA. Il doit être lu avant toute contribution : pour l'usage quotidien, il est auto-suffisant et ne nécessite la consultation d'aucun autre document (`architecture.md`, `epics.md`) pour respecter les règles ci-dessous. En cas de divergence future entre ce fichier et `architecture.md`, voir la clause de fin de document.
 
@@ -7,6 +7,8 @@ Ce fichier documente les conventions obligatoires du projet pour toute session d
 Vue 3 (Composition API + `<script setup>` uniquement, pas d'Options API) + TypeScript strict + Vite + Pinia + Vue Router + Dexie.js (IndexedDB) + Tailwind CSS. PWA via `vite-plugin-pwa`.
 
 **Offline** : aucune ressource réseau au runtime — polices auto-hébergées (`.woff2` dans `src/assets/`), jamais de CDN ni Google Fonts (FR45, NFR13). Le SW précache tout le build ; la mise à jour s'applique à l'accueil via `usePwaUpdate.ts`.
+
+**Nom du produit** : 1Score depuis la Story 10.6 (manifest, `<title>`, `package.json` en `1score` — npm refuse les majuscules). Restent volontairement à l'ancien nom : le dossier `carom-scoreboard/`, le dépôt Git, `netlify.toml`, le site Netlify (son nom fixe l'adresse `*.netlify.app`, donc l'origine : le renommer ferait perdre la partie sauvegardée et obligerait à réinstaller la PWA) et la clé `localStorage` `carom-scoreboard:game` (la renommer ferait perdre la partie sauvegardée à la mise à jour). Ne pas toucher non plus `id`, `start_url`, `scope` ni le nom du fichier `manifest.webmanifest` : ils identifient la PWA installée. Nom sous l'icône d'une PWA **déjà installée**, sans contournement : **iPadOS** le fige à l'ajout à l'écran d'accueil, il ne change qu'en retirant puis rajoutant l'app ; **Android (Chrome)** relit le manifest au lancement de l'app (au plus une fois par 24 h) et ne met le nom à jour qu'une fois toutes ses fenêtres fermées, l'appareil en charge et en Wi-Fi — une tablette de club laissée ouverte en permanence ne change donc de nom qu'après avoir été fermée puis relancée (`about://webapks` montre la date du dernier contrôle).
 
 Commandes (depuis `carom-scoreboard/`) :
 - `npm run dev` — serveur de développement

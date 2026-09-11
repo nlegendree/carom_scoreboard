@@ -177,7 +177,7 @@ function fixDistance(): void {
       <img
         v-if="step === 'category'"
         src="/logo.png"
-        alt="Carom Scoreboard"
+        alt="1Score"
         class="h-16 w-16 rounded-xl md:h-20 md:w-20"
       />
       <h1 v-if="headerTitle" class="text-label font-black tracking-widest text-white">

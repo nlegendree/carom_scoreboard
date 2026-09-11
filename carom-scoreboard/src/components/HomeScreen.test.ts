@@ -102,11 +102,11 @@ describe('HomeScreen', () => {
 
   it('shows the logo on the home step only', async () => {
     const wrapper = mount(HomeScreen)
-    expect(wrapper.find('img[alt="Carom Scoreboard"]').exists()).toBe(true)
+    expect(wrapper.find('img[alt="1Score"]').exists()).toBe(true)
 
     await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
 
-    expect(wrapper.find('img[alt="Carom Scoreboard"]').exists()).toBe(false)
+    expect(wrapper.find('img[alt="1Score"]').exists()).toBe(false)
   })
 
   it('marks categories whose modes are all unavailable as disabled and does not open them', async () => {
