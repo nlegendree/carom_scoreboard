@@ -53,12 +53,13 @@ describe('ShotClock', () => {
     expect(wrapper.find('[role="img"]').attributes('aria-label')).toContain('17')
   })
 
-  // Fond noir littéral (UX-DR4), libellé CHRONO au-dessus, comme REP.
-  it('paints the ring on a black ground under a CHRONO label', () => {
+  // Fond noir littéral (UX-DR4), sans libellé (retiré au rendu par Nathan, 2026-09-11).
+  it('paints the ring on a black ground without any label', () => {
     const wrapper = mount(ShotClock, { props: { secondsRemaining: 40, totalSeconds: 40 } })
 
     expect(wrapper.find('[role="img"]').classes()).toContain('bg-black')
-    expect(wrapper.find('[data-testid="shot-clock-label"]').text()).toBe('CHRONO')
+    expect(wrapper.find('[data-testid="shot-clock-label"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('CHRONO')
   })
 
   // Fondu (revue de Nathan) : vert à 40 s, rouge d'alerte à 0 s — la même couleur sur
@@ -101,7 +102,7 @@ describe('ShotClock', () => {
       expect.arrayContaining(['flex-1', 'min-h-0', 'justify-center', '[container-type:size]']),
     )
     const ring = wrapper.find('[data-testid="shot-clock-ring"]')
-    expect(ring.classes()).toContain('w-[min(100cqw,calc(100cqh_-_32px))]')
+    expect(ring.classes()).toContain('w-[min(100cqw,100cqh)]')
     expect(ring.classes()).not.toContain('w-full')
     expect(ring.classes()).toContain('[container-type:size]')
     expect(wrapper.find('[data-testid="shot-clock-value"]').classes()).toContain('text-[44cqmin]')

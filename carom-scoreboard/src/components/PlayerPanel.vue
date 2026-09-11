@@ -11,8 +11,13 @@ const props = withDefaults(
     active: boolean
     average?: number
     bestSeries?: number
+    // Story 2.4 : compte à rebours `POUR n` — propre au 3 Bandes, où le score avance
+    // point par point. C'est la VUE qui dit s'il a lieu d'être (le panneau ne connaît
+    // pas le mode) ; le calcul, lui, appartient au panneau : les deux termes sont sur
+    // `player`, et suivent donc le joueur lors d'un ÉCHANGER.
+    showRemaining?: boolean
   }>(),
-  { average: 0, bestSeries: 0 },
+  { average: 0, bestSeries: 0, showRemaining: false },
 )
 
 const emit = defineEmits<{ 'pass-turn': []; 'adjust-score': [delta: number] }>()
@@ -55,6 +60,16 @@ const ADJUST_BUTTON_CLASSES =
 
 // Convention des fédérations de billard : moyenne générale à 3 décimales.
 const displayedAverage = computed(() => props.average.toFixed(3))
+
+// Annonce de l'arbitre : « POUR 3 », « POUR 2 », « POUR 1 » à mesure que le joueur
+// approche de sa distance (FR15, idée Billizone). Seulement quand le restant vaut 1 à 3 —
+// au-delà l'annonce n'a pas cours, à 0 la partie est finie — et jamais en distance libre.
+const REMAINING_ANNOUNCE_MAX = 3
+const remaining = computed(() => {
+  if (!props.showRemaining || props.player.targetScore <= 0) return null
+  const left = props.player.targetScore - props.player.score
+  return left >= 1 && left <= REMAINING_ANNOUNCE_MAX ? left : null
+})
 
 // On rend la main en tapant la zone de l'ADVERSAIRE : un panneau qui a déjà la main
 // n'a rien à faire d'un tap. Sans cette garde, le joueur actif se retirerait le tour.
@@ -138,6 +153,10 @@ function adjust(delta: number): void {
          de tour. Posés aux deux coins bas et en filigrane — ce sont des rattrapages
          d'arbitrage, ils ne doivent pas attirer l'œil autant que le score.
          `.stop` obligatoire : la carte rend la main au tap. -->
+    <!-- `POUR n` (Story 2.4) entre les deux boutons de correction : l'emplacement retenu
+         par la spec UX (« sous le score, entre − et + »). Taille en largeur de PANNEAU
+         (`cqw`, le panneau est un `@container`) : en portrait il reste 105 px entre les
+         deux boutons de 90, et « POUR 2 » ne doit ni se replier ni les toucher. -->
     <div class="flex shrink-0 items-center justify-between">
       <button
         data-testid="score-minus"
@@ -147,6 +166,12 @@ function adjust(delta: number): void {
       >
         −
       </button>
+      <span
+        v-if="remaining !== null"
+        data-testid="remaining"
+        class="text-[clamp(18px,7.5cqw,44px)] leading-none font-black tabular-nums whitespace-nowrap opacity-80"
+        >POUR {{ remaining }}</span
+      >
       <button
         data-testid="score-plus"
         aria-label="Ajouter un point"

@@ -254,6 +254,7 @@ function confirmRestart(): void {
           :active="activePlayer === 'player1'"
           :average="averages.player1"
           :bestSeries="bestSeries.player1"
+          :showRemaining="isThreeCushions"
           @pass-turn="passTurn"
           @adjust-score="adjustScore('player1', $event)"
         />
@@ -269,6 +270,7 @@ function confirmRestart(): void {
           :active="activePlayer === 'player2'"
           :average="averages.player2"
           :bestSeries="bestSeries.player2"
+          :showRemaining="isThreeCushions"
           @pass-turn="passTurn"
           @adjust-score="adjustScore('player2', $event)"
         />

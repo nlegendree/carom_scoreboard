@@ -66,7 +66,8 @@ development_status:
   epic-2: in-progress
   2-1-selectionner-le-mode-3-bandes-et-demarrer-une-partie-avec-chronometre-actif: review
   2-2-incrementer-le-score-point-par-point-tap-du-joueur-assis: review
-  2-3-saisir-un-score-global-en-fin-de-serie-backup-pave-numerique: backlog
+  2-3-saisir-un-score-global-en-fin-de-serie-backup-pave-numerique: done # annulée sans code — pas de pavé de secours au 3 Bandes, le +1 suffit (décision de Nathan, 2026-09-11)
+  2-4-afficher-le-compte-a-rebours-pour-n-en-3-bandes: review
   epic-2-retrospective: optional
 
   epic-3: backlog

@@ -41,18 +41,17 @@ const color = computed(() => {
 
 <template>
   <!-- Racine = conteneur de taille (`container-type: size`) : elle prend la place laissée
-       par REP et les commandes, et centre libellé + anneau ensemble. L'anneau vaut le plus
-       petit de ses deux côtés — jamais plus large que la colonne, jamais plus haut que la
-       place restante moins le libellé (~32 px, libellé + `gap-1`). -->
+       par REP et les commandes et y centre l'anneau, qui vaut le plus petit de ses deux
+       côtés — jamais plus large que la colonne, jamais plus haut que la place restante.
+       Pas de libellé (retiré au rendu par Nathan, 2026-09-11) : l'anneau se suffit. -->
   <div
     data-testid="shot-clock"
-    class="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-1 [container-type:size]"
+    class="flex min-h-0 w-full flex-1 flex-col items-center justify-center [container-type:size]"
   >
-    <span data-testid="shot-clock-label" class="shrink-0 text-stat text-white/60">CHRONO</span>
     <div class="flex min-h-0 w-full items-center justify-center">
       <div
         data-testid="shot-clock-ring"
-        class="relative flex aspect-square w-[min(100cqw,calc(100cqh_-_32px))] items-center justify-center rounded-full bg-black [container-type:size]"
+        class="relative flex aspect-square w-[min(100cqw,100cqh)] items-center justify-center rounded-full bg-black [container-type:size]"
         role="img"
         :aria-label="`Chronomètre de série : ${secondsRemaining} secondes restantes`"
       >

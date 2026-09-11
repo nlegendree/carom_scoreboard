@@ -825,6 +825,8 @@ So that le score de mon adversaire progresse en temps réel sans qu'il touche lu
 
 ### Story 2.3: Saisir un score global en fin de série (backup pavé numérique)
 
+**⚠️ Annulée sans code (décision de Nathan, 2026-09-11) :** « on n'en a pas besoin au 3 Bandes » — le `+1 POINT` du joueur assis (Story 2.2) suffit, aucun pavé de secours n'est prévu dans ce mode. `ScoreEntryModal` reste le pavé des jeux de série ; en 3 Bandes rien ne l'ouvre, par choix. Les trois AC ci-dessous sont conservés pour mémoire.
+
 As a joueur,
 I want saisir directement le score global de la série au pavé numérique,
 So that je peux corriger un oubli de tap ou saisir un résultat en une seule fois, avec un chronomètre libre.
@@ -842,6 +844,30 @@ So that je peux corriger un oubli de tap ou saisir un résultat en une seule foi
 **Given** une série saisie globalement
 **When** elle remplace un comptage partiel par tap
 **Then** le score final de la reprise reste cohérent, sans double comptage entre taps et saisie globale
+
+### Story 2.4: Afficher le compte à rebours `POUR n` en 3 Bandes
+
+*Story courte ajoutée le 2026-09-11 à la demande de Nathan (revue au rendu de la 2.2) — elle porte la note de périmètre `POUR n` reportée depuis la Story 1.6 dans la Story 2.2, que la 2.2 n'a pas livrée.*
+
+As a joueur en 3 Bandes,
+I want lire « POUR 3 », « POUR 2 », « POUR 1 » sous mon score quand j'approche de ma distance,
+So that l'annonce de l'arbitre est sous mes yeux sans calcul mental (FR15, idée Billizone).
+
+**Acceptance Criteria:**
+
+**Given** une partie 3 Bandes, un joueur à 1, 2 ou 3 points de sa distance
+**When** son panneau s'affiche
+**Then** `POUR n` (`n = distance − score`) est affiché sous le score, entre les boutons `−` et `+`, et suit chaque mouvement du score (tap `+1`, correction `−`/`+`, `ANNULER`)
+
+**Given** un restant supérieur à 3, nul ou négatif, ou une distance libre
+**When** le panneau s'affiche
+**Then** rien n'est affiché
+
+**Given** une partie en jeux de série
+**When** un joueur approche de sa distance
+**Then** rien n'est affiché — l'annonce est propre au 3 Bandes (décision de la Story 1.6)
+
+**Note de livraison (2026-09-11) :** prop `showRemaining` sur `PlayerPanel` (posée par `GameView` quand le mode est `3bandes`), calcul dans le panneau (les deux termes sont sur `player`, transportés par ÉCHANGER), `data-testid="remaining"`. Seuil fixé à 3 sans annonce au-delà (la question « afficher aussi au-dessus de 3 ? » est tranchée par défaut sur la convention d'arbitre — à rouvrir si Nathan le souhaite).
 
 ---
 

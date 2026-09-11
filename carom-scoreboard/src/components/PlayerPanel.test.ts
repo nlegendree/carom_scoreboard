@@ -215,3 +215,47 @@ describe('PlayerPanel — score, statistiques et bascule au tap', () => {
     expect(source).not.toContain('@touchstart')
   })
 })
+
+// --- Story 2.4 : compte à rebours `POUR n` (3 Bandes) ---
+
+describe('PlayerPanel — POUR n', () => {
+  const remaining = (wrapper: ReturnType<typeof mount>) => wrapper.find('[data-testid="remaining"]')
+
+  function mountWithRemaining(player: Player, showRemaining = true) {
+    return mount(PlayerPanel, { props: { player, active: false, showRemaining } })
+  }
+
+  // Annonce de l'arbitre à l'approche de la distance : POUR 3, POUR 2, POUR 1.
+  it('announces the points left when 1 to 3 remain', () => {
+    expect(remaining(mountWithRemaining(makePlayer({ score: 27, targetScore: 30 }))).text()).toBe('POUR 3')
+    expect(remaining(mountWithRemaining(makePlayer({ score: 28, targetScore: 30 }))).text()).toBe('POUR 2')
+    expect(remaining(mountWithRemaining(makePlayer({ score: 29, targetScore: 30 }))).text()).toBe('POUR 1')
+  })
+
+  // Au-delà de 3, l'annonce n'a pas cours ; à 0 (ou en dessous), la partie est finie.
+  it('stays silent above 3 remaining and once the distance is reached', () => {
+    expect(remaining(mountWithRemaining(makePlayer({ score: 26, targetScore: 30 }))).exists()).toBe(false)
+    expect(remaining(mountWithRemaining(makePlayer({ score: 30, targetScore: 30 }))).exists()).toBe(false)
+    expect(remaining(mountWithRemaining(makePlayer({ score: 31, targetScore: 30 }))).exists()).toBe(false)
+  })
+
+  // Distance libre : rien à annoncer (NFR12).
+  it('stays silent without a distance', () => {
+    expect(remaining(mountWithRemaining(makePlayer({ score: 0, targetScore: 0 }))).exists()).toBe(false)
+  })
+
+  // Hors 3 Bandes (la vue ne le demande pas) : jamais, même à 1 point de la distance.
+  it('stays silent when the view does not ask for it', () => {
+    expect(remaining(mountWithRemaining(makePlayer({ score: 29, targetScore: 30 }), false)).exists()).toBe(false)
+    expect(remaining(mountPanel(makePlayer({ score: 29, targetScore: 30 }))).exists()).toBe(false)
+  })
+
+  // Placé sous le score, entre − et + (spec UX).
+  it('sits between the minus and plus buttons', () => {
+    const wrapper = mountWithRemaining(makePlayer({ score: 28, targetScore: 30 }))
+    const footer = wrapper.find('[data-testid="remaining"]').element.parentElement!
+    const children = [...footer.children].map((el) => el.getAttribute('data-testid'))
+
+    expect(children).toEqual(['score-minus', 'remaining', 'score-plus'])
+  })
+})

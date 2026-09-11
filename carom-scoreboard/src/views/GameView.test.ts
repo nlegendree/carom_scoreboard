@@ -1609,3 +1609,72 @@ describe('GameView — +1 POINT (3 Bandes)', () => {
     expect(wrapper.find('[data-testid="shot-clock"]').exists()).toBe(false)
   })
 })
+
+// --- Story 2.4 : `POUR n` en 3 Bandes ---
+
+describe('GameView — POUR n (3 Bandes)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  const panels = (wrapper: VueWrapper) => wrapper.findAllComponents({ name: 'PlayerPanel' })
+  const remaining = (wrapper: VueWrapper, side: 0 | 1) =>
+    panels(wrapper)[side]!.find('[data-testid="remaining"]')
+
+  async function press(wrapper: VueWrapper, testid: string) {
+    await wrapper.find(`[data-testid="${testid}"]`).trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+  }
+
+  // L'annonce suit les taps : POUR 3 → POUR 2 → POUR 1, puis la distance.
+  it('counts down POUR 3, 2, 1 as the playing side taps toward his distance', async () => {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('3bandes', 'MICHEL', 'ANDRÉ', { player1: 5, player2: 25 })
+    await wrapper.vm.$nextTick()
+
+    await press(wrapper, 'plus-one-button')
+    expect(remaining(wrapper, 0).exists()).toBe(false)
+    await press(wrapper, 'plus-one-button')
+    expect(remaining(wrapper, 0).text()).toBe('POUR 3')
+    await press(wrapper, 'plus-one-button')
+    expect(remaining(wrapper, 0).text()).toBe('POUR 2')
+    await press(wrapper, 'plus-one-button')
+    expect(remaining(wrapper, 0).text()).toBe('POUR 1')
+    expect(remaining(wrapper, 1).exists()).toBe(false)
+  })
+
+  // Une correction `−` le fait remonter, comme n'importe quel mouvement du score.
+  it('follows manual corrections too', async () => {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('3bandes', 'MICHEL', 'ANDRÉ', { player1: 5, player2: 25 })
+    await wrapper.vm.$nextTick()
+    store.adjustScore('player1', 3)
+    await wrapper.vm.$nextTick()
+    expect(remaining(wrapper, 0).text()).toBe('POUR 2')
+
+    await panels(wrapper)[0]!.find('[data-testid="score-minus"]').trigger('pointerdown')
+    await wrapper.vm.$nextTick()
+
+    expect(remaining(wrapper, 0).text()).toBe('POUR 3')
+  })
+
+  // Jamais en jeux de série : la distance brute de l'en-tête suffit (décision 1.6).
+  it('never shows in a series game', async () => {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRÉ', { player1: 5, player2: 25 })
+    await wrapper.vm.$nextTick()
+    store.adjustScore('player1', 4)
+    await wrapper.vm.$nextTick()
+
+    expect(remaining(wrapper, 0).exists()).toBe(false)
+    expect(remaining(wrapper, 1).exists()).toBe(false)
+  })
+})
