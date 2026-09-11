@@ -136,7 +136,9 @@ src/components/
 
 Dimensionner en gardant cette table en tête : une valeur choisie « à la Tailwind » produira un élément deux fois trop grand. C'est une convention assumée du projet (grille de 8px), pas un bug — ne pas « corriger » `--spacing` sans arbitrage produit.
 
-Les tokens typographiques suivent une échelle distincte, en `clamp()` fluide : `text-score` (score joueur), `text-reprise` (numéro de reprise, dimensionné pour la colonne centrale `w-1/5`), `text-label`, `text-stat`. Ne pas utiliser `text-score` hors d'un panneau joueur : son plancher de 120px déborde de la console centrale dès deux chiffres.
+Les tokens typographiques suivent une échelle distincte, en `clamp()` fluide : `text-score` (score joueur), `text-reprise` (numéro de reprise, dimensionné pour la colonne centrale `w-1/5`), `text-label`, `text-stat`, et depuis l'Epic 10 `text-hero` (accroche d'accueil), `text-tile-title` (titre de tuile de mode), `text-picto` (libellé sous picto). Ne pas utiliser `text-score` hors d'un panneau joueur : son plancher de 120px déborde de la console centrale dès deux chiffres.
+
+Les tokens de l'Epic 10 (`--color-surface`, `--color-border`/`--color-border-strong`, `--radius-container`/`--radius-cta`, `--color-sidebar`, `--color-brand-red`, `--color-cloth`, `--gradient-tile-*`, `--gradient-bg`) vivent dans le bloc `@theme static` de `main.css` : `static` force leur émission même quand aucun utilitaire ne les emploie encore. Direction visuelle (passe de rendu 10.1) : **angles vifs** (rayons à 0), palette **bleus / noir-gris / rouge**, fonds en dégradé posés par `bg-(image:--gradient-…)`, **coupes en biais** pour casser la symétrie (ex. bandeau rouge de l'en-tête de `SideBar`, `clip-path` en valeur arbitraire). `--color-brand-red` est le rouge de marque : ne pas le confondre avec `--color-alert` (chrono) ni `--color-turn-active` (liseré de tour).
 
 ### 8. Breakpoints Tailwind mobile-first (AR19)
 
@@ -152,7 +154,7 @@ Ordre des classes Tailwind : Layout → Sizing → Spacing → Typography → Co
 Pour toute session de développement assistée par IA (dev-story ou autre) :
 
 - **Pendant l'implémentation** : valider chaque élément de code (composant, store, composable) uniquement via les tests unitaires/`vue-tsc` au fur et à mesure — cycle red-green décrit dans la règle 6. **Ne pas** ouvrir de navigateur ni driver Chrome après chaque composant : ça consomme des tokens pour un gain marginal, les tests unitaires suffisent à valider la correction unitaire.
-- **En fin de story** : une fois toutes les tâches complètes et la suite de tests/`vue-tsc`/`build` au vert, faire **une seule** passe de validation visuelle/intégration dans un vrai navigateur (extension Claude for Chrome) pour parcourir les critères d'acceptation de bout en bout, avant de passer la story en statut "review". Cette passe doit couvrir **au moins deux formats tablette** — portrait 768×1024 et paysage 1024×768 — car happy-dom ne compile ni ne calcule le CSS Tailwind : aucun débordement de layout n'est détectable par les tests unitaires (le format téléphone est hors périmètre produit, la tablette est le plus petit format supporté).
+- **En fin de story** : une fois toutes les tâches complètes et la suite de tests/`vue-tsc`/`build` au vert, faire **une seule** passe de validation visuelle/intégration dans un vrai navigateur (extension Claude for Chrome) pour parcourir les critères d'acceptation de bout en bout, avant de passer la story en statut "review". Cette passe se fait **en paysage uniquement** — l'app n'est jamais utilisée en portrait (décision de Nathan, 2026-09-11) — et couvre au moins l'**iPad mini 1133×744** et l'**iPad 11″ 1194×834**, plus l'**écran 21,5″ 1920×1080** visé à terme, car happy-dom ne compile ni ne calcule le CSS Tailwind : aucun débordement de layout n'est détectable par les tests unitaires. Le téléphone et le portrait sont hors périmètre produit : ne pas écrire de variantes `portrait:`.
 
 ## En cas de divergence
 

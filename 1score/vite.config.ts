@@ -16,13 +16,16 @@ export default defineConfig({
       config: true,
     },
 
-    // Pas d'`orientation` : les deux formats tablette sont supportés (CLAUDE.md §9).
+    // `orientation: 'landscape'` : l'app ne tourne qu'en paysage (décision de Nathan,
+    // 2026-09-11, CLAUDE.md §9). Sans effet sur `id`/`start_url`/`scope` : la PWA
+    // installée reste la même.
     // Les `icons` sont injectées par `pwaAssets` (pwa-assets.config.ts), pas listées ici.
     manifest: {
       name: '1Score',
       short_name: '1Score',
       description: 'Scoreboard tactile pour billard carambole',
       lang: 'fr',
+      orientation: 'landscape',
       id: '/',
       theme_color: '#0D1117',
       background_color: '#0D1117',

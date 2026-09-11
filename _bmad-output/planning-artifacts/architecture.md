@@ -140,7 +140,7 @@ src/
 - **Android signage 22"** : Chrome Android, PWA installable, touch natif ✅
 - **Desktop** : souris + clavier, Pointer Events unifient les deux ✅
 - **iOS 26** : standalone PWA universel par défaut (à venir)
-- *Note (Story 1.13, 2026-09-10)* : manifest `Carom Scoreboard` / `Carom`, `lang: 'fr'`, `id: '/'`, `display: 'standalone'`, **sans `orientation`** (les deux formats tablette sont supportés) ; `index.html` en `lang="fr"` avec `apple-mobile-web-app-capable` / `apple-mobile-web-app-status-bar-style="black"`. Installabilité sur iPad et Android à vérifier sur appareil réel après déploiement Netlify. *Renommé `1Score` / `1Score` le 2026-09-11 (Story 10.6, AR27).*
+- *Note (Story 1.13, 2026-09-10)* : manifest `Carom Scoreboard` / `Carom`, `lang: 'fr'`, `id: '/'`, `display: 'standalone'`, **sans `orientation`** (les deux formats tablette sont supportés) ; `index.html` en `lang="fr"` avec `apple-mobile-web-app-capable` / `apple-mobile-web-app-status-bar-style="black"`. Installabilité sur iPad et Android à vérifier sur appareil réel après déploiement Netlify. *Renommé `1Score` / `1Score` le 2026-09-11 (Story 10.6, AR27).* *`orientation: 'landscape'` ajouté le 2026-09-11 (passe de rendu de la Story 10.1, décision de Nathan) : l'app ne tourne qu'en paysage — iPad mini, iPad 11″, puis écran 21,5″ — et le portrait sort du périmètre.*
 
 ### Note d'Initialisation
 
@@ -280,6 +280,13 @@ Trois évolutions dépassent l'habillage visuel et touchent `useGameStore` :
 **Risque technique à lever avant la Story 10.1 :** « Fermer l'application » (item de sidebar Accueil, fonctionnel) n'a pas d'équivalent standard fiable pour une PWA installée — `window.close()` ne fonctionne que sur une fenêtre ouverte par script. Spike de faisabilité requis (piste : confirmation puis tentative de fermeture, repli sur un retour à l'accueil du système). *Reporté hors Epic 10 (Nathan, 2026-09-11, passe epics) : l'item est affiché inerte, le spike viendra avec une story ultérieure.*
 
 *Passe epics du 2026-09-11 :* le retrait d'`ÉCHANGER` du store (point 2) est livré par la **Story 10.3** avec la scission de `swapPlayers` (le modèle joueur change à ce moment-là), et non par la 10.4. Piste retenue pour la scission : conserver l'invariant « `player1` = bille blanche = celui qui ouvre » et ajouter à `GameState` un champ d'affichage persisté (ex. `whiteSide: 'left' | 'right'`) qui remplace `sidesSwapped` — aucune règle de jeu touchée, `GAME_STORAGE_VERSION` incrémenté. À confirmer et consigner ici à la livraison de la 10.3.
+
+*Livré en Story 10.1 (2026-09-11)* : `SideBar` (props `items`/`exitItem`, type `SideBarItem` dans `types/ui.ts`, contenu fourni par l'écran, sortie calée en bas), `ModeTile` (tuile de mode, état BIENTÔT `disabled` + garde), `PictoIcon` (jeu de pictos SVG inline, tracés Lucide ISC, étendu par les stories suivantes — ajouté hors liste de la spec §10.4 pour ne pas dupliquer les SVG entre `SideBar`, `ModeTile` et `IconAction`), tokens de l'epic en `@theme static` dans `main.css`, `--color-cloth` `#0573BB`, logo `public/logo.png`. Dégradé `--gradient-bg` appliqué écran par écran : l'accueil (étape `category`) seulement en 10.1, les étapes `mode`/`players` gardent `ActionBar`. « Fermer l'application » affiché inerte (BIENTÔT), sans spike. *Passe de rendu (Nathan) :*
+- paysage uniquement ;
+- angles vifs (`--radius-*` à 0) ;
+- `SideBar` en aplat `--color-sidebar` collé au bord, en-tête rouge `--color-brand-red` coupé en biais par `clip-path` ;
+- tuiles collées avec filets, fonds `--gradient-tile-*` (nuances de bleu) sur un calque dédié, qui passe à 45 % en BIENTÔT ;
+- `--gradient-bg` gris/noir.
 
 ### Architecture Frontend
 
@@ -513,6 +520,7 @@ Le dépôt Git racine (déjà existant, contient `_bmad/`, `_bmad-output/`, `doc
     │
     ├── types/                   ← Interfaces TypeScript (référence IA)
     │   ├── game.ts              ← GameState, Player, Reprise, GameMode, GameStatus
+    │   ├── ui.ts                ← PictoName, ItemState, SideBarItem (Epic 10, Story 10.1)
     │   └── history.ts           ← GameRecord
     │
     ├── services/                ← Couche isolation storage
@@ -551,6 +559,12 @@ Le dépôt Git racine (déjà existant, contient `_bmad/`, `_bmad-output/`, `doc
     │   ├── keyClasses.ts        ← Style de touche partagé par les deux claviers
     │   ├── HomeScreen.vue       ← Écran d'accueil (veille + sélection catégorie/mode + joueurs)
     │   ├── HomeScreen.test.ts
+    │   ├── SideBar.vue          ← Barre latérale des écrans hors jeu, contenu fourni par l'écran (Story 10.1)
+    │   ├── SideBar.test.ts
+    │   ├── ModeTile.vue         ← Tuile de mode de l'accueil, état BIENTÔT (Story 10.1)
+    │   ├── ModeTile.test.ts
+    │   ├── PictoIcon.vue        ← Jeu de pictos SVG inline (Story 10.1)
+    │   ├── PictoIcon.test.ts
     │   ├── GameSummary.vue      ← Récapitulatif fin de partie
     │   ├── GameSummary.test.ts
     │   ├── HistoryList.vue      ← Liste des parties passées

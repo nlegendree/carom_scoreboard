@@ -25,7 +25,6 @@ const CATALOG = [
   {
     id: 'series',
     label: 'JEUX DE SÉRIES',
-    hint: 'Libre · Cadre · 1 Bande · 4 Billes',
     modes: [
       { id: 'libre', label: 'LIBRE', available: true },
       { id: 'cadre-47-2', label: 'CADRE 47/2', available: true },
@@ -38,13 +37,11 @@ const CATALOG = [
   {
     id: '3bandes',
     label: '3 BANDES',
-    hint: 'Partie au point · chronomètre',
     modes: [{ id: '3bandes', label: '3 BANDES', available: true }],
   },
   {
     id: 'quilles',
     label: 'QUILLES',
-    hint: '5 Quilles · 9 Quilles',
     modes: [
       { id: 'quilles-5', label: '5 QUILLES', available: false },
       { id: 'quilles-9', label: '9 QUILLES', available: false },
@@ -53,7 +50,6 @@ const CATALOG = [
   {
     id: 'casin',
     label: 'CASIN',
-    hint: 'Parties par catégories',
     modes: [{ id: 'casin', label: 'CASIN', available: false }],
   },
 ] as const
@@ -70,7 +66,6 @@ export interface GameModeDescriptor {
 export interface GameCategoryDescriptor {
   id: GameCategoryId
   label: string
-  hint: string
   modes: readonly GameModeDescriptor[]
 }
 

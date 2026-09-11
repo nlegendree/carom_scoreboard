@@ -2,20 +2,52 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/useGameStore'
 import ActionBar from './ActionBar.vue'
+import ModeTile from './ModeTile.vue'
 import PlayerSetupModal from './PlayerSetupModal.vue'
 import PromptModal from './PromptModal.vue'
+import SideBar from './SideBar.vue'
 import {
   GAME_CATEGORIES,
   GAME_MODE_LABELS,
   isCategoryAvailable,
   type GameCategoryDescriptor,
+  type GameCategoryId,
   type GameMode,
   type GameModeDescriptor,
   type PlayerId,
 } from '../types/game'
+import type { SideBarItem } from '../types/ui'
 
 const DEFAULT_PLAYER1_NAME = 'JOUEUR 1'
 const DEFAULT_PLAYER2_NAME = 'JOUEUR 2'
+
+// Accueil (Story 10.1) : la barre latérale reçoit son contenu de l'écran (UX-DR31). Les
+// trois items sont affichés mais pas encore livrés (AR26) : état BIENTÔT, aucune action —
+// FERMER L'APPLICATION compris, sans pop-up ni fermeture.
+const HOME_SIDEBAR_ITEMS: SideBarItem[] = [
+  { id: 'training', picto: 'training', label: 'ENTRAÎNEMENT', state: 'soon' },
+  { id: 'signup', picto: 'signup', label: 'INSCRIPTION', state: 'soon' },
+]
+const HOME_SIDEBAR_EXIT: SideBarItem = {
+  id: 'close-app',
+  picto: 'power',
+  label: "FERMER L'APPLICATION",
+  state: 'soon',
+}
+
+// Ordre et couleur des tuiles : une donnée de présentation, distincte de l'ordre du
+// catalogue (`series` y vient en premier). Le catalogue est statique : pas de `computed`.
+const HOME_TILES = (
+  [
+    { id: '3bandes', color: 'tile-3b' },
+    { id: 'series', color: 'tile-jds' },
+    { id: 'quilles', color: 'tile-quilles' },
+    { id: 'casin', color: 'tile-casin' },
+  ] as const satisfies readonly { id: GameCategoryId; color: string }[]
+).map((tile) => ({
+  ...tile,
+  category: GAME_CATEGORIES.find((category) => category.id === tile.id)!,
+}))
 
 const gameStore = useGameStore()
 
@@ -172,127 +204,140 @@ function fixDistance(): void {
 </script>
 
 <template>
-  <div class="flex h-full w-full flex-col bg-bg">
-    <header class="flex shrink-0 items-center gap-4 p-4">
-      <img
-        v-if="step === 'category'"
-        src="/logo.png"
-        alt="1Score"
-        class="h-16 w-16 rounded-xl md:h-20 md:w-20"
-      />
-      <h1 v-if="headerTitle" class="text-label font-black tracking-widest text-white">
-        {{ headerTitle }}
-      </h1>
-    </header>
+  <div class="h-full w-full">
+    <!-- Accueil refondu (Story 10.1) : fond dégradé gris/noir, barre latérale collée au
+         bord, accroche et tuiles de mode, sans barre basse. Rien n'y bouge au repos : c'est
+         l'écran de veille. -->
+    <div
+      v-if="step === 'category'"
+      data-testid="step-category"
+      class="flex h-full w-full bg-(image:--gradient-bg)"
+    >
+      <SideBar :items="HOME_SIDEBAR_ITEMS" :exitItem="HOME_SIDEBAR_EXIT" />
 
-    <main class="flex flex-1 flex-col justify-end overflow-hidden">
-      <section
-        v-if="step === 'category'"
-        data-testid="step-category"
-        class="grid grid-cols-2 gap-px bg-white/10 md:grid-cols-4"
-      >
-        <button
-          v-for="category in GAME_CATEGORIES"
-          :key="category.id"
-          :data-testid="`category-${category.id}`"
-          :disabled="!isCategoryAvailable(category)"
-          class="flex min-h-[var(--size-touch-target)] flex-col items-start justify-center gap-1 bg-bg p-6 text-left touch-manipulation select-none disabled:opacity-40"
-          @pointerdown="selectCategory(category)"
+      <main class="flex min-w-0 flex-1 flex-col">
+        <p
+          data-testid="home-tagline"
+          class="px-4 pt-5 text-hero font-black leading-tight text-white"
         >
-          <span class="text-label font-bold text-white">{{ category.label }}</span>
-          <span class="text-stat text-white/60">{{ category.hint }}</span>
-          <span v-if="!isCategoryAvailable(category)" class="text-stat text-white/40">BIENTÔT</span>
-        </button>
-      </section>
+          À vous de jouer.
+        </p>
 
-      <section
-        v-else-if="step === 'mode'"
-        data-testid="step-mode"
-        class="grid grid-cols-2 gap-px bg-white/10 md:grid-cols-3"
-      >
-        <button
-          v-for="mode in categoryModes"
-          :key="mode.id"
-          :data-testid="`mode-${mode.id}`"
-          :disabled="!mode.available"
-          class="flex min-h-[var(--size-touch-target)] flex-col items-center justify-center gap-1 bg-bg p-6 text-label font-bold text-white touch-manipulation select-none disabled:opacity-40"
-          @pointerdown="selectMode(mode)"
-        >
-          {{ mode.label }}
-          <span v-if="!mode.available" class="text-stat font-normal text-white/40">BIENTÔT</span>
-        </button>
-      </section>
+        <!-- Une rangée de quatre tuiles à 34 % de la hauteur, collées à la barre latérale et
+             aux bords de l'écran, séparées d'un filet (modèle Billiboard). Paysage
+             uniquement : l'app ne tourne jamais en portrait. -->
+        <section class="mt-auto grid h-[34%] grid-cols-4 divide-x divide-border">
+          <ModeTile
+            v-for="tile in HOME_TILES"
+            :key="tile.id"
+            :data-testid="`category-${tile.id}`"
+            :title="tile.category.label"
+            :color="tile.color"
+            :soon="!isCategoryAvailable(tile.category)"
+            @select="selectCategory(tile.category)"
+          />
+        </section>
+      </main>
+    </div>
 
-      <!-- Étape joueurs : deux grands panneaux portant déjà la bille de leur côté,
-           préfigurant la sélection depuis la base joueurs du club (Epic 4). Chaque panneau
-           est la zone d'appel de son propre réglage (nom + handicap). -->
-      <section
-        v-else
-        data-testid="step-players"
-        class="flex flex-1 flex-col gap-px bg-white/10 md:flex-row"
-      >
-        <button
-          data-testid="player1-zone"
-          class="flex flex-1 flex-col justify-between bg-player-white p-6 text-left text-on-player-white touch-manipulation select-none"
-          @pointerdown="openSetup('player1')"
+    <!-- Étapes mode et joueurs : rendu d'avant l'Epic 10, refondu en 10.2 et 10.3. -->
+    <div v-else class="flex h-full w-full flex-col bg-bg">
+      <header class="flex shrink-0 items-center gap-4 p-4">
+        <h1 v-if="headerTitle" class="text-label font-black tracking-widest text-white">
+          {{ headerTitle }}
+        </h1>
+      </header>
+
+      <main class="flex flex-1 flex-col justify-end overflow-hidden">
+        <section
+          v-if="step === 'mode'"
+          data-testid="step-mode"
+          class="grid grid-cols-2 gap-px bg-white/10 md:grid-cols-3"
         >
-          <span class="text-stat font-bold opacity-60">BILLE BLANCHE</span>
-          <span class="flex items-end justify-between gap-4">
-            <span
-              data-testid="player1-name"
-              class="text-label font-black uppercase"
-              :class="player1Name ? '' : 'opacity-40'"
-            >
-              {{ displayedNames.player1 }}
+          <button
+            v-for="mode in categoryModes"
+            :key="mode.id"
+            :data-testid="`mode-${mode.id}`"
+            :disabled="!mode.available"
+            class="flex min-h-[var(--size-touch-target)] flex-col items-center justify-center gap-1 bg-bg p-6 text-label font-bold text-white touch-manipulation select-none disabled:opacity-40"
+            @pointerdown="selectMode(mode)"
+          >
+            {{ mode.label }}
+            <span v-if="!mode.available" class="text-stat font-normal text-white/40">BIENTÔT</span>
+          </button>
+        </section>
+
+        <!-- Étape joueurs : deux grands panneaux portant déjà la bille de leur côté,
+             préfigurant la sélection depuis la base joueurs du club (Epic 4). Chaque panneau
+             est la zone d'appel de son propre réglage (nom + handicap). -->
+        <section
+          v-else
+          data-testid="step-players"
+          class="flex flex-1 flex-col gap-px bg-white/10 md:flex-row"
+        >
+          <button
+            data-testid="player1-zone"
+            class="flex flex-1 flex-col justify-between bg-player-white p-6 text-left text-on-player-white touch-manipulation select-none"
+            @pointerdown="openSetup('player1')"
+          >
+            <span class="text-stat font-bold opacity-60">BILLE BLANCHE</span>
+            <span class="flex items-end justify-between gap-4">
+              <span
+                data-testid="player1-name"
+                class="text-label font-black uppercase"
+                :class="player1Name ? '' : 'opacity-40'"
+              >
+                {{ displayedNames.player1 }}
+              </span>
+              <span
+                v-if="targetScores.player1 > 0"
+                data-testid="player1-target"
+                class="text-label font-black"
+              >
+                {{ targetScores.player1 }}
+              </span>
             </span>
-            <span
-              v-if="targetScores.player1 > 0"
-              data-testid="player1-target"
-              class="text-label font-black"
-            >
-              {{ targetScores.player1 }}
-            </span>
-          </span>
-        </button>
+          </button>
 
-        <button
-          data-testid="player2-zone"
-          class="flex flex-1 flex-col justify-between bg-player-yellow p-6 text-left text-on-player-yellow touch-manipulation select-none"
-          @pointerdown="openSetup('player2')"
-        >
-          <span class="text-stat font-bold opacity-60">BILLE JAUNE</span>
-          <span class="flex items-end justify-between gap-4">
-            <span
-              data-testid="player2-name"
-              class="text-label font-black uppercase"
-              :class="player2Name ? '' : 'opacity-40'"
-            >
-              {{ displayedNames.player2 }}
+          <button
+            data-testid="player2-zone"
+            class="flex flex-1 flex-col justify-between bg-player-yellow p-6 text-left text-on-player-yellow touch-manipulation select-none"
+            @pointerdown="openSetup('player2')"
+          >
+            <span class="text-stat font-bold opacity-60">BILLE JAUNE</span>
+            <span class="flex items-end justify-between gap-4">
+              <span
+                data-testid="player2-name"
+                class="text-label font-black uppercase"
+                :class="player2Name ? '' : 'opacity-40'"
+              >
+                {{ displayedNames.player2 }}
+              </span>
+              <span
+                v-if="targetScores.player2 > 0"
+                data-testid="player2-target"
+                class="text-label font-black"
+              >
+                {{ targetScores.player2 }}
+              </span>
             </span>
-            <span
-              v-if="targetScores.player2 > 0"
-              data-testid="player2-target"
-              class="text-label font-black"
-            >
-              {{ targetScores.player2 }}
-            </span>
-          </span>
-        </button>
-      </section>
-    </main>
+          </button>
+        </section>
+      </main>
 
-    <ActionBar :showBack="step !== 'category'" @back="back">
-      <template #actions>
-        <button
-          v-if="step === 'players'"
-          data-testid="confirm-button"
-          class="min-h-[var(--size-touch-target)] bg-accent px-10 text-label font-black text-on-accent touch-manipulation select-none"
-          @pointerdown="confirm"
-        >
-          DÉMARRER
-        </button>
-      </template>
-    </ActionBar>
+      <ActionBar @back="back">
+        <template #actions>
+          <button
+            v-if="step === 'players'"
+            data-testid="confirm-button"
+            class="min-h-[var(--size-touch-target)] bg-accent px-10 text-label font-black text-on-accent touch-manipulation select-none"
+            @pointerdown="confirm"
+          >
+            DÉMARRER
+          </button>
+        </template>
+      </ActionBar>
+    </div>
 
     <PlayerSetupModal
       v-if="editing && step === 'players'"

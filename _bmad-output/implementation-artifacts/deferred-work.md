@@ -116,3 +116,16 @@ Dossier applicatif, clé de sauvegarde et chemins des documents sont renommés. 
 - **Dossier local `carom_scoreboard` → `1score`** — à faire hors session Claude Code. Déplacer aussi la mémoire du projet, `~/.claude/projects/-Users-nathan-Developer-04-Projets-carom-scoreboard/` → `-Users-nathan-Developer-04-Projets-1score/`, sinon les sessions suivantes repartent sans mémoire. Au passage : corriger le chemin périmé (`Documents/…`) de `.claude/settings.local.json` et supprimer le vieux `.claude/projects/-Users-nathan-Documents-04-Projets-carom-scoreboard/` suivi par Git.
 - **Site Netlify** — le renommer change l'adresse `*.netlify.app`, donc l'origine : partie sauvegardée perdue et PWA à réinstaller sur chaque tablette. Sans conséquence tant qu'aucune tablette n'est en usage réel.
 - **À vérifier au prochain déploiement** : `netlify.toml` pointe désormais sur `base = "1score"`. Si le champ *Base directory* a été saisi à la main dans l'interface Netlify (`carom-scoreboard`), le build échouera : le vider ou le passer à `1score`.
+
+## Deferred from: dev-story 10-1-refonte-de-laccueil-barre-laterale-tuiles-de-mode-fond-degrade (2026-09-11)
+
+- **L'effet d'appui des tuiles se voit à peine au doigt.** La navigation part au `pointerdown` (AR8, NFR1) : l'accueil disparaît dès le contact, et `active:brightness-125` ne dure qu'un instant. Seul l'éclaircissement au survol (souris) se voit vraiment. Pour le rendre visible, il faudrait naviguer au `pointerup` ou après un court délai. C'est un arbitrage produit, contraire à la règle du geste immédiat.
+- **Tailles plafonnées trop bas pour l'écran 21,5″** (1920×1080, cible d'installation à terme). `text-picto` (12 px), `text-tile-title` (36 px) et `text-hero` (56 px) atteignent leur plafond dès la tablette, alors que les tuiles font 450 px de large. Il faudra relever les plafonds des `clamp()`, ou un palier `lg:`, quand l'écran arrivera.
+- **Fond d'accueil** : Nathan envisage de retravailler le dégradé gris vers noir pour le rendre « plus engageant ».
+- **Documents encore écrits pour le portrait**. Seules les notes datées de la passe de rendu annulent le portrait ; le texte d'origine n'a pas été réécrit ligne à ligne :
+  - `epics.md` (AC des stories 10.3 à 10.5 et 10.7) ;
+  - spec UX §10 (UX-DR29, UX-DR50) ;
+  - CLAUDE.md §8, dont le palier par défaut dit encore « smartphone / portrait ».
+  
+  Les stories 10.2 à 10.7 doivent partir des notes datées ; nettoyer le texte à leur création.
+- **Revue de code de la 10.1 reportée** (décision de Nathan, 2026-09-11 : « j'ai envie d'avancer là, on fera tous les fix à la fin »). La story est committée et laissée en `review` : **livrée mais non relue**. Les revues de l'Epic 10 seront passées groupées en fin d'epic, idéalement avec un autre modèle, et les correctifs appliqués à ce moment-là.

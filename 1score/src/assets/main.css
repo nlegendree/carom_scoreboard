@@ -36,6 +36,10 @@
   /* Numéro de reprise : dimensionné pour la colonne centrale (w-1/5), où le plancher
      de 120px de --text-score déborde dès deux chiffres sur tablette. */
   --text-reprise: clamp(48px, 7.5vw, 120px);
+  /* Epic 10 (Story 10.1) : accroche d'accueil, titre de tuile de mode, libellé sous picto. */
+  --text-hero: clamp(40px, 5vw, 56px);
+  --text-tile-title: clamp(28px, 3vw, 36px);
+  --text-picto: clamp(11px, 1.1vw, 12px);
 
   /* Unité de base d'espacement */
   --spacing: 8px;
@@ -77,6 +81,45 @@
     from { transform: scaleX(0); }
     to { transform: scaleX(1); }
   }
+}
+
+/* Epic 10 — Bloc Plein contenu (UX-DR27). `static` force l'émission de toutes les
+   variables : Tailwind élague sinon celles qu'aucun utilitaire n'emploie encore (bandeaux
+   de carte de la 10.4, `--gradient-bg` lu par `bg-(image:…)`). */
+@theme static {
+  /* Drap de billard : médiane des pixels de simonis-prestige.gif, hors texte blanc. Base
+     des bleus des tuiles. */
+  --color-cloth: #0573BB;
+
+  /* Conteneurs : fond translucide, contour, rayons. Angles vifs (passe de rendu 10.1,
+     Nathan : « trop arrondi », l'app doit se lire comme un outil tactile). */
+  --color-surface: rgba(255, 255, 255, 0.06);
+  --color-border: rgba(255, 255, 255, 0.18);
+  --color-border-strong: rgba(255, 255, 255, 0.40);
+  --radius-container: 0px;
+  --radius-cta: 0px;
+
+  /* Barre latérale : aplat sombre collé au bord de l'écran (modèle Cueuny). */
+  --color-sidebar: #101318;
+
+  /* Rouge de marque (palette bleus / noir-gris / rouge) : bandeau en biais de l'en-tête
+     de la barre latérale. Blanc dessus ≈ 4,9:1. Distinct de `--color-alert` (chrono) et de
+     `--color-turn-active` (liseré de tour), qui gardent leur rôle. */
+  --color-brand-red: #D0343F;
+
+  /* Tuiles de mode : une nuance de bleu par tuile, en dégradé, de la plus claire à la
+     plus sombre. Palette des apps de référence : bleus, noir/gris, rouge. */
+  --gradient-tile-3b: linear-gradient(160deg, #2E8FDB 0%, var(--color-cloth) 100%);
+  --gradient-tile-jds: linear-gradient(160deg, #0A7CC9 0%, #04558D 100%);
+  --gradient-tile-quilles: linear-gradient(160deg, #0668AD 0%, #033F6B 100%);
+  --gradient-tile-casin: linear-gradient(160deg, #05508A 0%, #022B4D 100%);
+
+  /* Bandeaux de carte joueur (Story 10.4). */
+  --color-panel-white-band: #ECECEC;
+  --color-panel-yellow-band: #E6B000;
+
+  /* Fond d'écran gris/noir, appliqué écran par écran avec sa story. */
+  --gradient-bg: linear-gradient(160deg, #2A2E35 0%, #111317 55%, #000000 100%);
 }
 
 * {

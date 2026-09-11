@@ -10,7 +10,7 @@ const emit = defineEmits<{ back: [] }>()
 <template>
   <!-- Barre d'action présente sur tous les écrans : le retour garde toujours la même place.
        `showBack` permet de la conserver sans afficher un retour inerte à l'étape racine. -->
-  <nav class="flex shrink-0 items-center gap-4 bg-bg px-4 py-2">
+  <nav data-testid="action-bar" class="flex shrink-0 items-center gap-4 bg-bg px-4 py-2">
     <!-- Retour compact et `shrink-0` : il garde sa place à gauche sans prendre de largeur
          inutile, laissant l'emplacement des actions occuper tout le reste de la barre. -->
     <button

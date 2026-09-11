@@ -529,6 +529,17 @@ Explicitement hors scope V1 : navigation clavier complète, ARIA avancé, suppor
 
 *Section issue de `sprint-change-proposal-2026-09-11-refonte-ui.md` et du brief écran par écran `explore/basic-ui-brainstorming-2026-09-11.md`. Elle **prime** sur les fiches et règles antérieures qu'elle amende (chacune porte une note de supersession renvoyant ici). Les règles de calcul, la persistance, le pattern de saisie (pavé différé en JDS, `+1` en 3 Bandes), l'undo multi-niveaux et les règles de fin de partie ne changent pas. Références visuelles retenues, par écran : Cueuny (`cueuny_home`, `cueuny_player*`, `cueuny_scoreboard`, `cueuny_recap`) pour la barre latérale, le paramétrage à deux CTA bille/côté et la carte joueur ; Billiboard (`billiboard_home*`, `billiboard_player_3`, `billiboard_scoreboard`, `billiboard_recap`) pour les tuiles d'accueil, le pavé central et le récap.*
 
+> **Amendement du 2026-09-11 — passe de rendu de la Story 10.1, décisions de Nathan.** Il prime sur les valeurs de cette section partout où elles divergent :
+> - **Paysage uniquement.** Le portrait est abandonné : les 96 px de la `SideBar`, les libellés masqués et toute passe en 768×1024 deviennent caducs. Formats : iPad mini 1133×744, iPad 11″ 1194×834, écran 21,5″ 1920×1080 à terme.
+> - **« Bloc Plein contenu » revu : angles vifs et éléments jointifs.** Rayons `--radius-container` et `--radius-cta` à 0. Plus de marge d'écran de 16 px ni de conteneurs espacés : la `SideBar` est un aplat `--color-sidebar` (`#101318`) collé au bord (Cueuny), les tuiles sont collées entre elles et à la barre, séparées par des filets `--color-border` (Billiboard).
+> - **Palette : bleus / noir-gris / rouge.**
+>   - Tuiles : dégradés de bleu `--gradient-tile-3b|jds|quilles|casin`, du plus clair au plus sombre. Ils remplacent les `--color-tile-*` vert, orange et violet ; en BIENTÔT, le calque de dégradé passe à 45 %.
+>   - Fond : `--gradient-bg` = `linear-gradient(160deg, #2A2E35 0%, #111317 55%, #000000 100%)`, gris vers noir, et non plus drap vers noir. Il sera peut-être retravaillé plus tard pour être plus engageant.
+>   - Rouge de marque : `--color-brand-red` `#D0343F`, distinct du rouge d'alerte et du liseré de tour.
+> - **Coupes en biais pour casser la symétrie.** L'en-tête de la `SideBar` est un bandeau rouge coupé en diagonale, avec un pli translucide, sur 120 px au lieu de 96. Le motif est à reprendre sur les autres écrans.
+> - **Typographie** : `system-ui` en attendant une police display, libellés de picto sans interlettrage. **Pictos de tuile** : flèche nue, sans rond.
+> - **Retour d'appui** : les tuiles disponibles s'éclaircissent au survol et à l'appui (`brightness`), sans transition.
+
 ### 10.0 — Portée et principes
 
 - **Nom du produit : 1Score.** Le logo et la marque sont des assets à fournir par Nathan ; en attendant, le mot `1Score` en police display tient lieu de logo.
@@ -541,7 +552,7 @@ Explicitement hors scope V1 : navigation clavier complète, ARIA avancé, suppor
 
 | Token | Valeur indicative | Usage |
 |---|---|---|
-| `--color-cloth` | `#2F6FB8` (à pixel-picker) | départ du dégradé de fond, tuile 3 Bandes, contour de focus neutre |
+| `--color-cloth` | ~~`#2F6FB8`~~ **`#0573BB`** (mesuré sur `simonis-prestige.gif` le 2026-09-11) | départ du dégradé de fond, tuile 3 Bandes, contour de focus neutre |
 | `--gradient-bg` | voir ci-dessus | fond de tous les écrans |
 | `--color-surface` | `rgba(255,255,255,0.06)` | fond des conteneurs neutres (sidebar, colonne centrale, tuiles inertes) |
 | `--color-border` | `rgba(255,255,255,0.18)` | contour par défaut de tout conteneur, 2 px |
@@ -689,8 +700,8 @@ Bille fixe **à la carte** (la couleur suit la bille, jamais le joueur) ; tour a
 
 ### 10.8 — Reste à trancher (hors bloquant)
 
-- Hex exact de `--color-cloth` (pixel-picking sur l'image Prestige fournie).
-- Libellé de l'accroche d'accueil et les quatre accroches de tuiles.
-- Assets : logo 1Score (SVG monochrome + couleur).
-- Résultat du **spike « Fermer l'application »** avant la Story 10.1.
+- Hex exact de `--color-cloth` (pixel-picking sur l'image Prestige fournie). *Tranché le 2026-09-11 (Story 10.1) : **`#0573BB`**, médiane des pixels de `explore/resources/simonis-prestige.gif` hors texte blanc.*
+- Libellé de l'accroche d'accueil et les quatre accroches de tuiles. *Tranché le 2026-09-11 (Nathan, Story 10.1) : « À vous de jouer. » ; **aucune accroche** sur `3 BANDES` et `JEUX DE SÉRIES` ; `QUILLES` et `CASIN` portent seulement le badge ; libellé `BIENTÔT` partout.*
+- Assets : logo 1Score (SVG monochrome + couleur). *Fourni le 2026-09-11 : `public/logo.png` (« 1S » blanc sur carré sombre arrondi), utilisé dans l'en-tête de la sidebar ; le repli « rond + 1 » est abandonné, un SVG reste à venir. Police display reportée : `system-ui` en Story 10.1 (Nathan).*
+- Résultat du **spike « Fermer l'application »** avant la Story 10.1. *Reporté hors Epic 10 : item inerte en 10.1.*
 - Débordement du chrono : à valider au rendu (option, pas obligation).

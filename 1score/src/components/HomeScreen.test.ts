@@ -90,7 +90,7 @@ describe('HomeScreen', () => {
   })
 
   // Un retour visible mais inerte sur le tout premier écran est un piège pour la cible
-  // « pas de formation » : la barre reste, le bouton disparaît.
+  // « pas de formation ». Depuis la 10.1, l'accueil n'a plus de barre basse du tout.
   it('hides the back button on the root step only', async () => {
     const wrapper = mount(HomeScreen)
     expect(wrapper.find('[data-testid="back-button"]').exists()).toBe(false)
@@ -100,13 +100,72 @@ describe('HomeScreen', () => {
     expect(wrapper.find('[data-testid="back-button"]').exists()).toBe(true)
   })
 
+  // Story 10.1 : le logo vit dans l'en-tête de la barre latérale, propre à l'accueil.
   it('shows the logo on the home step only', async () => {
     const wrapper = mount(HomeScreen)
+    expect(wrapper.find('[data-testid="sidebar"]').exists()).toBe(true)
     expect(wrapper.find('img[alt="1Score"]').exists()).toBe(true)
 
     await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
 
+    expect(wrapper.find('[data-testid="sidebar"]').exists()).toBe(false)
     expect(wrapper.find('img[alt="1Score"]').exists()).toBe(false)
+  })
+
+  it('does not render the bottom action bar on the home step', async () => {
+    const wrapper = mount(HomeScreen)
+    expect(wrapper.find('[data-testid="action-bar"]').exists()).toBe(false)
+
+    await wrapper.find('[data-testid="category-series"]').trigger('pointerdown')
+
+    expect(wrapper.find('[data-testid="action-bar"]').exists()).toBe(true)
+  })
+
+  it('greets the player with the home tagline', () => {
+    const wrapper = mount(HomeScreen)
+
+    expect(wrapper.find('[data-testid="home-tagline"]').text()).toBe('À vous de jouer.')
+  })
+
+  // L'ordre des tuiles est une donnée de présentation, distincte de l'ordre du catalogue.
+  it('lays out the mode tiles as 3 BANDES, JEUX DE SÉRIES, QUILLES, CASIN', () => {
+    const wrapper = mount(HomeScreen)
+    const tiles = wrapper.findAll('[data-testid^="category-"]')
+
+    expect(tiles.map((tile) => tile.attributes('data-testid'))).toEqual([
+      'category-3bandes',
+      'category-series',
+      'category-quilles',
+      'category-casin',
+    ])
+    expect(tiles.map((tile) => tile.find('[data-testid="tile-title"]').text())).toEqual([
+      '3 BANDES',
+      'JEUX DE SÉRIES',
+      'QUILLES',
+      'CASIN',
+    ])
+  })
+
+  // AR26 : les trois items sont affichés mais pas encore livrés — aucun effet au tap,
+  // FERMER L'APPLICATION compris (ni pop-up, ni fermeture).
+  it('shows the three sidebar items as soon, with the exit at the bottom, all inert', async () => {
+    const wrapper = mount(HomeScreen)
+    const ids = ['training', 'signup', 'close-app']
+
+    expect(
+      wrapper.find('[data-testid="sidebar-bottom"] [data-testid="sidebar-item-close-app"]').exists(),
+    ).toBe(true)
+
+    for (const id of ids) {
+      const item = wrapper.find(`[data-testid="sidebar-item-${id}"]`)
+      expect(item.attributes('disabled')).toBeDefined()
+      expect(item.text()).toContain('BIENTÔT')
+
+      await item.trigger('pointerdown')
+
+      expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="prompt-modal"]').exists()).toBe(false)
+    }
   })
 
   it('marks categories whose modes are all unavailable as disabled and does not open them', async () => {

@@ -368,7 +368,7 @@ Un club qui découvre le produit voit une interface premium et cohérente sur le
 | 10.3 | Paramétrage joueurs | `NumericPadDock`, `AlphaKeyboardSheet`, actions bille/côté, suppression de `PlayerSetupModal`, retrait d'`ÉCHANGER` du jeu | AR21, AR22, AR24, UX-DR38 à UX-DR44, UX-DR54, DT1, DT4, DT5, DT7 |
 | 10.4 | Scoreboard (JDS et 3 Bandes) | `IconAction`, `PASSER LE TOUR`, `ScoreEntryDock`, carte réorganisée, `CenterPanel` réduit, `ActionBar` reconstruite | AR23, AR25, UX-DR45 à UX-DR52, DT2 |
 | 10.5 | Récap | rien de nouveau — réutilise `SideBar` | UX-DR53, DT6 |
-| 10.7 | Finition transverse | sémantique de dialogue et garde `reduced-motion` sur toutes les pop-ups, contrôle de contraste AA, passe portrait | UX-DR55, UX-DR56, DT3 |
+| 10.7 | Finition transverse | sémantique de dialogue et garde `reduced-motion` sur toutes les pop-ups, contrôle de contraste AA, ~~passe portrait~~ passe iPad mini / iPad 11″ / 21,5″ (portrait abandonné le 2026-09-11) | UX-DR55, UX-DR56, DT3 |
 
 **Ordre d'exécution : 10.6 → 10.1 → 10.2 → 10.3 → 10.4 → 10.5 → 10.7.** Le renommage passe en premier parce que la sidebar affiche le mot « 1Score » dès l'accueil. Les numéros restent ceux déjà cités dans le PRD, l'architecture, la spec UX et `sprint-status.yaml`.
 
@@ -1493,6 +1493,14 @@ So that la fédération peut intégrer nos données sans ressaisie manuelle.
 
 *Section ajoutée le 2026-09-11 (`sprint-change-proposal-2026-09-11-refonte-ui.md`, spec UX §10.0-10.8). S'exécute **juste après l'Epic 2, avant l'Epic 4**, dans l'ordre **10.6 → 10.1 → 10.2 → 10.3 → 10.4 → 10.5 → 10.7**. Chaque story laisse l'application complète et jouable : un composant ancien n'est retiré que par la story qui le remplace, et les écrans non encore refondus gardent leur rendu actuel (barre basse comprise) jusqu'à leur story. Références visuelles : Nathan indique, à la création de chaque story, quelles captures de `explore/resources/` prendre en référence.*
 
+> **Décisions de Nathan à la passe de rendu de la Story 10.1 (2026-09-11)** — valables pour **toute l'epic**, elles priment sur les AC ci-dessous et sur les valeurs indicatives de la spec UX §10 :
+> - **Paysage uniquement, jamais de portrait.** Appareils : iPad mini (1133×744), iPad 11″ (1194×834), puis écran 21,5″ (1920×1080) à terme. Toute mention du portrait dans les AC de l'epic est **caduque** : colonne de 96 px, grille 2×2, pictos sans libellé en portrait, passes 768×1024. Les passes Chrome se font sur ces trois formats. Le manifest est en `orientation: 'landscape'`.
+> - **Angles vifs** : `--radius-container` et `--radius-cta` à 0, ni pilules ni ronds décoratifs.
+> - **Coller plutôt qu'espacer** : `SideBar` en aplat collé au bord de l'écran (modèle Cueuny), sans marge d'écran de 16 px ; éléments jointifs séparés par des filets (modèle Billiboard).
+> - **Palette resserrée bleus / noir-gris / rouge**. Tuiles en nuances de bleu dégradées (`--gradient-tile-*`, qui remplace `--color-tile-*` vert, orange et violet) ; fond `--gradient-bg` gris vers noir (et non drap vers noir) ; rouge de marque `--color-brand-red` `#D0343F`.
+> - **Coupes en biais pour casser la symétrie** (en-tête rouge de `SideBar` en 10.1), motif à reprendre sur les autres écrans.
+> - Un retour visuel à l'appui sur les éléments tapables.
+
 Un club qui découvre le produit voit une interface premium et cohérente sur les cinq écrans du jeu déjà livré, sous le nom **1Score**, sans changement des règles de calcul de score. Deux mécaniques d'interaction évoluent : le passage de tour par `PASSER LE TOUR`, et l'interversion bille/côté dissociée au paramétrage.
 
 **Constat de code (2026-09-11, à la rédaction des stories) :** l'interversion n'existe aujourd'hui **qu'en partie** — `swapPlayers()` refuse tout état autre que `playing` — et le paramétrage garde noms et distances en **état local de `HomeScreen`**, transmis à `startGame()`. Le modèle du store pose `player1` = joueur de gauche = bille blanche, et toute la logique de jeu (ouverture de reprise, égalisatrice, `openSeriesValue`) s'appuie sur « `player1` ouvre ». La Story 10.3 en tient compte : elle **conserve l'invariant « `player1` = bille blanche = celui qui ouvre »** et rend le **côté d'affichage** indépendant, plutôt que de rendre la couleur variable dans la logique de jeu.
@@ -1504,6 +1512,8 @@ I want un accueil 1Score premium — barre latérale, accroche, quatre tuiles de
 So that je reconnais le produit au premier regard et je choisis mon jeu d'un seul tap, sans rien lire (NFR12).
 
 *Fondations posées ici pour toute l'epic : tokens et dégradé (UX-DR25 à UX-DR28), `SideBar` (UX-DR29 à UX-DR31), `ModeTile` (UX-DR34), état BIENTÔT (UX-DR30). Périmètre : l'étape `category` de `HomeScreen` uniquement — les étapes `mode` et `players` gardent leur rendu actuel (barre basse comprise) jusqu'aux Stories 10.2 et 10.3.*
+
+*Précisions de la création de story (2026-09-11, décisions de Nathan) — elles priment sur les AC ci-dessous : référence visuelle `cueuny_home.png` ; police `system-ui` en attendant une police display ; accroche « À vous de jouer. », **aucune accroche de tuile** (`QUILLES`/`CASIN` : badge `BIENTÔT` seul, libellé `BIENTÔT` partout) ; logo = `public/logo.png` fourni par Nathan (« 1S »), le repli « rond + 1 » est abandonné ; `--color-cloth` = `#0573BB` (médiane de `explore/resources/simonis-prestige.gif`). Le dégradé est déclaré pour toute l'app mais appliqué écran par écran : l'accueil ici, les autres écrans avec leur story. ~~En portrait, tuiles en grille 2×2, à valider au rendu.~~ *Rendu livré (2026-09-11, validé par Nathan) : barre latérale collée au bord, en aplat `#101318`, en-tête rouge coupé en biais de 120 px ; rangée de quatre tuiles bleues collées à la barre et aux bords, séparées de filets, à 34 % de la hauteur ; fond gris vers noir ; aucun arrondi — voir la note de l'Epic 10 et la fiche de story.*
 
 **Exigences :** AR20 (`SideBar`), AR26 (item inerte), UX-DR25, UX-DR26, UX-DR27, UX-DR28, UX-DR29, UX-DR30, UX-DR31, UX-DR32 (reporté), UX-DR33, UX-DR34, UX-DR35.
 
