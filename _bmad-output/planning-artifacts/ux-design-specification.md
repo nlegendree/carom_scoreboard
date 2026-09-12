@@ -608,7 +608,7 @@ Nouveau primitif de coquille d'écran, modèle Cueuny : colonne **gauche**, larg
 
 #### Paramétrage joueurs (Story 10.3)
 
-> ***Sixième passe de rendu (Nathan, 2026-09-12).*** `ANNULER` devient **opaque** (`--gradient-neutral` en gris sombre plein) et perd son **contour clair**, partout — le blanc voilé salissait le bouton. Les **arrondis des modales sont validés**. Jaune encore éclairci à **`#FFE81A`**. Le chevron de `DÉMARRER` perd sa plaque : **flèche seule, plus large**, à gauche du mot.
+> ***Sixième passe de rendu (Nathan, 2026-09-12).*** `ANNULER` devient **opaque** (`--gradient-neutral` en gris sombre plein) et perd son **contour clair**, partout — le blanc voilé salissait le bouton. Les **arrondis des modales sont validés**. Jaune arrêté à **`#FFE000`** (bleu à zéro, saturation pleine : ni doré comme `#FFD60A`, ni lavé comme `#FFE81A`). Le chevron de `DÉMARRER` perd sa plaque : **flèche seule, plus large**, à gauche du mot.
 
 > ***Cinquième passe de rendu (Nathan, 2026-09-12).*** Pop-ups de saisie **centrées dans la zone laissée libre** par la carte visée (et non collées au bord) ; `ANNULER`/`VALIDER` au **rayon des touches** ; **touche `RESET`** au clavier alphabétique ; en-tête de carte **aligné à gauche**, bandeau pleine largeur, filet affiné, **vrais pictos de bille**. **Contraste corrigé** sur la carte jaune (opacités relevées). `PromptModal` : titre **centré**, **principal au-dessus du secondaire**, voile aligné sur les pop-ups de saisie, fermeture au tap dehors **opt-in** (`dismissible`) — les pop-ups de fin de partie gardent leur voile inerte.
 

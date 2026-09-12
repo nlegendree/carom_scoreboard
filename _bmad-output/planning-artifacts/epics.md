@@ -1650,7 +1650,7 @@ So that la table est prête sans pop-up ni écran supplémentaire, et la répart
 
 > **Sixième passe de rendu (Nathan, 2026-09-12).** Trois retouches, qui priment sur ce qui précède :
 > 1. **`ANNULER` devient OPAQUE et perd son contour clair.** `--gradient-neutral` passe d'un blanc voilé (0,22 → 0,10) à un gris sombre plein, de la famille de `--color-key` : le voilé laissait voir l'écran au travers et salissait le bouton sur tout fond chargé. Vaut partout — pop-ups de saisie et `PromptModal`. Les arrondis, eux, sont **validés** (« beaucoup mieux dans les modales », à généraliser peut-être plus tard).
-> 2. **Jaune encore éclairci** : `--color-player-yellow` passe de `#FFD60A` à **`#FFE81A`** — citron franc, le doré était encore perceptible.
+> 2. **Jaune arrêté à `#FFE000`** après quatre essais : `#FFC72C` puis `#FFD60A` tiraient vers le doré (`#FFD60A` est à deux points de `#FFD700`, la couleur « or » littérale), `#FFE81A` partait à l'inverse dans le jaune lavé. `#FFE000` tient le milieu et surtout porte un **bleu à zéro**, donc une saturation pleine — c'est ce qui le rend franc plutôt que délavé. Ne pas y remettre de bleu « pour adoucir ».
 > 3. **Le chevron de `DÉMARRER` perd sa plaque** : une flèche seule, plus large, à gauche du mot. La plaque translucide se lisait comme un bouton dans le bouton.
 
 **Acceptance Criteria:**

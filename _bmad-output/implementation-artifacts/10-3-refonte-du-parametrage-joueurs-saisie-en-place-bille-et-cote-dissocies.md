@@ -329,7 +329,7 @@ Vérifié au navigateur aux trois formats : pop-ups jamais sur la carte visée (
 **6e passe de rendu (Nathan, 2026-09-12)** :
 
 - **`ANNULER` opaque, sans contour clair.** `--gradient-neutral` passe du blanc voilé à un gris sombre plein, de la famille de `--color-key` ; `border-border-strong` retiré des deux pop-ups de saisie. Un seul token, donc la correction vaut aussi pour `PromptModal`. Les **arrondis sont validés** — Nathan évoque de les généraliser plus tard.
-- **Jaune à `#FFE81A`** (3e valeur) : `#FFC72C` puis `#FFD60A` tiraient encore vers le doré.
+- **Jaune arrêté à `#FFE000`** (4e valeur, validée par Nathan) : `#FFC72C` et `#FFD60A` tiraient vers le doré, `#FFE81A` vers le jaune lavé. Le point clé n'est pas la teinte mais le **bleu à zéro** : c'est lui qui donne la saturation pleine.
 - **Chevron de `DÉMARRER` nu et plus large**, à gauche du mot : sa plaque translucide se lisait comme un bouton dans le bouton.
 
 610 tests verts, build vert, aucun débordement aux trois formats.
@@ -393,3 +393,4 @@ Vérifié au navigateur aux trois formats : pop-ups jamais sur la carte visée (
 - **2026-09-12** — 4e passe de rendu (Nathan) : en-tête de carte à picto de bille (placeholder), jaune éclairci `#FFD60A`, pop-ups alignées sur le côté opposé à la carte visée (rappel de valeur retiré, voile sans flou), fermeture au tap dehors et `ANNULER` à la place de la croix, touches façon Cueuny (`--radius-key`). 606 tests verts, build vert.
 - **2026-09-12** — 5e passe de rendu (Nathan) : pop-ups centrées dans la zone libre, CTA au rayon des touches, touche `RESET`, `PromptModal` repris (titre centré, principal au-dessus, voile aligné, `dismissible`), en-tête de carte à gauche avec les vrais pictos de bille, contraste corrigé sur la carte jaune. 610 tests verts, build vert.
 - **2026-09-12** — 6e passe de rendu (Nathan) : `ANNULER` opaque et sans contour clair (`--gradient-neutral` en gris plein, valable aussi pour `PromptModal`), jaune éclairci à `#FFE81A`, chevron de `DÉMARRER` nu et élargi. 610 tests verts, build vert.
+- **2026-09-12** — jaune arrêté à `#FFE000` (`#FFE81A` faisait « jaune pipi »). Rendu **validé par Nathan** sur l'ensemble de l'écran.
