@@ -125,6 +125,17 @@
   --gradient-tile-quilles: linear-gradient(160deg, #0668AD 0%, #033F6B 100%);
   --gradient-tile-casin: linear-gradient(160deg, #05508A 0%, #022B4D 100%);
 
+  /* Rouge du CTA de démarrage (revue de rendu 10.3, Nathan, 2026-09-12, réf.
+     `explore/resources` #3 façon Cueuny) : les deux réglages sont bleus, l'action qui
+     ENGAGE la partie est rouge. Ancré sur `--color-brand-red`, qui garde par ailleurs son
+     rôle de rouge de marque (bandeau en biais de la barre latérale). */
+  --gradient-red: linear-gradient(160deg, #E2515B 0%, var(--color-brand-red) 100%);
+
+  /* Fond des champs NOM et DISTANCE des cartes de paramétrage (revue de rendu 10.3) :
+     un fondu grisé, lisible aussi bien sur la carte blanche que sur la jaune. Remplace le
+     médaillon rond sombre, retiré à la même revue. */
+  --gradient-field: linear-gradient(160deg, #454A54 0%, #1A1D22 100%);
+
   /* Bandeaux de carte joueur (Story 10.4). */
   --color-panel-white-band: #ECECEC;
   --color-panel-yellow-band: #E6B000;

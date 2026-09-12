@@ -36,6 +36,8 @@ const PATHS: Record<PictoName, readonly string[]> = {
   ],
   // Double flèche horizontale : les cartes changent de place.
   'swap-sides': ['m18 8 4 4-4 4', 'M2 12h20', 'm6 8-4 4 4 4'],
+  // Chevron seul, sans hampe : la pointe du CTA de démarrage (revue de rendu 10.3).
+  'chevron-right': ['m9 18 6-6-6-6'],
 }
 </script>
 

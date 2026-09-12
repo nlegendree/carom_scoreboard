@@ -17,12 +17,16 @@ function press(wrapper: ReturnType<typeof mount>, testid: string) {
   return wrapper.find(`[data-testid="${testid}"]`).trigger('pointerdown')
 }
 
+function pad(props: { value: string; ball?: 'white' | 'yellow' }) {
+  return mount(NumericPadDock, { props: { ball: 'white', ...props } })
+}
+
 describe('NumericPadDock', () => {
   // Le buffer vit dans l'écran, pas dans le dock : c'est la carte qui doit afficher la
   // valeur en direct, et deux buffers divergeraient à la première frappe. Le dock émet
   // donc la nouvelle valeur COMPLÈTE, jamais le seul chiffre frappé.
   it('emits the complete new value, appending as the parent feeds it back', async () => {
-    const wrapper = mount(NumericPadDock, { props: { value: '' } })
+    const wrapper = pad({ value: '' })
 
     await press(wrapper, 'digit-4')
     await wrapper.setProps({ value: '4' })
@@ -34,7 +38,7 @@ describe('NumericPadDock', () => {
   // Une distance ouverte sur une valeur déjà réglée attend d'être remplacée : sans cette
   // règle, un réglage à 3 chiffres serait inéditable (le plafond ignorerait tout).
   it('replaces an already-set value on the first keystroke', async () => {
-    const wrapper = mount(NumericPadDock, { props: { value: '150' } })
+    const wrapper = pad({ value: '150' })
 
     await press(wrapper, 'digit-8')
 
@@ -42,7 +46,7 @@ describe('NumericPadDock', () => {
   })
 
   it('keeps appending after that first replacing keystroke', async () => {
-    const wrapper = mount(NumericPadDock, { props: { value: '150' } })
+    const wrapper = pad({ value: '150' })
 
     await press(wrapper, 'digit-8')
     await wrapper.setProps({ value: '8' })
@@ -53,7 +57,7 @@ describe('NumericPadDock', () => {
 
   // Le 0 en tête reste interdit : il repart d'un buffer vide plutôt que de s'empiler.
   it('never stacks a leading zero', async () => {
-    const wrapper = mount(NumericPadDock, { props: { value: '' } })
+    const wrapper = pad({ value: '' })
 
     await press(wrapper, 'digit-0')
 
@@ -61,7 +65,7 @@ describe('NumericPadDock', () => {
   })
 
   it('starts empty when the first replacing keystroke is a zero', async () => {
-    const wrapper = mount(NumericPadDock, { props: { value: '150' } })
+    const wrapper = pad({ value: '150' })
 
     await press(wrapper, 'digit-0')
 
@@ -70,7 +74,7 @@ describe('NumericPadDock', () => {
 
   // DT1 : le plafond a une seule source, `MAX_TARGET_SCORE` (999 → 3 chiffres).
   it('ignores a keystroke beyond the three-digit cap', async () => {
-    const wrapper = mount(NumericPadDock, { props: { value: '123' } })
+    const wrapper = pad({ value: '123' })
     // La valeur a déjà été touchée : on consomme d'abord la frappe de remplacement.
     await press(wrapper, 'digit-9')
     await wrapper.setProps({ value: '999' })
@@ -81,7 +85,7 @@ describe('NumericPadDock', () => {
   })
 
   it('answers a refused keystroke with a reject haptic and a pulse', async () => {
-    const wrapper = mount(NumericPadDock, { props: { value: '123' } })
+    const wrapper = pad({ value: '123' })
     await press(wrapper, 'digit-9')
     await wrapper.setProps({ value: '999' })
     vibrate.mockClear()
@@ -93,7 +97,7 @@ describe('NumericPadDock', () => {
   })
 
   it('leaves the reject pulse at rest while keystrokes are accepted', async () => {
-    const wrapper = mount(NumericPadDock, { props: { value: '' } })
+    const wrapper = pad({ value: '' })
 
     await press(wrapper, 'digit-5')
 
@@ -101,7 +105,7 @@ describe('NumericPadDock', () => {
   })
 
   it('answers an accepted keystroke with a tap haptic', async () => {
-    const wrapper = mount(NumericPadDock, { props: { value: '' } })
+    const wrapper = pad({ value: '' })
 
     await press(wrapper, 'digit-5')
 
@@ -109,7 +113,7 @@ describe('NumericPadDock', () => {
   })
 
   it('clears the whole value from AC/C', async () => {
-    const wrapper = mount(NumericPadDock, { props: { value: '47' } })
+    const wrapper = pad({ value: '47' })
 
     await press(wrapper, 'clear-button')
 
@@ -117,7 +121,7 @@ describe('NumericPadDock', () => {
   })
 
   it('drops the last digit on backspace', async () => {
-    const wrapper = mount(NumericPadDock, { props: { value: '47' } })
+    const wrapper = pad({ value: '47' })
 
     await press(wrapper, 'backspace-button')
 
@@ -126,7 +130,7 @@ describe('NumericPadDock', () => {
 
   // Après un effacement la valeur n'est plus « vierge » : la frappe suivante s'empile.
   it('appends normally after a clear', async () => {
-    const wrapper = mount(NumericPadDock, { props: { value: '150' } })
+    const wrapper = pad({ value: '150' })
 
     await press(wrapper, 'clear-button')
     await wrapper.setProps({ value: '' })
@@ -136,15 +140,15 @@ describe('NumericPadDock', () => {
   })
 
   it('labels the clear key AC on an empty value and C otherwise', async () => {
-    const empty = mount(NumericPadDock, { props: { value: '' } })
-    const filled = mount(NumericPadDock, { props: { value: '47' } })
+    const empty = pad({ value: '' })
+    const filled = pad({ value: '47' })
 
     expect(empty.find('[data-testid="clear-button"]').text()).toBe('AC')
     expect(filled.find('[data-testid="clear-button"]').text()).toBe('C')
   })
 
   it('validates from its footer CTA and abandons from its cross', async () => {
-    const wrapper = mount(NumericPadDock, { props: { value: '47' } })
+    const wrapper = pad({ value: '47' })
 
     await press(wrapper, 'dock-confirm')
     await press(wrapper, 'dock-close')
@@ -153,11 +157,35 @@ describe('NumericPadDock', () => {
     expect(wrapper.emitted('cancel')).toHaveLength(1)
   })
 
-  // Décision 3 de Nathan : les deux cartes restent lisibles, le dock ne pose aucun voile.
-  it('renders no backdrop and no blur', () => {
-    expect(source).not.toContain('backdrop')
-    expect(source).not.toContain('blur')
-    expect(source).not.toContain('fixed')
+  // Revue de rendu du 2026-09-12 : c'est une VRAIE pop-up par-dessus l'écran, voile
+  // flouté compris — et non plus un dock logé dans la colonne centrale.
+  it('renders as a pop-up over the screen, with a blurred backdrop', () => {
+    const overlay = pad({ value: '' })
+
+    expect(overlay.classes()).toContain('fixed')
+    expect(overlay.classes()).toContain('backdrop-blur-md')
+    expect(overlay.find('[data-testid="dock-card"]').exists()).toBe(true)
+  })
+
+  // « On doit toujours être capable de voir la distance » : elle est rappelée DANS la
+  // pop-up, calée entre la croix et VALIDER, avec la bille du joueur concerné.
+  it('shows the value being typed between the cross and VALIDER, with its ball', () => {
+    const wrapper = pad({ value: '47', ball: 'yellow' })
+
+    expect(wrapper.find('[data-testid="dock-value"]').text()).toBe('47')
+    expect(wrapper.find('[data-testid="dock-reject"] span').classes()).toContain(
+      'bg-player-yellow',
+    )
+    expect(pad({ value: '', ball: 'white' }).find('[data-testid="dock-reject"] span').classes()).toContain(
+      'bg-player-white',
+    )
+  })
+
+  it('shows a dimmed zero while nothing has been typed', () => {
+    const value = pad({ value: '' }).find('[data-testid="dock-value"]')
+
+    expect(value.text()).toBe('0')
+    expect(value.classes().join(' ')).toContain('/25')
   })
 
   // AR8 : `@pointerdown` seul, jamais `@click`.

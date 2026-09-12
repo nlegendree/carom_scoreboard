@@ -68,13 +68,17 @@ const JDS_TILE_LAYOUT = [
   { id: '4billes', group: false },
 ] as const
 
-// Les deux CTA de réglage sont NEUTRES (`--gradient-neutral`, contour fort) : seul
-// `DÉMARRER` porte le bleu du produit (décision de Nathan, 2026-09-12 — un seul bleu, et
-// surtout pas `bg-accent`, l'ancien, qui jurerait à côté des pop-ups). Demi-largeur chacun.
-// Ils se resserrent jusqu'au plancher des claviers intégrés (57 px) quand le bandeau de
-// nom comprime la colonne : c'est `DÉMARRER` qui garde ses 110 px, pas eux.
+// Revue de rendu de Nathan (2026-09-12, réf. Cueuny) : les deux réglages sont BLEUS et
+// côte à côte, picto en ligne devant le libellé ; `DÉMARRER` est ROUGE, pleine largeur
+// dessous, avec un chevron. Le rouge marque l'action qui engage la partie, face à deux
+// réglages qu'on peut retoucher — il ne remplace pas `--color-brand-red` dans son rôle de
+// rouge de marque (bandeau de la barre latérale).
+// ⚠️ Picto AU-DESSUS du libellé et non en ligne comme la référence : la colonne centrale
+// fait 1/5 de la zone, soit 81 px par bouton à 1133×744 — un picto de 24 px suivi de
+// « CHANGER DE BILLE » déborde du bouton (vu à la passe navigateur). Empilé, ça tient aux
+// trois formats. À rebasculer en ligne si la colonne s'élargit un jour.
 const SETUP_CTA_CLASSES =
-  'flex min-h-[57px] w-1/2 max-h-[var(--size-touch-target)] flex-1 flex-col items-center justify-center gap-1 rounded-cta border border-border-strong bg-(image:--gradient-neutral) px-1 text-center font-bold text-white touch-manipulation select-none active:brightness-90'
+  'flex min-h-[var(--size-touch-target)] w-1/2 min-w-0 flex-col items-center justify-center gap-1 rounded-cta bg-(image:--gradient-blue) px-1 text-center text-picto font-bold leading-tight text-white touch-manipulation select-none active:brightness-90'
 
 // Les trois cadres du catalogue, dans l'ordre d'affichage de la pop-up.
 const CADRE_MODES = ['cadre-47-2', 'cadre-47-1', 'cadre-71-2'] as const satisfies readonly GameMode[]
@@ -428,6 +432,21 @@ function fixDistance(): void {
       <SideBar :items="PLAYERS_SIDEBAR_ITEMS" :exitItem="PLAYERS_SIDEBAR_EXIT" />
 
       <div class="flex min-w-0 flex-1 flex-col">
+        <!-- Bandeau de titre (revue de rendu de Nathan, 2026-09-12, réf. Cueuny) : le mode
+             se lit en grand, centré, en haut de l'écran — il ne tient plus en surtitre
+             discret de la colonne centrale, où personne ne le voyait. -->
+        <header
+          data-testid="setup-header"
+          class="flex shrink-0 items-center justify-center border-b border-border px-4 py-2"
+        >
+          <h1
+            data-testid="setup-mode-label"
+            class="text-tile-title font-black tracking-[0.15em] text-white"
+          >
+            {{ modeLabel }}
+          </h1>
+        </header>
+
         <main class="flex min-h-0 min-w-0 flex-1 gap-2 p-2">
           <PlayerSetupCard
             side="left"
@@ -445,40 +464,26 @@ function fixDistance(): void {
           <section
             data-testid="setup-center"
             class="flex min-h-0 w-1/5 shrink-0 flex-col gap-2 border border-border p-2"
-            :class="entry?.field === 'distance' && 'min-w-[240px]'"
           >
-            <p
-              data-testid="setup-mode-label"
-              class="shrink-0 text-center text-stat font-bold tracking-[0.2em] text-white/50"
-            >
-              {{ modeLabel }}
-            </p>
-
-            <NumericPadDock
-              v-if="entry?.field === 'distance'"
-              :value="draft"
-              @update="draft = $event"
-              @validate="applyEntry"
-              @cancel="abandonEntry"
-            />
-
-            <template v-else>
-              <div class="flex min-h-0 shrink gap-2">
+            <!-- Les trois commandes forment un BLOC, calé en bas de la colonne (modèle
+                 Cueuny) : deux réglages bleus côte à côte, puis l'action qui engage. -->
+            <div class="mt-auto flex shrink-0 flex-col gap-2">
+              <div class="flex gap-2">
                 <button
                   data-testid="change-ball-button"
                   :class="SETUP_CTA_CLASSES"
                   @pointerdown="changeBall"
                 >
-                  <PictoIcon name="swap-balls" class="size-4 shrink-0" />
-                  <span class="text-picto leading-tight">CHANGER DE BILLE</span>
+                  <PictoIcon name="swap-balls" class="size-3 shrink-0" />
+                  <span>CHANGER DE BILLE</span>
                 </button>
                 <button
                   data-testid="change-side-button"
                   :class="SETUP_CTA_CLASSES"
                   @pointerdown="changeSide"
                 >
-                  <PictoIcon name="swap-sides" class="size-4 shrink-0" />
-                  <span class="text-picto leading-tight">CHANGER DE CÔTÉ</span>
+                  <PictoIcon name="swap-sides" class="size-3 shrink-0" />
+                  <span>CHANGER DE CÔTÉ</span>
                 </button>
               </div>
 
@@ -486,12 +491,13 @@ function fixDistance(): void {
                    `GameView.test.ts` le lit pour traverser l'accueil. -->
               <button
                 data-testid="confirm-button"
-                class="mt-auto min-h-[110px] w-full shrink-0 rounded-cta bg-(image:--gradient-blue) text-label font-black text-white touch-manipulation select-none active:brightness-90"
+                class="flex min-h-[110px] w-full items-center justify-center gap-1 rounded-cta bg-(image:--gradient-red) px-1 text-[clamp(16px,1.7vw,24px)] font-black text-white touch-manipulation select-none active:brightness-90"
                 @pointerdown="confirm"
               >
-                DÉMARRER
+                <span>DÉMARRER</span>
+                <PictoIcon name="chevron-right" class="size-3 shrink-0" />
               </button>
-            </template>
+            </div>
           </section>
 
           <PlayerSetupCard
@@ -504,14 +510,28 @@ function fixDistance(): void {
           />
         </main>
 
-        <AlphaKeyboardSheet
-          v-if="entry?.field === 'name'"
-          :value="draft"
-          @update="draft = $event"
-          @validate="applyEntry"
-          @cancel="abandonEntry"
-        />
       </div>
+
+      <!-- Les deux claviers sont des POP-UPS par-dessus l'écran (revue de rendu du
+           2026-09-12) : la page ne reflue plus autour d'eux, et la valeur en cours est
+           rappelée dans leur en-tête, entre la croix et VALIDER. -->
+      <NumericPadDock
+        v-if="entry?.field === 'distance'"
+        :value="draft"
+        :ball="entry.ball"
+        @update="draft = $event"
+        @validate="applyEntry"
+        @cancel="abandonEntry"
+      />
+
+      <AlphaKeyboardSheet
+        v-if="entry?.field === 'name'"
+        :value="draft"
+        :ball="entry.ball"
+        @update="draft = $event"
+        @validate="applyEntry"
+        @cancel="abandonEntry"
+      />
     </div>
 
     <!-- Titre et deux CTA, sans message ni croix (revue de Nathan, 2026-09-10) : la modale

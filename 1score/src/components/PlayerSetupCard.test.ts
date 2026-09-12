@@ -34,16 +34,26 @@ describe('PlayerSetupCard', () => {
     expect(card({ ball: 'yellow' }).classes()).toContain('text-on-player-yellow')
   })
 
-  // La pastille garde la bille lisible quand les cartes ont changé de côté — d'où la
-  // platine sombre : une bille blanche à même la carte blanche serait invisible.
-  it('shows the ball on a dark pellet, in the colour of its ball', () => {
-    const pellet = card({ ball: 'yellow' }).find('[data-testid="ball-pellet"]')
+  // Revue de rendu du 2026-09-12 : ni pastille de bille ni médaillon rond sombre — la
+  // couleur pleine de la carte dit déjà la bille, le reste alourdissait.
+  it('carries neither a ball pellet nor a dark medallion', () => {
+    const wrapper = card()
 
-    expect(pellet.classes()).toContain('bg-bg')
-    expect(pellet.find('span').classes()).toContain('bg-player-yellow')
-    expect(card({ ball: 'white' }).find('[data-testid="ball-pellet"] span').classes()).toContain(
-      'bg-player-white',
-    )
+    expect(wrapper.find('[data-testid="ball-pellet"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="player-medallion"]').exists()).toBe(false)
+  })
+
+  // Les deux champs sont CENTRÉS dans la carte, en box à fondu grisé.
+  it('centres both fields in the card, each on a grey gradient', () => {
+    const wrapper = card()
+
+    expect(wrapper.classes()).toContain('justify-center')
+    expect(wrapper.classes()).toContain('items-center')
+    for (const field of ['name-field', 'distance-field']) {
+      expect(wrapper.find(`[data-testid="${field}"]`).classes()).toContain(
+        'bg-(image:--gradient-field)',
+      )
+    }
   })
 
   it('shows both fields with their dimmed placeholders while empty', () => {

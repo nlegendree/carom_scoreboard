@@ -1616,6 +1616,15 @@ So that la table est prête sans pop-up ni écran supplémentaire, et la répart
 > Deux autres écarts assumés, mesurés à la passe navigateur : la zone principale est en **conteneurs espacés** (gouttières, marge autour) et non jointifs comme les tuiles des 10.1/10.2 ; et le bandeau fait **465 px** (≈ 56 % de 834 px), non « ≈ 45 % » — les 45 % étaient une intention, la contrainte dure (touches ≥ 57 px, deux cartes entières au-dessus, aucun débordement) est tenue aux trois formats. La barre croix / `VALIDER` du bandeau est au plancher des claviers intégrés (57 px, exception UX-DR8) : ce sont ces 33 px qui manquaient aux cartes à 1133×744.
 > Enfin, le **buffer vit dans l'écran** et non dans le dock (écart à la lettre d'UX-DR39) : c'est la carte qui doit afficher la valeur en direct, et deux buffers divergeraient à la première frappe. Le dock et le bandeau gardent les **règles** (plafonds, espaces, première frappe qui remplace) et les **retours** (haptique, pulsation) ; les claviers restent muets (UX-DR54).
 
+> **Deuxième passe de rendu (Nathan, 2026-09-12, après livraison).** Le rendu de la première passe est refusé (« archi moche ») ; les décisions ci-dessous priment sur l'annotation précédente :
+> 1. **Bandeau de titre** en haut de la zone principale, le mode écrit **en grand et centré** (réf. Cueuny) — il ne tient plus en surtitre discret de la colonne centrale.
+> 2. **Pastille de bille et médaillon rond sombre RETIRÉS** : la couleur pleine de la carte dit déjà la bille.
+> 3. **Champs `NOM` et `DISTANCE` centrés** dans leur carte, chacun en box à **fondu grisé** (`--gradient-field`).
+> 4. **Commandes façon Cueuny** : les deux réglages sont **bleus**, côte à côte ; `DÉMARRER` est **rouge** (`--gradient-red`), pleine largeur dessous, avec un **chevron**. Le liseré rouge du champ visé est conservé (« ça marche bien »).
+> 5. **Les deux claviers deviennent de VRAIES POP-UPS** par-dessus l'écran, **voile flouté** compris — le dock en colonne centrale et le bandeau en flux sont abandonnés : le clavier intégré est une solution temporaire, la page n'a pas à refluer autour de lui. La valeur en cours reste visible parce qu'elle est **rappelée dans l'en-tête de la pop-up, calée entre la croix et `VALIDER`**, avec un **rappel de bille**. *(L'annotation « aucun voile » ci-dessus ne vaut donc plus que pour son intention — voir toujours ce qu'on tape — que ce rappel satisfait autrement.)*
+>
+> **Conséquence sur l'AC6** : un voile plein écran interdit de taper l'autre champ pendant une saisie. Les issues sont la croix et `VALIDER` ; la garde « ouvrir une saisie valide celle en cours » reste dans le code et sert l'enchaînement du rattrapage. **Conséquence sur l'AC10** : le surtitre du mode quitte la colonne centrale pour le bandeau. **Écart mesuré** : le picto des deux réglages est **au-dessus** du libellé et non en ligne comme la référence — la colonne centrale fait 1/5, soit 73 px par bouton à 1133×744, où un picto en ligne déborde.
+
 **Acceptance Criteria:**
 
 **Given** l'étape joueurs

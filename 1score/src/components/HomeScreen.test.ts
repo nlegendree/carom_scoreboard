@@ -4,6 +4,8 @@ import { setActivePinia, createPinia } from 'pinia'
 import HomeScreen from './HomeScreen.vue'
 import ModeTile from './ModeTile.vue'
 import PromptModal from './PromptModal.vue'
+import NumericPadDock from './NumericPadDock.vue'
+import AlphaKeyboardSheet from './AlphaKeyboardSheet.vue'
 import { useGameStore } from '../stores/useGameStore'
 
 type Wrapper = ReturnType<typeof mount>
@@ -459,13 +461,16 @@ describe('HomeScreen', () => {
     expect(ballOn(wrapper, 'right')).toBe('yellow')
   })
 
-  // AC10 : la colonne centrale porte le surtitre du mode, les deux CTA, puis DÉMARRER.
-  it('shows the mode label and the two setting CTAs at rest', async () => {
+  // AC10, revu le 2026-09-12 : le mode se lit en GRAND dans un bandeau de titre en haut
+  // de l'écran (réf. Cueuny), plus en surtitre discret de la colonne centrale.
+  it('titles the screen with the mode, and shows the two setting CTAs', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper, 'cadre-47-2')
 
-    expect(wrapper.find('[data-testid="setup-mode-label"]').text()).toBe('CADRE 47/2')
+    const title = wrapper.find('[data-testid="setup-header"] [data-testid="setup-mode-label"]')
+    expect(title.text()).toBe('CADRE 47/2')
+    expect(title.classes()).toContain('text-tile-title')
     expect(wrapper.find('[data-testid="change-ball-button"]').text()).toContain('CHANGER DE BILLE')
     expect(wrapper.find('[data-testid="change-side-button"]').text()).toContain('CHANGER DE CÔTÉ')
     expect(wrapper.find('[data-testid="confirm-button"]').text()).toBe('DÉMARRER')
@@ -541,17 +546,33 @@ describe('HomeScreen', () => {
     expect(wrapper.find('[data-testid="modal-backdrop"]').exists()).toBe(false)
   })
 
-  // AC4 : taper la DISTANCE ouvre le dock, à la place des CTA de réglage.
-  it('opens the distance dock in place of the setting CTAs', async () => {
+  // AC4, revu le 2026-09-12 : taper la DISTANCE ouvre le pavé en POP-UP par-dessus
+  // l'écran, et non plus dans la colonne centrale — les commandes de réglage restent donc
+  // en place, simplement recouvertes par le voile.
+  it('opens the distance pad as a pop-up over the screen', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
     await focusField(wrapper, 'yellow', 'distance')
 
-    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="change-ball-button"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="confirm-button"]').exists()).toBe(false)
+    const pad = wrapper.find('[data-testid="numeric-pad-dock"]')
+    expect(pad.exists()).toBe(true)
+    expect(pad.classes()).toContain('fixed')
     expect(wrapper.find('[data-testid="alpha-keyboard-sheet"]').exists()).toBe(false)
+  })
+
+  // La pop-up reçoit la bille du joueur visé : c'est le rappel de son en-tête.
+  it('hands the targeted ball to the entry pop-up', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await focusField(wrapper, 'yellow', 'distance')
+    expect(wrapper.findComponent(NumericPadDock).props('ball')).toBe('yellow')
+
+    await press(wrapper, ['dock-close'])
+    await focusField(wrapper, 'white', 'name')
+
+    expect(wrapper.findComponent(AlphaKeyboardSheet).props('ball')).toBe('white')
   })
 
   // AC3 : le liseré dit quel champ reçoit la frappe, et il n'y en a qu'un.
@@ -632,30 +653,38 @@ describe('HomeScreen', () => {
     expect(nameOn(wrapper, 'left').text()).toBe('MICHEL')
   })
 
-  // AC6 : un seul geste pour passer d'un champ à l'autre — la saisie en cours est VALIDÉE,
-  // jamais perdue, et jamais besoin d'un tap mort pour refermer d'abord.
-  it('validates the running entry and opens the new one in a single tap', async () => {
+  // AC6 relu le 2026-09-12 : depuis que les claviers sont des POP-UPS à voile plein écran,
+  // un joueur ne peut plus taper l'autre champ pendant une saisie — les issues sont la
+  // croix et VALIDER. La garde « ouvrir une saisie valide celle en cours » reste néanmoins
+  // dans `openEntry`, et elle est bel et bien atteinte par l'enchaînement du rattrapage
+  // (« DISTANCE MANQUANTE ») : une valeur en cours n'y est jamais perdue en silence.
+  it('never loses a running entry when another one is opened', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    await typeDistance(wrapper, 'white', [4, 0])
-    await focusField(wrapper, 'white', 'name')
+    await press(wrapper, ['confirm-button', 'prompt-primary'])
+    await press(wrapper, ['digit-4', 'digit-0'])
+    // La validation du blanc enchaîne d'elle-même sur le jaune : c'est le chemin réel.
+    await press(wrapper, ['dock-confirm'])
 
-    expect(distanceOn(wrapper, 'left').text()).toBe('40')
-    expect(wrapper.find('[data-testid="alpha-keyboard-sheet"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(false)
+    expect(distanceOn(wrapper, sideOfBall(wrapper, 'white')).text()).toBe('40')
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(true)
+    expect(
+      card(wrapper, sideOfBall(wrapper, 'yellow'))
+        .find('[data-testid="distance-field"]')
+        .classes(),
+    ).toContain('border-turn-active')
   })
 
-  it('carries the running entry across to the other card too', async () => {
+  // Une seule saisie ouverte à la fois, quoi qu'il arrive.
+  it('never opens two entries at once', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    await typeName(wrapper, 'white', 'MICHEL')
-    await focusField(wrapper, 'yellow', 'distance')
+    await focusField(wrapper, 'white', 'name')
 
-    expect(nameOn(wrapper, 'left').text()).toBe('MICHEL')
-    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="alpha-keyboard-sheet"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="alpha-keyboard-sheet"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').exists()).toBe(false)
   })
 
   // AC11 : les billes s'échangent, les joueurs restent en place.

@@ -12,6 +12,7 @@ export type PictoName =
   | 'close'
   | 'swap-balls'
   | 'swap-sides'
+  | 'chevron-right'
 
 // `soon` : fonction affichée mais pas encore livrée (état BIENTÔT, inerte).
 export type ItemState = 'normal' | 'soon'

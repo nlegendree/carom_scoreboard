@@ -264,6 +264,22 @@ Claude Opus 5 (`claude-opus-5`), workflow `bmad-dev-story`, 2026-09-12.
 
 **AC15 vérifié explicitement** : une sauvegarde semée en **version 1** (avec `sidesSwapped` et `Player.id`) est écartée au lancement — aucune pop-up « PARTIE EN COURS », entrée supprimée, accueil affiché normalement.
 
+---
+
+**2e passe de rendu (Nathan, 2026-09-12, après livraison)** — rendu refusé (« archi moche »), repris intégralement :
+
+- **Bandeau de titre** en haut de la zone principale, le mode en grand et centré (réf. Cueuny). Le surtitre quitte la colonne centrale.
+- **Pastille de bille et médaillon rond sombre supprimés** — la couleur pleine de la carte dit déjà la bille.
+- **Champs centrés** dans leur carte, chacun en box à fondu grisé (`--gradient-field`, token ajouté).
+- **Commandes façon Cueuny** : les deux réglages passent en **bleu**, côte à côte ; `DÉMARRER` passe en **rouge** (`--gradient-red`, token ajouté) avec un **chevron** (picto `chevron-right`). Le liseré rouge du champ visé est conservé.
+- **Les deux claviers deviennent de vraies POP-UPS** par-dessus l'écran, voile flouté compris : le dock en colonne centrale et le bandeau en flux sont abandonnés. La valeur en cours est **rappelée dans l'en-tête de la pop-up, calée entre la croix et `VALIDER`**, avec un **rappel de bille** — c'est ce qui garantit qu'on voit toujours ce qu'on tape.
+
+Conséquences assumées : **AC6** (passer d'un champ à l'autre d'un seul tap) n'est plus atteignable au doigt, un voile plein écran recouvrant les cartes — la garde reste dans `openEntry` et sert l'enchaînement du rattrapage ; **AC10** perd son surtitre, monté en bandeau. Deux débordements trouvés à la passe navigateur et corrigés : picto des réglages remis **au-dessus** du libellé (73 px par bouton à 1133×744, un picto en ligne débordait) et libellé de `DÉMARRER` légèrement réduit. **598 tests verts**, build vert, aucun débordement aux trois formats.
+
+Toute la mise en page de hauteur de la 1re passe disparaît avec les pop-ups : plus de colonne qui s'élargit, plus de cartes qui se resserrent, plus de planchers à 57 px sur les champs.
+
+---
+
 **À montrer à Nathan en priorité** : la cohabitation dock/cartes et bandeau/cartes à 1133×744 — c'est le point de design neuf de la story, celui sur lequel sa décision 3 se juge, et le seul endroit où la contrainte de hauteur est tendue (cartes à 247 px, champs à leur plancher de 57 px).
 
 ### File List
@@ -298,6 +314,7 @@ Claude Opus 5 (`claude-opus-5`), workflow `bmad-dev-story`, 2026-09-12.
 - `1score/src/components/GameSummary.vue`
 - `1score/src/components/GameSummary.test.ts`
 - `1score/src/components/PlayerPanel.test.ts`
+- `1score/src/assets/main.css`
 - `1score/src/views/GameView.vue`
 - `1score/src/views/GameView.test.ts`
 - `1score/src/stores/useGameStore.ts`
@@ -315,3 +332,4 @@ Claude Opus 5 (`claude-opus-5`), workflow `bmad-dev-story`, 2026-09-12.
 - **2026-09-12** — Story 10.3 implémentée (`bmad-dev-story`). Paramétrage joueurs refondu en saisie en place : `NumericPadDock`, `AlphaKeyboardSheet`, `PlayerSetupCard`, `PlayerSetupModal` supprimé, `ActionBar` réservée au scoreboard. Store : `whiteSide` remplace `sidesSwapped`, `Player.id` retiré, `swapPlayers`/`mirrorSnapshot` supprimés, `GAME_STORAGE_VERSION → 2`. `ÉCHANGER` retiré du jeu. Clavier complété (DT4), plafond unifié (DT1). 591 tests verts, build vert, passe navigateur aux trois formats paysage. Statut → `review` (revue de code groupée en fin d'Epic 10).
 
 - 2026-09-12 — Création de la fiche (bmad-create-story). Décisions de Nathan : référence de disposition `billiboard_player_3.png` (rendu repris des 10.1/10.2), trois colonnes en **conteneurs espacés** sur le dégradé, **aucun voile** pendant la saisie — les deux cartes restent lisibles et se remplissent à vue. `epics.md`, spec UX et `architecture.md` à annoter en Task 9.2.
+- **2026-09-12** — 2e passe de rendu (Nathan) : bandeau de titre, pastille et médaillon supprimés, champs centrés en box à fondu grisé, commandes façon Cueuny (réglages bleus, `DÉMARRER` rouge à chevron), et les deux claviers passent en **pop-ups** à voile flouté avec rappel de la valeur entre la croix et `VALIDER`. Tokens `--gradient-red` et `--gradient-field`, picto `chevron-right`. 598 tests verts, build vert, trois formats vérifiés.
