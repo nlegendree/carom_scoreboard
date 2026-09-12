@@ -87,7 +87,7 @@ function closeFromBackdrop(event: PointerEvent): void {
       <footer class="flex shrink-0 gap-2">
         <button
           data-testid="sheet-close"
-          class="min-h-[var(--size-touch-target)] w-1/3 rounded-key border border-border-strong bg-(image:--gradient-neutral) text-label font-black text-white touch-manipulation select-none active:brightness-90"
+          class="min-h-[var(--size-touch-target)] w-1/3 rounded-key bg-(image:--gradient-neutral) text-label font-black text-white touch-manipulation select-none active:brightness-90"
           @pointerdown="emit('cancel')"
         >
           ANNULER

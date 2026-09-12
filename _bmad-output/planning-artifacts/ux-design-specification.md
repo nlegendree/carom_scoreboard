@@ -608,6 +608,8 @@ Nouveau primitif de coquille d'écran, modèle Cueuny : colonne **gauche**, larg
 
 #### Paramétrage joueurs (Story 10.3)
 
+> ***Sixième passe de rendu (Nathan, 2026-09-12).*** `ANNULER` devient **opaque** (`--gradient-neutral` en gris sombre plein) et perd son **contour clair**, partout — le blanc voilé salissait le bouton. Les **arrondis des modales sont validés**. Jaune encore éclairci à **`#FFE81A`**. Le chevron de `DÉMARRER` perd sa plaque : **flèche seule, plus large**, à gauche du mot.
+
 > ***Cinquième passe de rendu (Nathan, 2026-09-12).*** Pop-ups de saisie **centrées dans la zone laissée libre** par la carte visée (et non collées au bord) ; `ANNULER`/`VALIDER` au **rayon des touches** ; **touche `RESET`** au clavier alphabétique ; en-tête de carte **aligné à gauche**, bandeau pleine largeur, filet affiné, **vrais pictos de bille**. **Contraste corrigé** sur la carte jaune (opacités relevées). `PromptModal` : titre **centré**, **principal au-dessus du secondaire**, voile aligné sur les pop-ups de saisie, fermeture au tap dehors **opt-in** (`dismissible`) — les pop-ups de fin de partie gardent leur voile inerte.
 
 > ***Quatrième passe de rendu (Nathan, 2026-09-12).*** **En-tête de carte** portant un picto de bille et son nom ; **jaune éclairci** (`#FFD60A`). Les pop-ups de saisie sont **alignées sur le côté opposé** à la carte qu'on remplit, qui reste donc visible : elles ne rappellent plus la valeur, et leur voile **n'est plus flouté** (seulement très légèrement assombri). Elles **ferment au tap dehors** (geste complet) et leur croix devient un `ANNULER`. **Touches façon Cueuny** : plaques sombres légèrement adoucies avec relief, qui s'enfoncent à l'appui.

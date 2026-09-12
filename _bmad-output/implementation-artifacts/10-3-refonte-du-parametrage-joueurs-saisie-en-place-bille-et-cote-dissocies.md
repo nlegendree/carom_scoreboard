@@ -324,6 +324,18 @@ Vérifié au navigateur aux trois formats : pop-ups jamais sur la carte visée (
 
 ---
 
+---
+
+**6e passe de rendu (Nathan, 2026-09-12)** :
+
+- **`ANNULER` opaque, sans contour clair.** `--gradient-neutral` passe du blanc voilé à un gris sombre plein, de la famille de `--color-key` ; `border-border-strong` retiré des deux pop-ups de saisie. Un seul token, donc la correction vaut aussi pour `PromptModal`. Les **arrondis sont validés** — Nathan évoque de les généraliser plus tard.
+- **Jaune à `#FFE81A`** (3e valeur) : `#FFC72C` puis `#FFD60A` tiraient encore vers le doré.
+- **Chevron de `DÉMARRER` nu et plus large**, à gauche du mot : sa plaque translucide se lisait comme un bouton dans le bouton.
+
+610 tests verts, build vert, aucun débordement aux trois formats.
+
+---
+
 **À montrer à Nathan en priorité** : la cohabitation dock/cartes et bandeau/cartes à 1133×744 — c'est le point de design neuf de la story, celui sur lequel sa décision 3 se juge, et le seul endroit où la contrainte de hauteur est tendue (cartes à 247 px, champs à leur plancher de 57 px).
 
 ### File List
@@ -380,3 +392,4 @@ Vérifié au navigateur aux trois formats : pop-ups jamais sur la carte visée (
 - **2026-09-12** — 3e passe de rendu (Nathan) : correction du bug de `CHANGER DE CÔTÉ` (n'intervertit que noms et distances, les billes ne bougent pas), réglages empilés à picto en ligne, pictos de la référence coréenne (`refresh`, `arrow-right-left`), chevron de `DÉMARRER` à gauche en plaque translucide, cartes allégées (marge, box claires, intitulé seul en placeholder), colonne centrale élargie à 1/4 sur `--gradient-panel`. 598 tests verts, build vert.
 - **2026-09-12** — 4e passe de rendu (Nathan) : en-tête de carte à picto de bille (placeholder), jaune éclairci `#FFD60A`, pop-ups alignées sur le côté opposé à la carte visée (rappel de valeur retiré, voile sans flou), fermeture au tap dehors et `ANNULER` à la place de la croix, touches façon Cueuny (`--radius-key`). 606 tests verts, build vert.
 - **2026-09-12** — 5e passe de rendu (Nathan) : pop-ups centrées dans la zone libre, CTA au rayon des touches, touche `RESET`, `PromptModal` repris (titre centré, principal au-dessus, voile aligné, `dismissible`), en-tête de carte à gauche avec les vrais pictos de bille, contraste corrigé sur la carte jaune. 610 tests verts, build vert.
+- **2026-09-12** — 6e passe de rendu (Nathan) : `ANNULER` opaque et sans contour clair (`--gradient-neutral` en gris plein, valable aussi pour `PromptModal`), jaune éclairci à `#FFE81A`, chevron de `DÉMARRER` nu et élargi. 610 tests verts, build vert.

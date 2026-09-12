@@ -505,19 +505,15 @@ function fixDistance(): void {
 
               <!-- `confirm-button` conservé malgré le déménagement en colonne centrale :
                    `GameView.test.ts` le lit pour traverser l'accueil.
-                   Le chevron est à GAUCHE du mot, dans une plaque translucide qui lui donne
-                   du poids sans arrondi (revue de rendu du 2026-09-12 : « plus premium »). -->
+                   Le chevron est à GAUCHE du mot, NU et large : sa plaque translucide,
+                   essayée d'abord, se lisait comme un bouton dans le bouton (revue de rendu
+                   du 2026-09-12). -->
               <button
                 data-testid="confirm-button"
                 class="flex min-h-[110px] w-full items-center justify-center gap-2 rounded-cta bg-(image:--gradient-red) px-2 text-[clamp(16px,1.6vw,26px)] font-black tracking-[0.05em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] touch-manipulation select-none active:brightness-90"
                 @pointerdown="confirm"
               >
-                <span
-                  aria-hidden="true"
-                  class="flex size-4 shrink-0 items-center justify-center rounded-cta bg-white/20"
-                >
-                  <PictoIcon name="chevron-right" class="size-2.5" />
-                </span>
+                <PictoIcon name="chevron-right" class="size-5 shrink-0" />
                 <span>DÉMARRER</span>
               </button>
             </div>

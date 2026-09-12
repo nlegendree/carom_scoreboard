@@ -3,9 +3,10 @@
 @theme {
   /* Couleurs joueur : la bille est liée au côté (gauche blanc, droite jaune),
      chacune en bloc plein à chiffres noirs (convention Billiboard). */
-  /* Jaune revu le 2026-09-12 (Nathan) : `#FFC72C` tirait vers l'or/orange. Teinte remontée
-     vers le citron et éclaircie — le jaune « moderne » des interfaces système. */
-  --color-player-yellow: #FFD60A;
+  /* Jaune revu deux fois le 2026-09-12 (Nathan) : `#FFC72C` puis `#FFD60A` tiraient encore
+     vers le doré. Teinte remontée au citron franc (~54°) et éclaircie. Encre noire dessus :
+     le contraste reste très au-dessus d'AA. */
+  --color-player-yellow: #FFE81A;
   --color-player-white: #FFFFFF;
 
   /* Texte garantissant un contraste WCAG AA (4.5:1 min) sur chaque bloc joueur */
@@ -119,7 +120,11 @@
      de la 10.1 est abandonnée — plus simple, et rien ne distinguait vraiment les nuances.
      Le neutre est le même dégradé en blanc voilé (CTA secondaires). */
   --gradient-blue: linear-gradient(160deg, #2E8FDB 0%, var(--color-cloth) 100%);
-  --gradient-neutral: linear-gradient(160deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.10) 100%);
+  /* Neutre OPAQUE depuis le 2026-09-12 (Nathan) : le blanc voilé laissait voir l'écran au
+     travers d'`ANNULER`, ce qui le rendait sale sur tout fond un peu chargé. Même famille
+     que `--color-key` pour qu'il s'assoie naturellement au pied d'un clavier. Il ne porte
+     PLUS de contour clair : la teinte suffit à le distinguer de la carte de pop-up. */
+  --gradient-neutral: linear-gradient(160deg, #3A4049 0%, #262A31 100%);
 
   /* Seules survivantes de l'échelle par tuile : les nuances sombres des tuiles BIENTÔT,
      laissées telles quelles (Nathan, 2026-09-12) — elles disent l'inactivité autant que le
@@ -164,7 +169,7 @@
 
   /* Bandeaux de carte joueur (Story 10.4). */
   --color-panel-white-band: #ECECEC;
-  --color-panel-yellow-band: #E0BC00;
+  --color-panel-yellow-band: #E6CE00;
 
   /* Fond d'écran gris/noir, appliqué écran par écran avec sa story. */
   --gradient-bg: linear-gradient(160deg, #2A2E35 0%, #111317 55%, #000000 100%);

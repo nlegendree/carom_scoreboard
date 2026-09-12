@@ -1648,6 +1648,11 @@ So that la table est prête sans pop-up ni écran supplémentaire, et la répart
 > 5. **En-tête de carte revu** : contenu **aligné à gauche**, bandeau **pleine largeur** sur un aplat légèrement plus sombre que la carte, **filet affiné**, et les **vrais pictos de bille** fournis par Nathan (`public/bille_blanche.png`, `public/bille_jaune.png`).
 > 6. **Contraste corrigé** : le gris des intitulés et des placeholders tombait à ~2:1 sur la carte jaune. Opacités relevées (placeholder 55 %, intitulé 65 %, en-tête 75 %) — au-delà de 9:1 sur les deux billes. **Ne pas les rebaisser sans revérifier sur le JAUNE**, qui est le cas limite.
 
+> **Sixième passe de rendu (Nathan, 2026-09-12).** Trois retouches, qui priment sur ce qui précède :
+> 1. **`ANNULER` devient OPAQUE et perd son contour clair.** `--gradient-neutral` passe d'un blanc voilé (0,22 → 0,10) à un gris sombre plein, de la famille de `--color-key` : le voilé laissait voir l'écran au travers et salissait le bouton sur tout fond chargé. Vaut partout — pop-ups de saisie et `PromptModal`. Les arrondis, eux, sont **validés** (« beaucoup mieux dans les modales », à généraliser peut-être plus tard).
+> 2. **Jaune encore éclairci** : `--color-player-yellow` passe de `#FFD60A` à **`#FFE81A`** — citron franc, le doré était encore perceptible.
+> 3. **Le chevron de `DÉMARRER` perd sa plaque** : une flèche seule, plus large, à gauche du mot. La plaque translucide se lisait comme un bouton dans le bouton.
+
 **Acceptance Criteria:**
 
 **Given** l'étape joueurs
