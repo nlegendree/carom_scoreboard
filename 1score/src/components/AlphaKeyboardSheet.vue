@@ -1,32 +1,31 @@
 <script setup lang="ts">
 import AlphaKeyboard from './AlphaKeyboard.vue'
-import PictoIcon from './PictoIcon.vue'
-import type { PlayerColor } from '../types/game'
+import type { TableSide } from '../types/game'
 
 // Hôte du clavier alphabétique pour la saisie d'un nom (UX-DR40).
 //
-// Revue de rendu de Nathan (2026-09-12) : même traitement que `NumericPadDock` — une VRAIE
-// POP-UP par-dessus l'écran, voile flouté, et le champ de saisie calé ENTRE la croix et
-// `VALIDER`, avec le rappel de la bille du joueur concerné. Le clavier intégré est une
-// solution temporaire : il ne vaut pas la peine de faire refluer toute la page autour de
-// lui, comme le faisait le bandeau en flux de la première passe.
+// Revue de rendu du 2026-09-12 (Nathan) : même traitement que `NumericPadDock` — pop-up
+// ALIGNÉE SUR LE CÔTÉ OPPOSÉ à la carte qu'on remplit, pour que celle-ci reste visible et
+// se remplisse à vue. Le rappel du nom dans l'en-tête disparaît donc avec le besoin. Le
+// voile ferme au tap dehors, et `ANNULER` remplace la croix.
+// ⚠️ Voile SANS FLOU, et à peine assombri : voir `NumericPadDock`, même raison — la carte
+// qu'on remplit doit rester lisible.
 //
 // Même partage qu'avec `NumericPadDock` : la valeur vit dans l'écran, la pop-up reçoit
 // `value` et émet la nouvelle valeur complète, mais porte les règles de saisie — le
 // clavier, lui, reste muet (UX-DR54).
 //
-// Voile inerte, comme la pop-up du pavé : croix et `VALIDER` sont les seules issues.
 // ⚠️ Aucun commentaire HTML à la racine du gabarit : il en ferait un fragment, et la
 // racine perdrait `classes()` comme son `data-testid`.
 const MAX_NAME_LENGTH = 20
 
-const props = defineProps<{ value: string; ball: PlayerColor }>()
+const props = defineProps<{ value: string; align: TableSide }>()
 
 const emit = defineEmits<{ update: [value: string]; validate: []; cancel: [] }>()
 
-const BALL_CLASSES: Record<PlayerColor, string> = {
-  white: 'bg-player-white',
-  yellow: 'bg-player-yellow',
+const ALIGN_CLASSES: Record<TableSide, string> = {
+  left: 'justify-start',
+  right: 'justify-end',
 }
 
 function onInput(char: string): void {
@@ -41,49 +40,61 @@ function onInput(char: string): void {
 function onBackspace(): void {
   emit('update', props.value.slice(0, -1))
 }
+
+// Geste COMPLET sur le voile (appui ET relâchement) : voir le commentaire détaillé de
+// `NumericPadDock`, même mécanique et mêmes raisons.
+let backdropPointerId: number | null = null
+
+function armBackdropClose(event: PointerEvent): void {
+  backdropPointerId = event.pointerId
+}
+
+function disarmBackdropClose(): void {
+  backdropPointerId = null
+}
+
+function closeFromBackdrop(event: PointerEvent): void {
+  if (backdropPointerId === null || backdropPointerId !== event.pointerId) return
+  backdropPointerId = null
+  emit('cancel')
+}
 </script>
 
 <template>
   <div
     data-testid="alpha-keyboard-sheet"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md"
+    class="fixed inset-0 z-50 flex items-center bg-black/25 p-4"
+    :class="ALIGN_CLASSES[align]"
+    @pointerdown="armBackdropClose"
+    @pointerup="closeFromBackdrop"
+    @pointercancel="disarmBackdropClose"
   >
+    <!-- Plafond en POURCENTAGE et non en `max-w-*` fixe : la pop-up doit laisser voir la
+         carte qu'on remplit, quelle que soit la largeur de l'écran. -->
     <div
       data-testid="sheet-card"
-      class="flex max-h-full w-full max-w-4xl flex-col gap-2 rounded-modal border border-border bg-bg/95 p-2 shadow-[0_32px_80px_rgba(0,0,0,0.65)]"
+      class="flex max-h-full w-full max-w-[52%] flex-col gap-2 rounded-modal border border-border bg-bg/95 p-3 shadow-[0_32px_80px_rgba(0,0,0,0.65)]"
+      @pointerdown.stop
+      @pointerup.stop
     >
-      <header class="flex shrink-0 items-center gap-2">
+      <AlphaKeyboard @input="onInput" @backspace="onBackspace" />
+
+      <footer class="flex shrink-0 gap-2">
         <button
           data-testid="sheet-close"
-          aria-label="Abandonner la saisie"
-          class="flex min-h-[var(--size-touch-target)] min-w-[var(--size-touch-target)] shrink-0 items-center justify-center rounded-cta text-white/55 touch-manipulation select-none active:bg-white/10 active:text-white"
+          class="min-h-[var(--size-touch-target)] w-1/3 rounded-cta border border-border-strong bg-(image:--gradient-neutral) text-label font-black text-white touch-manipulation select-none active:brightness-90"
           @pointerdown="emit('cancel')"
         >
-          <PictoIcon name="close" class="size-4" />
+          ANNULER
         </button>
-
-        <div
-          class="flex min-h-[var(--size-touch-target)] min-w-0 flex-1 items-center gap-2 rounded-cta border border-border bg-(image:--gradient-field) px-3"
-        >
-          <span aria-hidden="true" class="size-2 shrink-0 rounded-full" :class="BALL_CLASSES[ball]" />
-          <span
-            data-testid="sheet-value"
-            class="truncate text-label font-black uppercase"
-            :class="value ? 'text-white' : 'text-white/25'"
-            >{{ value || 'JOUEUR' }}</span
-          >
-        </div>
-
         <button
           data-testid="sheet-confirm"
-          class="min-h-[var(--size-touch-target)] shrink-0 rounded-cta bg-(image:--gradient-blue) px-3 text-label font-black text-white touch-manipulation select-none active:brightness-90"
+          class="min-h-[var(--size-touch-target)] flex-1 rounded-cta bg-(image:--gradient-blue) text-label font-black text-white touch-manipulation select-none active:brightness-90"
           @pointerdown="emit('validate')"
         >
           VALIDER
         </button>
-      </header>
-
-      <AlphaKeyboard @input="onInput" @backspace="onBackspace" />
+      </footer>
     </div>
   </div>
 </template>

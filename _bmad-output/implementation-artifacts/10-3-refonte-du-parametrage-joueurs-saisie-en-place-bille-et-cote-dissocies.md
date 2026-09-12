@@ -295,6 +295,20 @@ Toute la mise en page de hauteur de la 1re passe disparaît avec les pop-ups : p
 
 ---
 
+---
+
+**4e passe de rendu (Nathan, 2026-09-12)** :
+
+- **En-tête de carte** : picto de bille + `BILLE BLANCHE` / `BILLE JAUNE`. Le picto est un **disque CSS placeholder** — Nathan fournit les vrais (consigné dans `deferred-work.md`). L'espace sous les champs reste volontairement vide.
+- **Jaune éclairci** : `--color-player-yellow` de `#FFC72C` à `#FFD60A` (« trop or/orange »). Touche aussi le scoreboard, ce qui est voulu.
+- **Pop-ups alignées sur le côté OPPOSÉ à la carte visée** : celle-ci reste entièrement visible et se remplit à vue. Le rappel de la valeur **disparaît** des pop-ups, et leur voile **n'est plus flouté** — un flou plein écran rendait justement illisible la carte qu'on remplit, ce qui annulait tout l'intérêt de l'alignement. Voile à `bg-black/25`, sans `backdrop-blur`.
+- **Fermeture au tap dehors** sur geste complet (appui ET relâchement, `pointerId` mémorisé, `pointercancel` qui désarme — la mécanique de `ScoreEntryModal`), et **`ANNULER` à la place de la croix**.
+- **Touches façon Cueuny** : `--radius-key` (8 px), `--color-key`, filet clair en haut, ombre portée en bas, enfoncement à l'appui. `keyClasses.ts` étant partagé, `ScoreEntryModal` en hérite — noté pour la 10.7.
+
+Vérifié au navigateur aux trois formats : la pop-up ne recouvre **jamais** la carte visée (mesuré), aucun débordement, touches à 57 px, placeholders non tronqués, fermeture au tap dehors effective et insensible à un relâchement seul. **606 tests verts**, build vert.
+
+---
+
 **À montrer à Nathan en priorité** : la cohabitation dock/cartes et bandeau/cartes à 1133×744 — c'est le point de design neuf de la story, celui sur lequel sa décision 3 se juge, et le seul endroit où la contrainte de hauteur est tendue (cartes à 247 px, champs à leur plancher de 57 px).
 
 ### File List
@@ -349,3 +363,4 @@ Toute la mise en page de hauteur de la 1re passe disparaît avec les pop-ups : p
 - 2026-09-12 — Création de la fiche (bmad-create-story). Décisions de Nathan : référence de disposition `billiboard_player_3.png` (rendu repris des 10.1/10.2), trois colonnes en **conteneurs espacés** sur le dégradé, **aucun voile** pendant la saisie — les deux cartes restent lisibles et se remplissent à vue. `epics.md`, spec UX et `architecture.md` à annoter en Task 9.2.
 - **2026-09-12** — 2e passe de rendu (Nathan) : bandeau de titre, pastille et médaillon supprimés, champs centrés en box à fondu grisé, commandes façon Cueuny (réglages bleus, `DÉMARRER` rouge à chevron), et les deux claviers passent en **pop-ups** à voile flouté avec rappel de la valeur entre la croix et `VALIDER`. Tokens `--gradient-red` et `--gradient-field`, picto `chevron-right`. 598 tests verts, build vert, trois formats vérifiés.
 - **2026-09-12** — 3e passe de rendu (Nathan) : correction du bug de `CHANGER DE CÔTÉ` (n'intervertit que noms et distances, les billes ne bougent pas), réglages empilés à picto en ligne, pictos de la référence coréenne (`refresh`, `arrow-right-left`), chevron de `DÉMARRER` à gauche en plaque translucide, cartes allégées (marge, box claires, intitulé seul en placeholder), colonne centrale élargie à 1/4 sur `--gradient-panel`. 598 tests verts, build vert.
+- **2026-09-12** — 4e passe de rendu (Nathan) : en-tête de carte à picto de bille (placeholder), jaune éclairci `#FFD60A`, pop-ups alignées sur le côté opposé à la carte visée (rappel de valeur retiré, voile sans flou), fermeture au tap dehors et `ANNULER` à la place de la croix, touches façon Cueuny (`--radius-key`). 606 tests verts, build vert.

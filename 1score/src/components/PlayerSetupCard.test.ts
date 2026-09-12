@@ -34,23 +34,31 @@ describe('PlayerSetupCard', () => {
     expect(card({ ball: 'yellow' }).classes()).toContain('text-on-player-yellow')
   })
 
-  // Revue de rendu du 2026-09-12 : ni pastille de bille ni médaillon rond sombre — la
-  // couleur pleine de la carte dit déjà la bille, le reste alourdissait.
-  it('carries neither a ball pellet nor a dark medallion', () => {
+  // Le médaillon rond sombre et la pastille flottante restent retirés ; c'est l'en-tête
+  // de carte qui porte désormais la bille (revue de rendu du 2026-09-12).
+  it('carries neither a floating pellet nor a dark medallion', () => {
     const wrapper = card()
 
     expect(wrapper.find('[data-testid="ball-pellet"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="player-medallion"]').exists()).toBe(false)
   })
 
+  it('names its ball in a card header, with a matching picto', () => {
+    const white = card({ ball: 'white' })
+    const yellow = card({ ball: 'yellow' })
+
+    expect(white.find('[data-testid="card-header"]').text()).toBe('BILLE BLANCHE')
+    expect(white.find('[data-testid="ball-picto"]').classes()).toContain('bg-player-white')
+    expect(yellow.find('[data-testid="card-header"]').text()).toBe('BILLE JAUNE')
+    expect(yellow.find('[data-testid="ball-picto"]').classes()).toContain('bg-player-yellow')
+  })
+
   // Les deux champs sont CENTRÉS dans la carte, en box CLAIRE teintée de la carte
   // elle-même : lisible sur le blanc comme sur le jaune, et beaucoup moins lourde que les
   // pavés presque noirs de la passe précédente.
-  it('centres both fields in the card, on a light tint of the card itself', () => {
+  it('lays both fields on a light tint of the card itself', () => {
     const wrapper = card()
 
-    expect(wrapper.classes()).toContain('justify-center')
-    expect(wrapper.classes()).toContain('items-center')
     for (const field of ['name-field', 'distance-field']) {
       expect(wrapper.find(`[data-testid="${field}"]`).classes()).toContain('bg-black/8')
     }

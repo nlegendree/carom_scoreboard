@@ -17,8 +17,8 @@ function press(wrapper: ReturnType<typeof mount>, testid: string) {
   return wrapper.find(`[data-testid="${testid}"]`).trigger('pointerdown')
 }
 
-function pad(props: { value: string; ball?: 'white' | 'yellow' }) {
-  return mount(NumericPadDock, { props: { ball: 'white', ...props } })
+function pad(props: { value: string; align?: 'left' | 'right' }) {
+  return mount(NumericPadDock, { props: { align: 'right', ...props } })
 }
 
 describe('NumericPadDock', () => {
@@ -157,35 +157,56 @@ describe('NumericPadDock', () => {
     expect(wrapper.emitted('cancel')).toHaveLength(1)
   })
 
-  // Revue de rendu du 2026-09-12 : c'est une VRAIE pop-up par-dessus l'écran, voile
-  // flouté compris — et non plus un dock logé dans la colonne centrale.
-  it('renders as a pop-up over the screen, with a blurred backdrop', () => {
+  // Revue de rendu du 2026-09-12 : pop-up par-dessus l'écran, mais voile SANS FLOU et à
+  // peine assombri — la carte qu'on remplit doit rester lisible en face, c'est elle qui
+  // affiche la valeur depuis que la pop-up ne la rappelle plus.
+  it('renders as a pop-up over the screen, without blurring what is behind', () => {
     const overlay = pad({ value: '' })
 
     expect(overlay.classes()).toContain('fixed')
-    expect(overlay.classes()).toContain('backdrop-blur-md')
+    expect(overlay.classes().join(' ')).not.toContain('backdrop-blur')
+    expect(overlay.classes()).toContain('bg-black/25')
     expect(overlay.find('[data-testid="dock-card"]').exists()).toBe(true)
   })
 
-  // « On doit toujours être capable de voir la distance » : elle est rappelée DANS la
-  // pop-up, calée entre la croix et VALIDER, avec la bille du joueur concerné.
-  it('shows the value being typed between the cross and VALIDER, with its ball', () => {
-    const wrapper = pad({ value: '47', ball: 'yellow' })
-
-    expect(wrapper.find('[data-testid="dock-value"]').text()).toBe('47')
-    expect(wrapper.find('[data-testid="dock-reject"] span').classes()).toContain(
-      'bg-player-yellow',
-    )
-    expect(pad({ value: '', ball: 'white' }).find('[data-testid="dock-reject"] span').classes()).toContain(
-      'bg-player-white',
-    )
+  // Revue de rendu du 2026-09-12 : la pop-up se range du côté demandé et ne rappelle PLUS
+  // la valeur — la carte qu'on remplit reste visible en face, c'est elle qui l'affiche.
+  it('aligns itself to the requested side', () => {
+    expect(pad({ value: '', align: 'right' }).classes()).toContain('justify-end')
+    expect(pad({ value: '', align: 'left' }).classes()).toContain('justify-start')
   })
 
-  it('shows a dimmed zero while nothing has been typed', () => {
-    const value = pad({ value: '' }).find('[data-testid="dock-value"]')
+  it('carries no value readout of its own', () => {
+    expect(pad({ value: '47' }).find('[data-testid="dock-value"]').exists()).toBe(false)
+  })
 
-    expect(value.text()).toBe('0')
-    expect(value.classes().join(' ')).toContain('/25')
+  // La croix cède la place à un `ANNULER`, comme dans toutes les pop-ups du produit.
+  it('cancels from an ANNULER button, not a cross', () => {
+    const wrapper = pad({ value: '47' })
+
+    expect(wrapper.find('[data-testid="dock-close"]').text()).toBe('ANNULER')
+  })
+
+  // Un tap en dehors ferme, mais sur un geste COMPLET : appui ET relâchement sur le voile.
+  it('closes on a complete gesture outside, and ignores a partial one', async () => {
+    const wrapper = pad({ value: '47' })
+
+    await wrapper.trigger('pointerup', { pointerId: 1 })
+    expect(wrapper.emitted('cancel')).toBeUndefined()
+
+    await wrapper.trigger('pointerdown', { pointerId: 2 })
+    await wrapper.trigger('pointerup', { pointerId: 2 })
+
+    expect(wrapper.emitted('cancel')).toHaveLength(1)
+  })
+
+  it('ignores a gesture that started on the card itself', async () => {
+    const wrapper = pad({ value: '47' })
+
+    await wrapper.find('[data-testid="dock-card"]').trigger('pointerdown', { pointerId: 3 })
+    await wrapper.trigger('pointerup', { pointerId: 3 })
+
+    expect(wrapper.emitted('cancel')).toBeUndefined()
   })
 
   // AR8 : `@pointerdown` seul, jamais `@click`.

@@ -561,18 +561,32 @@ describe('HomeScreen', () => {
     expect(wrapper.find('[data-testid="alpha-keyboard-sheet"]').exists()).toBe(false)
   })
 
-  // La pop-up reçoit la bille du joueur visé : c'est le rappel de son en-tête.
-  it('hands the targeted ball to the entry pop-up', async () => {
+  // La pop-up se range du côté OPPOSÉ à la carte visée : c'est ce qui laisse voir la carte
+  // pendant qu'on la remplit, et donc ce qui permet à la pop-up de ne rien rappeler.
+  it('opens the entry pop-up on the side opposite the targeted card', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
+    // Le jaune est à droite : la pop-up se range à gauche.
     await focusField(wrapper, 'yellow', 'distance')
-    expect(wrapper.findComponent(NumericPadDock).props('ball')).toBe('yellow')
+    expect(wrapper.findComponent(NumericPadDock).props('align')).toBe('left')
 
     await press(wrapper, ['dock-close'])
     await focusField(wrapper, 'white', 'name')
 
-    expect(wrapper.findComponent(AlphaKeyboardSheet).props('ball')).toBe('white')
+    expect(wrapper.findComponent(AlphaKeyboardSheet).props('align')).toBe('right')
+  })
+
+  // Et elle suit la carte quand les billes changent de côté.
+  it('follows the targeted card once the balls have swapped sides', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await press(wrapper, ['change-ball-button'])
+    // Le jaune est passé à gauche : sa pop-up se range désormais à droite.
+    await focusField(wrapper, 'yellow', 'distance')
+
+    expect(wrapper.findComponent(NumericPadDock).props('align')).toBe('right')
   })
 
   // AC3 : le liseré dit quel champ reçoit la frappe, et il n'y en a qu'un.

@@ -36,6 +36,14 @@ const CARD_CLASSES: Record<PlayerColor, string> = {
   white: 'bg-player-white text-on-player-white',
   yellow: 'bg-player-yellow text-on-player-yellow',
 }
+const BALL_CLASSES: Record<PlayerColor, string> = {
+  white: 'bg-player-white',
+  yellow: 'bg-player-yellow',
+}
+const BALL_LABELS: Record<PlayerColor, string> = {
+  white: 'BILLE BLANCHE',
+  yellow: 'BILLE JAUNE',
+}
 
 // Une box claire, teintée par transparence de la carte qui la porte : elle reste lisible
 // sur le blanc comme sur le jaune, sans deux jeux de couleurs à maintenir.
@@ -43,7 +51,7 @@ const CARD_CLASSES: Record<PlayerColor, string> = {
 // disponible (`flex-1`) entre un plancher confortable et un plafond raisonnable, pour que
 // la carte ne soit pas un grand vide avec deux petites boîtes au milieu.
 const FIELD_CLASSES =
-  'flex min-h-[130px] max-h-[220px] w-full flex-1 flex-col items-center justify-center gap-2 rounded-cta border-2 bg-black/8 px-4 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] touch-manipulation select-none'
+  'flex min-h-[130px] max-h-[220px] w-full flex-1 flex-col items-center justify-center gap-2 rounded-cta border-2 bg-black/8 px-3 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] touch-manipulation select-none'
 
 // Le champ visé se signale par une PRÉSENCE (liseré), pas par une teinte de fond seule :
 // même signal non chromatique que l'indicateur de tour (UX-DR22). Conservé tel quel à la
@@ -57,9 +65,30 @@ function fieldClasses(field: 'name' | 'distance', focused: 'name' | 'distance' |
   <div
     :data-testid="`player-card-${side}`"
     :data-ball="ball"
-    class="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-5 border border-border p-6"
+    class="flex min-h-0 min-w-0 flex-1 flex-col items-stretch gap-5 border border-border p-6"
     :class="CARD_CLASSES[ball]"
   >
+    <!-- En-tête de carte (revue de rendu du 2026-09-12) : la bille en picto, et son nom.
+         C'est ce qui dit la bille depuis que la pastille flottante a été retirée, et ça
+         remplit le haut de la carte que les deux champs laissaient vide.
+         ⚠️ PLACEHOLDER : le disque CSS ci-dessous tient la place des vrais pictos de bille
+         que Nathan prépare (2026-09-12). À leur arrivée, remplacer le `<span>` par un
+         `<img>` servi depuis `public/` (modèle `logo.png` de la `SideBar`, offline
+         oblige : aucune ressource réseau) et retirer `BALL_CLASSES`. Le liseré sombre
+         n'est là que pour rendre le disque visible sur la carte de sa propre couleur. -->
+    <header
+      data-testid="card-header"
+      class="flex shrink-0 items-center justify-center gap-3 border-b-2 border-black/15 pb-4"
+    >
+      <span
+        data-testid="ball-picto"
+        aria-hidden="true"
+        class="size-4 shrink-0 rounded-full border-2 border-black/35"
+        :class="BALL_CLASSES[ball]"
+      />
+      <span class="text-stat font-black tracking-[0.25em] opacity-60">{{ BALL_LABELS[ball] }}</span>
+    </header>
+
     <button
       data-testid="name-field"
       :class="[FIELD_CLASSES, fieldClasses('name', focusedField)]"
@@ -71,7 +100,7 @@ function fieldClasses(field: 'name' | 'distance', focused: 'name' | 'distance' |
       <span
         data-testid="name-value"
         class="w-full truncate font-black uppercase"
-        :class="name ? 'text-[clamp(24px,2.6vw,40px)]' : 'text-label tracking-[0.25em] opacity-35'"
+        :class="name ? 'text-[clamp(24px,2.6vw,40px)]' : 'text-stat tracking-[0.15em] opacity-35'"
         >{{ name || 'NOM' }}</span
       >
     </button>
@@ -85,7 +114,7 @@ function fieldClasses(field: 'name' | 'distance', focused: 'name' | 'distance' |
       <span
         data-testid="distance-value"
         class="w-full truncate font-black tabular-nums"
-        :class="distance ? 'text-[clamp(24px,2.6vw,40px)]' : 'text-label tracking-[0.25em] opacity-35'"
+        :class="distance ? 'text-[clamp(24px,2.6vw,40px)]' : 'text-stat tracking-[0.15em] opacity-35'"
         >{{ distance || 'DISTANCE' }}</span
       >
     </button>

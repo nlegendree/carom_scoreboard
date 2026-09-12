@@ -3,7 +3,9 @@
 @theme {
   /* Couleurs joueur : la bille est liée au côté (gauche blanc, droite jaune),
      chacune en bloc plein à chiffres noirs (convention Billiboard). */
-  --color-player-yellow: #FFC72C;
+  /* Jaune revu le 2026-09-12 (Nathan) : `#FFC72C` tirait vers l'or/orange. Teinte remontée
+     vers le citron et éclaircie — le jaune « moderne » des interfaces système. */
+  --color-player-yellow: #FFD60A;
   --color-player-white: #FFFFFF;
 
   /* Texte garantissant un contraste WCAG AA (4.5:1 min) sur chaque bloc joueur */
@@ -131,6 +133,14 @@
      rôle de rouge de marque (bandeau en biais de la barre latérale). */
   --gradient-red: linear-gradient(160deg, #E2515B 0%, var(--color-brand-red) 100%);
 
+  /* Touches des claviers intégrés (revue de rendu 10.3, réf. Cueuny) : plaques sombres
+     légèrement adoucies, relief donné par un filet clair en haut et une ombre portée en
+     bas — la touche s'enfonce à l'appui. SEULE exception aux angles vifs avec la carte de
+     pop-up : une touche de clavier se lit comme un objet physique, pas comme un panneau. */
+  --radius-key: 8px;
+  --color-key: #2E333B;
+  --color-key-active: #3C434D;
+
   /* Surface des panneaux posés sur le fond d'écran (colonne centrale du paramétrage) :
      nettement plus claire que `--gradient-bg`, pour que la colonne ne se lise pas comme un
      trou noir entre deux cartes pleines (revue de rendu 10.3, Nathan : « c'est un peu
@@ -144,7 +154,7 @@
 
   /* Bandeaux de carte joueur (Story 10.4). */
   --color-panel-white-band: #ECECEC;
-  --color-panel-yellow-band: #E6B000;
+  --color-panel-yellow-band: #E0BC00;
 
   /* Fond d'écran gris/noir, appliqué écran par écran avec sa story. */
   --gradient-bg: linear-gradient(160deg, #2A2E35 0%, #111317 55%, #000000 100%);

@@ -1633,6 +1633,13 @@ So that la table est prête sans pop-up ni écran supplémentaire, et la répart
 > 5. **Cartes joueur allégées** : plus de marge (`p-6`), champs en box **claires** teintées de la carte et écrites à son encre — les pavés presque noirs étaient « trop cheap » et l'écran « un peu sombre ». Un champ vide porte **son seul intitulé** (`NOM`, `DISTANCE`) : ni « JOUEUR » ni « 0 », qui se lisaient comme de vraies valeurs.
 > 6. **Cartes réduites, centre élargi** : la colonne centrale passe de 1/5 à **1/4**, sur une surface `--gradient-panel` nettement plus claire que le fond d'écran. L'AC1 (« trois colonnes 2/5 · 1/5 · 2/5 ») est donc **caduque**.
 
+> **Quatrième passe de rendu (Nathan, 2026-09-12).** Priment sur tout ce qui précède :
+> 1. **En-tête de carte** : un picto de bille et son nom (`BILLE BLANCHE` / `BILLE JAUNE`) en haut de chaque carte. *(Le picto est un disque CSS PLACEHOLDER — Nathan fournit les vrais pictos de bille, à servir depuis `public/` comme `logo.png`.)* L'espace laissé libre sous les champs reste vide, volontairement.
+> 2. **Jaune revu** : `--color-player-yellow` passe de `#FFC72C` (trop or/orange) à `#FFD60A`.
+> 3. **Pop-ups de saisie ALIGNÉES SUR UN CÔTÉ**, celui **opposé** à la carte qu'on remplit : cette carte reste entièrement visible et se remplit à vue. Conséquences directes — le rappel de la valeur **disparaît** des pop-ups (c'est la carte qui l'affiche), et le **voile n'est plus flouté** mais seulement très légèrement assombri, sans quoi la carte redeviendrait illisible.
+> 4. **Fermeture au tap dehors** (geste complet, appui **et** relâchement) et **la croix cède la place à un `ANNULER`**, comme dans toutes les pop-ups du produit.
+> 5. **Touches façon Cueuny** : plaques sombres légèrement adoucies (`--radius-key`, seule exception aux angles vifs avec la carte de pop-up), filet clair en haut, ombre portée en bas, et la touche s'enfonce à l'appui. `keyClasses.ts` étant partagé, `ScoreEntryModal` en hérite.
+
 **Acceptance Criteria:**
 
 **Given** l'étape joueurs

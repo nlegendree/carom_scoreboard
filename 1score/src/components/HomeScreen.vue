@@ -143,6 +143,16 @@ function focusedFieldOf(ball: PlayerColor): 'name' | 'distance' | null {
   return entry.value?.ball === ball ? entry.value.field : null
 }
 
+// La pop-up de saisie se range du côté OPPOSÉ à la carte visée : c'est ce qui laisse voir
+// la carte pendant qu'on la remplit, et donc ce qui permet à la pop-up de ne porter aucun
+// rappel de la valeur (revue de rendu du 2026-09-12).
+const entryPopupSide = computed<TableSide>(() => {
+  const current = entry.value
+  if (!current) return 'right'
+  const cardSide = leftBall.value === current.ball ? 'left' : 'right'
+  return cardSide === 'left' ? 'right' : 'left'
+})
+
 function distanceOf(ball: PlayerColor): number {
   return Number(players.value[ball].distance || 0)
 }
@@ -525,13 +535,13 @@ function fixDistance(): void {
 
       </div>
 
-      <!-- Les deux claviers sont des POP-UPS par-dessus l'écran (revue de rendu du
-           2026-09-12) : la page ne reflue plus autour d'eux, et la valeur en cours est
-           rappelée dans leur en-tête, entre la croix et VALIDER. -->
+      <!-- Les deux claviers sont des POP-UPS alignées sur le côté OPPOSÉ à la carte qu'on
+           remplit (revue de rendu du 2026-09-12) : celle-ci reste entièrement visible et se
+           remplit à vue, ce qui rend inutile tout rappel de la valeur dans la pop-up. -->
       <NumericPadDock
         v-if="entry?.field === 'distance'"
         :value="draft"
-        :ball="entry.ball"
+        :align="entryPopupSide"
         @update="draft = $event"
         @validate="applyEntry"
         @cancel="abandonEntry"
@@ -540,7 +550,7 @@ function fixDistance(): void {
       <AlphaKeyboardSheet
         v-if="entry?.field === 'name'"
         :value="draft"
-        :ball="entry.ball"
+        :align="entryPopupSide"
         @update="draft = $event"
         @validate="applyEntry"
         @cancel="abandonEntry"

@@ -7,8 +7,8 @@ function press(wrapper: ReturnType<typeof mount>, testid: string) {
   return wrapper.find(`[data-testid="${testid}"]`).trigger('pointerdown')
 }
 
-function sheet(props: { value: string; ball?: 'white' | 'yellow' }) {
-  return mount(AlphaKeyboardSheet, { props: { ball: 'white', ...props } })
+function sheet(props: { value: string; align?: 'left' | 'right' }) {
+  return mount(AlphaKeyboardSheet, { props: { align: 'right', ...props } })
 }
 
 describe('AlphaKeyboardSheet', () => {
@@ -98,31 +98,52 @@ describe('AlphaKeyboardSheet', () => {
     expect(wrapper.emitted('cancel')).toHaveLength(1)
   })
 
-  // Revue de rendu du 2026-09-12 : même traitement que la pop-up du pavé — le clavier
-  // intégré est temporaire, il ne vaut pas la peine de faire refluer la page autour.
-  it('renders as a pop-up over the screen, with a blurred backdrop', () => {
+  // Revue de rendu du 2026-09-12 : pop-up par-dessus l'écran, mais voile SANS FLOU et à
+  // peine assombri — la carte qu'on remplit doit rester lisible en face, c'est elle qui
+  // affiche la valeur depuis que la pop-up ne la rappelle plus.
+  it('renders as a pop-up over the screen, without blurring what is behind', () => {
     const overlay = sheet({ value: '' })
 
     expect(overlay.classes()).toContain('fixed')
-    expect(overlay.classes()).toContain('backdrop-blur-md')
+    expect(overlay.classes().join(' ')).not.toContain('backdrop-blur')
+    expect(overlay.classes()).toContain('bg-black/25')
     expect(overlay.find('[data-testid="sheet-card"]').exists()).toBe(true)
   })
 
-  // Le champ de saisie est calé ENTRE la croix et VALIDER, avec le rappel de bille.
-  it('shows the name being typed between the cross and VALIDER, with its ball', () => {
-    const wrapper = sheet({ value: 'MICHEL', ball: 'yellow' })
-
-    expect(wrapper.find('[data-testid="sheet-value"]').text()).toBe('MICHEL')
-    expect(wrapper.find('header span[aria-hidden="true"]').classes()).toContain(
-      'bg-player-yellow',
-    )
+  // Revue de rendu du 2026-09-12 : la pop-up se range du côté demandé et ne rappelle PLUS
+  // le nom — la carte qu'on remplit reste visible en face, c'est elle qui l'affiche.
+  it('aligns itself to the requested side', () => {
+    expect(sheet({ value: '', align: 'right' }).classes()).toContain('justify-end')
+    expect(sheet({ value: '', align: 'left' }).classes()).toContain('justify-start')
   })
 
-  it('shows a dimmed placeholder while nothing has been typed', () => {
-    const value = sheet({ value: '' }).find('[data-testid="sheet-value"]')
+  it('carries no value readout of its own', () => {
+    expect(sheet({ value: 'MICHEL' }).find('[data-testid="sheet-value"]').exists()).toBe(false)
+  })
 
-    expect(value.text()).toBe('JOUEUR')
-    expect(value.classes().join(' ')).toContain('/25')
+  it('cancels from an ANNULER button, not a cross', () => {
+    expect(sheet({ value: '' }).find('[data-testid="sheet-close"]').text()).toBe('ANNULER')
+  })
+
+  it('closes on a complete gesture outside, and ignores a partial one', async () => {
+    const wrapper = sheet({ value: 'MICHEL' })
+
+    await wrapper.trigger('pointerup', { pointerId: 1 })
+    expect(wrapper.emitted('cancel')).toBeUndefined()
+
+    await wrapper.trigger('pointerdown', { pointerId: 2 })
+    await wrapper.trigger('pointerup', { pointerId: 2 })
+
+    expect(wrapper.emitted('cancel')).toHaveLength(1)
+  })
+
+  it('ignores a gesture that started on the card itself', async () => {
+    const wrapper = sheet({ value: 'MICHEL' })
+
+    await wrapper.find('[data-testid="sheet-card"]').trigger('pointerdown', { pointerId: 3 })
+    await wrapper.trigger('pointerup', { pointerId: 3 })
+
+    expect(wrapper.emitted('cancel')).toBeUndefined()
   })
 
   it('binds pointerdown only, never click', () => {
