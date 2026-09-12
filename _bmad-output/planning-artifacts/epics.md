@@ -1625,6 +1625,14 @@ So that la table est prête sans pop-up ni écran supplémentaire, et la répart
 >
 > **Conséquence sur l'AC6** : un voile plein écran interdit de taper l'autre champ pendant une saisie. Les issues sont la croix et `VALIDER` ; la garde « ouvrir une saisie valide celle en cours » reste dans le code et sert l'enchaînement du rattrapage. **Conséquence sur l'AC10** : le surtitre du mode quitte la colonne centrale pour le bandeau. **Écart mesuré** : le picto des deux réglages est **au-dessus** du libellé et non en ligne comme la référence — la colonne centrale fait 1/5, soit 73 px par bouton à 1133×744, où un picto en ligne déborde.
 
+> **Troisième passe de rendu (Nathan, 2026-09-12).** Un **bug** et une nouvelle série de correctifs, qui priment sur les annotations précédentes :
+> 1. **`CHANGER DE CÔTÉ` n'intervertit QUE les noms et les distances** — les billes ne bougent pas, la gauche reste blanche. L'AC12 (« les cartes s'échangent de place, tout compris ») est **corrigée** : c'est le dual exact de `CHANGER DE BILLE`, qui laisse les joueurs en place. Seul `CHANGER DE BILLE` déplace donc la bille blanche d'un côté à l'autre, et donc `whiteSide`.
+> 2. **Les deux réglages sont EMPILÉS**, pleine largeur, picto **en ligne** devant le libellé (Nathan teste sur un 14″).
+> 3. **Pictos repris de la référence coréenne** : boucle de rafraîchissement pour la bille, deux flèches croisées pour le côté. Les deux ronds barrés d'une flèche sont abandonnés (« catastrophiques »).
+> 4. **`DÉMARRER` : chevron à GAUCHE du mot**, dans une plaque translucide (« plus premium »).
+> 5. **Cartes joueur allégées** : plus de marge (`p-6`), champs en box **claires** teintées de la carte et écrites à son encre — les pavés presque noirs étaient « trop cheap » et l'écran « un peu sombre ». Un champ vide porte **son seul intitulé** (`NOM`, `DISTANCE`) : ni « JOUEUR » ni « 0 », qui se lisaient comme de vraies valeurs.
+> 6. **Cartes réduites, centre élargi** : la colonne centrale passe de 1/5 à **1/4**, sur une surface `--gradient-panel` nettement plus claire que le fond d'écran. L'AC1 (« trois colonnes 2/5 · 1/5 · 2/5 ») est donc **caduque**.
+
 **Acceptance Criteria:**
 
 **Given** l'étape joueurs

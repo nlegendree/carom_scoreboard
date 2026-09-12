@@ -43,35 +43,40 @@ describe('PlayerSetupCard', () => {
     expect(wrapper.find('[data-testid="player-medallion"]').exists()).toBe(false)
   })
 
-  // Les deux champs sont CENTRÉS dans la carte, en box à fondu grisé.
-  it('centres both fields in the card, each on a grey gradient', () => {
+  // Les deux champs sont CENTRÉS dans la carte, en box CLAIRE teintée de la carte
+  // elle-même : lisible sur le blanc comme sur le jaune, et beaucoup moins lourde que les
+  // pavés presque noirs de la passe précédente.
+  it('centres both fields in the card, on a light tint of the card itself', () => {
     const wrapper = card()
 
     expect(wrapper.classes()).toContain('justify-center')
     expect(wrapper.classes()).toContain('items-center')
     for (const field of ['name-field', 'distance-field']) {
-      expect(wrapper.find(`[data-testid="${field}"]`).classes()).toContain(
-        'bg-(image:--gradient-field)',
-      )
+      expect(wrapper.find(`[data-testid="${field}"]`).classes()).toContain('bg-black/8')
     }
   })
 
-  it('shows both fields with their dimmed placeholders while empty', () => {
+  // Revue de rendu du 2026-09-12 : un champ vide porte SON PROPRE INTITULÉ et rien
+  // d'autre — « JOUEUR » et « 0 » se lisaient comme de vraies valeurs déjà saisies.
+  it('shows nothing but its own label while a field is empty', () => {
     const wrapper = card()
 
-    expect(wrapper.find('[data-testid="name-value"]').text()).toBe('JOUEUR')
-    expect(wrapper.find('[data-testid="name-value"]').classes().join(' ')).toContain('/25')
-    expect(wrapper.find('[data-testid="distance-value"]').text()).toBe('0')
-    expect(wrapper.find('[data-testid="distance-value"]').classes().join(' ')).toContain('/25')
+    expect(wrapper.find('[data-testid="name-value"]').text()).toBe('NOM')
+    expect(wrapper.find('[data-testid="name-value"]').classes()).toContain('opacity-35')
+    expect(wrapper.find('[data-testid="distance-value"]').text()).toBe('DISTANCE')
+    expect(wrapper.find('[data-testid="distance-value"]').classes()).toContain('opacity-35')
+    // Pas d'intitulé en double au-dessus tant qu'il n'y a pas de valeur.
+    expect(wrapper.find('[data-testid="name-field"]').text()).toBe('NOM')
   })
 
-  it('shows the typed values in full ink', () => {
+  it('captions the value with its label once something is typed', () => {
     const wrapper = card({ name: 'MICHEL', distance: '47' })
 
     expect(wrapper.find('[data-testid="name-value"]').text()).toBe('MICHEL')
-    expect(wrapper.find('[data-testid="name-value"]').classes().join(' ')).not.toContain('/25')
+    expect(wrapper.find('[data-testid="name-value"]').classes()).not.toContain('opacity-35')
+    expect(wrapper.find('[data-testid="name-field"]').text()).toContain('NOM')
     expect(wrapper.find('[data-testid="distance-value"]').text()).toBe('47')
-    expect(wrapper.find('[data-testid="distance-value"]').classes().join(' ')).not.toContain('/25')
+    expect(wrapper.find('[data-testid="distance-field"]').text()).toContain('DISTANCE')
   })
 
   // Le champ visé se signale par une PRÉSENCE (le liseré), jamais par une teinte de fond

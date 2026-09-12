@@ -26,16 +26,16 @@ const PATHS: Record<PictoName, readonly string[]> = {
     'M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6',
   ],
   close: ['M18 6 6 18', 'm6 6 12 12'],
-  // Deux billes sous une double flèche : les billes s'échangent, les joueurs ne bougent pas.
-  'swap-balls': [
-    'M3 16a4 4 0 1 0 8 0a4 4 0 1 0 -8 0',
-    'M13 16a4 4 0 1 0 8 0a4 4 0 1 0 -8 0',
-    'M4 6h16',
-    'm7 3-3 3 3 3',
-    'm17 3 3 3-3 3',
+  // Boucle de rafraîchissement : CHANGER DE BILLE (picto de la référence coréenne,
+  // revue de rendu 10.3 — les deux ronds barrés d'une flèche étaient illisibles à 24 px).
+  refresh: [
+    'M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8',
+    'M21 3v5h-5',
+    'M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16',
+    'M8 16H3v5',
   ],
-  // Double flèche horizontale : les cartes changent de place.
-  'swap-sides': ['m18 8 4 4-4 4', 'M2 12h20', 'm6 8-4 4 4 4'],
+  // Deux flèches croisées : CHANGER DE CÔTÉ, les joueurs échangent leur place.
+  'arrow-right-left': ['m16 3 4 4-4 4', 'M20 7H4', 'm8 21-4-4 4-4', 'M4 17h16'],
   // Chevron seul, sans hampe : la pointe du CTA de démarrage (revue de rendu 10.3).
   'chevron-right': ['m9 18 6-6-6-6'],
 }

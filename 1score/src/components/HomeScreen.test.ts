@@ -447,8 +447,8 @@ describe('HomeScreen', () => {
 
     await goToPlayersStep(wrapper)
 
-    expect(nameOn(wrapper, 'left').text()).toBe('JOUEUR')
-    expect(distanceOn(wrapper, 'left').text()).toBe('0')
+    expect(nameOn(wrapper, 'left').text()).toBe('NOM')
+    expect(distanceOn(wrapper, 'left').text()).toBe('DISTANCE')
   })
 
   // AC3 : deux cartes, blanc à gauche au départ, chacune adressable par son côté.
@@ -716,22 +716,27 @@ describe('HomeScreen', () => {
     expect(nameOn(wrapper, 'left').text()).toBe('MICHEL')
   })
 
-  // AC12 : les cartes s'échangent de place, tout compris.
-  it('swaps the whole cards on CHANGER DE CÔTÉ', async () => {
+  // AC12 corrigé le 2026-09-12 (Nathan) : CHANGER DE CÔTÉ intervertit les NOMS et les
+  // DISTANCES, et RIEN D'AUTRE. Les billes ne bougent pas — la gauche reste blanche.
+  // C'est le pendant exact de CHANGER DE BILLE, qui laisse les joueurs en place.
+  it('swaps only names and distances on CHANGER DE CÔTÉ, leaving the balls put', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
     await typeName(wrapper, 'white', 'MICHEL')
     await press(wrapper, ['sheet-confirm'])
+    await typeDistance(wrapper, 'white', [1, 0, 0])
+    await press(wrapper, ['dock-confirm'])
     await typeName(wrapper, 'yellow', 'ANDRE')
     await press(wrapper, ['sheet-confirm'])
 
     await press(wrapper, ['change-side-button'])
 
-    expect(ballOn(wrapper, 'left')).toBe('yellow')
+    expect(ballOn(wrapper, 'left')).toBe('white')
+    expect(ballOn(wrapper, 'right')).toBe('yellow')
     expect(nameOn(wrapper, 'left').text()).toBe('ANDRE')
-    expect(ballOn(wrapper, 'right')).toBe('white')
     expect(nameOn(wrapper, 'right').text()).toBe('MICHEL')
+    expect(distanceOn(wrapper, 'right').text()).toBe('100')
   })
 
   it('is its own inverse on a second CHANGER DE CÔTÉ', async () => {
@@ -745,7 +750,8 @@ describe('HomeScreen', () => {
     expect(nameOn(wrapper, 'left').text()).toBe('MICHEL')
   })
 
-  // Les deux enchaînés : la bille revient à gauche, le joueur a changé de bille.
+  // Les deux enchaînés : chaque joueur a changé de place ET de bille — c'est la seule
+  // combinaison que ni l'une ni l'autre des deux actions ne donne seule.
   it('combines both settings without losing anyone', async () => {
     const wrapper = mount(HomeScreen)
 
@@ -755,34 +761,16 @@ describe('HomeScreen', () => {
     await typeName(wrapper, 'yellow', 'ANDRE')
     await press(wrapper, ['sheet-confirm', 'change-ball-button', 'change-side-button'])
 
-    expect(ballOn(wrapper, 'left')).toBe('white')
+    expect(ballOn(wrapper, 'left')).toBe('yellow')
     expect(nameOn(wrapper, 'left').text()).toBe('ANDRE')
-    expect(ballOn(wrapper, 'right')).toBe('yellow')
+    expect(ballOn(wrapper, 'right')).toBe('white')
     expect(nameOn(wrapper, 'right').text()).toBe('MICHEL')
   })
 
   // AC13 : le côté part au store à part ; `player1` reste la bille blanche, donc celui qui
   // ouvre — aucune règle de jeu ne bouge.
+  // Seul CHANGER DE BILLE déplace la bille blanche d'un côté à l'autre de l'écran.
   it('starts the game with the white ball seated where it was left', async () => {
-    const wrapper = mount(HomeScreen)
-    const store = useGameStore()
-
-    await goToPlayersStep(wrapper)
-    await typeName(wrapper, 'white', 'MICHEL')
-    await press(wrapper, ['sheet-confirm'])
-    await typeName(wrapper, 'yellow', 'ANDRE')
-    await press(wrapper, ['sheet-confirm'])
-    await setDistances(wrapper)
-    await press(wrapper, ['change-side-button', 'confirm-button'])
-
-    expect(store.whiteSide).toBe('right')
-    expect(store.player1.name).toBe('MICHEL')
-    expect(store.player1.color).toBe('white')
-    expect(store.player1.targetScore).toBe(100)
-    expect(store.activePlayer).toBe('player1')
-  })
-
-  it('sends the player who took the white ball as player1', async () => {
     const wrapper = mount(HomeScreen)
     const store = useGameStore()
 
@@ -794,7 +782,27 @@ describe('HomeScreen', () => {
     await setDistances(wrapper)
     await press(wrapper, ['change-ball-button', 'confirm-button'])
 
-    // MICHEL a pris la jaune : c'est ANDRE qui ouvre désormais.
+    expect(store.whiteSide).toBe('right')
+    // MICHEL est resté à gauche mais a pris la jaune : c'est ANDRE qui ouvre.
+    expect(store.player1.name).toBe('ANDRE')
+    expect(store.player1.color).toBe('white')
+    expect(store.activePlayer).toBe('player1')
+  })
+
+  // CHANGER DE CÔTÉ ne touche pas au côté d'affichage de la bille blanche.
+  it('leaves the white ball on its side when the players swap seats', async () => {
+    const wrapper = mount(HomeScreen)
+    const store = useGameStore()
+
+    await goToPlayersStep(wrapper)
+    await typeName(wrapper, 'white', 'MICHEL')
+    await press(wrapper, ['sheet-confirm'])
+    await typeName(wrapper, 'yellow', 'ANDRE')
+    await press(wrapper, ['sheet-confirm'])
+    await setDistances(wrapper)
+    await press(wrapper, ['change-side-button', 'confirm-button'])
+
+    expect(store.whiteSide).toBe('left')
     expect(store.player1.name).toBe('ANDRE')
     expect(store.player2.name).toBe('MICHEL')
   })
@@ -1034,12 +1042,12 @@ describe('HomeScreen', () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    expect(nameOn(wrapper, 'left').classes().join(' ')).toContain('/25')
+    expect(nameOn(wrapper, 'left').classes()).toContain('opacity-35')
 
     await typeName(wrapper, 'white', 'MICHEL')
     await press(wrapper, ['sheet-confirm'])
 
-    expect(nameOn(wrapper, 'left').classes().join(' ')).not.toContain('/25')
+    expect(nameOn(wrapper, 'left').classes()).not.toContain('opacity-35')
   })
 
   // Même défaut que celui corrigé sur `resetGame()` en revue de la Story 1.3 : un réglage
@@ -1057,8 +1065,8 @@ describe('HomeScreen', () => {
     await wrapper.find('[data-testid="sidebar-item-cancel"]').trigger('pointerdown')
     await goToPlayersStep(wrapper, 'cadre-47-2')
 
-    expect(nameOn(wrapper, 'left').text()).toBe('JOUEUR')
-    expect(distanceOn(wrapper, 'left').text()).toBe('0')
+    expect(nameOn(wrapper, 'left').text()).toBe('NOM')
+    expect(distanceOn(wrapper, 'left').text()).toBe('DISTANCE')
 
     // Distance obligatoire (1.10) : d'autres valeurs, pour prouver que 100 est oublié.
     await typeDistance(wrapper, 'white', [5, 0])
@@ -1075,7 +1083,7 @@ describe('HomeScreen', () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    await press(wrapper, ['change-side-button'])
+    await press(wrapper, ['change-ball-button'])
     expect(ballOn(wrapper, 'left')).toBe('yellow')
 
     await wrapper.find('[data-testid="sidebar-item-cancel"]').trigger('pointerdown')

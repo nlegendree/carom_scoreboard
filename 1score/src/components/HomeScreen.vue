@@ -73,12 +73,12 @@ const JDS_TILE_LAYOUT = [
 // dessous, avec un chevron. Le rouge marque l'action qui engage la partie, face à deux
 // réglages qu'on peut retoucher — il ne remplace pas `--color-brand-red` dans son rôle de
 // rouge de marque (bandeau de la barre latérale).
-// ⚠️ Picto AU-DESSUS du libellé et non en ligne comme la référence : la colonne centrale
-// fait 1/5 de la zone, soit 81 px par bouton à 1133×744 — un picto de 24 px suivi de
-// « CHANGER DE BILLE » déborde du bouton (vu à la passe navigateur). Empilé, ça tient aux
-// trois formats. À rebasculer en ligne si la colonne s'élargit un jour.
+// Les deux réglages sont EMPILÉS et pleine largeur depuis la revue de rendu du 2026-09-12
+// (Nathan teste sur un 14") : chacun tient son libellé sur une ligne, picto EN LIGNE devant
+// comme la référence coréenne — ce que la disposition côte à côte, à 73 px par bouton,
+// rendait impossible.
 const SETUP_CTA_CLASSES =
-  'flex min-h-[var(--size-touch-target)] w-1/2 min-w-0 flex-col items-center justify-center gap-1 rounded-cta bg-(image:--gradient-blue) px-1 text-center text-picto font-bold leading-tight text-white touch-manipulation select-none active:brightness-90'
+  'flex min-h-[var(--size-touch-target)] w-full min-w-0 items-center justify-center gap-2 rounded-cta bg-(image:--gradient-blue) px-2 text-center text-stat font-bold text-white touch-manipulation select-none active:brightness-90'
 
 // Les trois cadres du catalogue, dans l'ordre d'affichage de la pop-up.
 const CADRE_MODES = ['cadre-47-2', 'cadre-47-1', 'cadre-71-2'] as const satisfies readonly GameMode[]
@@ -314,19 +314,27 @@ function abandonEntry(): void {
   fixingDistances.value = false
 }
 
-// UX-DR43. Les deux actions sont leur propre inverse par construction : `CHANGER DE BILLE`
-// permute les entrées ET bascule le côté (les cartes ne bougent pas, leurs billes
-// s'échangent) ; `CHANGER DE CÔTÉ` ne bascule que le côté (les cartes s'échangent, tout
-// compris). Une saisie en cours est validée d'abord : sa carte va changer sous le doigt.
+// UX-DR43, corrigé à la revue de rendu du 2026-09-12 (Nathan). Les deux actions sont
+// exactement duales, et chacune est son propre inverse :
+// - `CHANGER DE BILLE` : les JOUEURS restent en place, leurs billes s'échangent. Permuter
+//   les entrées ET basculer le côté se compensent à l'écran, seule la couleur change.
+// - `CHANGER DE CÔTÉ` : les BILLES restent en place (gauche blanche, droite jaune), les
+//   noms et les distances s'échangent. Une simple permutation des entrées suffit — c'était
+//   le bug : basculer aussi `whiteSide` faisait voyager la bille avec le joueur.
+// Une saisie en cours est validée d'abord : sa carte va changer sous le doigt.
+function swapPlayerEntries(): void {
+  players.value = { white: players.value.yellow, yellow: players.value.white }
+}
+
 function changeBall(): void {
   if (entry.value) applyEntry()
-  players.value = { white: players.value.yellow, yellow: players.value.white }
+  swapPlayerEntries()
   whiteSide.value = whiteSide.value === 'left' ? 'right' : 'left'
 }
 
 function changeSide(): void {
   if (entry.value) applyEntry()
-  whiteSide.value = whiteSide.value === 'left' ? 'right' : 'left'
+  swapPlayerEntries()
 }
 
 // AC1 : sans distance, la partie ne démarre pas — une pop-up propose de la régler.
@@ -447,7 +455,7 @@ function fixDistance(): void {
           </h1>
         </header>
 
-        <main class="flex min-h-0 min-w-0 flex-1 gap-2 p-2">
+        <main class="flex min-h-0 min-w-0 flex-1 gap-4 p-4">
           <PlayerSetupCard
             side="left"
             :ball="leftBall"
@@ -463,39 +471,44 @@ function fixDistance(): void {
                resserrent, les deux restent lisibles (décision de Nathan, 2026-09-12). -->
           <section
             data-testid="setup-center"
-            class="flex min-h-0 w-1/5 shrink-0 flex-col gap-2 border border-border p-2"
+            class="flex min-h-0 w-1/4 shrink-0 flex-col gap-2 border border-border bg-(image:--gradient-panel) p-3"
           >
             <!-- Les trois commandes forment un BLOC, calé en bas de la colonne (modèle
                  Cueuny) : deux réglages bleus côte à côte, puis l'action qui engage. -->
             <div class="mt-auto flex shrink-0 flex-col gap-2">
-              <div class="flex gap-2">
-                <button
-                  data-testid="change-ball-button"
-                  :class="SETUP_CTA_CLASSES"
-                  @pointerdown="changeBall"
-                >
-                  <PictoIcon name="swap-balls" class="size-3 shrink-0" />
-                  <span>CHANGER DE BILLE</span>
-                </button>
-                <button
-                  data-testid="change-side-button"
-                  :class="SETUP_CTA_CLASSES"
-                  @pointerdown="changeSide"
-                >
-                  <PictoIcon name="swap-sides" class="size-3 shrink-0" />
-                  <span>CHANGER DE CÔTÉ</span>
-                </button>
-              </div>
+              <button
+                data-testid="change-ball-button"
+                :class="SETUP_CTA_CLASSES"
+                @pointerdown="changeBall"
+              >
+                <PictoIcon name="refresh" class="size-3 shrink-0" />
+                <span>CHANGER DE BILLE</span>
+              </button>
+              <button
+                data-testid="change-side-button"
+                :class="SETUP_CTA_CLASSES"
+                @pointerdown="changeSide"
+              >
+                <PictoIcon name="arrow-right-left" class="size-3 shrink-0" />
+                <span>CHANGER DE CÔTÉ</span>
+              </button>
 
               <!-- `confirm-button` conservé malgré le déménagement en colonne centrale :
-                   `GameView.test.ts` le lit pour traverser l'accueil. -->
+                   `GameView.test.ts` le lit pour traverser l'accueil.
+                   Le chevron est à GAUCHE du mot, dans une plaque translucide qui lui donne
+                   du poids sans arrondi (revue de rendu du 2026-09-12 : « plus premium »). -->
               <button
                 data-testid="confirm-button"
-                class="flex min-h-[110px] w-full items-center justify-center gap-1 rounded-cta bg-(image:--gradient-red) px-1 text-[clamp(16px,1.7vw,24px)] font-black text-white touch-manipulation select-none active:brightness-90"
+                class="flex min-h-[110px] w-full items-center justify-center gap-2 rounded-cta bg-(image:--gradient-red) px-2 text-[clamp(16px,1.6vw,26px)] font-black tracking-[0.05em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] touch-manipulation select-none active:brightness-90"
                 @pointerdown="confirm"
               >
+                <span
+                  aria-hidden="true"
+                  class="flex size-4 shrink-0 items-center justify-center rounded-cta bg-white/20"
+                >
+                  <PictoIcon name="chevron-right" class="size-2.5" />
+                </span>
                 <span>DÉMARRER</span>
-                <PictoIcon name="chevron-right" class="size-3 shrink-0" />
               </button>
             </div>
           </section>

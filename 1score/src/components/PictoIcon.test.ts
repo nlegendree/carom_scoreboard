@@ -11,8 +11,8 @@ const EXPECTED_PATH_COUNTS: Record<PictoName, number> = {
   'arrow-left': 2,
   gear: 2,
   close: 2,
-  'swap-balls': 5,
-  'swap-sides': 3,
+  refresh: 4,
+  'arrow-right-left': 4,
   'chevron-right': 1,
 }
 

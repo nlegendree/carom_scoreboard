@@ -280,6 +280,21 @@ Toute la mise en page de hauteur de la 1re passe disparaît avec les pop-ups : p
 
 ---
 
+---
+
+**3e passe de rendu (Nathan, 2026-09-12)** — un bug et une série de correctifs :
+
+- **BUG corrigé : `CHANGER DE CÔTÉ` n'intervertit que les noms et les distances.** Les billes restent attachées à leur côté (gauche blanche). C'est le dual exact de `CHANGER DE BILLE`, qui laisse les joueurs en place ; l'implémentation basculait `whiteSide` en plus de permuter les entrées, ce qui faisait voyager la bille avec le joueur. **Seul `CHANGER DE BILLE` déplace donc `whiteSide`.** AC12 corrigée en conséquence.
+- **Réglages empilés**, pleine largeur, picto **en ligne** (Nathan teste sur un 14″).
+- **Pictos de la référence coréenne** : `refresh` (boucle) pour la bille, `arrow-right-left` (flèches croisées) pour le côté. `swap-balls` et `swap-sides` supprimés du jeu de pictos.
+- **`DÉMARRER`** : chevron **à gauche** du mot, dans une plaque translucide.
+- **Cartes allégées** : marge portée à 48 px, champs en **box claires** teintées de la carte (`bg-black/8`, encre de la carte) au lieu des pavés presque noirs, et champs plus hauts pour occuper la carte. Un champ vide porte **son seul intitulé** — ni « JOUEUR » ni « 0 ».
+- **Colonne centrale élargie** de 1/5 à **1/4**, sur `--gradient-panel`, nettement plus clair que le fond d'écran (« globalement c'est un peu sombre »).
+
+598 tests verts, build vert, aucun débordement aux trois formats. Le bug de `CHANGER DE CÔTÉ` a été revérifié au navigateur, pas seulement en test.
+
+---
+
 **À montrer à Nathan en priorité** : la cohabitation dock/cartes et bandeau/cartes à 1133×744 — c'est le point de design neuf de la story, celui sur lequel sa décision 3 se juge, et le seul endroit où la contrainte de hauteur est tendue (cartes à 247 px, champs à leur plancher de 57 px).
 
 ### File List
@@ -333,3 +348,4 @@ Toute la mise en page de hauteur de la 1re passe disparaît avec les pop-ups : p
 
 - 2026-09-12 — Création de la fiche (bmad-create-story). Décisions de Nathan : référence de disposition `billiboard_player_3.png` (rendu repris des 10.1/10.2), trois colonnes en **conteneurs espacés** sur le dégradé, **aucun voile** pendant la saisie — les deux cartes restent lisibles et se remplissent à vue. `epics.md`, spec UX et `architecture.md` à annoter en Task 9.2.
 - **2026-09-12** — 2e passe de rendu (Nathan) : bandeau de titre, pastille et médaillon supprimés, champs centrés en box à fondu grisé, commandes façon Cueuny (réglages bleus, `DÉMARRER` rouge à chevron), et les deux claviers passent en **pop-ups** à voile flouté avec rappel de la valeur entre la croix et `VALIDER`. Tokens `--gradient-red` et `--gradient-field`, picto `chevron-right`. 598 tests verts, build vert, trois formats vérifiés.
+- **2026-09-12** — 3e passe de rendu (Nathan) : correction du bug de `CHANGER DE CÔTÉ` (n'intervertit que noms et distances, les billes ne bougent pas), réglages empilés à picto en ligne, pictos de la référence coréenne (`refresh`, `arrow-right-left`), chevron de `DÉMARRER` à gauche en plaque translucide, cartes allégées (marge, box claires, intitulé seul en placeholder), colonne centrale élargie à 1/4 sur `--gradient-panel`. 598 tests verts, build vert.

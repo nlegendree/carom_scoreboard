@@ -131,7 +131,13 @@
      rôle de rouge de marque (bandeau en biais de la barre latérale). */
   --gradient-red: linear-gradient(160deg, #E2515B 0%, var(--color-brand-red) 100%);
 
-  /* Fond des champs NOM et DISTANCE des cartes de paramétrage (revue de rendu 10.3) :
+  /* Surface des panneaux posés sur le fond d'écran (colonne centrale du paramétrage) :
+     nettement plus claire que `--gradient-bg`, pour que la colonne ne se lise pas comme un
+     trou noir entre deux cartes pleines (revue de rendu 10.3, Nathan : « c'est un peu
+     sombre »). */
+  --gradient-panel: linear-gradient(160deg, #3A3F49 0%, #23262C 100%);
+
+  /* Fond des champs des POP-UPS de saisie, posés sur une carte sombre (revue de rendu 10.3) :
      un fondu grisé, lisible aussi bien sur la carte blanche que sur la jaune. Remplace le
      médaillon rond sombre, retiré à la même revue. */
   --gradient-field: linear-gradient(160deg, #454A54 0%, #1A1D22 100%);

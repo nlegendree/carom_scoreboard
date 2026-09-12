@@ -10,9 +10,9 @@ export type PictoName =
   | 'arrow-left'
   | 'gear'
   | 'close'
-  | 'swap-balls'
-  | 'swap-sides'
   | 'chevron-right'
+  | 'refresh'
+  | 'arrow-right-left'
 
 // `soon` : fonction affichée mais pas encore livrée (état BIENTÔT, inerte).
 export type ItemState = 'normal' | 'soon'

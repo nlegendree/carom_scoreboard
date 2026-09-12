@@ -95,7 +95,10 @@ describe('GameView', () => {
       await press('digit-0')
       await press('dock-confirm')
     }
-    await press('change-side-button')
+    // Seul CHANGER DE BILLE déplace la bille blanche d'un côté à l'autre de l'écran ;
+    // CHANGER DE CÔTÉ, lui, n'intervertit que les noms et les distances (revue du
+    // 2026-09-12).
+    await press('change-ball-button')
     await press('confirm-button')
     await wrapper.vm.$nextTick()
 
