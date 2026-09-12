@@ -1640,6 +1640,14 @@ So that la table est prête sans pop-up ni écran supplémentaire, et la répart
 > 4. **Fermeture au tap dehors** (geste complet, appui **et** relâchement) et **la croix cède la place à un `ANNULER`**, comme dans toutes les pop-ups du produit.
 > 5. **Touches façon Cueuny** : plaques sombres légèrement adoucies (`--radius-key`, seule exception aux angles vifs avec la carte de pop-up), filet clair en haut, ombre portée en bas, et la touche s'enfonce à l'appui. `keyClasses.ts` étant partagé, `ScoreEntryModal` en hérite.
 
+> **Cinquième passe de rendu (Nathan, 2026-09-12).** Priment sur tout ce qui précède :
+> 1. **Pop-ups de saisie CENTRÉES dans la zone libre**, et non plus collées au bord : la carte visée occupe environ un tiers, la pop-up se centre dans le reste, avec une gouttière. Géométrie portée par `--setup-popup-inset-left` / `--setup-popup-inset-right`, qui **reproduisent la mise en page de l'étape `players` et doivent bouger avec elle**.
+> 2. **`ANNULER` et `VALIDER` prennent le rayon des TOUCHES** (`--radius-key`) : des rectangles nets à côté de claviers en relief juraient. Vaut aussi pour les CTA de `PromptModal`.
+> 3. **Touche `RESET`** dans le clavier alphabétique (rangée d'`ESPACE`), qui vide le nom d'un coup. `AlphaKeyboard` reste muet : il émet `clear`, son hôte vide le buffer.
+> 4. **`PromptModal` repris** : titre **centré dans toutes les variantes**, **CTA principal AU-DESSUS du secondaire** (l'action proposée se lit avant son refus), **voile aligné sur celui des pop-ups de saisie** (`bg-black/25`, **sans flou**), et **fermeture au tap dehors via une prop `dismissible`** — **opt-in**, car les pop-ups de FIN DE PARTIE doivent garder leur voile inerte (AC18, Décision 12). « DISTANCE MANQUANTE » l'active.
+> 5. **En-tête de carte revu** : contenu **aligné à gauche**, bandeau **pleine largeur** sur un aplat légèrement plus sombre que la carte, **filet affiné**, et les **vrais pictos de bille** fournis par Nathan (`public/bille_blanche.png`, `public/bille_jaune.png`).
+> 6. **Contraste corrigé** : le gris des intitulés et des placeholders tombait à ~2:1 sur la carte jaune. Opacités relevées (placeholder 55 %, intitulé 65 %, en-tête 75 %) — au-delà de 9:1 sur les deux billes. **Ne pas les rebaisser sans revérifier sur le JAUNE**, qui est le cas limite.
+
 **Acceptance Criteria:**
 
 **Given** l'étape joueurs

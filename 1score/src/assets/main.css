@@ -133,6 +133,16 @@
      rôle de rouge de marque (bandeau en biais de la barre latérale). */
   --gradient-red: linear-gradient(160deg, #E2515B 0%, var(--color-brand-red) 100%);
 
+  /* Recentrage des pop-ups de saisie du paramétrage (revue de rendu 10.3, 2026-09-12) :
+     la pop-up ne se colle pas au bord, elle se CENTRE dans la zone laissée libre par la
+     carte qu'on remplit. Ces deux insets reproduisent la géométrie de l'étape `players`
+     — barre latérale (`w-15` = 120 px), padding de la zone principale (`p-4` = 32 px),
+     colonne centrale à 1/4 et deux cartes se partageant le reste, gouttières de 32 px.
+     ⚠️ À faire bouger AVEC cette mise en page : c'est le seul endroit où elle est
+     dupliquée, et une pop-up mal recentrée est la première chose qui se verra. */
+  --setup-popup-inset-left: calc(152px + (100vw - 184px) * 0.375);
+  --setup-popup-inset-right: calc((100vw - 184px) * 0.375 + 32px);
+
   /* Touches des claviers intégrés (revue de rendu 10.3, réf. Cueuny) : plaques sombres
      légèrement adoucies, relief donné par un filet clair en haut et une ombre portée en
      bas — la touche s'enfonce à l'appui. SEULE exception aux angles vifs avec la carte de

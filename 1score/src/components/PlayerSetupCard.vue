@@ -36,9 +36,11 @@ const CARD_CLASSES: Record<PlayerColor, string> = {
   white: 'bg-player-white text-on-player-white',
   yellow: 'bg-player-yellow text-on-player-yellow',
 }
-const BALL_CLASSES: Record<PlayerColor, string> = {
-  white: 'bg-player-white',
-  yellow: 'bg-player-yellow',
+// Pictos fournis par Nathan (2026-09-12), servis depuis `public/` : aucune ressource
+// réseau, l'app doit tourner hors ligne (FR45, NFR13).
+const BALL_PICTOS: Record<PlayerColor, string> = {
+  white: '/bille_blanche.png',
+  yellow: '/bille_jaune.png',
 }
 const BALL_LABELS: Record<PlayerColor, string> = {
   white: 'BILLE BLANCHE',
@@ -57,7 +59,7 @@ const FIELD_CLASSES =
 // même signal non chromatique que l'indicateur de tour (UX-DR22). Conservé tel quel à la
 // revue de rendu du 2026-09-12 (« bonne idée […] on garde ça »).
 function fieldClasses(field: 'name' | 'distance', focused: 'name' | 'distance' | null): string {
-  return field === focused ? 'border-turn-active' : 'border-black/15'
+  return field === focused ? 'border-turn-active' : 'border-black/25'
 }
 </script>
 
@@ -65,28 +67,19 @@ function fieldClasses(field: 'name' | 'distance', focused: 'name' | 'distance' |
   <div
     :data-testid="`player-card-${side}`"
     :data-ball="ball"
-    class="flex min-h-0 min-w-0 flex-1 flex-col items-stretch gap-5 border border-border p-6"
+    class="flex min-h-0 min-w-0 flex-1 flex-col items-stretch gap-5 overflow-hidden border border-border p-6"
     :class="CARD_CLASSES[ball]"
   >
-    <!-- En-tête de carte (revue de rendu du 2026-09-12) : la bille en picto, et son nom.
-         C'est ce qui dit la bille depuis que la pastille flottante a été retirée, et ça
-         remplit le haut de la carte que les deux champs laissaient vide.
-         ⚠️ PLACEHOLDER : le disque CSS ci-dessous tient la place des vrais pictos de bille
-         que Nathan prépare (2026-09-12). À leur arrivée, remplacer le `<span>` par un
-         `<img>` servi depuis `public/` (modèle `logo.png` de la `SideBar`, offline
-         oblige : aucune ressource réseau) et retirer `BALL_CLASSES`. Le liseré sombre
-         n'est là que pour rendre le disque visible sur la carte de sa propre couleur. -->
+    <!-- En-tête de carte (revue de rendu du 2026-09-12) : la bille en picto et son nom,
+         CALÉS À GAUCHE, sur un aplat très légèrement plus sombre que la carte, et un filet
+         FIN qui court sur toute la largeur. Les marges négatives annulent le padding de la
+         carte : sans elles le bandeau s'arrêterait avant les bords. -->
     <header
       data-testid="card-header"
-      class="flex shrink-0 items-center justify-center gap-3 border-b-2 border-black/15 pb-4"
+      class="-mx-6 -mt-6 mb-1 flex shrink-0 items-center gap-3 border-b border-black/12 bg-black/6 px-6 py-4"
     >
-      <span
-        data-testid="ball-picto"
-        aria-hidden="true"
-        class="size-4 shrink-0 rounded-full border-2 border-black/35"
-        :class="BALL_CLASSES[ball]"
-      />
-      <span class="text-stat font-black tracking-[0.25em] opacity-60">{{ BALL_LABELS[ball] }}</span>
+      <img :src="BALL_PICTOS[ball]" alt="" aria-hidden="true" class="size-5 shrink-0 object-contain" />
+      <span class="text-stat font-black tracking-[0.25em] opacity-75">{{ BALL_LABELS[ball] }}</span>
     </header>
 
     <button
@@ -96,11 +89,11 @@ function fieldClasses(field: 'name' | 'distance', focused: 'name' | 'distance' |
     >
       <!-- L'intitulé ne double la valeur que lorsqu'il y en a une : un champ vide porte
            `NOM` seul, en gros, et ne fait pas croire à une valeur déjà saisie. -->
-      <span v-if="name" class="text-stat font-bold tracking-[0.25em] opacity-45">NOM</span>
+      <span v-if="name" class="text-stat font-bold tracking-[0.25em] opacity-65">NOM</span>
       <span
         data-testid="name-value"
         class="w-full truncate font-black uppercase"
-        :class="name ? 'text-[clamp(24px,2.6vw,40px)]' : 'text-stat tracking-[0.15em] opacity-35'"
+        :class="name ? 'text-[clamp(24px,2.6vw,40px)]' : 'text-stat tracking-[0.15em] opacity-55'"
         >{{ name || 'NOM' }}</span
       >
     </button>
@@ -110,11 +103,11 @@ function fieldClasses(field: 'name' | 'distance', focused: 'name' | 'distance' |
       :class="[FIELD_CLASSES, fieldClasses('distance', focusedField)]"
       @pointerdown="emit('focus', 'distance')"
     >
-      <span v-if="distance" class="text-stat font-bold tracking-[0.25em] opacity-45">DISTANCE</span>
+      <span v-if="distance" class="text-stat font-bold tracking-[0.25em] opacity-65">DISTANCE</span>
       <span
         data-testid="distance-value"
         class="w-full truncate font-black tabular-nums"
-        :class="distance ? 'text-[clamp(24px,2.6vw,40px)]' : 'text-stat tracking-[0.15em] opacity-35'"
+        :class="distance ? 'text-[clamp(24px,2.6vw,40px)]' : 'text-stat tracking-[0.15em] opacity-55'"
         >{{ distance || 'DISTANCE' }}</span
       >
     </button>

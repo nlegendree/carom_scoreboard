@@ -33,9 +33,12 @@ const { tap, reject } = useHaptics()
 // DT1 : le plafond est dérivé de la constante du store, jamais recopié.
 const MAX_DIGITS = String(MAX_TARGET_SCORE).length
 
+// La pop-up ne se colle pas au bord : elle se CENTRE dans la zone que la carte visée
+// laisse libre (revue de rendu du 2026-09-12). L'inset réserve la bande occupée par cette
+// carte, `justify-center` fait le reste.
 const ALIGN_CLASSES: Record<TableSide, string> = {
-  left: 'justify-start',
-  right: 'justify-end',
+  left: 'pl-4 pr-[var(--setup-popup-inset-right)]',
+  right: 'pl-[var(--setup-popup-inset-left)] pr-4',
 }
 
 // Une distance ouverte sur une valeur déjà réglée attend d'être remplacée : la première
@@ -110,7 +113,7 @@ function closeFromBackdrop(event: PointerEvent): void {
 <template>
   <div
     data-testid="numeric-pad-dock"
-    class="fixed inset-0 z-50 flex items-center bg-black/25 p-4"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 py-4"
     :class="ALIGN_CLASSES[align]"
     @pointerdown="armBackdropClose"
     @pointerup="closeFromBackdrop"
@@ -140,14 +143,14 @@ function closeFromBackdrop(event: PointerEvent): void {
       <footer class="flex shrink-0 gap-2">
         <button
           data-testid="dock-close"
-          class="min-h-[var(--size-touch-target)] w-1/3 rounded-cta border border-border-strong bg-(image:--gradient-neutral) text-label font-black text-white touch-manipulation select-none active:brightness-90"
+          class="min-h-[var(--size-touch-target)] w-1/3 rounded-key border border-border-strong bg-(image:--gradient-neutral) text-label font-black text-white touch-manipulation select-none active:brightness-90"
           @pointerdown="emit('cancel')"
         >
           ANNULER
         </button>
         <button
           data-testid="dock-confirm"
-          class="min-h-[var(--size-touch-target)] flex-1 rounded-cta bg-(image:--gradient-blue) text-label font-black text-white touch-manipulation select-none active:brightness-90"
+          class="min-h-[var(--size-touch-target)] flex-1 rounded-key bg-(image:--gradient-blue) text-label font-black text-white touch-manipulation select-none active:brightness-90"
           @pointerdown="emit('validate')"
         >
           VALIDER

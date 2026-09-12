@@ -571,11 +571,15 @@ function fixDistance(): void {
       @secondary="cadrePromptOpen = false"
     />
 
+    <!-- `dismissible` : cette décision-ci s'annule sans conséquence, taper à côté vaut donc
+         `ANNULER` (revue de rendu du 2026-09-12). Les pop-ups de FIN DE PARTIE gardent, elles,
+         leur voile inerte. -->
     <PromptModal
       v-if="distanceError"
       title="DISTANCE MANQUANTE"
       primaryLabel="RÉGLER LA DISTANCE"
       secondaryLabel="ANNULER"
+      dismissible
       @primary="fixDistance"
       @secondary="distanceError = false"
     />

@@ -111,8 +111,13 @@ describe('PromptModal', () => {
 
   // Flou léger (8 px, `sm`) : la page doit rester reconnaissable derrière — à 12 px elle
   // devenait une bouillie (revue de rendu de Nathan, 2026-09-12).
-  it('blurs the page behind instead of hiding it', () => {
-    expect(find(mountPrompt(), 'prompt-modal').classes()).toContain('backdrop-blur-sm')
+  // Voile aligné sur celui des pop-ups de saisie le 2026-09-12 : à peine assombri et
+  // SANS flou. Un même voile pour toutes les pop-ups du produit.
+  it('barely dims the page behind, without blurring it', () => {
+    const overlay = find(mountPrompt(), 'prompt-modal')
+
+    expect(overlay.classes()).toContain('bg-black/25')
+    expect(overlay.classes().join(' ')).not.toContain('backdrop-blur')
   })
 
   // Story 10.2, variante liste : n actions empilées dans l'ordre reçu, la première en
@@ -174,24 +179,26 @@ describe('PromptModal', () => {
   // Direction visuelle de l'Epic 10 : CTA à angles vifs (`--radius-cta`, 0), carte à peine
   // adoucie (`--radius-modal`) pour se détacher du fond flouté — jamais un `rounded-*` de
   // l'échelle Tailwind (revue de rendu de Nathan, 2026-09-12).
-  it('takes its radii from the tokens, sharp controls and a barely softened card', () => {
+  // Les CTA prennent le rayon des TOUCHES depuis le 2026-09-12 : à côté des claviers en
+  // relief, des boutons parfaitement rectangulaires juraient.
+  it('takes its radii from the tokens, keys radius on controls and a softened card', () => {
     const wrapper = mountPrompt({ title: 'CADRE', actions: CADRES, secondaryLabel: 'ANNULER' })
 
     expect(find(wrapper, 'prompt-card').classes()).toContain('rounded-modal')
     for (const button of wrapper.findAll('footer button')) {
-      expect(button.classes()).toContain('rounded-cta')
+      expect(button.classes()).toContain('rounded-key')
     }
     expect(source).not.toContain('rounded-2xl')
     expect(source).not.toContain('rounded-3xl')
   })
 
-  // Le titre d'une liste de choix est centré au-dessus d'elle ; les pop-ups de décision
-  // gardent leur titre aligné à gauche, avec la bille du joueur concerné.
-  it('centres the title in the list variant only', () => {
+  // Titre centré dans TOUTES les variantes depuis le 2026-09-12 : la carte est resserrée,
+  // un titre collé à gauche y flottait.
+  it('centres the title in every variant', () => {
     expect(find(mountPrompt({ actions: CADRES }), 'prompt-header').classes()).toContain(
       'justify-center',
     )
-    expect(find(mountPrompt(), 'prompt-header').classes()).not.toContain('justify-center')
+    expect(find(mountPrompt(), 'prompt-header').classes()).toContain('justify-center')
   })
 
   it('emits select once with the id of the action tapped', async () => {
@@ -213,7 +220,9 @@ describe('PromptModal', () => {
   // P1 : ANNULER passe SOUS les choix en variante liste (au-dessus, il s'intercalerait
   // entre le titre et les cadres) mais reste AU-DESSUS du principal partout ailleurs. Les
   // deux ordres viennent du même markup linéaire : les verrouiller tous les deux.
-  it('places the secondary after the actions, and before the primary without them', () => {
+  // Ordre inversé le 2026-09-12 : l'action proposée se lit AVANT son refus. Avec des
+  // choix, `ANNULER` reste dessous — il serait sinon coincé entre le titre et la liste.
+  it('places the secondary last, after the actions as after the primary', () => {
     expect(footerOrder(mountPrompt({ actions: CADRES, secondaryLabel: 'ANNULER' }))).toEqual([
       'prompt-action-cadre-47-2',
       'prompt-action-cadre-47-1',
@@ -221,9 +230,31 @@ describe('PromptModal', () => {
       'prompt-secondary',
     ])
     expect(footerOrder(mountPrompt({ secondaryLabel: 'ANNULER' }))).toEqual([
-      'prompt-secondary',
       'prompt-primary',
+      'prompt-secondary',
     ])
+  })
+
+  // `dismissible` ouvre le tap dehors aux pop-ups à deux CTA qui s'annulent sans
+  // conséquence. Opt-in : une FIN DE PARTIE garde son voile inerte (AC18, Décision 12).
+  it('closes a dismissible two-CTA prompt on a complete tap outside', async () => {
+    const wrapper = mountPrompt({ secondaryLabel: 'ANNULER', dismissible: true })
+    const veil = find(wrapper, 'prompt-modal')
+
+    await veil.trigger('pointerdown', { pointerId: 4 })
+    await veil.trigger('pointerup', { pointerId: 4 })
+
+    expect(wrapper.emitted('secondary')).toHaveLength(1)
+  })
+
+  it('keeps the veil inert on a decision prompt that is not dismissible', async () => {
+    const wrapper = mountPrompt({ secondaryLabel: 'ANNULER' })
+    const veil = find(wrapper, 'prompt-modal')
+
+    await veil.trigger('pointerdown', { pointerId: 5 })
+    await veil.trigger('pointerup', { pointerId: 5 })
+
+    expect(wrapper.emitted('secondary')).toBeUndefined()
   })
 
   // Un choix est annulable : taper à côté revient à `ANNULER` (revue de rendu de Nathan,

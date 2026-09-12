@@ -309,6 +309,21 @@ Vérifié au navigateur aux trois formats : la pop-up ne recouvre **jamais** la 
 
 ---
 
+---
+
+**5e passe de rendu (Nathan, 2026-09-12)** :
+
+- **Pop-ups centrées dans la zone libre** et non collées au bord, gouttière de 32 px comprise. Géométrie portée par `--setup-popup-inset-left`/`-right`, qui dupliquent la mise en page de l'étape — dette consignée.
+- **`ANNULER`/`VALIDER` au rayon des touches** (`--radius-key`), `PromptModal` compris.
+- **Touche `RESET`** au clavier alphabétique : `AlphaKeyboard` émet `clear`, l'hôte vide le buffer — le clavier reste muet.
+- **`PromptModal`** : titre centré partout, **principal au-dessus du secondaire**, voile `bg-black/25` sans flou, et **`dismissible`** (opt-in) pour le tap dehors — activé sur « DISTANCE MANQUANTE », refusé aux pop-ups de fin de partie dont le voile doit rester inerte (AC18).
+- **En-tête de carte** aligné à gauche, bandeau pleine largeur sur un aplat plus sombre, filet affiné, **vrais pictos de bille** de Nathan (`public/bille_*.png`).
+- **Contraste corrigé** : ~2:1 sur la carte jaune, désormais au-delà de 9:1. Opacités relevées (placeholder 55 %, intitulé 65 %, en-tête 75 %).
+
+Vérifié au navigateur aux trois formats : pop-ups jamais sur la carte visée (gouttière mesurée), aucun débordement, touches à 57 px, `RESET` présent, tap dehors effectif sur les deux claviers et sur « DISTANCE MANQUANTE ». **610 tests verts**, build vert.
+
+---
+
 **À montrer à Nathan en priorité** : la cohabitation dock/cartes et bandeau/cartes à 1133×744 — c'est le point de design neuf de la story, celui sur lequel sa décision 3 se juge, et le seul endroit où la contrainte de hauteur est tendue (cartes à 247 px, champs à leur plancher de 57 px).
 
 ### File List
@@ -364,3 +379,4 @@ Vérifié au navigateur aux trois formats : la pop-up ne recouvre **jamais** la 
 - **2026-09-12** — 2e passe de rendu (Nathan) : bandeau de titre, pastille et médaillon supprimés, champs centrés en box à fondu grisé, commandes façon Cueuny (réglages bleus, `DÉMARRER` rouge à chevron), et les deux claviers passent en **pop-ups** à voile flouté avec rappel de la valeur entre la croix et `VALIDER`. Tokens `--gradient-red` et `--gradient-field`, picto `chevron-right`. 598 tests verts, build vert, trois formats vérifiés.
 - **2026-09-12** — 3e passe de rendu (Nathan) : correction du bug de `CHANGER DE CÔTÉ` (n'intervertit que noms et distances, les billes ne bougent pas), réglages empilés à picto en ligne, pictos de la référence coréenne (`refresh`, `arrow-right-left`), chevron de `DÉMARRER` à gauche en plaque translucide, cartes allégées (marge, box claires, intitulé seul en placeholder), colonne centrale élargie à 1/4 sur `--gradient-panel`. 598 tests verts, build vert.
 - **2026-09-12** — 4e passe de rendu (Nathan) : en-tête de carte à picto de bille (placeholder), jaune éclairci `#FFD60A`, pop-ups alignées sur le côté opposé à la carte visée (rappel de valeur retiré, voile sans flou), fermeture au tap dehors et `ANNULER` à la place de la croix, touches façon Cueuny (`--radius-key`). 606 tests verts, build vert.
+- **2026-09-12** — 5e passe de rendu (Nathan) : pop-ups centrées dans la zone libre, CTA au rayon des touches, touche `RESET`, `PromptModal` repris (titre centré, principal au-dessus, voile aligné, `dismissible`), en-tête de carte à gauche avec les vrais pictos de bille, contraste corrigé sur la carte jaune. 610 tests verts, build vert.

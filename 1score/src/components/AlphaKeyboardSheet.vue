@@ -23,9 +23,12 @@ const props = defineProps<{ value: string; align: TableSide }>()
 
 const emit = defineEmits<{ update: [value: string]; validate: []; cancel: [] }>()
 
+// La pop-up ne se colle pas au bord : elle se CENTRE dans la zone que la carte visée
+// laisse libre (revue de rendu du 2026-09-12). L'inset réserve la bande occupée par cette
+// carte, `justify-center` fait le reste.
 const ALIGN_CLASSES: Record<TableSide, string> = {
-  left: 'justify-start',
-  right: 'justify-end',
+  left: 'pl-4 pr-[var(--setup-popup-inset-right)]',
+  right: 'pl-[var(--setup-popup-inset-left)] pr-4',
 }
 
 function onInput(char: string): void {
@@ -39,6 +42,10 @@ function onInput(char: string): void {
 
 function onBackspace(): void {
   emit('update', props.value.slice(0, -1))
+}
+
+function onClear(): void {
+  emit('update', '')
 }
 
 // Geste COMPLET sur le voile (appui ET relâchement) : voir le commentaire détaillé de
@@ -63,33 +70,31 @@ function closeFromBackdrop(event: PointerEvent): void {
 <template>
   <div
     data-testid="alpha-keyboard-sheet"
-    class="fixed inset-0 z-50 flex items-center bg-black/25 p-4"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 py-4"
     :class="ALIGN_CLASSES[align]"
     @pointerdown="armBackdropClose"
     @pointerup="closeFromBackdrop"
     @pointercancel="disarmBackdropClose"
   >
-    <!-- Plafond en POURCENTAGE et non en `max-w-*` fixe : la pop-up doit laisser voir la
-         carte qu'on remplit, quelle que soit la largeur de l'écran. -->
     <div
       data-testid="sheet-card"
-      class="flex max-h-full w-full max-w-[52%] flex-col gap-2 rounded-modal border border-border bg-bg/95 p-3 shadow-[0_32px_80px_rgba(0,0,0,0.65)]"
+      class="flex max-h-full w-full max-w-3xl flex-col gap-2 rounded-modal border border-border bg-bg/95 p-3 shadow-[0_32px_80px_rgba(0,0,0,0.65)]"
       @pointerdown.stop
       @pointerup.stop
     >
-      <AlphaKeyboard @input="onInput" @backspace="onBackspace" />
+      <AlphaKeyboard @input="onInput" @backspace="onBackspace" @clear="onClear" />
 
       <footer class="flex shrink-0 gap-2">
         <button
           data-testid="sheet-close"
-          class="min-h-[var(--size-touch-target)] w-1/3 rounded-cta border border-border-strong bg-(image:--gradient-neutral) text-label font-black text-white touch-manipulation select-none active:brightness-90"
+          class="min-h-[var(--size-touch-target)] w-1/3 rounded-key border border-border-strong bg-(image:--gradient-neutral) text-label font-black text-white touch-manipulation select-none active:brightness-90"
           @pointerdown="emit('cancel')"
         >
           ANNULER
         </button>
         <button
           data-testid="sheet-confirm"
-          class="min-h-[var(--size-touch-target)] flex-1 rounded-cta bg-(image:--gradient-blue) text-label font-black text-white touch-manipulation select-none active:brightness-90"
+          class="min-h-[var(--size-touch-target)] flex-1 rounded-key bg-(image:--gradient-blue) text-label font-black text-white touch-manipulation select-none active:brightness-90"
           @pointerdown="emit('validate')"
         >
           VALIDER

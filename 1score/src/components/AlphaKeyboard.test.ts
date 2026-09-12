@@ -74,6 +74,17 @@ describe('AlphaKeyboard', () => {
     expect(wrapper.emitted('input')).toEqual([[' ']])
   })
 
+  // RESET : tout effacer d'un coup, sans passer par N retours arrière.
+  it('emits clear from the reset key, without any character', async () => {
+    const wrapper = mount(AlphaKeyboard)
+
+    await wrapper.find('[data-testid="key-reset"]').trigger('pointerdown')
+
+    expect(wrapper.emitted('clear')).toHaveLength(1)
+    expect(wrapper.emitted('input')).toBeUndefined()
+    expect(wrapper.emitted('backspace')).toBeUndefined()
+  })
+
   it('emits backspace without any character', async () => {
     const wrapper = mount(AlphaKeyboard)
 

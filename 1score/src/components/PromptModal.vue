@@ -17,7 +17,18 @@ import type { PromptAction } from '../types/ui'
 // annulable — taper à côté y vaut `ANNULER`, et émet donc `secondary`. La fermeture exige
 // un geste COMPLET sur le voile (`armBackdropClose`, repris de `PlayerSetupModal`), sans
 // quoi le `pointerup` du geste qui vient d'ouvrir la pop-up la refermerait aussitôt.
+// La prop `dismissible` ouvre la même porte aux pop-ups à deux CTA qui, elles aussi,
+// s'annulent sans conséquence — « DISTANCE MANQUANTE » en est une (revue du 2026-09-12).
+// Elle est OPT-IN et le restera : les pop-ups de FIN DE PARTIE doivent garder leur voile
+// inerte (AC18, Décision 12), sans quoi le doigt qui vient de valider une série les
+// refermerait au passage.
 // Purement présentationnel : aucun accès au store, la vue appelle les actions.
+// Le voile est INERTE par défaut : les gardes vivent dans les handlers, qui ne font rien
+// hors variante liste ou `dismissible`. Seule exception à `@pointerdown` (AR8) : la
+// fermeture demande un geste complet. Pas de `role="button"` sur un voile plein écran,
+// exception assumée à CLAUDE.md §2 (DT3).
+// ⚠️ Aucun commentaire HTML à la racine du gabarit : il en ferait un fragment, et la
+// racine perdrait `classes()`, `trigger()` et son `data-testid`.
 const props = withDefaults(
   defineProps<{
     title: string
@@ -31,6 +42,8 @@ const props = withDefaults(
     actions?: readonly PromptAction[]
     // Bille en en-tête, comme les autres pop-ups, quand la décision concerne un joueur.
     ball?: PlayerColor
+    // Taper à côté referme et vaut `secondary`. Opt-in : voir l'en-tête du script.
+    dismissible?: boolean
   }>(),
   {
     message: undefined,
@@ -38,6 +51,7 @@ const props = withDefaults(
     secondaryLabel: undefined,
     actions: undefined,
     ball: undefined,
+    dismissible: false,
   },
 )
 
@@ -55,8 +69,11 @@ const BALL_CLASSES: Record<PlayerColor, string> = {
 // angles vifs de l'Epic 10 valent pour les pop-ups aussi (revue de Nathan, 2026-09-12).
 // Chaque CTA porte SON dégradé, jamais un dégradé étalé sur la rangée. L'accent est LE
 // bleu du produit, celui des tuiles de mode (décision de Nathan, 2026-09-12).
+// Rayon pris au token des TOUCHES depuis la revue du 2026-09-12 : à côté des claviers en
+// relief, des CTA parfaitement rectangulaires juraient. C'est la même famille d'objets
+// tapables, elle porte le même arrondi.
 const BUTTON_CLASSES =
-  'w-full min-h-[var(--size-touch-target)] rounded-cta text-label font-black touch-manipulation select-none'
+  'w-full min-h-[var(--size-touch-target)] rounded-key text-label font-black touch-manipulation select-none'
 const ACCENT_CLASSES = `${BUTTON_CLASSES} bg-(image:--gradient-blue) text-white active:brightness-90`
 const NEUTRAL_CLASSES = `${BUTTON_CLASSES} bg-(image:--gradient-neutral) text-white active:brightness-125`
 
@@ -66,7 +83,7 @@ const NEUTRAL_CLASSES = `${BUTTON_CLASSES} bg-(image:--gradient-neutral) text-wh
 let backdropPointerId: number | null = null
 
 function armBackdropClose(event: PointerEvent): void {
-  if (!props.actions?.length) return
+  if (!props.dismissible && !props.actions?.length) return
   backdropPointerId = event.pointerId
 }
 
@@ -82,13 +99,9 @@ function closeFromBackdrop(event: PointerEvent): void {
 </script>
 
 <template>
-  <!-- Voile INERTE pour les pop-ups de décision : les gardes vivent dans les handlers, qui
-       ne font rien hors variante liste (voir l'en-tête du script). Seule exception à
-       `@pointerdown` (AR8) : la fermeture demande un geste complet. Pas de `role="button"`
-       sur un voile plein écran, exception assumée à CLAUDE.md §2 (DT3). -->
   <div
     data-testid="prompt-modal"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 p-4"
     @pointerdown="armBackdropClose"
     @pointerup="closeFromBackdrop"
     @pointercancel="disarmBackdropClose"
@@ -101,11 +114,9 @@ function closeFromBackdrop(event: PointerEvent): void {
       @pointerdown.stop
       @pointerup.stop
     >
-      <header
-        data-testid="prompt-header"
-        class="flex shrink-0 items-center gap-4"
-        :class="actions?.length ? 'justify-center' : ''"
-      >
+      <!-- Titre TOUJOURS centré (revue du 2026-09-12) : la carte est resserrée, un titre
+           collé à gauche y flottait. -->
+      <header data-testid="prompt-header" class="flex shrink-0 items-center justify-center gap-4">
         <span
           v-if="ball"
           data-testid="prompt-ball"
@@ -123,10 +134,11 @@ function closeFromBackdrop(event: PointerEvent): void {
       </p>
 
       <!-- Pied en markup LINÉAIRE, sans branche d'ordre : le rang de choix, puis le
-           secondaire (neutre), puis le principal (accent). Les deux ordres attendus en
-           découlent d'eux-mêmes — sans `actions`, le secondaire reste AU-DESSUS du
-           principal, comme depuis la 1.10 ; avec `actions`, `ANNULER` tombe SOUS les choix,
-           où il serait sinon coincé entre le titre et la liste. Cibles ≥ 90 px. -->
+           principal (accent), puis le secondaire (neutre). Les deux ordres attendus en
+           découlent d'eux-mêmes — sans `actions`, le principal passe AU-DESSUS d'`ANNULER`
+           (ordre inversé le 2026-09-12 : l'action proposée se lit avant son refus) ; avec
+           `actions`, `ANNULER` tombe SOUS les choix, où il serait sinon coincé entre le
+           titre et la liste. Cibles ≥ 90 px. -->
       <footer class="flex shrink-0 flex-col gap-2">
         <!-- Les choix sur UNE ligne, en colonnes égales quel qu'en soit leur nombre : pas
              de `grid-cols-n` construit à la volée, que le scanner de Tailwind ne verrait
@@ -148,21 +160,21 @@ function closeFromBackdrop(event: PointerEvent): void {
         </div>
 
         <button
-          v-if="secondaryLabel"
-          data-testid="prompt-secondary"
-          :class="NEUTRAL_CLASSES"
-          @pointerdown="emit('secondary')"
-        >
-          {{ secondaryLabel }}
-        </button>
-
-        <button
           v-if="!actions?.length && primaryLabel"
           data-testid="prompt-primary"
           :class="ACCENT_CLASSES"
           @pointerdown="emit('primary')"
         >
           {{ primaryLabel }}
+        </button>
+
+        <button
+          v-if="secondaryLabel"
+          data-testid="prompt-secondary"
+          :class="NEUTRAL_CLASSES"
+          @pointerdown="emit('secondary')"
+        >
+          {{ secondaryLabel }}
         </button>
       </footer>
     </div>

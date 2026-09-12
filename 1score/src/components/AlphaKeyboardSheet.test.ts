@@ -88,6 +88,14 @@ describe('AlphaKeyboardSheet', () => {
     expect(wrapper.emitted('update')).toEqual([['']])
   })
 
+  it('clears the whole name from the reset key', async () => {
+    const wrapper = sheet({ value: 'JEAN-PIERRE' })
+
+    await press(wrapper, 'key-reset')
+
+    expect(wrapper.emitted('update')).toEqual([['']])
+  })
+
   it('validates from its right CTA and abandons from its cross', async () => {
     const wrapper = sheet({ value: 'JEAN' })
 
@@ -112,17 +120,27 @@ describe('AlphaKeyboardSheet', () => {
 
   // Revue de rendu du 2026-09-12 : la pop-up se range du côté demandé et ne rappelle PLUS
   // le nom — la carte qu'on remplit reste visible en face, c'est elle qui l'affiche.
-  it('aligns itself to the requested side', () => {
-    expect(sheet({ value: '', align: 'right' }).classes()).toContain('justify-end')
-    expect(sheet({ value: '', align: 'left' }).classes()).toContain('justify-start')
+  // Elle ne se colle pas au bord : elle se centre dans la zone que la carte visée laisse
+  // libre, l'inset réservant la bande occupée par cette carte.
+  it('centres itself in the space left free by the targeted card', () => {
+    const right = sheet({ value: '', align: 'right' })
+    const left = sheet({ value: '', align: 'left' })
+
+    expect(right.classes()).toContain('justify-center')
+    expect(right.classes()).toContain('pl-[var(--setup-popup-inset-left)]')
+    expect(left.classes()).toContain('pr-[var(--setup-popup-inset-right)]')
   })
 
   it('carries no value readout of its own', () => {
     expect(sheet({ value: 'MICHEL' }).find('[data-testid="sheet-value"]').exists()).toBe(false)
   })
 
-  it('cancels from an ANNULER button, not a cross', () => {
-    expect(sheet({ value: '' }).find('[data-testid="sheet-close"]').text()).toBe('ANNULER')
+  it('cancels from an ANNULER button, not a cross, rounded like the keys', () => {
+    const wrapper = sheet({ value: '' })
+
+    expect(wrapper.find('[data-testid="sheet-close"]').text()).toBe('ANNULER')
+    expect(wrapper.find('[data-testid="sheet-close"]').classes()).toContain('rounded-key')
+    expect(wrapper.find('[data-testid="sheet-confirm"]').classes()).toContain('rounded-key')
   })
 
   it('closes on a complete gesture outside, and ignores a partial one', async () => {

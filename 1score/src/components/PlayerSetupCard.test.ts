@@ -43,14 +43,19 @@ describe('PlayerSetupCard', () => {
     expect(wrapper.find('[data-testid="player-medallion"]').exists()).toBe(false)
   })
 
-  it('names its ball in a card header, with a matching picto', () => {
+  // Pictos servis depuis `public/` : aucune ressource réseau, l'app tourne hors ligne.
+  it('names its ball in a card header, with the matching picto', () => {
     const white = card({ ball: 'white' })
     const yellow = card({ ball: 'yellow' })
 
     expect(white.find('[data-testid="card-header"]').text()).toBe('BILLE BLANCHE')
-    expect(white.find('[data-testid="ball-picto"]').classes()).toContain('bg-player-white')
+    expect(white.find('[data-testid="card-header"] img').attributes('src')).toBe(
+      '/bille_blanche.png',
+    )
     expect(yellow.find('[data-testid="card-header"]').text()).toBe('BILLE JAUNE')
-    expect(yellow.find('[data-testid="ball-picto"]').classes()).toContain('bg-player-yellow')
+    expect(yellow.find('[data-testid="card-header"] img').attributes('src')).toBe(
+      '/bille_jaune.png',
+    )
   })
 
   // Les deux champs sont CENTRÉS dans la carte, en box CLAIRE teintée de la carte
@@ -70,9 +75,9 @@ describe('PlayerSetupCard', () => {
     const wrapper = card()
 
     expect(wrapper.find('[data-testid="name-value"]').text()).toBe('NOM')
-    expect(wrapper.find('[data-testid="name-value"]').classes()).toContain('opacity-35')
+    expect(wrapper.find('[data-testid="name-value"]').classes()).toContain('opacity-55')
     expect(wrapper.find('[data-testid="distance-value"]').text()).toBe('DISTANCE')
-    expect(wrapper.find('[data-testid="distance-value"]').classes()).toContain('opacity-35')
+    expect(wrapper.find('[data-testid="distance-value"]').classes()).toContain('opacity-55')
     // Pas d'intitulé en double au-dessus tant qu'il n'y a pas de valeur.
     expect(wrapper.find('[data-testid="name-field"]').text()).toBe('NOM')
   })
@@ -81,7 +86,7 @@ describe('PlayerSetupCard', () => {
     const wrapper = card({ name: 'MICHEL', distance: '47' })
 
     expect(wrapper.find('[data-testid="name-value"]').text()).toBe('MICHEL')
-    expect(wrapper.find('[data-testid="name-value"]').classes()).not.toContain('opacity-35')
+    expect(wrapper.find('[data-testid="name-value"]').classes()).not.toContain('opacity-55')
     expect(wrapper.find('[data-testid="name-field"]').text()).toContain('NOM')
     expect(wrapper.find('[data-testid="distance-value"]').text()).toBe('47')
     expect(wrapper.find('[data-testid="distance-field"]').text()).toContain('DISTANCE')

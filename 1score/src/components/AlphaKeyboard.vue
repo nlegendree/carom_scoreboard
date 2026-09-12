@@ -6,7 +6,9 @@ import { KEY_CLASSES } from './keyClasses'
 // champ qu'il alimente, ni sa longueur maximale.
 withDefaults(defineProps<{ disabled?: boolean }>(), { disabled: false })
 
-const emit = defineEmits<{ input: [char: string]; backspace: [] }>()
+// `clear` : tout effacer d'un coup (revue de rendu du 2026-09-12). Le clavier reste muet —
+// il dit qu'on a tapé RESET, c'est son hôte qui vide le buffer.
+const emit = defineEmits<{ input: [char: string]; backspace: []; clear: [] }>()
 
 // Disposition AZERTY. La rangée de chiffres est en haut, comme sur un clavier de tablette :
 // les joueurs doivent pouvoir écrire « MICHEL 2 » sans changer de mode.
@@ -83,10 +85,20 @@ const KEY_SIZE = 'h-full min-h-[57px] text-[clamp(16px,2vw,26px)] font-semibold 
       data-testid="key-space"
       :disabled="disabled"
       :class="[KEY_CLASSES, KEY_SIZE]"
-      class="col-span-10 tracking-[0.3em] text-white/55"
+      class="col-span-7 tracking-[0.3em] text-white/55"
       @pointerdown="emit('input', ' ')"
     >
       ESPACE
+    </button>
+
+    <button
+      data-testid="key-reset"
+      :disabled="disabled"
+      :class="[KEY_CLASSES, KEY_SIZE]"
+      class="col-span-3 tracking-[0.15em] text-white/55"
+      @pointerdown="emit('clear')"
+    >
+      RESET
     </button>
   </div>
 </template>
