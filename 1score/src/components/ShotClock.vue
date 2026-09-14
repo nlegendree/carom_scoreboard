@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { TableSide } from '../types/game'
 
 // Story 2.1 : chrono de tir du 3 Bandes (FR13, UX-DR4). Anneau SVG classique (cercle +
 // `stroke-dasharray`/`stroke-dashoffset`), inspiré du « SHOT CLOCK » circulaire du CUESCO
@@ -16,7 +17,30 @@ import { computed } from 'vue'
 //   dimensionne en unités de conteneur — `min(100cqw, 100cqh)` — au lieu d'un `w-full`
 //   fixe qui, sur un iPad en paysage avec la barre Safari (~1180×673), poussait REP et
 //   ÉCHANGER hors de l'écran. Le chiffre suit (`cqmin`), pour ne jamais déborder du disque.
-const props = defineProps<{ secondsRemaining: number; totalSeconds: number }>()
+// `turnRingSide` (3e passe de rendu de la 10.4, Nathan : « je veux que le liseré rouge passe
+// AUTOUR du cercle, pas par-dessus ») : côté d'écran de la carte qui a le tour. Le disque
+// débordant sur les cartes coupe leur liseré ; ce DEMI-ANNEAU rouge, collé à son bord, en
+// prend le relais et le contourne. `null` hors partie ou si aucune carte n'a le tour.
+// ⚠️ C'est bien au chrono de le porter : lui seul connaît la géométrie du disque, et le
+// caler depuis la colonne demanderait de recalculer `min(100cqw, 100cqh)` à la main.
+const props = withDefaults(
+  defineProps<{
+    secondsRemaining: number
+    totalSeconds: number
+    turnRingSide?: TableSide | null
+  }>(),
+  { turnRingSide: null },
+)
+
+// ⚠️ On ne garde PAS la moitié du disque, mais la seule bande qui DÉPASSE dans la carte —
+// `--game-clock-bleed`, la même que celle dont la colonne s'élargit. Un demi-anneau
+// s'arrêtait au centre du disque, donc en pleine colonne, et ne raccordait pas au liseré
+// vertical de la carte : le rouge y dessinait un crochet au lieu d'un contournement.
+// Classes écrites en toutes lettres pour le scanner JIT de Tailwind 4.
+const TURN_RING_CLIP_CLASSES: Record<TableSide, string> = {
+  left: '[clip-path:inset(0_calc(100%_-_var(--game-clock-bleed))_0_0)]',
+  right: '[clip-path:inset(0_0_0_calc(100%_-_var(--game-clock-bleed)))]',
+}
 
 // 1re passe de rendu de la 10.4 (Nathan, réf. `cueuny_scoreboard.png`) : l'arc est RENTRÉ
 // dans le disque, qui lui fait une marge sombre tout autour. Collé au bord (rayon 42 sur un
@@ -35,10 +59,10 @@ const ratio = computed(() =>
 
 const dashoffset = computed(() => CIRCUMFERENCE * (1 - ratio.value))
 
-// À 0 l'anneau doit être VIDE (AC7) : avec `stroke-linecap="round"`, un dash de longueur
-// nulle laisse encore un point à midi (artefact SVG connu des caps arrondis). Le cap
-// redevient droit à zéro, et l'arc disparaît pour de bon.
-const linecap = computed(() => (ratio.value > 0 ? 'round' : 'butt'))
+// Cap PLAT en toutes circonstances (3e passe de rendu, Nathan) : les extrémités arrondies
+// débordaient de la piste et bavaient sur elle. Le cap droit règle du même coup l'artefact
+// qui imposait déjà `butt` à zéro — un dash de longueur nulle y laissait un point à midi
+// (AC7 : l'anneau doit être VIDE à 0). Il n'y a donc plus de cas particulier à traiter.
 
 // Vert → rouge par le jaune et l'orange : la teinte descend linéairement de 130° à 3°
 // (le rouge d'alerte du projet). Saturation et luminosité glissent vers celles de
@@ -68,6 +92,20 @@ const color = computed(() => {
         aria-live="off"
         :aria-label="`Chrono de tir : ${secondsRemaining} secondes restantes`"
       >
+        <!-- Prolongement du liseré de tour AUTOUR du disque : même épaisseur (8 px) et même
+             couleur que le `ring-8` de la carte, dont il reprend le tracé là où le disque
+             l'interrompt. `inset-0` + `border-8` le dessine sur les 8 px extérieurs du
+             disque — donc au rayon exact de celui-ci, ce qui aligne le raccord —, et
+             `clip-path` n'en garde que la bande qui dépasse dans la carte active. Un anneau
+             complet se lirait comme une alerte du chrono, pas comme un signal de tour. -->
+        <span
+          v-if="turnRingSide"
+          data-testid="shot-clock-turn-ring"
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 rounded-full border-8 border-turn-active"
+          :class="TURN_RING_CLIP_CLASSES[turnRingSide]"
+        />
+
         <!-- `-rotate-90` fait partir le tracé de midi : l'anneau se vide en tournant. -->
         <svg viewBox="0 0 100 100" class="absolute inset-0 h-full w-full -rotate-90">
           <circle
@@ -87,7 +125,7 @@ const color = computed(() => {
             :r="RADIUS"
             fill="none"
             :stroke-width="STROKE_WIDTH"
-            :stroke-linecap="linecap"
+            stroke-linecap="butt"
             class="transition-[stroke-dashoffset,stroke] duration-1000 ease-linear"
             :style="{ strokeDasharray: CIRCUMFERENCE, strokeDashoffset: dashoffset, stroke: color }"
           />

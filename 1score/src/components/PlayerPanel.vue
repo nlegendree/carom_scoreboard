@@ -160,30 +160,26 @@ function adjust(delta: number): void {
 
 <template>
   <div
-    class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden touch-manipulation select-none"
+    class="@container relative flex h-full min-w-0 flex-1 flex-col overflow-hidden touch-manipulation select-none"
     :class="colorClasses"
   >
-    <!-- ⚠️ `@container` vit ICI et non sur la racine : `container-type` implique
-         `contain: layout`, qui crée un CONTEXTE D'EMPILEMENT. Posé sur la racine, il
-         enfermait le `z-20` du liseré dans la carte, et l'anneau du chrono — qui déborde
-         depuis la colonne voisine avec son propre `z-10` — passait devant lui. La racine
-         reste `relative` sans `z-index` : elle ne crée aucun contexte, le liseré remonte
-         donc au contexte racine et gagne. -->
-    <div class="@container flex h-full min-w-0 flex-col">
-    <!-- 1. BANDEAU (≈ 22 % de la carte), au modèle Billiboard (1re passe de rendu, Nathan) :
+    <!-- 1. BANDEAU, au modèle Billiboard (1re passe de rendu, Nathan) :
          ligne 1 **NOM | DISTANCE**, ligne 2 **RESTANT | MOY · SÉRIE**. Les statistiques
          sont remontées ici — leur bandeau gris sous le score coupait la carte en deux pour
          trois valeurs secondaires.
          ⚠️ DISTANCE et RESTANT sont des **nombres nus** : leurs libellés encombraient un
          bandeau qui doit se lire d'un coup d'œil. MOY et SÉRIE gardent le leur, comme
          `AVG` et `HR` sur la référence — sans quoi trois nombres nus se confondraient.
+         ⚠️ Hauteur LIBRE, à la mesure de son contenu (3e passe de rendu) : fixée à 22 % de
+         la carte, elle laissait la moitié de l'aplat vide sous les deux lignes. L'AC1 parle
+         de 22 %, la référence ne montre qu'un cartouche serré autour de son texte.
          Fond pleine largeur — l'aplat ne s'interrompt pas sur la gouttière de l'anneau —,
          contenu décalé par la gouttière intérieure.
          Le nom est le SEUL élément élastique : deux lignes puis ellipse. Une valeur
          chiffrée rognée deviendrait fausse à la lecture, jamais elle. -->
     <div
       data-testid="panel-header"
-      class="flex h-[22%] shrink-0 flex-col justify-start gap-0.5 overflow-hidden px-3 py-2"
+      class="flex shrink-0 flex-col gap-1 overflow-hidden px-3 py-2.5"
       :class="[bandClasses, gutterClass]"
     >
       <div class="flex items-baseline justify-between gap-2">
@@ -289,17 +285,18 @@ function adjust(delta: number): void {
       </button>
     </div>
 
-    </div>
-
     <!-- Liseré de tour, en OVERLAY posé après les zones (passe navigateur 10.4).
          ⚠️ Il vivait sur la racine en `ring-inset` : une ombre interne se peint au-dessus du
          fond de l'élément mais SOUS ses enfants, et le bandeau opaque du haut l'effaçait
          donc sur les 22 % supérieurs de la carte — bord haut et deux tiers des montants.
          Aucun test ne pouvait le voir : happy-dom ne calcule pas le CSS. Le signal de tour
          actif est ce qui se lit en premier à 2 mètres, il doit encadrer la carte ENTIÈRE.
-         ⚠️ Il passe aussi DEVANT l'anneau du chrono qui déborde de la colonne voisine
-         (2e passe de rendu, Nathan) : le disque du chrono le coupait sur toute sa hauteur.
-         C'est ce que le `@container` descendu d'un cran rend possible — voir plus haut. -->
+         ⚠️ Il s'arrête au bord du disque du chrono qui déborde de la colonne voisine, et
+         c'est VOULU (3e passe de rendu, Nathan : « je veux que le liseré passe AUTOUR du
+         cercle, pas par-dessus »). Le relais est pris par un demi-anneau rouge dessiné
+         autour du disque, dans `ShotClock`, qui prolonge le liseré en le contournant.
+         Le `@container` de la racine (`contain: layout`) crée le contexte d'empilement qui
+         confine ce `z-20` dans la carte : c'est lui qui laisse le disque passer devant. -->
     <span
       v-if="active"
       data-testid="turn-ring"

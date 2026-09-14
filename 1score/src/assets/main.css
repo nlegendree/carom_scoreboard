@@ -182,6 +182,14 @@
      médaillon rond sombre, retiré à la même revue. */
   --gradient-field: linear-gradient(160deg, #454A54 0%, #1A1D22 100%);
 
+  /* Débordement de l'anneau du chrono sur CHAQUE carte voisine (Story 10.4, AC16).
+     ⚠️ Une seule définition pour DEUX usages qui doivent coïncider au pixel : la colonne
+     centrale s'élargit d'autant (plus son propre padding) pour laisser sortir le disque, et
+     le prolongement du liseré de tour se clippe exactement sur cette bande — c'est la
+     portion du disque qui dépasse dans la carte, et elle seule, qui doit être peinte en
+     rouge. Les deux valeurs recopiées séparément se décalaient visiblement au raccord. */
+  --game-clock-bleed: 24px;
+
   /* Disque du chrono de tir (2e passe de rendu de la 10.4, Nathan : « il faut que le chrono
      se fonde au maximum avec le background »). Le disque portait un `bg-black` littéral qui
      tranchait nettement sur la colonne centrale, gris-bleu : il se lisait comme une pastille

@@ -111,13 +111,13 @@ describe('CenterPanel', () => {
   // `-mx-2` + `calc(100% + 32px)` ne reconstitue que sa border-box et l'anneau n'en sort
   // PAS d'un pixel (défaut mesuré à la passe navigateur de la 10.4). Il faut le double.
   // Aucun CSS n'étant calculé en test, seule la classe peut être verrouillée ici.
-  it('bleeds by twice the column padding, not by the padding itself', () => {
+  it('derives its bleed from the shared token, never from a recopied value', () => {
     const bleed = mount(CenterPanel, {
       props: { ...baseProps, secondsRemaining: 40 },
     }).find('[data-testid="shot-clock-bleed"]')
 
-    expect(bleed.classes()).toContain('-mx-5')
-    expect(bleed.classes()).toContain('w-[calc(100%+80px)]')
+    expect(bleed.classes()).toContain('w-[calc(100%_+_2_*_(var(--game-clock-bleed)_+_16px))]')
+    expect(bleed.classes()).toContain('mx-[calc(-1_*_(var(--game-clock-bleed)_+_16px))]')
     expect(bleed.classes()).toContain('z-10')
   })
 

@@ -66,13 +66,13 @@ describe('PlayerPanel', () => {
     expect(ring.classes()).toContain('inset-0')
     // Rendu APRÈS les zones : c'est ce qui le met au-dessus des aplats opaques.
     expect(ring.element.previousElementSibling).toBe(
-      active.find('[data-testid="panel-header"]').element.parentElement,
+      active.find('[data-testid="score-minus"]').element.parentElement,
     )
-    // ⚠️ Et la RACINE ne doit porter aucun `@container` : `container-type` implique
-    // `contain: layout`, donc un contexte d'empilement qui enfermerait ce `z-20` dans la
-    // carte — l'anneau du chrono, qui déborde de la colonne voisine, repasserait devant.
-    expect(active.classes()).not.toContain('@container')
-    expect(active.find('.\\@container').exists()).toBe(true)
+    // ⚠️ Il reste CONFINÉ dans la carte — `@container` sur la racine implique
+    // `contain: layout`, donc un contexte d'empilement. C'est voulu depuis la 3e passe de
+    // rendu : le disque du chrono, qui déborde de la colonne voisine, passe devant lui, et
+    // c'est le demi-anneau de `ShotClock` qui prend le relais en le CONTOURNANT.
+    expect(active.classes()).toContain('@container')
 
     const inactive = mountPanel(makePlayer(), false)
     expect(inactive.find('[data-testid="turn-ring"]').exists()).toBe(false)

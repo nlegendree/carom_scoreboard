@@ -109,6 +109,10 @@ function entryValueOf(playerId: PlayerId): string | null {
 // ne rend plus la main. Le voile de fin, lui, reste inerte de son côté (AC18 de la 1.10).
 const endPromptOpen = computed(() => endPrompt.value !== null)
 
+// Côté d'ÉCRAN de la carte qui a le tour. Dérivé de `leftId`, comme tout le reste : le
+// chrono s'en sert pour prolonger le liseré de cette carte autour de son disque.
+const turnSide = computed<TableSide>(() => (activePlayer.value === leftId.value ? 'left' : 'right'))
+
 // ⚠️ Tap fantôme (revue de code du 2026-09-09) : quand la pop-up se referme d'elle-même
 // à l'auto-validation, le tour a basculé et un doigt qui arrive juste après sur
 // l'emplacement d'une touche atterrit sur le panneau adverse, qui enregistrerait une
@@ -300,6 +304,7 @@ function confirmRestart(): void {
           :secondsRemaining="shotClockSeconds"
           :passTurnDisabled="endPromptOpen"
           :entryOpen="entryOpen"
+          :turnSide="turnSide"
           @pass-turn="passTurn"
         />
         <PlayerPanel

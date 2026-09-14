@@ -2,6 +2,7 @@
 import ShotClock from './ShotClock.vue'
 import PictoIcon from './PictoIcon.vue'
 import { SHOT_CLOCK_SECONDS } from '../composables/useTimer'
+import type { TableSide } from '../types/game'
 
 // Colonne centrale du scoreboard, réduite à l'essentiel par la Story 10.4 (AC5) : le
 // compteur de reprises, le chrono (3 Bandes seulement) et `PASSER LE TOUR`. Le mode de jeu
@@ -20,8 +21,12 @@ const props = withDefaults(
     // Pop-up de saisie ouverte : le CTA est MASQUÉ — il se retrouverait sous le voile,
     // et le doigt qui vient de fermer la pop-up tomberait dessus (AC8).
     entryOpen?: boolean
+    // Côté d'écran de la carte qui a le tour, relayé tel quel au chrono : son disque
+    // déborde sur les cartes et coupe leur liseré, il en porte donc le prolongement.
+    // La colonne ne s'en sert pour rien d'autre — elle reste générique.
+    turnSide?: TableSide | null
   }>(),
-  { passTurnDisabled: false, entryOpen: false },
+  { passTurnDisabled: false, entryOpen: false, turnSide: null },
 )
 
 // `PASSER LE TOUR` (Story 10.4) remplace le tap sur la carte adverse comme seul geste de
@@ -70,9 +75,13 @@ function passTurn(): void {
     <div
       v-if="secondsRemaining !== null"
       data-testid="shot-clock-bleed"
-      class="relative z-10 -mx-5 flex min-h-0 w-[calc(100%+80px)] flex-1"
+      class="relative z-10 flex min-h-0 flex-1 w-[calc(100%_+_2_*_(var(--game-clock-bleed)_+_16px))] mx-[calc(-1_*_(var(--game-clock-bleed)_+_16px))]"
     >
-      <ShotClock :secondsRemaining="secondsRemaining" :totalSeconds="SHOT_CLOCK_SECONDS" />
+      <ShotClock
+        :secondsRemaining="secondsRemaining"
+        :totalSeconds="SHOT_CLOCK_SECONDS"
+        :turnRingSide="turnSide"
+      />
     </div>
 
     <!-- AC5 : CTA neutre, pleine largeur de colonne, ≥ 90 px de haut. Il n'engage rien

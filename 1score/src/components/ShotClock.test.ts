@@ -66,13 +66,16 @@ describe('ShotClock', () => {
 
   // Revue de code (2026-09-11) : un cap arrondi sur un dash de longueur nulle laisse un
   // point à midi — à 0 le cap redevient droit, l'anneau est réellement vide (AC7).
-  it('drops the round cap at zero so no dot remains', () => {
+  // 3e passe de rendu de la 10.4 (Nathan) : cap PLAT en toutes circonstances — les
+  // extrémités arrondies débordaient de la piste. Ce qui n'était qu'un cas particulier à
+  // zéro (un dash de longueur nulle laissait un point à midi, AC7) devient la règle.
+  it('keeps a flat cap at every value, so no dot remains at zero', () => {
     const full = mount(ShotClock, { props: { secondsRemaining: 40, totalSeconds: 40 } })
     const last = mount(ShotClock, { props: { secondsRemaining: 1, totalSeconds: 40 } })
     const empty = mount(ShotClock, { props: { secondsRemaining: 0, totalSeconds: 40 } })
 
-    expect(arc(full).attributes('stroke-linecap')).toBe('round')
-    expect(arc(last).attributes('stroke-linecap')).toBe('round')
+    expect(arc(full).attributes('stroke-linecap')).toBe('butt')
+    expect(arc(last).attributes('stroke-linecap')).toBe('butt')
     expect(arc(empty).attributes('stroke-linecap')).toBe('butt')
   })
 
@@ -136,5 +139,48 @@ describe('ShotClock', () => {
     // Le chiffre se dimensionne sur le DISQUE (`cqmin`), pas sur la zone : il a suivi l'arc
     // quand celui-ci est rentré (44 → 40 cqmin), le disque intérieur ayant rétréci.
     expect(wrapper.find('[data-testid="shot-clock-value"]').classes()).toContain('text-[40cqmin]')
+  })
+})
+
+// --- Story 10.4, 3e passe de rendu : le liseré de tour contourne le disque ---
+
+describe('ShotClock — prolongement du liseré de tour', () => {
+  const turnRing = (wrapper: ReturnType<typeof mount>) =>
+    wrapper.find('[data-testid="shot-clock-turn-ring"]')
+
+  function mountClock(turnRingSide: 'left' | 'right' | null = null) {
+    return mount(ShotClock, { props: { secondsRemaining: 40, totalSeconds: 40, turnRingSide } })
+  }
+
+  // Le disque déborde sur les cartes et coupe leur liseré : ce demi-anneau, collé à son
+  // bord, en prend le relais et le contourne au lieu de le laisser interrompu.
+  it('draws a half ring on the side of the card that has the turn', () => {
+    const left = turnRing(mountClock('left'))
+    const right = turnRing(mountClock('right'))
+
+    expect(left.classes()).toContain('border-turn-active')
+    expect(left.classes()).toContain('rounded-full')
+    // ⚠️ La bande qui DÉPASSE (`--game-clock-bleed`), pas la moitié du disque : sinon
+    // l'arc s'arrête au centre du disque, en pleine colonne, et ne raccorde pas au liseré.
+    expect(left.classes()).toContain('[clip-path:inset(0_calc(100%_-_var(--game-clock-bleed))_0_0)]')
+    expect(right.classes()).toContain('[clip-path:inset(0_0_0_calc(100%_-_var(--game-clock-bleed)))]')
+  })
+
+  // Même épaisseur que le `ring-8` de la carte : le raccord doit être invisible.
+  it('matches the thickness of the card ring it continues', () => {
+    expect(turnRing(mountClock('left')).classes()).toContain('border-8')
+  })
+
+  // Sans côté — hors partie, ou avant qu'un tour soit attribué — rien n'est dessiné.
+  it('draws nothing without a side', () => {
+    expect(turnRing(mountClock(null)).exists()).toBe(false)
+  })
+
+  // ⚠️ Un anneau COMPLET se lirait comme une alerte du chrono, pas comme un signal de tour :
+  // la moitié tournée vers la carte inactive ne doit jamais être peinte.
+  it('never paints a full ring', () => {
+    for (const side of ['left', 'right'] as const) {
+      expect(turnRing(mountClock(side)).classes().join(' ')).toContain('clip-path')
+    }
   })
 })
