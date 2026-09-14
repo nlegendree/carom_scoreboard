@@ -9,6 +9,18 @@ import type { TableSide } from '../types/game'
 // en est sorti le 2026-09-09, `ÉCHANGER` en Story 10.3 (AR22, DT7), et `ANNULER` descend
 // en barre basse avec les trois autres pictos ici.
 //
+// ⚠️ La colonne est SANS CONTOUR, contrairement à la lettre de l'AC5 (3e passe de rendu,
+// Nathan). Le filet clair (`border-border`, blanc à 18 %) courait verticalement au bord de
+// la colonne et s'interrompait derrière le disque du chrono qui déborde : le raccord du
+// liseré de tour y laissait voir un petit trait gris et une délimitation nette, juste là où
+// le tracé doit être invisible. Les deux cartes en aplat plein la délimitent déjà par
+// contraste — le contour n'apportait rien qu'un défaut. Ne pas le remettre sans revoir ce
+// raccord.
+//
+// ⚠️ Et AUCUN commentaire HTML à la racine du gabarit : il en ferait un fragment, et la
+// racine perdrait `classes()` comme ses attributs (piège payé en 10.1 sur `ModeTile`, et
+// repayé ici même en voulant documenter la ligne ci-dessus au bon endroit).
+//
 // `secondsRemaining` (Story 2.1) : chrono de tir du 3 Bandes, `null` dans les autres
 // modes — c'est la vue qui filtre par mode, la console reste générique. En JDS l'espace
 // reste vide et `PASSER LE TOUR` remonte : rien à masquer, `flex-1` s'en charge.
@@ -47,7 +59,7 @@ function passTurn(): void {
 
 <template>
   <div
-    class="flex w-1/5 min-w-0 shrink-0 flex-col items-center justify-center gap-3 overflow-visible border border-border bg-surface p-2"
+    class="flex w-1/5 min-w-0 shrink-0 flex-col items-center justify-center gap-3 overflow-visible bg-surface p-2"
   >
     <div class="flex w-full min-w-0 flex-col items-center">
       <span data-testid="reprise-label" class="text-stat text-white/60">REP</span>

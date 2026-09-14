@@ -1764,7 +1764,7 @@ So that je lis tout à 2 mètres et je passe la main par un geste explicite, san
 
 **Given** la colonne centrale
 **When** elle s'affiche
-**Then** elle est un conteneur à contour (`--color-surface`) réduit à `REP` + compteur en haut, le chrono en 3 Bandes (anneau et fondu inchangés ; en JDS l'espace reste vide et `PASSER LE TOUR` remonte), et `PASSER LE TOUR` en bas (CTA neutre à contour fort, pleine largeur, ≥ 90 px, libellé sur deux lignes si besoin) ; `ANNULER` et `ÉCHANGER` n'y sont plus
+**Then** elle est un conteneur ~~à contour~~ (`--color-surface` ; *contour retiré à la 3e passe de rendu : son filet s'interrompait derrière le disque du chrono et salissait le raccord du liseré de tour*) réduit à `REP` + compteur en haut, le chrono en 3 Bandes (anneau et fondu inchangés ; en JDS l'espace reste vide et `PASSER LE TOUR` remonte), et `PASSER LE TOUR` en bas (CTA neutre à contour fort, pleine largeur, ≥ 90 px, libellé sur deux lignes si besoin) ; `ANNULER` et `ÉCHANGER` n'y sont plus
 **And** ~~le débordement de l'anneau sur les cartes (12 à 20 px, `z-index`, marge intérieure réservée) est **optionnel** : appliqué seulement si la colonne offre moins de 160 px d'anneau~~ *(**Écart livré, décision 4** : le débordement est **systématique**, 15 px de chaque côté, mesuré aux trois formats ; les cartes réservent 24 px sur leur bord intérieur)*, à valider au rendu avec Nathan
 
 **Given** une partie en JDS, le joueur actif n'ayant rien saisi

@@ -89,13 +89,17 @@ describe('CenterPanel', () => {
     expect(wrapper.find('[data-testid="pass-turn-button"]').exists()).toBe(false)
   })
 
-  // AC5 : conteneur à contour sur `--color-surface`, comme les autres panneaux de l'epic
-  // — la colonne ne doit plus se lire comme un trou noir entre deux cartes pleines.
-  it('is a bordered container on the epic surface', () => {
+  // AC5 : conteneur sur `--color-surface` — la colonne ne doit pas se lire comme un trou
+  // noir entre deux cartes pleines.
+  // ⚠️ SANS contour, contrairement à la lettre de l'AC (3e passe de rendu, Nathan) : le
+  // filet clair s'interrompait derrière le disque du chrono qui déborde, et le raccord du
+  // liseré de tour y laissait voir un trait gris. Ne pas le remettre sans revoir ce raccord.
+  it('is a borderless container on the epic surface', () => {
     const classes = mount(CenterPanel, { props: baseProps }).classes()
 
     expect(classes).toContain('bg-surface')
-    expect(classes).toContain('border-border')
+    expect(classes).not.toContain('border-border')
+    expect(classes).not.toContain('border')
   })
 
   // AC16 : l'anneau du chrono déborde sur les cartes voisines — la colonne doit donc
