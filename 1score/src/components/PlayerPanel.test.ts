@@ -237,18 +237,12 @@ describe('PlayerPanel — zone de série', () => {
     }
   })
 
-  // (a) La valeur en cours de saisie prime sur tout : c'est ce que le joueur tape à cet
-  // instant, et la pop-up de saisie ne la rappelle plus (modèle 10.3).
+  // (a) La valeur en cours de saisie prime : c'est ce que le joueur tape à cet instant, et
+  // la pop-up de saisie ne la rappelle plus (modèle 10.3).
   it('shows the value being typed first', () => {
-    const wrapper = mountFooter({
-      entryValue: '12',
-      seriesValue: 4,
-      showRemaining: true,
-      player: makePlayer({ score: 28, targetScore: 30 }),
-    })
+    const wrapper = mountFooter({ entryValue: '12', seriesValue: 4 })
 
     expect(wrapper.find('[data-testid="entry-value"]').text()).toBe('12')
-    expect(wrapper.find('[data-testid="remaining"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="series-value"]').exists()).toBe(false)
   })
 
@@ -258,32 +252,42 @@ describe('PlayerPanel — zone de série', () => {
     expect(mountFooter({ entryValue: '' }).find('[data-testid="entry-value"]').text()).toBe('0')
   })
 
-  // (b) Puis `POUR n` (Story 2.4, inchangé).
-  it('falls back to the POUR n announce', () => {
+  // ⚠️ `POUR n` n'est PLUS ici (4e passe de rendu) : il a rejoint le bandeau, à la place du
+  // restant. La série en cours reste donc visible jusqu'au bout, y compris pendant les
+  // trois derniers points — c'est précisément là qu'on la regarde le plus.
+  it('keeps showing the open series through the POUR n announce', () => {
     const wrapper = mountFooter({
       showRemaining: true,
       seriesValue: 4,
       player: makePlayer({ score: 28, targetScore: 30 }),
     })
 
+    expect(wrapper.find('[data-testid="series-value"]').text()).toBe('4')
     expect(wrapper.find('[data-testid="remaining"]').text()).toBe('POUR 2')
-    expect(wrapper.find('[data-testid="series-value"]').exists()).toBe(false)
+    expect(
+      wrapper.find('[data-testid="panel-header"] [data-testid="remaining"]').exists(),
+    ).toBe(true)
   })
 
-  // (c) Puis la série en cours comptée par les `+1` (3 Bandes).
+  // (b) Puis la série en cours comptée par les `+1` (3 Bandes).
   it('falls back to the open series', () => {
     const wrapper = mountFooter({ seriesValue: 4 })
 
     expect(wrapper.find('[data-testid="series-value"]').text()).toBe('4')
   })
 
-  // (d) Et sinon rien : aucun tiret, aucun zéro à interpréter.
+  // (c) Et sinon rien : aucun tiret, aucun zéro à interpréter.
   it('shows nothing when there is nothing to show', () => {
     const wrapper = mountFooter({})
+    const footer = wrapper.find('[data-testid="score-minus"]').element.parentElement!
 
-    for (const id of ['entry-value', 'remaining', 'series-value']) {
+    for (const id of ['entry-value', 'series-value']) {
       expect(wrapper.find(`[data-testid="${id}"]`).exists()).toBe(false)
     }
+    expect([...footer.children].map((el) => el.getAttribute('data-testid'))).toEqual([
+      'score-minus',
+      'score-plus',
+    ])
   })
 
   // 1re passe de rendu (Nathan) : le nombre de la zone de série est ROUGE et plus gros —
@@ -293,10 +297,6 @@ describe('PlayerPanel — zone de série', () => {
     const cases = [
       ['entry-value', { entryValue: '12' }],
       ['series-value', { seriesValue: 4 }],
-      [
-        'remaining',
-        { showRemaining: true, player: makePlayer({ score: 28, targetScore: 30 }) },
-      ],
     ] as const
 
     for (const [testid, props] of cases) {
@@ -308,15 +308,12 @@ describe('PlayerPanel — zone de série', () => {
 
   // La zone vit ENTRE les deux boutons de correction (spec UX).
   it('sits between the minus and plus buttons', () => {
-    const wrapper = mountFooter({
-      showRemaining: true,
-      player: makePlayer({ score: 28, targetScore: 30 }),
-    })
-    const footer = wrapper.find('[data-testid="remaining"]').element.parentElement!
+    const wrapper = mountFooter({ seriesValue: 4 })
+    const footer = wrapper.find('[data-testid="series-value"]').element.parentElement!
 
     expect([...footer.children].map((el) => el.getAttribute('data-testid'))).toEqual([
       'score-minus',
-      'remaining',
+      'series-value',
       'score-plus',
     ])
   })
@@ -409,12 +406,25 @@ describe('PlayerPanel — POUR n', () => {
     expect(remaining(mountPanel(makePlayer({ score: 29, targetScore: 30 }))).exists()).toBe(false)
   })
 
-  // AC2 : `POUR n` et `RESTANT` disent la même chose pendant trois points. C'est VOULU —
-  // ne pas « corriger » en masquant l'un des deux.
-  it('coexists with the permanent RESTANT of the band', () => {
+  // ⚠️ L'annonce REMPLACE le restant au lieu de le doubler (4e passe de rendu) : les deux
+  // disaient la même chose à deux endroits pendant trois points. L'AC2 assumait cette
+  // redondance — elle n'a plus lieu d'être, `POUR n` EST l'expression du restant.
+  it('replaces the bare remaining count in the band instead of doubling it', () => {
     const wrapper = mountWithRemaining(makePlayer({ score: 28, targetScore: 30 }))
 
     expect(remaining(wrapper).text()).toBe('POUR 2')
-    expect(wrapper.find('[data-testid="remaining-score"]').text()).toBe('2')
+    expect(wrapper.find('[data-testid="remaining-score"]').exists()).toBe(false)
+    // Et il vit dans le bandeau, plus au pied de la carte.
+    expect(
+      wrapper.find('[data-testid="panel-header"] [data-testid="remaining"]').exists(),
+    ).toBe(true)
+  })
+
+  // Au-delà de trois points, le bandeau reprend le nombre nu, sans libellé.
+  it('gives the band back its bare number once the announce is over', () => {
+    const wrapper = mountWithRemaining(makePlayer({ score: 20, targetScore: 30 }))
+
+    expect(remaining(wrapper).exists()).toBe(false)
+    expect(wrapper.find('[data-testid="remaining-score"]').text()).toBe('10')
   })
 })

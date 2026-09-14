@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import ShotClock from './ShotClock.vue'
 import PictoIcon from './PictoIcon.vue'
 import { SHOT_CLOCK_SECONDS } from '../composables/useTimer'
@@ -49,6 +50,26 @@ const props = withDefaults(
 // contrairement à une saisie de score.
 const emit = defineEmits<{ 'pass-turn': [] }>()
 
+// ⚠️ `PASSER LE TOUR` tient LA MÊME PLACE dans les deux modes — en bas de la colonne
+// (4e passe de rendu, Nathan : « pour que l'utilisateur soit habitué à sa position »).
+// Avant, la colonne centrait sa pile : sans chrono, le CTA remontait au milieu et changeait
+// d'endroit entre un JDS et un 3 Bandes. Le compteur de reprises prend alors la place que
+// le chrono occupe en 3 Bandes, au lieu de laisser un vide.
+// Un seul markup pour les deux cas : c'est la CLASSE du bloc de reprises qui change, pas
+// sa position dans le gabarit — le dupliquer pour le déplacer rouvrirait DT2 en miniature.
+const REPRISE_BLOCK_CLASSES = {
+  clock: 'shrink-0',
+  noClock: 'flex-1 justify-center',
+} as const
+
+// ⚠️ Sert à la CLASSE seulement : le `v-if` du chrono garde sa comparaison littérale
+// `secondsRemaining !== null`, qui est ce qui affine `number | null` en `number` pour
+// `ShotClock`. Un `v-if` sur ce computed perd ce narrowing — `vue-tsc --noEmit` le laisse
+// passer, `npm run build` (`vue-tsc -b`) le refuse.
+const repriseBlockClass = computed(() =>
+  props.secondsRemaining !== null ? REPRISE_BLOCK_CLASSES.clock : REPRISE_BLOCK_CLASSES.noClock,
+)
+
 // `disabled` porte le visuel, la garde porte le comportement : les navigateurs ne
 // s'accordent pas sur l'envoi des pointer events aux contrôles désactivés.
 function passTurn(): void {
@@ -59,9 +80,9 @@ function passTurn(): void {
 
 <template>
   <div
-    class="flex w-1/5 min-w-0 shrink-0 flex-col items-center justify-center gap-3 overflow-visible bg-surface p-2"
+    class="flex w-1/5 min-w-0 shrink-0 flex-col items-center justify-between gap-3 overflow-visible bg-surface p-2"
   >
-    <div class="flex w-full min-w-0 flex-col items-center">
+    <div class="flex w-full min-w-0 flex-col items-center" :class="repriseBlockClass">
       <span data-testid="reprise-label" class="text-stat text-white/60">REP</span>
       <!-- `text-reprise` est dimensionné pour la colonne (w-1/5) et non pour un panneau
            joueur : `text-score` (plancher 120px) déborde dès 2 chiffres sur tablette. -->

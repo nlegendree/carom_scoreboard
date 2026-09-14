@@ -154,3 +154,43 @@ describe('CenterPanel', () => {
   })
 
 })
+
+// --- Story 10.4, 4e passe de rendu : `PASSER LE TOUR` à place fixe ---
+
+describe('CenterPanel — une place fixe pour PASSER LE TOUR', () => {
+  // Le CTA doit tomber sous le même doigt en JDS et en 3 Bandes : c'est un geste qu'on
+  // répète des dizaines de fois par partie. La colonne centrait sa pile, donc sans chrono
+  // le CTA remontait au milieu — il changeait d'endroit d'un mode à l'autre.
+  it('pins the CTA to the bottom in both modes', () => {
+    for (const secondsRemaining of [null, 40]) {
+      const wrapper = mount(CenterPanel, { props: { ...baseProps, secondsRemaining } })
+      const column = wrapper.find('[data-testid="pass-turn-button"]').element.parentElement!
+
+      expect(wrapper.classes()).toContain('justify-between')
+      expect(column.lastElementChild).toBe(wrapper.find('[data-testid="pass-turn-button"]').element)
+    }
+  })
+
+  // Sans chrono, le compteur prend SA place au lieu de laisser un vide.
+  it('lets the reprise counter take the clock slot when there is no clock', () => {
+    const withClock = mount(CenterPanel, { props: { ...baseProps, secondsRemaining: 40 } })
+    const without = mount(CenterPanel, { props: baseProps })
+    const block = (w: ReturnType<typeof mount>) =>
+      w.find('[data-testid="reprise-number"]').element.parentElement!.className
+
+    expect(block(withClock)).toContain('shrink-0')
+    expect(block(without)).toContain('flex-1')
+    expect(block(without)).toContain('justify-center')
+  })
+
+  // ⚠️ Un seul markup : le compteur n'est pas dupliqué pour changer de place, seule sa
+  // classe change. Le dupliquer rouvrirait DT2 en miniature.
+  it('renders the reprise counter exactly once, whatever the mode', () => {
+    for (const secondsRemaining of [null, 40]) {
+      const wrapper = mount(CenterPanel, { props: { ...baseProps, secondsRemaining } })
+
+      expect(wrapper.findAll('[data-testid="reprise-number"]')).toHaveLength(1)
+      expect(wrapper.findAll('[data-testid="reprise-label"]')).toHaveLength(1)
+    }
+  })
+})

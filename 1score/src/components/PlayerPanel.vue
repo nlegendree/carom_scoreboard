@@ -122,7 +122,6 @@ const remainingScore = computed(() =>
 // Annonce de l'arbitre : « POUR 3 », « POUR 2 », « POUR 1 » à mesure que le joueur
 // approche de sa distance (FR15, idée Billizone). Seulement quand le restant vaut 1 à 3 —
 // au-delà l'annonce n'a pas cours, à 0 la partie est finie — et jamais en distance libre.
-// ⚠️ Elle DOUBLE le RESTANT du bandeau pendant trois points : c'est voulu (AC2).
 const REMAINING_ANNOUNCE_MAX = 3
 const remaining = computed(() => {
   if (!props.showRemaining || remainingScore.value === null) return null
@@ -131,14 +130,34 @@ const remaining = computed(() => {
     : null
 })
 
-// AC3 : la zone de série ne montre QU'UNE chose à la fois, dans cet ordre — valeur en
-// cours de frappe, puis `POUR n`, puis la série ouverte, puis rien. Un seul `computed`
-// porte la priorité, pour qu'aucun cas ne puisse en croiser deux.
-type SeriesSlot = { kind: 'entry' | 'remaining' | 'series'; text: string }
+// ⚠️ L'annonce REMPLACE le restant dans le bandeau au lieu de le doubler au pied de la
+// carte (4e passe de rendu, Nathan : « c'est le but des points restants »). Les deux
+// disaient la même chose à deux endroits pendant trois points — l'AC2 assumait cette
+// redondance, elle n'a plus lieu d'être. La zone de série du pied est libérée d'autant :
+// la série en cours y reste visible jusqu'au bout, au lieu de disparaître trois points
+// avant la fin, précisément quand on la regarde le plus.
+type BandSlot = { kind: 'announce' | 'remaining'; text: string }
+
+const BAND_SLOT_TESTIDS: Record<BandSlot['kind'], string> = {
+  announce: 'remaining',
+  remaining: 'remaining-score',
+}
+
+const bandSlot = computed<BandSlot | null>(() => {
+  if (remaining.value !== null) return { kind: 'announce', text: `POUR ${remaining.value}` }
+  if (remainingScore.value !== null) return { kind: 'remaining', text: String(remainingScore.value) }
+  return null
+})
+
+// AC3 : la zone de série ne montre QU'UNE chose à la fois — la valeur en cours de frappe,
+// puis la série ouverte, puis rien. Un seul `computed` porte la priorité, pour qu'aucun cas
+// ne puisse en croiser deux.
+// ⚠️ `POUR n` en est SORTI (4e passe de rendu) : il a rejoint le bandeau, à la place du
+// restant dont il est l'expression. La série reste donc affichée jusqu'à la fin.
+type SeriesSlot = { kind: 'entry' | 'series'; text: string }
 
 const SLOT_TESTIDS: Record<SeriesSlot['kind'], string> = {
   entry: 'entry-value',
-  remaining: 'remaining',
   series: 'series-value',
 }
 
@@ -146,7 +165,6 @@ const seriesSlot = computed<SeriesSlot | null>(() => {
   // `0` en attente plutôt qu'un champ vide : c'est la valeur qu'on est en train de
   // composer, et le plus souvent la série réelle au carambole (repris de la 1.5).
   if (props.entryValue !== null) return { kind: 'entry', text: props.entryValue || '0' }
-  if (remaining.value !== null) return { kind: 'remaining', text: `POUR ${remaining.value}` }
   if (props.seriesValue !== null) return { kind: 'series', text: String(props.seriesValue) }
   return null
 })
@@ -200,12 +218,14 @@ function adjust(delta: number): void {
 
       <div class="flex items-baseline gap-2">
         <!-- RESTANT : deuxième information de la carte après le score (réf. Cueuny,
-             `남은 점수`). Champ dérivé, aucun état nouveau (AR25). -->
+             `남은 점수`). Champ dérivé, aucun état nouveau (AR25). À l'approche de la
+             distance, l'annonce d'arbitre `POUR n` prend sa place — elle dit la même chose
+             en la rendant urgente, et n'a donc pas à s'afficher ailleurs en même temps. -->
         <span
-          v-if="remainingScore !== null"
-          data-testid="remaining-score"
-          class="shrink-0 text-label font-black tabular-nums leading-none"
-          >{{ remainingScore }}</span
+          v-if="bandSlot"
+          :data-testid="BAND_SLOT_TESTIDS[bandSlot.kind]"
+          class="shrink-0 text-label font-black tabular-nums leading-none whitespace-nowrap"
+          >{{ bandSlot.text }}</span
         >
         <!-- `ml-auto` et non `justify-between` : sans distance, le restant disparaît et les
              statistiques doivent rester calées à droite, pas glisser à gauche. -->

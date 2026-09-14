@@ -1756,7 +1756,7 @@ So that je lis tout à 2 mètres et je passe la main par un geste explicite, san
 **Given** une partie en cours
 **When** une carte joueur s'affiche
 **Then** elle est un conteneur à contour, fond plein couleur de bille, en quatre zones : (1) un **bandeau** (~~22 % de la carte~~ — *à hauteur LIBRE depuis la 3e passe de rendu : fixé à 22 %, il laissait la moitié de son aplat vide sous le texte*, fond `--color-panel-white-band` ou `--color-panel-yellow-band`) avec `NOM` en haut à gauche (gras, deux lignes max puis ellipse — jamais une valeur chiffrée tronquée), `DISTANCE` en haut à droite (libellé petit + valeur), `RESTANT` sous le nom (libellé petit + valeur) ; (2) le **score** géant centré, paliers de taille par nombre de chiffres ajustés à la hauteur restante ; (3) `MOY · SÉRIE` sur une ligne sous le score (18 à 22 px) ; (4) le **pied** `−` / zone de série / `+` (≥ 90×90 px)
-**And** `RESTANT = max(distance − score, 0)` est affiché **dans tous les modes**, masqué sans distance, calculé dans le panneau (AR25) ; `POUR n` reste propre au 3 Bandes et s'affiche dans la zone de série comme aujourd'hui (Story 2.4), redondance avec `RESTANT` assumée
+**And** `RESTANT = max(distance − score, 0)` est affiché **dans tous les modes**, masqué sans distance, calculé dans le panneau (AR25) ; ~~`POUR n` reste propre au 3 Bandes et s'affiche dans la zone de série comme aujourd'hui (Story 2.4), redondance avec `RESTANT` assumée~~ — *__caduc, 4e passe de rendu__ : `POUR n` s'affiche dans le BANDEAU, **à la place** du restant dont il est l'expression, et la zone de série du pied reste occupée par la série en cours jusqu'au bout. Il n'y a plus de redondance à assumer.*
 
 **Given** une carte joueur
 **When** je la tape (n'importe où hors `−`/`+`)
@@ -1764,7 +1764,7 @@ So that je lis tout à 2 mètres et je passe la main par un geste explicite, san
 
 **Given** la colonne centrale
 **When** elle s'affiche
-**Then** elle est un conteneur ~~à contour~~ (`--color-surface` ; *contour retiré à la 3e passe de rendu : son filet s'interrompait derrière le disque du chrono et salissait le raccord du liseré de tour*) réduit à `REP` + compteur en haut, le chrono en 3 Bandes (anneau et fondu inchangés ; en JDS l'espace reste vide et `PASSER LE TOUR` remonte), et `PASSER LE TOUR` en bas (CTA neutre à contour fort, pleine largeur, ≥ 90 px, libellé sur deux lignes si besoin) ; `ANNULER` et `ÉCHANGER` n'y sont plus
+**Then** *(4e passe : `PASSER LE TOUR` tient la même place dans les deux modes, en bas ; en JDS le compteur de reprises prend la place du chrono au lieu de laisser un vide)* elle est un conteneur ~~à contour~~ (`--color-surface` ; *contour retiré à la 3e passe de rendu : son filet s'interrompait derrière le disque du chrono et salissait le raccord du liseré de tour*) réduit à `REP` + compteur en haut, le chrono en 3 Bandes (anneau et fondu inchangés ; en JDS l'espace reste vide et `PASSER LE TOUR` remonte), et `PASSER LE TOUR` en bas (CTA neutre à contour fort, pleine largeur, ≥ 90 px, libellé sur deux lignes si besoin) ; `ANNULER` et `ÉCHANGER` n'y sont plus
 **And** ~~le débordement de l'anneau sur les cartes (12 à 20 px, `z-index`, marge intérieure réservée) est **optionnel** : appliqué seulement si la colonne offre moins de 160 px d'anneau~~ *(**Écart livré, décision 4** : le débordement est **systématique**, 15 px de chaque côté, mesuré aux trois formats ; les cartes réservent 24 px sur leur bord intérieur)*, à valider au rendu avec Nathan
 
 **Given** une partie en JDS, le joueur actif n'ayant rien saisi
