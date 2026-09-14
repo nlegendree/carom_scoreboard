@@ -116,8 +116,8 @@ describe('CenterPanel', () => {
       props: { ...baseProps, secondsRemaining: 40 },
     }).find('[data-testid="shot-clock-bleed"]')
 
-    expect(bleed.classes()).toContain('-mx-4')
-    expect(bleed.classes()).toContain('w-[calc(100%+64px)]')
+    expect(bleed.classes()).toContain('-mx-5')
+    expect(bleed.classes()).toContain('w-[calc(100%+80px)]')
     expect(bleed.classes()).toContain('z-10')
   })
 

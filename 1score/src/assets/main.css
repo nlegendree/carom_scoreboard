@@ -182,6 +182,17 @@
      médaillon rond sombre, retiré à la même revue. */
   --gradient-field: linear-gradient(160deg, #454A54 0%, #1A1D22 100%);
 
+  /* Disque du chrono de tir (2e passe de rendu de la 10.4, Nathan : « il faut que le chrono
+     se fonde au maximum avec le background »). Le disque portait un `bg-black` littéral qui
+     tranchait nettement sur la colonne centrale, gris-bleu : il se lisait comme une pastille
+     posée dessus au lieu d'un médaillon creusé dedans.
+     ⚠️ Cette valeur est `--color-surface` COMPOSÉ sur `--color-bg`, c'est-à-dire exactement
+     ce que rend la colonne centrale — un aplat translucide sur le fond de page. Une variable
+     CSS ne sait pas faire cette composition : elle est donc figée ici, et doit être
+     RECALCULÉE si `--color-surface` ou `--color-bg` bouge. Le disque déborde sur les cartes
+     claires, il lui faut une couleur opaque, pas la translucide de la colonne. */
+  --color-shot-clock-face: #1C1F25;
+
   /* Bandeaux de carte joueur (Story 10.4). */
   --color-panel-white-band: #ECECEC;
   --color-panel-yellow-band: #E6CA00;

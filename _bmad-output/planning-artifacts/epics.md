@@ -1745,7 +1745,9 @@ So that je lis tout à 2 mètres et je passe la main par un geste explicite, san
 > - **latence du chrono ramenée de 2 s à 1 s** (`SHOT_CLOCK_GRACE_MS`) : 2 s se lisaient comme un chrono en panne ;
 > - **anneau du chrono rentré dans son disque** (rayon 36 au lieu de 42, trait 10 au lieu de 8) : collé au bord il se lisait comme un liseré ; avec sa marge sombre, le médaillon se détache des cartes sur lesquelles il déborde (modèle Cueuny).
 >
-> 8. **Écart constaté, non corrigé** : l'anneau débordant recouvre le liseré de tour sur ~15 px de large (la carte `@container` crée un contexte d'empilement qui confine le `z-20` du liseré). À trancher avec Nathan au rendu.
+> **2e passe de rendu (Nathan, 2026-09-14)** : le **liseré de tour passe devant l'anneau** du chrono (l'écart n° 8 ci-dessous est donc **clos**) ; anneau **plus gros** (débordement 16 → 24 px, gouttière des cartes 24 → 32 px), **trait affiné** (10 → 7) et **disque fondu** dans la colonne (`--color-shot-clock-face` au lieu de `bg-black`). **Correction de règle** : en 3 Bandes, `−`/`+` corrigent la **série en cours** au lieu d'empiler un ajustement séparé — sans quoi le total divergeait de la somme des reprises (défaut de la Story 2.2, rendu visible par l'affichage de la série).
+>
+> 8. ~~**Écart constaté, non corrigé**~~ **✅ Clos à la 2e passe de rendu** : l'anneau débordant recouvre le liseré de tour sur ~15 px de large (la carte `@container` crée un contexte d'empilement qui confine le `z-20` du liseré). À trancher avec Nathan au rendu.
 
 **Acceptance Criteria:**
 

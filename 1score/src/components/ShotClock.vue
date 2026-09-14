@@ -3,8 +3,7 @@ import { computed } from 'vue'
 
 // Story 2.1 : chrono de tir du 3 Bandes (FR13, UX-DR4). Anneau SVG classique (cercle +
 // `stroke-dasharray`/`stroke-dashoffset`), inspiré du « SHOT CLOCK » circulaire du CUESCO
-// — forme retenue, pas ses couleurs. Fond NOIR littéral (`bg-black`, pas `bg-bg` qui est
-// un gris-bleu). Pas de librairie, comme les icônes SVG inline de `GameView.vue`. La barre
+// — forme retenue, pas ses couleurs. Pas de librairie, comme les icônes SVG inline. La barre
 // segmentée du Billiboard a été écartée (paliers visibles) : la transition CSS d'une
 // seconde, calée sur le tick de `useTimer`, donne un mouvement continu.
 //
@@ -22,10 +21,12 @@ const props = defineProps<{ secondsRemaining: number; totalSeconds: number }>()
 // 1re passe de rendu de la 10.4 (Nathan, réf. `cueuny_scoreboard.png`) : l'arc est RENTRÉ
 // dans le disque, qui lui fait une marge sombre tout autour. Collé au bord (rayon 42 sur un
 // disque de 50), il se lisait comme un liseré ; à 36, le médaillon se détache des cartes sur
-// lesquelles il déborde et l'arc « passe autour » du chiffre. Le trait s'épaissit d'autant
-// pour rester franc à distance.
+// lesquelles il déborde et l'arc « passe autour » du chiffre.
+// 2e passe (2026-09-14) : trait AFFINÉ (10 → 7). Le disque ayant grossi en même temps, un
+// trait épais redevenait lourd ; fin, il se lit comme un cadran et laisse respirer le
+// chiffre. Le rayon ne bouge pas — c'est le disque entier qui grandit, porté par la colonne.
 const RADIUS = 36
-const STROKE_WIDTH = 10
+const STROKE_WIDTH = 7
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 const ratio = computed(() =>
@@ -62,7 +63,7 @@ const color = computed(() => {
     <div class="flex min-h-0 w-full items-center justify-center">
       <div
         data-testid="shot-clock-ring"
-        class="relative flex aspect-square w-[min(100cqw,100cqh)] items-center justify-center rounded-full bg-black [container-type:size]"
+        class="relative flex aspect-square w-[min(100cqw,100cqh)] items-center justify-center rounded-full bg-shot-clock-face [container-type:size]"
         role="timer"
         aria-live="off"
         :aria-label="`Chrono de tir : ${secondsRemaining} secondes restantes`"

@@ -1969,7 +1969,12 @@ describe('useGameStore — série au point (3 Bandes)', () => {
 
   // Les corrections `−`/`+` restent hors des reprises : elles ne rouvrent ni ne
   // prolongent la série au tap.
-  it('keeps manual corrections apart from the tapped series', () => {
+  // ⚠️ Règle CHANGÉE à la 2e passe de rendu de la 10.4 (défaut relevé par Nathan) : tant
+  // qu'une série est OUVERTE, `−`/`+` corrigent CE QUI VIENT D'ÊTRE COMPTÉ. L'ancien
+  // comportement — un ajustement tenu à part — faisait diverger le total de la somme des
+  // reprises : la carte affichait une série de 4 pour un total de 3, et la meilleure série
+  // comme la moyenne gardaient la valeur fausse jusqu'à la fin de la partie.
+  it('folds a correction into the series still being counted', () => {
     const store = startThreeCushions()
 
     store.incrementSeries()
@@ -1977,7 +1982,52 @@ describe('useGameStore — série au point (3 Bandes)', () => {
     store.incrementSeries()
 
     expect(store.player1.score).toBe(3)
+    expect(store.reprises).toEqual([expect.objectContaining({ player1: 3, player2: null })])
+    expect(store.bestSeries.player1).toBe(3)
+    expect(store.openSeries.player1).toBe(3)
+  })
+
+  // Une série ne descend pas sous zéro : la correction retombe alors sur l'ajustement
+  // séparé, qui n'est volontairement pas borné (un score peut être négatif, Story 1.9).
+  it('falls back to a plain adjustment rather than making a series negative', () => {
+    const store = startThreeCushions()
+
+    store.incrementSeries()
+    store.adjustScore('player1', -1)
+    expect(store.reprises).toEqual([expect.objectContaining({ player1: 0, player2: null })])
+    expect(store.player1.score).toBe(0)
+
+    store.adjustScore('player1', -1)
+
+    expect(store.reprises).toEqual([expect.objectContaining({ player1: 0, player2: null })])
+    expect(store.player1.score).toBe(-1)
+  })
+
+  // Le joueur ASSIS n'a pas de série en cours : corriger son total reste un ajustement.
+  it('keeps the seated player corrections apart from his last series', () => {
+    const store = startThreeCushions()
+
+    store.incrementSeries()
+    store.incrementSeries()
+    store.passTurn()
+    store.adjustScore('player1', 1)
+
     expect(store.reprises).toEqual([expect.objectContaining({ player1: 2, player2: null })])
+    expect(store.player1.score).toBe(3)
+  })
+
+  // En JDS la série est saisie d'un bloc : `−`/`+` n'y touchent pas au déroulé (Story 1.7).
+  it('never folds a correction into a series game', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    store.appendScoreDigit('player1', 5)
+    store.validateScoreInput('player1')
+
+    store.adjustScore('player1', 2)
+
+    expect(store.reprises).toEqual([expect.objectContaining({ player1: 5, player2: null })])
+    expect(store.player1.score).toBe(7)
+    expect(store.bestSeries.player1).toBe(5)
   })
 
   // Atteindre la distance au tap termine la série sur-le-champ : le blanc reçoit l'offre

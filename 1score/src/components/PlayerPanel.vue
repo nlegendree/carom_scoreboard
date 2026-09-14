@@ -71,9 +71,11 @@ const BAND_COLOR_CLASSES: Record<PlayerColor, string> = {
 // L'anneau du chrono déborde de la colonne centrale sur les deux cartes (AC16) : chacune
 // réserve une gouttière sur son bord INTÉRIEUR pour que ni le score, ni le bandeau, ni la
 // ligne de statistiques ne passent dessous. Le FOND, lui, reste pleine largeur.
+// Élargie de 24 à 32 px à la 2e passe de rendu : l'anneau ayant grossi, il déborde de
+// 24 px de chaque côté au lieu de 15.
 const INNER_GUTTER_CLASSES: Record<TableSide, string> = {
-  left: 'pr-3',
-  right: 'pl-3',
+  left: 'pr-4',
+  right: 'pl-4',
 }
 
 // Le score doit être le plus GROS possible dans sa carte. Une taille unique ne peut pas
@@ -158,9 +160,16 @@ function adjust(delta: number): void {
 
 <template>
   <div
-    class="@container relative flex h-full min-w-0 flex-1 flex-col overflow-hidden touch-manipulation select-none"
+    class="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden touch-manipulation select-none"
     :class="colorClasses"
   >
+    <!-- ⚠️ `@container` vit ICI et non sur la racine : `container-type` implique
+         `contain: layout`, qui crée un CONTEXTE D'EMPILEMENT. Posé sur la racine, il
+         enfermait le `z-20` du liseré dans la carte, et l'anneau du chrono — qui déborde
+         depuis la colonne voisine avec son propre `z-10` — passait devant lui. La racine
+         reste `relative` sans `z-index` : elle ne crée aucun contexte, le liseré remonte
+         donc au contexte racine et gagne. -->
+    <div class="@container flex h-full min-w-0 flex-col">
     <!-- 1. BANDEAU (≈ 22 % de la carte), au modèle Billiboard (1re passe de rendu, Nathan) :
          ligne 1 **NOM | DISTANCE**, ligne 2 **RESTANT | MOY · SÉRIE**. Les statistiques
          sont remontées ici — leur bandeau gris sous le score coupait la carte en deux pour
@@ -280,12 +289,17 @@ function adjust(delta: number): void {
       </button>
     </div>
 
-    <!-- Liseré de tour, en OVERLAY posé après les quatre zones (passe navigateur 10.4).
+    </div>
+
+    <!-- Liseré de tour, en OVERLAY posé après les zones (passe navigateur 10.4).
          ⚠️ Il vivait sur la racine en `ring-inset` : une ombre interne se peint au-dessus du
          fond de l'élément mais SOUS ses enfants, et le bandeau opaque du haut l'effaçait
          donc sur les 22 % supérieurs de la carte — bord haut et deux tiers des montants.
          Aucun test ne pouvait le voir : happy-dom ne calcule pas le CSS. Le signal de tour
-         actif est ce qui se lit en premier à 2 mètres, il doit encadrer la carte ENTIÈRE. -->
+         actif est ce qui se lit en premier à 2 mètres, il doit encadrer la carte ENTIÈRE.
+         ⚠️ Il passe aussi DEVANT l'anneau du chrono qui déborde de la colonne voisine
+         (2e passe de rendu, Nathan) : le disque du chrono le coupait sur toute sa hauteur.
+         C'est ce que le `@container` descendu d'un cran rend possible — voir plus haut. -->
     <span
       v-if="active"
       data-testid="turn-ring"

@@ -70,7 +70,7 @@ function passTurn(): void {
     <div
       v-if="secondsRemaining !== null"
       data-testid="shot-clock-bleed"
-      class="relative z-10 -mx-4 flex min-h-0 w-[calc(100%+64px)] flex-1"
+      class="relative z-10 -mx-5 flex min-h-0 w-[calc(100%+80px)] flex-1"
     >
       <ShotClock :secondsRemaining="secondsRemaining" :totalSeconds="SHOT_CLOCK_SECONDS" />
     </div>

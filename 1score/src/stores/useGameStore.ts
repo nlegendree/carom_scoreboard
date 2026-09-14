@@ -211,7 +211,31 @@ export const useGameStore = defineStore('game', () => {
   function adjustScore(playerId: PlayerId, delta: number): void {
     if (status.value !== 'playing') return
     pushHistory()
-    scoreAdjustments.value[playerId] += delta
+
+    // ⚠️ Défaut relevé par Nathan à la 2e passe de rendu de la 10.4 : quand une SÉRIE EST
+    // OUVERTE (3 Bandes, joueur qui a la main), la correction doit porter sur CE QUI VIENT
+    // D'ÊTRE COMPTÉ, pas sur un ajustement à part. Sinon `−` baissait bien le total mais
+    // laissait la série en cours, la meilleure série et la moyenne sur une valeur fausse —
+    // la somme des reprises et le total divergeaient en silence. Le défaut existait depuis
+    // la 2.2 ; il devient visible avec la série affichée en grand sur la carte (AC3c).
+    // ⚠️ Borné au 3 BANDES, et au joueur qui a la main. C'est le seul mode où une série se
+    // COMPTE point par point sous les yeux de l'arbitre, donc le seul où corriger revient à
+    // corriger ce comptage. En JDS la série est saisie d'un bloc et se corrige par `ANNULER`
+    // puis ressaisie : `−`/`+` y restent un ajustement séparé qui ne touche pas au déroulé
+    // de la partie (Story 1.7), et le comportement n'y change pas d'un iota.
+    const open =
+      mode.value === '3bandes' && activePlayer.value === playerId
+        ? openSeriesValue(playerId)
+        : null
+
+    // Une série ne peut pas devenir négative : sous zéro, on retombe sur l'ajustement, qui
+    // n'est volontairement pas borné (un score peut descendre sous zéro, Story 1.9).
+    if (open !== null && open + delta >= 0) {
+      writeLastReprise(playerId, open + delta)
+    } else {
+      scoreAdjustments.value[playerId] += delta
+    }
+
     recomputeScore(playerId)
     lastSaved.value = new Date().toISOString()
   }

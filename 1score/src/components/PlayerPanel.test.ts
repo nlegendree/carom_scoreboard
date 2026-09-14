@@ -64,10 +64,15 @@ describe('PlayerPanel', () => {
     expect(ring.classes()).toContain('ring-turn-active')
     expect(ring.classes()).toContain('absolute')
     expect(ring.classes()).toContain('inset-0')
-    // Rendu APRÈS les quatre zones : c'est ce qui le met au-dessus des aplats opaques.
+    // Rendu APRÈS les zones : c'est ce qui le met au-dessus des aplats opaques.
     expect(ring.element.previousElementSibling).toBe(
-      active.find('[data-testid="score-minus"]').element.parentElement,
+      active.find('[data-testid="panel-header"]').element.parentElement,
     )
+    // ⚠️ Et la RACINE ne doit porter aucun `@container` : `container-type` implique
+    // `contain: layout`, donc un contexte d'empilement qui enfermerait ce `z-20` dans la
+    // carte — l'anneau du chrono, qui déborde de la colonne voisine, repasserait devant.
+    expect(active.classes()).not.toContain('@container')
+    expect(active.find('.\\@container').exists()).toBe(true)
 
     const inactive = mountPanel(makePlayer(), false)
     expect(inactive.find('[data-testid="turn-ring"]').exists()).toBe(false)
@@ -179,8 +184,8 @@ describe('PlayerPanel — les quatre zones de la carte', () => {
       props: { player: makePlayer(), active: false, side: 'right' },
     })
 
-    expect(left.find('[data-testid="score-zone"]').classes()).toContain('pr-3')
-    expect(right.find('[data-testid="score-zone"]').classes()).toContain('pl-3')
+    expect(left.find('[data-testid="score-zone"]').classes()).toContain('pr-4')
+    expect(right.find('[data-testid="score-zone"]').classes()).toContain('pl-4')
   })
 })
 
