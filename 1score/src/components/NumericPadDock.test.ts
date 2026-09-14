@@ -224,4 +224,25 @@ describe('NumericPadDock', () => {
     expect(source).toContain('@pointerdown')
     expect(source).not.toContain('@click')
   })
+
+  // AC1 (Story 10.7) : le dock s'annonce comme un dialogue. Aucun titre visible ici — la
+  // carte visée reste lisible à côté —, donc un `aria-label` statique plutôt qu'un
+  // `aria-labelledby` qui n'aurait rien à viser.
+  it('exposes the dialog semantics with a static label', () => {
+    const backdrop = pad({ value: '' }).find('[data-testid="numeric-pad-dock"]')
+
+    expect(backdrop.attributes('role')).toBe('dialog')
+    expect(backdrop.attributes('aria-modal')).toBe('true')
+    expect(backdrop.attributes('aria-label')).toBe('Réglage de la distance')
+  })
+
+  // AC2 (Story 10.7) : le voile garde ses handlers pointer SANS `role="button"` — il porte
+  // déjà `role="dialog"`. Exception assumée à CLAUDE.md §2, consignée là-bas.
+  it('never gives the backdrop a button role', () => {
+    const wrapper = pad({ value: '' })
+
+    expect(wrapper.find('[data-testid="numeric-pad-dock"]').attributes('role')).not.toBe('button')
+    expect(wrapper.find('[role="button"]').exists()).toBe(false)
+  })
+
 })

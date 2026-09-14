@@ -1056,12 +1056,12 @@ describe('HomeScreen', () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper)
-    expect(nameOn(wrapper, 'left').classes()).toContain('opacity-55')
+    expect(nameOn(wrapper, 'left').classes()).toContain('opacity-60')
 
     await typeName(wrapper, 'white', 'MICHEL')
     await press(wrapper, ['sheet-confirm'])
 
-    expect(nameOn(wrapper, 'left').classes()).not.toContain('opacity-55')
+    expect(nameOn(wrapper, 'left').classes()).not.toContain('opacity-60')
   })
 
   // Même défaut que celui corrigé sur `resetGame()` en revue de la Story 1.3 : un réglage

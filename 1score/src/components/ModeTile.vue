@@ -61,7 +61,13 @@ function select(): void {
       <span data-testid="tile-title" class="text-tile-title font-black uppercase leading-none">
         {{ title }}
       </span>
-      <span v-if="tagline" data-testid="tile-tagline" class="text-stat text-white/80">
+      <!-- Blanc PLEIN depuis la passe contraste de la 10.7 : `text-white/80` ne donnait
+           que 2,78:1 sur le stop clair de `--gradient-blue`, contre 3,46:1 ici. ⚠️ Toujours
+           sous le seuil 4,5:1 qui s'applique à `text-stat` (jamais « grand texte »), mais
+           AUCUNE tuile n'affiche d'accroche aujourd'hui (décision de Nathan en 10.1) : la
+           prop reste au contrat, le chemin est corrigé au mieux, et `deferred-work.md`
+           consigne que rouvrir les accroches obligera à en remonter la taille. -->
+      <span v-if="tagline" data-testid="tile-tagline" class="text-stat text-white">
         {{ tagline }}
       </span>
     </span>

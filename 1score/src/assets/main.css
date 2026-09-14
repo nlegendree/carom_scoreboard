@@ -28,16 +28,23 @@
   --color-on-alert: #000000;
   --color-victory-gold: #FFD54A;
   --color-on-victory-gold: #000000;
-  --color-victory-ribbon: #E63946;
+  /* Assombri de #E63946 à #D0343F à la passe contraste AA (Story 10.7, décision de
+     Nathan) : le texte blanc qu'il porte passe de 4,17:1 à 4,95:1. La dette ouverte par
+     la 3e passe de rendu de la 10.5 est donc close PAR LA COULEUR, et non par une note.
+     ⚠️ Cette valeur est désormais celle de `--color-brand-red`, et ce sont pourtant DEUX
+     tokens, à garder tels quels : deux rôles distincts (ruban de victoire / rouge de
+     marque) qui peuvent rediverger. Ne pas en supprimer un, ne pas écrire l'un en `var()`
+     de l'autre, ne pas remplacer les usages. Un design system des couleurs est prévu plus
+     tard, hors Epic 10 (demande de Nathan, 2026-09-14) : fusionner ici, ce serait
+     improviser la palette story par story. */
+  --color-victory-ribbon: #D0343F;
   /* Blanc et non noir depuis la 3e passe de rendu de la 10.5 (Nathan) : partout ailleurs
      dans l'app le texte est blanc, et la colonne perdante juste à côté l'est aussi — le
      noir se lisait comme une inversion.
-     ⚠️ Chiffres de contraste sur `--color-victory-ribbon` : blanc 4,17:1, noir 5,04:1.
-     Les deux passent AA pour les tailles employées ici (tout est en `text-label`, ≥ 24 px
-     et gras, donc « grand texte », seuil 3:1), mais le blanc NE passe PAS le seuil 4,5:1
-     du texte courant. Ne pas descendre la taille de ces valeurs sans revoir la teinte —
-     assombrir le ruban vers `--color-brand-red` (#D0343F) porterait le blanc à 4,95:1.
-     À trancher à la passe contraste AA (Story 10.7). */
+     Contraste sur le ruban assombri : blanc 4,95:1, noir 4,24:1 — le blanc est désormais
+     le PLUS contrasté des deux, et il passe même le seuil 4,5:1 du texte courant, alors
+     que les valeurs du récap sont toutes en `text-label` (≥ 24 px gras, seuil 3:1). La
+     marge ne dépend donc plus de la taille : descendre une de ces valeurs ne rouvre rien. */
   --color-on-victory-ribbon: #FFFFFF;
 
   /* Fond sombre (valeur de première passe, susceptible d'être affinée) */
@@ -259,5 +266,33 @@ body,
 button:focus-visible {
   outline: 4px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+/* Garde `prefers-reduced-motion` (Story 10.7, NFR10 / UX-DR55). Elle CIBLE deux classes
+   nommément, et surtout PAS `*, *::before, *::after { animation-duration: 0.01ms }` :
+   le motif qui circule emporterait le fondu du chrono et la barre de rebours, c'est-à-dire
+   les deux seules animations du produit qui portent une INFORMATION (le temps restant, et
+   le fait que le score va se valider seul et changer le tour). Elles survivent donc à
+   `reduce` — décision de Nathan, 2026-09-14, écart assumé à la lettre de l'AC d'`epics.md`,
+   qui n'exemptait que le chrono. Les deux coupées ci-dessous sont des retours de CONFORT :
+   l'haptique et l'affichage du chiffre disent déjà la même chose.
+   Toute nouvelle animation d'ORNEMENT vient se couper ici ; une animation porteuse
+   d'information ne s'y ajoute pas, et la décision se documente (CLAUDE.md §10). */
+@media (prefers-reduced-motion: reduce) {
+  /* Pulsation de refus de plafond : ses keyframes partent et reviennent à `scale(1)`,
+     sans `forwards`. Couper l'animation suffit, l'élément reste dans son état normal. */
+  .animate-input-reject {
+    animation: none;
+  }
+
+  /* ⚠️ Flash de frappe : PAS `animation: none` seul. Ses keyframes vont de `opacity: 1`
+     à `0` en `forwards`, et l'élément qui les porte est un voile noir posé en absolu
+     PAR-DESSUS la valeur de série (`PlayerPanel`). Sans animation, son état au repos est
+     `opacity: 1` : le voile resterait peint en permanence sur le chiffre. C'est
+     l'animation qui l'efface — il faut donc l'effacer soi-même. */
+  .animate-input-flash {
+    animation: none;
+    opacity: 0;
+  }
 }
 

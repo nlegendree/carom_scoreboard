@@ -75,9 +75,9 @@ describe('PlayerSetupCard', () => {
     const wrapper = card()
 
     expect(wrapper.find('[data-testid="name-value"]').text()).toBe('NOM')
-    expect(wrapper.find('[data-testid="name-value"]').classes()).toContain('opacity-55')
+    expect(wrapper.find('[data-testid="name-value"]').classes()).toContain('opacity-60')
     expect(wrapper.find('[data-testid="distance-value"]').text()).toBe('DISTANCE')
-    expect(wrapper.find('[data-testid="distance-value"]').classes()).toContain('opacity-55')
+    expect(wrapper.find('[data-testid="distance-value"]').classes()).toContain('opacity-60')
     // Pas d'intitulé en double au-dessus tant qu'il n'y a pas de valeur.
     expect(wrapper.find('[data-testid="name-field"]').text()).toBe('NOM')
   })
@@ -86,7 +86,7 @@ describe('PlayerSetupCard', () => {
     const wrapper = card({ name: 'MICHEL', distance: '47' })
 
     expect(wrapper.find('[data-testid="name-value"]').text()).toBe('MICHEL')
-    expect(wrapper.find('[data-testid="name-value"]').classes()).not.toContain('opacity-55')
+    expect(wrapper.find('[data-testid="name-value"]').classes()).not.toContain('opacity-60')
     expect(wrapper.find('[data-testid="name-field"]').text()).toContain('NOM')
     expect(wrapper.find('[data-testid="distance-value"]').text()).toBe('47')
     expect(wrapper.find('[data-testid="distance-field"]').text()).toContain('DISTANCE')
@@ -127,4 +127,20 @@ describe('PlayerSetupCard', () => {
     expect(source).toContain('@pointerdown')
     expect(source).not.toContain('@click')
   })
+
+  // AC5 (Story 10.7) : les intitulés en placeholder sont posés sur la BOX du champ
+  // (`bg-black/8`), pas sur la carte nue — sur le jaune, `opacity-55` n'y donnait que
+  // 4,20:1 pour un `text-stat` qui n'est jamais « grand texte ». `opacity-60` porte le
+  // couple à 4,98:1 sur la carte jaune et 5,44:1 sur la blanche : une seule classe suffit
+  // aux deux.
+  it.each(['white', 'yellow'] as const)('dims the %s card placeholders to a legible level', (ball) => {
+    const wrapper = card({ ball, name: '', distance: '' })
+
+    for (const testid of ['name-value', 'distance-value']) {
+      const classes = wrapper.find(`[data-testid="${testid}"]`).classes()
+      expect(classes).toContain('opacity-60')
+      expect(classes).not.toContain('opacity-55')
+    }
+  })
+
 })

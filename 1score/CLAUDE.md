@@ -52,6 +52,8 @@ button, [role="button"] { touch-action: manipulation; user-select: none; }
 
 Tout élément non-`<button>` utilisé comme zone tactile/interactive (ex. `<div @pointerdown>`) doit porter `role="button"` pour hériter de ce CSS.
 
+**Exception : le voile plein écran d'une pop-up** (`PromptModal`, `NumericPadDock`, `AlphaKeyboardSheet`, `ScoreEntryDock`). Il garde ses handlers pointer **sans** `role="button"`, pour deux raisons : il porte déjà `role="dialog"` et un élément n'a qu'un rôle ; et il n'est pas un bouton — l'annoncer comme tel serait faux, alors que la fermeture porte déjà un nom, le CTA `ANNULER` de la carte. Le CSS que la règle cherche à faire hériter (`touch-action`, `user-select`) est sans objet sur un voile qui ne porte aucun texte. Exception appliquée depuis la Story 10.2, consignée ici par la 10.7 ; elle ne s'étend à aucun autre élément.
+
 Pour toute interaction complexe (long press, tap avancé), utiliser `usePointerEvents.ts` — ne jamais réimplémenter la logique pointer inline.
 
 ### 3. Gestion d'erreurs storage en couche service (AR12)
@@ -153,8 +155,36 @@ Ordre des classes Tailwind : Layout → Sizing → Spacing → Typography → Co
 
 Pour toute session de développement assistée par IA (dev-story ou autre) :
 
+- **Commande de validation de référence : `npm run build`** (= `vue-tsc -b && vite build`), **pas** `npx vue-tsc --noEmit`. `--noEmit` laisse passer des pertes de narrowing que `vue-tsc -b` refuse : remplacer un `v-if="x !== null"` par un `v-if` sur un `computed` équivalent perd le narrowing `number | null` → `number` qu'attend le composant enfant, et seul le build le voit (leçon de la 4e passe de la Story 10.4). Une story n'est pas validée tant que `npm test` **et** `npm run build` ne sont pas verts tous les deux.
 - **Pendant l'implémentation** : valider chaque élément de code (composant, store, composable) uniquement via les tests unitaires/`vue-tsc` au fur et à mesure — cycle red-green décrit dans la règle 6. **Ne pas** ouvrir de navigateur ni driver Chrome après chaque composant : ça consomme des tokens pour un gain marginal, les tests unitaires suffisent à valider la correction unitaire.
 - **En fin de story** : une fois toutes les tâches complètes et la suite de tests/`vue-tsc`/`build` au vert, faire **une seule** passe de validation visuelle/intégration dans un vrai navigateur (extension Claude for Chrome) pour parcourir les critères d'acceptation de bout en bout, avant de passer la story en statut "review". Cette passe se fait **en paysage uniquement** — l'app n'est jamais utilisée en portrait (décision de Nathan, 2026-09-11) — et couvre au moins l'**iPad mini 1133×744** et l'**iPad 11″ 1194×834**, plus l'**écran 21,5″ 1920×1080** visé à terme, car happy-dom ne compile ni ne calcule le CSS Tailwind : aucun débordement de layout n'est détectable par les tests unitaires. Le téléphone et le portrait sont hors périmètre produit : ne pas écrire de variantes `portrait:`.
+
+### 10. Composants et conventions de l'Epic 10 (refonte UI/UX « 1Score »)
+
+Cinq écrans partagent une même coquille : fond `bg-(image:--gradient-bg)`, `SideBar` à gauche, `<main>` à droite.
+
+- **`SideBar` est CONTEXTUELLE et nourrie par l'écran.** Elle reçoit `items: SideBarItem[]` et `exitItem?: SideBarItem` ; elle ne code **aucun** contenu en propre. Chaque écran déclare ses propres constantes (`HOME_SIDEBAR_ITEMS`, `SUMMARY_SIDEBAR_ITEMS`/`SUMMARY_SIDEBAR_EXIT`…) et les lui passe. Ajouter un item **dans** `SideBar` est une faute : la barre ne sait pas sur quel écran elle est. Un `SideBarItem` porte `id`, `picto`, `label`, `state` et un `action?` optionnel ; l'`exitItem` est calé en bas, isolé du reste.
+- **`ModeTile`** — tuile de mode de l'accueil et de la sélection JDS : `title`, `tagline?`, `color` (famille `--gradient-tile-*`), `soon`. L'état `BIENTÔT` atténue le fond à `opacity-45` **et** affiche un badge : l'information ne dépend jamais de la couleur seule (UX-DR30). Cette atténuation ne se « corrige » pas au contraste — WCAG §1.4.3 exempte les commandes inactives.
+- **`IconAction`** — bouton picto + libellé de la barre basse du scoreboard : `picto`, `label`, `state?`, `disabled?`, émet `press`.
+- **`PictoIcon`** — SVG **inline**, jamais de fichier ni de police d'icônes : une table `name` → tracés (Lucide, licence ISC), `viewBox` 24, trait 2 px, sans remplissage, `aria-hidden`. Ajouter un picto = ajouter une entrée dans `PATHS` et son nom au type `PictoName`.
+- **Les trois hôtes de saisie portent les règles, les pavés restent muets** (UX-DR54). `NumericPadDock`, `AlphaKeyboardSheet` et `ScoreEntryDock` tiennent le plafond, le timer d'auto-validation, l'haptique et les animations de retour ; `NumericPad` et `AlphaKeyboard` n'émettent que la frappe. **Le buffer de saisie vit dans l'ÉCRAN**, pas dans l'hôte : l'hôte émet la valeur COMPLÈTE, jamais le seul caractère frappé — deux buffers divergeraient à la première frappe.
+- **Les quatre pop-ups ont un seul patron** : racine `fixed inset-0 z-50 … bg-black/25` portant `role="dialog"`, `aria-modal="true"` et son nom accessible (`aria-labelledby` vers le titre visible pour `PromptModal`, `aria-label` statique pour les trois autres, qui n'ont pas de titre), puis une carte en `@pointerdown.stop`. L'`id` de titre vient de `useId()`, jamais d'une chaîne littérale. **Rien d'autre en ARIA** : pas de piège à focus, pas de `tabindex`, pas d'écoute de `Escape` — l'app tourne sur une tablette de club sans clavier (arbitrage « borne fixe »).
+- **Tokens de conteneur** : `--size-touch-target` (90 px, le plancher de toute zone tactile hors claviers), `--game-popup-inset-left`/`-right` (les pop-ups de paramétrage se logent dans la zone libre, du côté OPPOSÉ à la carte visée), `--game-clock-bleed` (24 px — le débordement du chrono hors de la colonne centrale, **même token** que la largeur qui le clippe : trois usages dans trois fichiers doivent rester cohérents). Les cartes joueur sont des conteneurs `@container` : leurs variantes s'écrivent en `@min-[420px]:`, jamais en breakpoints d'écran.
+
+### 11. Animations et `prefers-reduced-motion`
+
+Les animations vivent dans le `@theme` de `main.css` (`--animate-*`) et se consomment par classe. `main.css` porte une garde globale `@media (prefers-reduced-motion: reduce)` qui **cite nommément** les classes à couper.
+
+- **Toute nouvelle animation d'ORNEMENT doit venir s'y ajouter à la main.** Une animation **porteuse d'information** (le fondu du chrono, la barre de rebours de l'auto-validation — elles disent le temps restant et le fait que le score va se valider seul) ne s'y ajoute **pas**, et la décision se documente dans le commentaire de la garde.
+- **Jamais de garde attrape-tout** (`*, *::before, *::after { animation-duration: 0.01ms !important }`) : elle emporterait précisément les deux animations conservées.
+- ⚠️ **`animation: none` ne suffit pas pour une animation en `forwards` dont l'état de départ est visible.** Le flash de frappe va de `opacity: 1` à `0` : sans animation, son voile noir resterait peint en permanence sur la valeur de série. La garde doit poser l'état final elle-même (`opacity: 0`).
+- happy-dom ne calcule aucun CSS : un test peut verrouiller le **texte** de la règle (`main.css.test.ts`), jamais son effet. L'effet se vérifie au navigateur, `prefers-reduced-motion` émulé.
+
+### 12. Pièges de gabarit
+
+- **Aucun commentaire HTML à la racine d'un gabarit.** Un `<!-- … -->` placé avant l'élément racine fait du composant un **fragment** : la racine perd `classes()`, `attributes()` et son `data-testid`, et des cas tombent d'un coup sans rapport apparent avec le changement. Payé quatre fois dans l'Epic 10. Commenter **dans le `<script setup>`**, ou à l'intérieur de la racine.
+- **Aucune classe Tailwind construite à la volée.** Le scanner JIT de Tailwind 4 ne voit que les classes écrites en toutes lettres : `opacity-60` littéral, jamais `` `opacity-${n}` ``.
+- **`scrollWidth` / `scrollHeight` ne voient rien sous `overflow-hidden`.** Pour détecter un débordement, comparer les `getBoundingClientRect()` des enfants à celui du parent.
 
 ## En cas de divergence
 

@@ -316,4 +316,36 @@ describe('ScoreEntryDock', () => {
     expect(source).not.toContain('@click')
     expect(source).not.toContain('@touchstart')
   })
+
+  // AC1 (Story 10.7) : le dock de score s'annonce comme un dialogue, nommé par un
+  // `aria-label` statique — la valeur saisie s'affiche sur la carte du joueur, pas ici,
+  // donc il n'y a aucun titre visible à viser.
+  it('exposes the dialog semantics with a static label', () => {
+    const backdrop = mountDock().find('[data-testid="score-entry-dock"]')
+
+    expect(backdrop.attributes('role')).toBe('dialog')
+    expect(backdrop.attributes('aria-modal')).toBe('true')
+    expect(backdrop.attributes('aria-label')).toBe('Saisie du score')
+  })
+
+  // AC2 (Story 10.7) : pas de `role="button"` sur le voile, qui porte déjà `role="dialog"`.
+  it('never gives the backdrop a button role', () => {
+    const wrapper = mountDock()
+
+    expect(wrapper.find('[data-testid="score-entry-dock"]').attributes('role')).not.toBe('button')
+    expect(wrapper.find('[role="button"]').exists()).toBe(false)
+  })
+
+
+  // AC5 (Story 10.7) : la barre de rebours est un OBJET GRAPHIQUE porteur d'information
+  // (WCAG 1.4.11, seuil 3:1), pas du texte. En `bg-white/70` elle donnait 2,45:1 sur le
+  // stop clair de `--gradient-blue` ; en blanc plein, 3,46:1.
+  it('draws the countdown bar at full opacity', () => {
+    const wrapper = mountDock('12')
+    const classes = wrapper.find('[data-testid="validate-countdown"]').classes()
+
+    expect(classes).toContain('bg-white')
+    expect(classes).not.toContain('bg-white/70')
+  })
+
 })

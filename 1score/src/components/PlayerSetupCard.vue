@@ -88,12 +88,17 @@ function fieldClasses(field: 'name' | 'distance', focused: 'name' | 'distance' |
       @pointerdown="emit('focus', 'name')"
     >
       <!-- L'intitulé ne double la valeur que lorsqu'il y en a une : un champ vide porte
-           `NOM` seul, en gros, et ne fait pas croire à une valeur déjà saisie. -->
+           `NOM` seul, en gros, et ne fait pas croire à une valeur déjà saisie.
+           ⚠️ `opacity-60` et non 55 depuis la passe contraste de la 10.7 : le placeholder
+           est posé sur la BOX du champ (`bg-black/8`), pas sur la carte nue, et sur le
+           jaune il n'y tenait que 4,20:1 — `text-stat` n'est jamais « grand texte »
+           (14 → 18 px), donc le seuil est bien 4,5:1. À 60 % : 4,98:1 sur le jaune,
+           5,44:1 sur le blanc. Une seule classe pour les deux cartes. -->
       <span v-if="name" class="text-stat font-bold tracking-[0.25em] opacity-65">NOM</span>
       <span
         data-testid="name-value"
         class="w-full truncate font-black uppercase"
-        :class="name ? 'text-[clamp(24px,2.6vw,40px)]' : 'text-stat tracking-[0.15em] opacity-55'"
+        :class="name ? 'text-[clamp(24px,2.6vw,40px)]' : 'text-stat tracking-[0.15em] opacity-60'"
         >{{ name || 'NOM' }}</span
       >
     </button>
@@ -107,7 +112,7 @@ function fieldClasses(field: 'name' | 'distance', focused: 'name' | 'distance' |
       <span
         data-testid="distance-value"
         class="w-full truncate font-black tabular-nums"
-        :class="distance ? 'text-[clamp(24px,2.6vw,40px)]' : 'text-stat tracking-[0.15em] opacity-55'"
+        :class="distance ? 'text-[clamp(24px,2.6vw,40px)]' : 'text-stat tracking-[0.15em] opacity-60'"
         >{{ distance || 'DISTANCE' }}</span
       >
     </button>

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 // `?raw` (typé par vite/client) plutôt que node:fs : tsconfig.app.json n'expose pas
 // les types Node, et il ne faut pas les y ajouter pour du code navigateur.
 import source from './PromptModal.vue?raw'
+import { h } from 'vue'
 import { mount } from '@vue/test-utils'
 import PromptModal from './PromptModal.vue'
 
@@ -293,4 +294,50 @@ describe('PromptModal', () => {
     expect(source).not.toContain('@click')
     expect(source).not.toContain('@touchstart')
   })
+
+  // AC1 (Story 10.7) : la pop-up s'annonce comme un dialogue. Seule des quatre à porter un
+  // titre VISIBLE, elle se nomme par lui (`aria-labelledby`) plutôt que par un `aria-label`
+  // statique — l'`id` vient de `useId()` (Vue 3.5), donc unique par instance et jamais en dur.
+  it('exposes the dialog semantics, labelled by its visible title', () => {
+    const wrapper = mountPrompt()
+    const backdrop = find(wrapper, 'prompt-modal')
+    const titleId = find(wrapper, 'prompt-title').attributes('id')
+
+    expect(backdrop.attributes('role')).toBe('dialog')
+    expect(backdrop.attributes('aria-modal')).toBe('true')
+    expect(titleId).toBeTruthy()
+    expect(backdrop.attributes('aria-labelledby')).toBe(titleId)
+    // L'id est CALCULÉ, pas écrit : une chaîne littérale dans le gabarit collisionnerait
+    // dès que deux pop-ups coexistent.
+    expect(source).not.toContain('aria-labelledby="prompt')
+  })
+
+  it('gives each instance its own title id', () => {
+    // Les deux pop-ups vivent dans la MÊME application : `useId()` compte par application,
+    // donc deux `mount()` séparés repartiraient tous deux de zéro et ne prouveraient rien.
+    // Rendu en `h()` plutôt qu'en `template` : le compilateur d'exécution n'est pas embarqué.
+    const host = mount({
+      render: () =>
+        h('div', [
+          h(PromptModal, { title: 'UNE', primaryLabel: 'OK' }),
+          h(PromptModal, { title: 'DEUX', primaryLabel: 'OK' }),
+        ]),
+    })
+    const ids = host.findAll('[data-testid="prompt-title"]').map((title) => title.attributes('id'))
+
+    expect(ids).toHaveLength(2)
+    expect(ids[0]).toBeTruthy()
+    expect(ids[0]).not.toBe(ids[1])
+  })
+
+  // AC2 (Story 10.7) : le voile garde ses handlers pointer SANS `role="button"`. Il porte
+  // déjà `role="dialog"`, et un élément n'a qu'un rôle ; l'annoncer comme un bouton serait
+  // faux. Exception assumée à CLAUDE.md §2, consignée dans CLAUDE.md §2 lui-même.
+  it('never gives the backdrop a button role', () => {
+    const wrapper = mountPrompt()
+
+    expect(find(wrapper, 'prompt-modal').attributes('role')).not.toBe('button')
+    expect(wrapper.find('[role="button"]').exists()).toBe(false)
+  })
+
 })

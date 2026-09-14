@@ -168,4 +168,23 @@ describe('AlphaKeyboardSheet', () => {
     expect(source).toContain('@pointerdown')
     expect(source).not.toContain('@click')
   })
+
+  // AC1 (Story 10.7) : le clavier s'annonce comme un dialogue, nommé par un `aria-label`
+  // statique — il n'a aucun titre visible à viser.
+  it('exposes the dialog semantics with a static label', () => {
+    const backdrop = sheet({ value: '' }).find('[data-testid="alpha-keyboard-sheet"]')
+
+    expect(backdrop.attributes('role')).toBe('dialog')
+    expect(backdrop.attributes('aria-modal')).toBe('true')
+    expect(backdrop.attributes('aria-label')).toBe('Saisie du nom')
+  })
+
+  // AC2 (Story 10.7) : pas de `role="button"` sur le voile, qui porte déjà `role="dialog"`.
+  it('never gives the backdrop a button role', () => {
+    const wrapper = sheet({ value: '' })
+
+    expect(wrapper.find('[data-testid="alpha-keyboard-sheet"]').attributes('role')).not.toBe('button')
+    expect(wrapper.find('[role="button"]').exists()).toBe(false)
+  })
+
 })

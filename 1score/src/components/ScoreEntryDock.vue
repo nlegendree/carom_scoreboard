@@ -144,6 +144,9 @@ function closeFromBackdrop(event: PointerEvent): void {
 <template>
   <div
     data-testid="score-entry-dock"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Saisie du score"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 py-4"
     :class="ALIGN_CLASSES[align]"
     @pointerdown="armBackdropClose"
@@ -187,13 +190,18 @@ function closeFromBackdrop(event: PointerEvent): void {
           VALIDER
 
           <!-- Compte à rebours de l'auto-validation : purement visuel, aucune logique de
-               score. Relancé à chaque frappe par sa `key`, en même temps que le timer. -->
+               score. Relancé à chaque frappe par sa `key`, en même temps que le timer.
+               Blanc PLEIN depuis la passe contraste de la 10.7 : c'est un objet graphique
+               porteur d'information (WCAG 1.4.11, seuil 3:1), et `bg-white/70` ne donnait
+               que 2,45:1 sur le stop clair de `--gradient-blue` — 3,46:1 en blanc plein.
+               Elle survit à `prefers-reduced-motion` (décision de Nathan) : elle dit que le
+               score va se valider seul et changer le tour, ce qu'aucun autre élément ne dit. -->
           <span
             v-if="hasInput"
             :key="countdownKey"
             data-testid="validate-countdown"
             :data-countdown="countdownKey"
-            class="absolute inset-x-0 bottom-0 h-2 origin-left bg-white/70 animate-input-countdown"
+            class="absolute inset-x-0 bottom-0 h-2 origin-left bg-white animate-input-countdown"
             :style="{ animationDuration: `${AUTO_VALIDATE_DELAY_MS}ms` }"
           />
         </button>

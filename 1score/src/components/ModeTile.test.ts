@@ -81,4 +81,18 @@ describe('ModeTile', () => {
 
     expect(html).not.toMatch(/transition|animate-|scale-/)
   })
+
+  // AC5 (Story 10.7) : `text-white/80` donnait 2,78:1 sur le stop clair de `--gradient-blue`,
+  // échec net au seuil 4,5:1 — `text-stat` n'est jamais « grand texte » (14 → 18 px). Passé
+  // en blanc plein (3,46:1). ⚠️ Toujours sous 4,5:1 : le chemin n'est aujourd'hui affiché
+  // par AUCUNE tuile (décision de Nathan en 10.1), et la prop reste au contrat — la dette
+  // « accroche rouverte = taille à remonter » est consignée dans `deferred-work.md`.
+  it('renders the tagline at full opacity', () => {
+    const wrapper = mount(ModeTile, { props: { title: 'CASIN', tagline: 'Parties par catégories' } })
+    const classes = wrapper.find('[data-testid="tile-tagline"]').classes()
+
+    expect(classes).toContain('text-white')
+    expect(classes).not.toContain('text-white/80')
+  })
+
 })

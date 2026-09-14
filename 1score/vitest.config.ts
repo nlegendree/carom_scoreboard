@@ -9,5 +9,10 @@ export default defineConfig({
   plugins: [vue(), VitePWA({ registerType: 'prompt', injectRegister: false })],
   test: {
     environment: 'happy-dom',
+    // Vitest remplace par défaut TOUT import CSS par une chaîne vide — y compris en
+    // `?raw`, qui rend donc `''` au lieu du fichier. `main.css` est le seul dont un test
+    // lit le TEXTE (garde `prefers-reduced-motion`, Story 10.7) : on le laisse passer, lui
+    // seul. Aucun composant n'importe de CSS, la portée est donc sans effet ailleurs.
+    css: { include: [/main\.css/] },
   },
 })

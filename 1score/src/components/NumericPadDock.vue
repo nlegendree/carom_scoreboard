@@ -113,6 +113,9 @@ function closeFromBackdrop(event: PointerEvent): void {
 <template>
   <div
     data-testid="numeric-pad-dock"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Réglage de la distance"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 py-4"
     :class="ALIGN_CLASSES[align]"
     @pointerdown="armBackdropClose"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useId } from 'vue'
 import type { PlayerColor } from '../types/game'
 import type { PromptAction } from '../types/ui'
 
@@ -57,6 +58,12 @@ const props = withDefaults(
 
 const emit = defineEmits<{ primary: []; secondary: []; select: [id: string] }>()
 
+// Nom accessible de la pop-up (Story 10.7) : seule des quatre à porter un titre VISIBLE,
+// elle se nomme par lui plutôt que par un `aria-label` statique. `useId()` (Vue 3.5) le
+// rend unique par instance — un `id` écrit en dur collisionnerait dès que deux pop-ups
+// coexistent, et les collisions d'`id` cassent silencieusement `aria-labelledby`.
+const titleId = useId()
+
 // Classes écrites en toutes lettres pour le scanner JIT de Tailwind v4.
 const BALL_CLASSES: Record<PlayerColor, string> = {
   white: 'bg-player-white',
@@ -101,6 +108,9 @@ function closeFromBackdrop(event: PointerEvent): void {
 <template>
   <div
     data-testid="prompt-modal"
+    role="dialog"
+    aria-modal="true"
+    :aria-labelledby="titleId"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 p-4"
     @pointerdown="armBackdropClose"
     @pointerup="closeFromBackdrop"
@@ -124,7 +134,11 @@ function closeFromBackdrop(event: PointerEvent): void {
           class="h-5 w-5 shrink-0 rounded-full"
           :class="BALL_CLASSES[ball]"
         />
-        <h2 data-testid="prompt-title" class="text-label font-black tracking-[0.1em] text-white">
+        <h2
+          :id="titleId"
+          data-testid="prompt-title"
+          class="text-label font-black tracking-[0.1em] text-white"
+        >
           {{ title }}
         </h2>
       </header>
