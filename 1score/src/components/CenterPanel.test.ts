@@ -118,7 +118,9 @@ describe('CenterPanel', () => {
 
     expect(bleed.classes()).toContain('w-[calc(100%_+_2_*_(var(--game-clock-bleed)_+_16px))]')
     expect(bleed.classes()).toContain('mx-[calc(-1_*_(var(--game-clock-bleed)_+_16px))]')
-    expect(bleed.classes()).toContain('z-10')
+    // ⚠️ `z-20` : le débordement doit MASQUER le liseré de tour des cartes (`z-10`), dont
+    // le demi-anneau prend le relais. Les deux z-index sont explicites de part et d'autre.
+    expect(bleed.classes()).toContain('z-20')
   })
 
 

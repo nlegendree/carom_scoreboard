@@ -61,8 +61,12 @@ function passTurn(): void {
     </div>
 
     <!-- Story 2.1 : anneau du chrono de tir, uniquement en 3 Bandes (UX-DR4).
-         Story 10.4 (AC16) : il DÉBORDE franchement sur les deux cartes (modèle Cueuny) —
-         16 px de chaque côté, au-dessus d'elles (`z-10`). Le débordement est porté ICI, par
+         Story 10.4 (AC16) : il DÉBORDE franchement sur les deux cartes (modèle Cueuny),
+         au-dessus d'elles ET de leur liseré de tour, qu'il MASQUE (`z-20` contre le `z-10`
+         du liseré) — c'est le demi-anneau rouge de `ShotClock` qui en prend le relais
+         autour du disque. Les deux z-index sont EXPLICITES de part et d'autre : s'en
+         remettre au contexte d'empilement de `@container` ne suffisait pas, le liseré droit
+         restait visible en travers du disque (3e passe de rendu, Nathan). Le débordement est porté ICI, par
          la colonne, et non par `ShotClock`, qui reste dimensionné par son conteneur.
          ⚠️ Le calcul se fait sur la CONTENT BOX, padding déduit : la colonne porte `p-2`
          (16 px), donc `-mx-2` + `calc(100% + 32px)` ne fait que reconstituer sa border-box —
@@ -75,7 +79,7 @@ function passTurn(): void {
     <div
       v-if="secondsRemaining !== null"
       data-testid="shot-clock-bleed"
-      class="relative z-10 flex min-h-0 flex-1 w-[calc(100%_+_2_*_(var(--game-clock-bleed)_+_16px))] mx-[calc(-1_*_(var(--game-clock-bleed)_+_16px))]"
+      class="relative z-20 flex min-h-0 flex-1 w-[calc(100%_+_2_*_(var(--game-clock-bleed)_+_16px))] mx-[calc(-1_*_(var(--game-clock-bleed)_+_16px))]"
     >
       <ShotClock
         :secondsRemaining="secondsRemaining"

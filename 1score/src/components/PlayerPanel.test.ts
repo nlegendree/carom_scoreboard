@@ -68,11 +68,11 @@ describe('PlayerPanel', () => {
     expect(ring.element.previousElementSibling).toBe(
       active.find('[data-testid="score-minus"]').element.parentElement,
     )
-    // ⚠️ Il reste CONFINÉ dans la carte — `@container` sur la racine implique
-    // `contain: layout`, donc un contexte d'empilement. C'est voulu depuis la 3e passe de
-    // rendu : le disque du chrono, qui déborde de la colonne voisine, passe devant lui, et
-    // c'est le demi-anneau de `ShotClock` qui prend le relais en le CONTOURNANT.
-    expect(active.classes()).toContain('@container')
+    // ⚠️ `z-10` et non `z-20` : le débordement du chrono (`z-20`) doit passer DEVANT lui
+    // et le masquer, son demi-anneau prenant le relais autour du disque. L'ordre est forcé
+    // par ces deux z-index explicites — le contexte d'empilement de `@container` ne
+    // suffisait pas, le liseré droit restait visible en travers du disque.
+    expect(ring.classes()).toContain('z-10')
 
     const inactive = mountPanel(makePlayer(), false)
     expect(inactive.find('[data-testid="turn-ring"]').exists()).toBe(false)

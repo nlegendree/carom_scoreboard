@@ -291,17 +291,21 @@ function adjust(delta: number): void {
          donc sur les 22 % supérieurs de la carte — bord haut et deux tiers des montants.
          Aucun test ne pouvait le voir : happy-dom ne calcule pas le CSS. Le signal de tour
          actif est ce qui se lit en premier à 2 mètres, il doit encadrer la carte ENTIÈRE.
-         ⚠️ Il s'arrête au bord du disque du chrono qui déborde de la colonne voisine, et
-         c'est VOULU (3e passe de rendu, Nathan : « je veux que le liseré passe AUTOUR du
-         cercle, pas par-dessus »). Le relais est pris par un demi-anneau rouge dessiné
-         autour du disque, dans `ShotClock`, qui prolonge le liseré en le contournant.
-         Le `@container` de la racine (`contain: layout`) crée le contexte d'empilement qui
-         confine ce `z-20` dans la carte : c'est lui qui laisse le disque passer devant. -->
+         ⚠️ Il est MASQUÉ par le disque du chrono qui déborde de la colonne voisine, et
+         c'est VOULU (3e passe de rendu, Nathan : « le liseré doit passer AUTOUR du cercle,
+         pas par-dessus, et le détourage doit être clean »). Le relais est pris par un
+         demi-anneau rouge dessiné autour du disque dans `ShotClock`, qui reprend le tracé
+         exactement là où le disque l'interrompt.
+         ⚠️ `z-10` ET NON `z-20` : l'ordre de peinture est forcé par des z-index EXPLICITES
+         (le débordement du chrono est à `z-20`), et non laissé au contexte d'empilement que
+         `@container` est censé créer sur la racine — on a mesuré qu'il ne suffisait pas, le
+         liseré droit restant visible EN TRAVERS du disque. Ne pas remonter ce `z-10`
+         au-dessus du débordement sans revoir le raccord. -->
     <span
       v-if="active"
       data-testid="turn-ring"
       aria-hidden="true"
-      class="pointer-events-none absolute inset-0 z-20 ring-8 ring-turn-active ring-inset"
+      class="pointer-events-none absolute inset-0 z-10 ring-8 ring-turn-active ring-inset"
     />
   </div>
 </template>
