@@ -2192,3 +2192,53 @@ describe('useGameStore — côté d\'affichage de la bille blanche', () => {
     expect(store.whiteSide).toBe('right')
   })
 })
+
+// --- Story 10.4 : série OUVERTE exposée en lecture (AJOUTS UNIQUEMENT) ---
+//
+// Getter DÉRIVÉ de la fonction privée `openSeriesValue` déjà écrite en Story 2.2, dans la
+// même famille que `averages`, `bestSeries` et `repriseCounts` : aucun état nouveau, aucune
+// persistance, `GameState` inchangé — `GAME_STORAGE_VERSION` ne bouge donc pas. Il sert à la
+// carte joueur, qui affiche la série en cours entre `−` et `+` (AC3c).
+
+describe('useGameStore — série ouverte', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('exposes the series being counted by the plus-one taps', () => {
+    const store = useGameStore()
+    store.startGame('3bandes', 'MICHEL', 'ANDRE')
+
+    store.incrementSeries()
+    store.incrementSeries()
+
+    expect(store.openSeries.player1).toBe(2)
+  })
+
+  // Le joueur qui n'a pas la main n'a jamais de série ouverte : la sienne a été close par
+  // le passage de main.
+  it('stays null for the player without the hand', () => {
+    const store = useGameStore()
+    store.startGame('3bandes', 'MICHEL', 'ANDRE')
+
+    store.incrementSeries()
+    store.passTurn()
+
+    expect(store.openSeries.player1).toBeNull()
+    expect(store.openSeries.player2).toBeNull()
+  })
+
+  // En JDS la série est écrite d'un bloc à la validation, qui rend aussitôt la main : il
+  // n'y a jamais de série ouverte, et la zone de la carte reste vide.
+  it('stays null in series games, before and after a validated entry', () => {
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE')
+    expect(store.openSeries.player1).toBeNull()
+
+    store.appendScoreDigit('player1', 5)
+    store.validateScoreInput('player1')
+
+    expect(store.openSeries.player1).toBeNull()
+    expect(store.openSeries.player2).toBeNull()
+  })
+})

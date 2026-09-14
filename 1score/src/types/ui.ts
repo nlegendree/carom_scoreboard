@@ -13,6 +13,10 @@ export type PictoName =
   | 'chevron-right'
   | 'refresh'
   | 'arrow-right-left'
+  | 'door'
+  | 'rotate-ccw'
+  | 'undo'
+  | 'pass-turn'
 
 // `soon` : fonction affichée mais pas encore livrée (état BIENTÔT, inerte).
 export type ItemState = 'normal' | 'soon'

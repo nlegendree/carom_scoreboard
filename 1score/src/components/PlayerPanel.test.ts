@@ -41,18 +41,6 @@ describe('PlayerPanel', () => {
     expect(yellow.find('[data-testid="target-score"]').text()).toBe('80')
   })
 
-  // Story 1.6, décision produit (2026-09-09) : PAS de score restant en jeux de série.
-  // L'annonce « Pour n » suppose un score qui avance point par point ; elle est réservée
-  // au 3 Bandes (Epic 2, Story 2.2). Ce test verrouille la règle pour qu'un futur dev ne
-  // réintroduise pas le restant en JDS par réflexe.
-  it('shows the distance but never a remaining count in series games', () => {
-    const wrapper = mountPanel(makePlayer({ score: 37, targetScore: 100 }))
-
-    expect(wrapper.find('[data-testid="target-score"]').text()).toBe('100')
-    expect(wrapper.text()).not.toContain('63')
-    expect(wrapper.text()).not.toMatch(/RESTE|POUR/)
-  })
-
   it('renders each ball as a full colour block with readable text', () => {
     const white = mountPanel(makePlayer({ color: 'white' }))
     expect(white.classes()).toContain('bg-player-white')
@@ -63,21 +51,34 @@ describe('PlayerPanel', () => {
     expect(yellow.classes()).toContain('text-on-player-yellow')
   })
 
-  it('frames the active player with the turn ring', () => {
+  // ⚠️ Le liseré est un OVERLAY, pas un `ring` sur la racine : une ombre interne se peint
+  // sous les enfants, et le bandeau opaque du haut l'effaçait sur 22 % de la carte (défaut
+  // relevé à la passe navigateur de la 10.4, invisible en test — happy-dom ne calcule aucun
+  // CSS). Il doit encadrer la carte ENTIÈRE, bandeau compris.
+  it('frames the active player with a turn ring drawn over every zone', () => {
     const active = mountPanel(makePlayer(), true)
-    expect(active.classes()).toContain('ring-8')
-    expect(active.classes()).toContain('ring-turn-active')
+    const ring = active.find('[data-testid="turn-ring"]')
+
+    expect(ring.exists()).toBe(true)
+    expect(ring.classes()).toContain('ring-8')
+    expect(ring.classes()).toContain('ring-turn-active')
+    expect(ring.classes()).toContain('absolute')
+    expect(ring.classes()).toContain('inset-0')
+    // Rendu APRÈS les quatre zones : c'est ce qui le met au-dessus des aplats opaques.
+    expect(ring.element.previousElementSibling).toBe(
+      active.find('[data-testid="score-minus"]').element.parentElement,
+    )
 
     const inactive = mountPanel(makePlayer(), false)
+    expect(inactive.find('[data-testid="turn-ring"]').exists()).toBe(false)
     expect(inactive.classes()).not.toContain('ring-8')
   })
 })
 
-// --- Story 1.5 (refonte du 2026-09-09) : score maximal, statistiques, tap pour
-//     rendre la main. La saisie a quitté le panneau pour `ScoreEntryModal`. ---
+// --- Story 10.4 : carte en QUATRE zones (bandeau / score géant / MOY · SÉRIE / pied) ---
 
-describe('PlayerPanel — score, statistiques et bascule au tap', () => {
-  // Le score doit être le plus gros possible : plus aucun pavé dans la carte.
+describe('PlayerPanel — les quatre zones de la carte', () => {
+  // Le score doit être le plus gros possible : plus aucun pavé dans la carte (Story 1.5).
   it('holds no numeric pad any more', () => {
     const wrapper = mountPanel(makePlayer())
 
@@ -85,78 +86,31 @@ describe('PlayerPanel — score, statistiques et bascule au tap', () => {
     expect(wrapper.find('[data-testid="digit-5"]').exists()).toBe(false)
   })
 
-  it('shows the average and the best series of its own player', () => {
+  // AC1 : le bandeau porte NOM (haut gauche), DISTANCE (haut droite) et RESTANT sous le
+  // nom. Les statistiques n'y sont plus — elles descendent sous le score.
+  it('puts the name, the distance and the remaining count in the top band', () => {
+    const wrapper = mountPanel(makePlayer({ name: 'MICHEL', score: 12, targetScore: 100 }))
+
+    const band = wrapper.find('[data-testid="panel-header"]')
+    expect(band.text()).toContain('MICHEL')
+    expect(band.find('[data-testid="target-score"]').text()).toBe('100')
+    expect(band.find('[data-testid="remaining-score"]').text()).toBe('88')
+    expect(band.find('[data-testid="average"]').exists()).toBe(false)
+    expect(band.find('[data-testid="score"]').exists()).toBe(false)
+  })
+
+  // AC1 : la ligne MOY · SÉRIE est SOUS le score, plus dans le bandeau.
+  it('puts the statistics under the score, outside the band', () => {
     const wrapper = mount(PlayerPanel, {
       props: { player: makePlayer({ score: 8 }), active: false, average: 8 / 3, bestSeries: 5 },
     })
 
-    expect(wrapper.find('[data-testid="average"]').text()).toBe('2.667')
-    expect(wrapper.find('[data-testid="best-series"]').text()).toBe('5')
-  })
-
-  // Statistiques en tête de carte, avec le nom et la distance : le bas est réservé aux
-  // boutons de correction, et le score garde toute la hauteur centrale.
-  it('puts the statistics in the card header, above the score', () => {
-    const wrapper = mountPanel(makePlayer({ score: 42 }))
-
-    const header = wrapper.find('[data-testid="panel-header"]')
-    expect(header.find('[data-testid="average"]').exists()).toBe(true)
-    expect(header.find('[data-testid="best-series"]').exists()).toBe(true)
-    expect(header.find('[data-testid="score"]').exists()).toBe(false)
-  })
-
-  // Nom, statistiques et distance tiennent sur UNE SEULE ligne d'en-tête.
-  it('lines up the name, the statistics and the distance in a single header row', () => {
-    const wrapper = mountPanel(makePlayer({ name: 'MICHEL', targetScore: 100 }))
-
-    const header = wrapper.find('[data-testid="panel-header"]')
-    expect(header.text()).toContain('MICHEL')
-    expect(header.find('[data-testid="average"]').exists()).toBe(true)
-    expect(header.find('[data-testid="best-series"]').exists()).toBe(true)
-    expect(header.find('[data-testid="target-score"]').text()).toBe('100')
-  })
-
-  // Le nom est le SEUL élément élastique de la ligne : quand la place manque, c'est lui
-  // qui se tronque — jamais une valeur chiffrée, qui deviendrait fausse à la lecture.
-  it('lets the name shrink but never the figures', () => {
-    const wrapper = mountPanel(makePlayer({ name: 'MICHEL' }))
-
-    const name = wrapper.find('[data-testid="panel-header"] span')
-    expect(name.classes()).toContain('truncate')
-    expect(name.classes()).toContain('min-w-0')
-    expect(wrapper.find('[data-testid="panel-stats"]').classes()).toContain('shrink-0')
-  })
-
-  // Correction manuelle du total : ±1 par appui, sur SON joueur.
-  it('emits a signed correction on the minus and plus buttons', async () => {
-    const wrapper = mountPanel(makePlayer())
-
-    await wrapper.find('[data-testid="score-plus"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="score-minus"]').trigger('pointerdown')
-
-    expect(wrapper.emitted('adjust-score')).toEqual([[1], [-1]])
-  })
-
-  // ⚠️ La carte entière rend la main au tap. Sans arrêt de propagation, corriger le score
-  // du joueur adverse lui donnerait la main du même geste.
-  it('never hands the turn over when a correction button is pressed', async () => {
-    const wrapper = mountPanel(makePlayer(), false)
-
-    await wrapper.find('[data-testid="score-plus"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="score-minus"]').trigger('pointerdown')
-
-    expect(wrapper.emitted('pass-turn')).toBeUndefined()
-  })
-
-  // Les corrections restent disponibles des deux côtés, y compris sur le panneau actif.
-  it('offers the correction buttons on both panels', () => {
-    const active = mountPanel(makePlayer(), true)
-    const inactive = mountPanel(makePlayer(), false)
-
-    for (const wrapper of [active, inactive]) {
-      expect(wrapper.find('[data-testid="score-minus"]').exists()).toBe(true)
-      expect(wrapper.find('[data-testid="score-plus"]').exists()).toBe(true)
-    }
+    const stats = wrapper.find('[data-testid="panel-stats"]')
+    expect(stats.find('[data-testid="average"]').text()).toBe('2.667')
+    expect(stats.find('[data-testid="best-series"]').text()).toBe('5')
+    expect(wrapper.find('[data-testid="panel-header"] [data-testid="panel-stats"]').exists()).toBe(
+      false,
+    )
   })
 
   // Convention des fédérations de billard : moyenne générale à 3 décimales.
@@ -168,6 +122,19 @@ describe('PlayerPanel — score, statistiques et bascule au tap', () => {
     expect(wrapper.find('[data-testid="average"]').text()).toBe('2.000')
   })
 
+  // Le nom est le SEUL élément élastique : quand la place manque, il passe sur deux lignes
+  // puis s'ellipse — jamais une valeur chiffrée, qui deviendrait fausse à la lecture.
+  it('lets the name wrap onto two lines then ellipse, never the figures', () => {
+    const wrapper = mountPanel(makePlayer({ name: 'JEAN-CHRISTOPHE', targetScore: 100 }))
+
+    const name = wrapper.find('[data-testid="panel-name"]')
+    expect(name.classes()).toContain('line-clamp-2')
+    expect(name.classes()).toContain('min-w-0')
+    expect(wrapper.find('[data-testid="target-score"]').element.parentElement!.className).toContain(
+      'shrink-0',
+    )
+  })
+
   // Le score occupe la carte : sa taille suit le nombre de chiffres, sinon un total à
   // trois chiffres déborderait de la largeur du panneau (40 % de l'écran).
   it('shrinks the score type as digits are added', () => {
@@ -175,37 +142,185 @@ describe('PlayerPanel — score, statistiques et bascule au tap', () => {
     const threeDigits = mountPanel(makePlayer({ score: 123 }))
 
     const sizeOf = (w: ReturnType<typeof mountPanel>) =>
-      w.find('[data-testid="score"]').classes().find((c) => c.startsWith('text-['))
+      w
+        .find('[data-testid="score"]')
+        .classes()
+        .find((c) => c.startsWith('text-['))
 
     expect(sizeOf(oneDigit)).toBeDefined()
     expect(sizeOf(threeDigits)).toBeDefined()
     expect(sizeOf(oneDigit)).not.toBe(sizeOf(threeDigits))
   })
 
-  // On tape la zone de l'ADVERSAIRE pour lui rendre la main : le panneau qui a déjà
-  // la main ne doit donc rien émettre.
-  it('emits pass-turn when the panel without the hand is tapped', async () => {
-    const wrapper = mountPanel(makePlayer(), false)
+  // AC16 : l'anneau du chrono déborde sur les cartes — chacune réserve une marge sur son
+  // bord INTÉRIEUR (à droite pour la carte de gauche, à gauche pour celle de droite).
+  it('reserves an inner gutter on the side facing the centre column', () => {
+    const left = mount(PlayerPanel, { props: { player: makePlayer(), active: false, side: 'left' } })
+    const right = mount(PlayerPanel, {
+      props: { player: makePlayer(), active: false, side: 'right' },
+    })
 
-    await wrapper.trigger('pointerdown')
+    expect(left.find('[data-testid="score-zone"]').classes()).toContain('pr-3')
+    expect(right.find('[data-testid="score-zone"]').classes()).toContain('pl-3')
+  })
+})
 
-    expect(wrapper.emitted('pass-turn')).toHaveLength(1)
+// --- Story 10.4, AC2 : RESTANT permanent, tous modes ---
+
+describe('PlayerPanel — RESTANT', () => {
+  const restant = (wrapper: ReturnType<typeof mount>) =>
+    wrapper.find('[data-testid="remaining-score"]')
+
+  it('shows distance minus score in every mode', () => {
+    expect(restant(mountPanel(makePlayer({ score: 37, targetScore: 100 }))).text()).toBe('63')
+    expect(restant(mountPanel(makePlayer({ score: 0, targetScore: 40 }))).text()).toBe('40')
   })
 
-  it('stays inert when the panel that already has the hand is tapped', async () => {
-    const wrapper = mountPanel(makePlayer(), true)
-
-    await wrapper.trigger('pointerdown')
-
-    expect(wrapper.emitted('pass-turn')).toBeUndefined()
+  // Jamais de négatif : une correction `+` peut dépasser la distance.
+  it('floors at zero once the distance is reached or passed', () => {
+    expect(restant(mountPanel(makePlayer({ score: 30, targetScore: 30 }))).text()).toBe('0')
+    expect(restant(mountPanel(makePlayer({ score: 33, targetScore: 30 }))).text()).toBe('0')
   })
 
-  // CLAUDE.md §2 : une zone tactile qui n'est pas un `<button>` doit porter
-  // `role="button"` pour hériter du CSS global `touch-action: manipulation`.
-  it('declares the tappable panel as a button for the global touch CSS', () => {
-    const wrapper = mountPanel(makePlayer(), false)
+  // Distance libre : rien à retrancher, l'emplacement disparaît (NFR12).
+  it('disappears without a distance', () => {
+    expect(restant(mountPanel(makePlayer({ score: 12, targetScore: 0 }))).exists()).toBe(false)
+  })
+})
 
-    expect(wrapper.attributes('role')).toBe('button')
+// --- Story 10.4, AC3 : zone de série au pied de la carte, une seule chose à la fois ---
+
+describe('PlayerPanel — zone de série', () => {
+  function mountFooter(props: Record<string, unknown>) {
+    return mount(PlayerPanel, { props: { player: makePlayer(), active: false, ...props } as never })
+  }
+
+  // Correction manuelle du total : ±1 par appui, sur SON joueur (inchangé).
+  it('emits a signed correction on the minus and plus buttons', async () => {
+    const wrapper = mountPanel(makePlayer())
+
+    await wrapper.find('[data-testid="score-plus"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="score-minus"]').trigger('pointerdown')
+
+    expect(wrapper.emitted('adjust-score')).toEqual([[1], [-1]])
+  })
+
+  // Les corrections restent disponibles des deux côtés, y compris sur le panneau actif.
+  it('offers the correction buttons on both panels', () => {
+    for (const wrapper of [mountPanel(makePlayer(), true), mountPanel(makePlayer(), false)]) {
+      expect(wrapper.find('[data-testid="score-minus"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="score-plus"]').exists()).toBe(true)
+    }
+  })
+
+  // (a) La valeur en cours de saisie prime sur tout : c'est ce que le joueur tape à cet
+  // instant, et la pop-up de saisie ne la rappelle plus (modèle 10.3).
+  it('shows the value being typed first', () => {
+    const wrapper = mountFooter({
+      entryValue: '12',
+      seriesValue: 4,
+      showRemaining: true,
+      player: makePlayer({ score: 28, targetScore: 30 }),
+    })
+
+    expect(wrapper.find('[data-testid="entry-value"]').text()).toBe('12')
+    expect(wrapper.find('[data-testid="remaining"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="series-value"]').exists()).toBe(false)
+  })
+
+  // Un buffer vide affiche le `0` qu'on est en train de composer, comme dans la pop-up
+  // centrée qu'elle remplace (Story 1.5).
+  it('shows a zero while the buffer is still empty', () => {
+    expect(mountFooter({ entryValue: '' }).find('[data-testid="entry-value"]').text()).toBe('0')
+  })
+
+  // (b) Puis `POUR n` (Story 2.4, inchangé).
+  it('falls back to the POUR n announce', () => {
+    const wrapper = mountFooter({
+      showRemaining: true,
+      seriesValue: 4,
+      player: makePlayer({ score: 28, targetScore: 30 }),
+    })
+
+    expect(wrapper.find('[data-testid="remaining"]').text()).toBe('POUR 2')
+    expect(wrapper.find('[data-testid="series-value"]').exists()).toBe(false)
+  })
+
+  // (c) Puis la série en cours comptée par les `+1` (3 Bandes).
+  it('falls back to the open series', () => {
+    const wrapper = mountFooter({ seriesValue: 4 })
+
+    expect(wrapper.find('[data-testid="series-value"]').text()).toBe('4')
+  })
+
+  // (d) Et sinon rien : aucun tiret, aucun zéro à interpréter.
+  it('shows nothing when there is nothing to show', () => {
+    const wrapper = mountFooter({})
+
+    for (const id of ['entry-value', 'remaining', 'series-value']) {
+      expect(wrapper.find(`[data-testid="${id}"]`).exists()).toBe(false)
+    }
+  })
+
+  // La zone vit ENTRE les deux boutons de correction (spec UX).
+  it('sits between the minus and plus buttons', () => {
+    const wrapper = mountFooter({
+      showRemaining: true,
+      player: makePlayer({ score: 28, targetScore: 30 }),
+    })
+    const footer = wrapper.find('[data-testid="remaining"]').element.parentElement!
+
+    expect([...footer.children].map((el) => el.getAttribute('data-testid'))).toEqual([
+      'score-minus',
+      'remaining',
+      'score-plus',
+    ])
+  })
+
+  // UX-DR17 : l'accusé de frappe se joue LÀ OÙ LA VALEUR CHANGE — donc sur la carte depuis
+  // que la pop-up ne rappelle plus la valeur. La `key` recrée l'élément, ce qui rejoue
+  // l'animation CSS sans aucun timer JS.
+  it('replays the keystroke flash on the card as the value changes', async () => {
+    const wrapper = mountFooter({ entryValue: '1' })
+    const before = wrapper.find('[data-testid="input-flash"]').attributes('data-flash')
+
+    await wrapper.setProps({ entryValue: '12' })
+
+    expect(wrapper.find('[data-testid="input-flash"]').attributes('data-flash')).not.toBe(before)
+  })
+})
+
+// --- Story 10.4, AC4 : la carte n'est plus tapable ---
+
+describe('PlayerPanel — carte inerte', () => {
+  // Le passage de tour est passé au CTA `PASSER LE TOUR` de la colonne centrale : taper la
+  // carte ne doit plus RIEN faire, sans quoi un geste malheureux rendrait la main.
+  it('never emits anything when the card itself is tapped', async () => {
+    for (const active of [true, false]) {
+      const wrapper = mountPanel(makePlayer(), active)
+
+      await wrapper.trigger('pointerdown')
+
+      // ⚠️ `emitted()` enregistre aussi l'événement DOM natif déclenché sur la racine :
+      // ce sont les emits de COMPOSANT qui doivent rester absents.
+      expect(wrapper.emitted('pass-turn')).toBeUndefined()
+      expect(wrapper.emitted('adjust-score')).toBeUndefined()
+    }
+  })
+
+  it('is no longer declared as a button', () => {
+    expect(mountPanel(makePlayer()).attributes('role')).toBeUndefined()
+    expect(source).not.toContain("'pass-turn'")
+  })
+
+  // CLAUDE.md §2 : le CSS global `touch-action: manipulation` cible `button, [role=button]`.
+  // Le rôle retiré, les classes Tailwind doivent tenir seules — sinon un appui long sur le
+  // score sélectionne le texte.
+  it('keeps the tactile CSS in classes now that the role is gone', () => {
+    const classes = mountPanel(makePlayer()).classes()
+
+    expect(classes).toContain('touch-manipulation')
+    expect(classes).toContain('select-none')
   })
 
   // AR8 : `@pointerdown` seul, jamais `@click` — sinon le délai tactile de 300 ms
@@ -216,7 +331,7 @@ describe('PlayerPanel — score, statistiques et bascule au tap', () => {
   })
 })
 
-// --- Story 2.4 : compte à rebours `POUR n` (3 Bandes) ---
+// --- Story 2.4 : compte à rebours `POUR n` (3 Bandes), règles inchangées ---
 
 describe('PlayerPanel — POUR n', () => {
   const remaining = (wrapper: ReturnType<typeof mount>) => wrapper.find('[data-testid="remaining"]')
@@ -250,12 +365,12 @@ describe('PlayerPanel — POUR n', () => {
     expect(remaining(mountPanel(makePlayer({ score: 29, targetScore: 30 }))).exists()).toBe(false)
   })
 
-  // Placé sous le score, entre − et + (spec UX).
-  it('sits between the minus and plus buttons', () => {
+  // AC2 : `POUR n` et `RESTANT` disent la même chose pendant trois points. C'est VOULU —
+  // ne pas « corriger » en masquant l'un des deux.
+  it('coexists with the permanent RESTANT of the band', () => {
     const wrapper = mountWithRemaining(makePlayer({ score: 28, targetScore: 30 }))
-    const footer = wrapper.find('[data-testid="remaining"]').element.parentElement!
-    const children = [...footer.children].map((el) => el.getAttribute('data-testid'))
 
-    expect(children).toEqual(['score-minus', 'remaining', 'score-plus'])
+    expect(remaining(wrapper).text()).toBe('POUR 2')
+    expect(wrapper.find('[data-testid="remaining-score"]').text()).toBe('2')
   })
 })

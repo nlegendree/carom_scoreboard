@@ -38,6 +38,21 @@ const PATHS: Record<PictoName, readonly string[]> = {
   'arrow-right-left': ['m16 3 4 4-4 4', 'M20 7H4', 'm8 21-4-4 4-4', 'M4 17h16'],
   // Chevron seul, sans hampe : la pointe du CTA de démarrage (revue de rendu 10.3).
   'chevron-right': ['m9 18 6-6-6-6'],
+  // Barre basse du scoreboard (Story 10.4). `door` reprend le tracé « sortie » (porte +
+  // flèche, signalétique d'évacuation) et `rotate-ccw` la flèche circulaire de RECOMMENCER
+  // qui vivaient tous deux en SVG inline dans `GameView.vue` jusqu'à la refonte de la barre.
+  // ⚠️ `rotate-ccw` n'est PAS `refresh` : celui-ci est la boucle DOUBLE de CHANGER DE BILLE.
+  door: ['M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4', 'm16 17 5-5-5-5', 'M21 12H9'],
+  'rotate-ccw': ['M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8', 'M3 3v5h5'],
+  // Flèche retour courbe : ANNULER (undo multi-niveaux).
+  undo: ['M9 14 4 9l5-5', 'M4 9h10.5a5.5 5.5 0 0 1 0 11H11'],
+  // Flèche passant AU-DESSUS d'un rond : PASSER LE TOUR. Le rond est le joueur qu'on
+  // enjambe ; distinct des deux boucles ci-dessus, qui disent « refaire », pas « passer ».
+  'pass-turn': [
+    'M11 17a1 1 0 1 0 2 0a1 1 0 1 0 -2 0',
+    'M21 7v6h-6',
+    'M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7',
+  ],
 }
 </script>
 

@@ -8,10 +8,10 @@ import HomeScreen from '../components/HomeScreen.vue'
 import ActionBar from '../components/ActionBar.vue'
 import PlayerPanel from '../components/PlayerPanel.vue'
 import CenterPanel from '../components/CenterPanel.vue'
-import ScoreEntryModal from '../components/ScoreEntryModal.vue'
+import ScoreEntryDock from '../components/ScoreEntryDock.vue'
 import PromptModal from '../components/PromptModal.vue'
 import GameSummary from '../components/GameSummary.vue'
-import type { PlayerId } from '../types/game'
+import type { PlayerId, TableSide } from '../types/game'
 
 const gameStore = useGameStore()
 const {
@@ -25,6 +25,7 @@ const {
   completedReprises,
   averages,
   bestSeries,
+  openSeries,
   repriseCounts,
   canUndo,
   endPrompt,
@@ -55,16 +56,15 @@ const shotClockSeconds = computed(() => (isThreeCushions.value ? secondsRemainin
 // du 3 Bandes (Story 2.3) trouvera son propre point d'entrée.
 const { tap } = useHaptics()
 const ctaTestId = computed(() => (isThreeCushions.value ? 'plus-one-button' : 'add-points-button'))
-const ctaLabel = computed(() => (isThreeCushions.value ? '+1 POINT' : 'AJOUTER LES POINTS'))
+// Story 10.4 : le libellé dit désormais POUR QUI on compte. C'est l'ASSIS qui appuie, et
+// les points vont à l'adversaire — celui qui joue. Les `data-testid`, eux, ne changent pas.
+const ctaLabel = computed(() => (isThreeCushions.value ? '+1 ADVERSAIRE' : '+ POINTS ADVERSAIRE'))
 // `canUndo` vient du store, pas d'un `computed` local sur `reprises` : celui-ci resterait
 // actif après avoir tout annulé, et inactif après une simple correction (Story 1.7).
 
 // L'ouverture de la pop-up de saisie vit dans le STORE depuis la 1.12 (`entryOpen`) :
 // c'est le seul moyen de la rouvrir, buffer compris, à la reprise après une fermeture
 // pendant la saisie (décision 3 de Nathan, 2026-09-10).
-
-// La saisie porte toujours sur le joueur qui a la main.
-const entryPlayer = computed(() => (activePlayer.value === 'player1' ? player1.value : player2.value))
 
 // ⚠️ Résolution UNIQUE des côtés d'écran (Story 10.3). `player1` est la bille BLANCHE, pas
 // le joueur de gauche : avec `whiteSide === 'right'`, il est assis à DROITE. L'ordre des
@@ -80,6 +80,34 @@ const rightPlayer = computed(() => (rightId.value === 'player1' ? player1.value 
 // l'adversaire assis qui compte les points de celui qui joue. Le bouton est donc à
 // l'opposé du liseré de tour actif, et la sortie occupe l'autre colonne.
 const entrySide = computed(() => (activePlayer.value === 'player1' ? 'player2' : 'player1'))
+
+// Colonne d'écran du CTA, et joueur propriétaire de chaque colonne : la barre basse reçoit
+// les deux de la résolution ci-dessus, elle n'en refait aucune (AC14).
+const ctaSide = computed<TableSide>(() => (entrySide.value === leftId.value ? 'left' : 'right'))
+const sideOwners = computed<Record<TableSide, PlayerId>>(() => ({
+  left: leftId.value,
+  right: rightId.value,
+}))
+
+// ⚠️ L'alignement de la pop-up de saisie est le problème INVERSE de celui du CTA : elle se
+// pose du côté OPPOSÉ à la carte du joueur ACTIF, pour que cette carte reste visible et
+// que la valeur s'y écrive à vue (décision 2 de Nathan). Les deux coïncident en pratique —
+// l'assis est toujours en face de l'actif — mais ils ne disent pas la même chose : celui-ci
+// se dérive de la carte active, jamais de `entrySide`.
+const entryAlign = computed<TableSide>(() =>
+  activePlayer.value === leftId.value ? 'right' : 'left',
+)
+
+// Valeur en cours de frappe, portée par la carte du joueur qui a la main et par elle seule
+// (AC3a) ; `null` partout ailleurs, y compris sur la carte d'en face.
+function entryValueOf(playerId: PlayerId): string | null {
+  if (!entryOpen.value || activePlayer.value !== playerId) return null
+  return currentInput.value[playerId]
+}
+
+// Une pop-up de fin ouverte rend `PASSER LE TOUR` inerte (AC8) : la partie est finie, on
+// ne rend plus la main. Le voile de fin, lui, reste inerte de son côté (AC18 de la 1.10).
+const endPromptOpen = computed(() => endPrompt.value !== null)
 
 // ⚠️ Tap fantôme (revue de code du 2026-09-09) : quand la pop-up se referme d'elle-même
 // à l'auto-validation, le tour a basculé et un doigt qui arrive juste après sur
@@ -153,12 +181,6 @@ function validateEntry(): void {
   gameStore.validateScoreInput(activePlayer.value)
   closeEntry()
 }
-
-// Pictos de la barre basse — sortie (porte + flèche, signalétique d'évacuation) et, depuis
-// la 1.15, RECOMMENCER (flèche circulaire) : ils ne doivent pas peser autant que le CTA
-// de saisie, mais restent de vraies zones tactiles (`≥ 90×90 px`).
-const PICTO_BUTTON_CLASSES =
-  'flex min-h-[var(--size-touch-target)] min-w-[var(--size-touch-target)] items-center justify-center rounded-2xl bg-white/10 text-white touch-manipulation select-none active:bg-white/20'
 
 // --- Fin de partie (Story 1.10) ---
 // La détection vit dans le store : `endPrompt` dit quelle pop-up montrer, la vue ne
@@ -258,22 +280,27 @@ function confirmRestart(): void {
 
     <template v-else-if="status === 'playing'">
       <div class="flex min-h-0 flex-1">
-        <!-- On rend la main en tapant la zone de l'ADVERSAIRE : le panneau inactif émet,
-             celui qui a déjà la main reste inerte (garde dans `PlayerPanel`). -->
+        <!-- Story 10.4 (AC4) : les cartes ne sont PLUS TAPABLES. Le passage de main est
+             passé au CTA `PASSER LE TOUR` de la colonne centrale, seul geste possible —
+             plus rien de destructif ne se déclenche au contact d'une carte.
+             `side` ne sert qu'à la gouttière réservée au débordement de l'anneau (AC16). -->
         <PlayerPanel
           :player="leftPlayer"
           :active="activePlayer === leftId"
           :average="averages[leftId]"
           :bestSeries="bestSeries[leftId]"
           :showRemaining="isThreeCushions"
-          @pass-turn="passTurn"
+          side="left"
+          :seriesValue="openSeries[leftId]"
+          :entryValue="entryValueOf(leftId)"
           @adjust-score="adjustScore(leftId, $event)"
         />
         <CenterPanel
           :repriseNumber="repriseNumber"
-          :canUndo="canUndo"
           :secondsRemaining="shotClockSeconds"
-          @undo="undoLastAction"
+          :passTurnDisabled="endPromptOpen"
+          :entryOpen="entryOpen"
+          @pass-turn="passTurn"
         />
         <PlayerPanel
           :player="rightPlayer"
@@ -281,154 +308,37 @@ function confirmRestart(): void {
           :average="averages[rightId]"
           :bestSeries="bestSeries[rightId]"
           :showRemaining="isThreeCushions"
-          @pass-turn="passTurn"
+          side="right"
+          :seriesValue="openSeries[rightId]"
+          :entryValue="entryValueOf(rightId)"
           @adjust-score="adjustScore(rightId, $event)"
         />
       </div>
 
-      <!-- Le retour d'`ActionBar` est désactivé : en partie, la sortie change de côté
-           avec le CTA, elle ne peut donc pas rester à la place fixe de la barre. -->
-      <ActionBar :showBack="false">
-        <template #actions>
-          <!-- Deux colonnes calées sur les panneaux (2/5 · 1/5 · 2/5). Les marges
-               négatives annulent le padding de la barre : sans elles, la colonne est plus
-               étroite que le bloc joueur et le CTA ne s'aligne pas dessus.
-               Le CTA occupe TOUTE la largeur de la colonne du joueur assis ; la sortie
-               tient l'autre. Les deux échangent de place à chaque bascule. -->
-          <div class="-mx-4 flex flex-1 items-center">
-            <div class="flex w-2/5 justify-start gap-2">
-              <button
-                v-if="entrySide === leftId"
-                :data-testid="ctaTestId"
-                :data-side="leftId"
-                class="flex w-full min-h-[var(--size-touch-target)] items-center justify-center rounded-2xl px-4 text-label font-black tracking-[0.1em] bg-accent text-on-accent touch-manipulation select-none active:brightness-90"
-                @pointerdown="pressCta"
-              >
-                {{ ctaLabel }}
-              </button>
-              <!-- Deux pictos (1.15) : la sortie garde le bord extérieur, RECOMMENCER
-                   vient vers l'intérieur — `gap-2` = 16 px (`--spacing: 8px`). Markup
-                   dupliqué par colonne, dette connue (revue 1.5), pas de refactor ici. -->
-              <template v-else>
-                <button
-                  data-testid="exit-button"
-                  :data-side="leftId"
-                  aria-label="Quitter la partie"
-                  class="ml-4"
-                  :class="PICTO_BUTTON_CLASSES"
-                  @pointerdown="leaveGame"
-                >
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    class="h-8 w-8"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
-                </button>
-                <button
-                  data-testid="restart-button"
-                  :data-side="leftId"
-                  aria-label="Recommencer la partie"
-                  :disabled="!canUndo"
-                  class="disabled:opacity-30"
-                  :class="PICTO_BUTTON_CLASSES"
-                  @pointerdown="askRestart"
-                >
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    class="h-8 w-8"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                    <path d="M3 3v5h5" />
-                  </svg>
-                </button>
-              </template>
-            </div>
+      <!-- Barre basse en pictos (AC12 à AC15) : un seul markup pour les deux côtés, la
+           barre porte elle-même sa grille et ses quatre `IconAction`. La duplication CTA/SVG
+           et les marges négatives qui recalaient les colonnes ont disparu avec elle (DT2). -->
+      <ActionBar
+        :ctaSide="ctaSide"
+        :sideOwners="sideOwners"
+        :ctaLabel="ctaLabel"
+        :ctaTestId="ctaTestId"
+        :canUndo="canUndo"
+        :canRestart="canUndo"
+        @cta="pressCta"
+        @quit="leaveGame"
+        @restart="askRestart"
+        @undo="undoLastAction"
+      />
 
-            <div class="w-1/5 shrink-0" />
-
-            <div class="flex w-2/5 justify-end gap-2">
-              <button
-                v-if="entrySide === rightId"
-                :data-testid="ctaTestId"
-                :data-side="rightId"
-                class="flex w-full min-h-[var(--size-touch-target)] items-center justify-center rounded-2xl px-4 text-label font-black tracking-[0.1em] bg-accent text-on-accent touch-manipulation select-none active:brightness-90"
-                @pointerdown="pressCta"
-              >
-                {{ ctaLabel }}
-              </button>
-              <template v-else>
-                <button
-                  data-testid="restart-button"
-                  :data-side="rightId"
-                  aria-label="Recommencer la partie"
-                  :disabled="!canUndo"
-                  class="disabled:opacity-30"
-                  :class="PICTO_BUTTON_CLASSES"
-                  @pointerdown="askRestart"
-                >
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    class="h-8 w-8"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                    <path d="M3 3v5h5" />
-                  </svg>
-                </button>
-                <button
-                  data-testid="exit-button"
-                  :data-side="rightId"
-                  aria-label="Quitter la partie"
-                  class="mr-4"
-                  :class="PICTO_BUTTON_CLASSES"
-                  @pointerdown="leaveGame"
-                >
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    class="h-8 w-8"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
-                </button>
-              </template>
-            </div>
-          </div>
-        </template>
-      </ActionBar>
-
-      <ScoreEntryModal
+      <!-- Pop-up de saisie LATÉRALE (AC9), posée du côté opposé à la carte du joueur qui a
+           la main : cette carte reste entièrement visible et nette, et la valeur tapée s'y
+           écrit entre `−` et `+`. Emits inchangés depuis `ScoreEntryModal` : le branchement
+           ci-dessous n'a pas bougé d'une ligne. -->
+      <ScoreEntryDock
         v-if="entryOpen"
-        :color="entryPlayer.color"
-        :name="entryPlayer.name"
         :currentInput="currentInput[activePlayer]"
+        :align="entryAlign"
         @digit="gameStore.appendScoreDigit(activePlayer, $event)"
         @clear="gameStore.clearScoreInput(activePlayer)"
         @backspace="gameStore.backspaceScoreInput(activePlayer)"
@@ -494,26 +404,28 @@ function confirmRestart(): void {
         :whiteSide="whiteSide"
       />
 
-      <ActionBar :showBack="false">
-        <template #actions>
-          <div class="flex flex-1 items-center justify-between gap-4">
-            <button
-              data-testid="end-game-button"
-              class="min-h-[var(--size-touch-target)] rounded-2xl bg-white/10 px-10 text-label font-black text-white touch-manipulation select-none active:bg-white/20"
-              @pointerdown="gameStore.resetGame()"
-            >
-              FIN DE PARTIE
-            </button>
-            <button
-              data-testid="rematch-button"
-              class="min-h-[var(--size-touch-target)] rounded-2xl bg-accent px-10 text-label font-black text-on-accent touch-manipulation select-none active:brightness-90"
-              @pointerdown="gameStore.rematch()"
-            >
-              UNE PARTIE DE PLUS
-            </button>
-          </div>
-        </template>
-      </ActionBar>
+      <!-- ⚠️ PROVISOIRE — supprimé par la Story 10.5, qui refond le récap (barre latérale
+           QUITTER / RECOMMENCER). `ActionBar` est devenue la barre basse du SCOREBOARD en
+           Story 10.4 et ne sert plus ici : ces deux boutons gardent leurs classes et leurs
+           `data-testid` tels quels, posés à plat, le temps de cette transition. -->
+      <nav data-testid="summary-bar" class="flex shrink-0 items-center gap-4 bg-bg px-4 py-2">
+        <div class="flex flex-1 items-center justify-between gap-4">
+          <button
+            data-testid="end-game-button"
+            class="min-h-[var(--size-touch-target)] rounded-2xl bg-white/10 px-10 text-label font-black text-white touch-manipulation select-none active:bg-white/20"
+            @pointerdown="gameStore.resetGame()"
+          >
+            FIN DE PARTIE
+          </button>
+          <button
+            data-testid="rematch-button"
+            class="min-h-[var(--size-touch-target)] rounded-2xl bg-accent px-10 text-label font-black text-on-accent touch-manipulation select-none active:brightness-90"
+            @pointerdown="gameStore.rematch()"
+          >
+            UNE PARTIE DE PLUS
+          </button>
+        </div>
+      </nav>
     </template>
   </div>
 </template>

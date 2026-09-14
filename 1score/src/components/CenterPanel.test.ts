@@ -7,7 +7,6 @@ import { SHOT_CLOCK_SECONDS } from '../composables/useTimer'
 // `secondsRemaining: null` = partie JDS, sans chrono (Story 2.1).
 const baseProps = {
   repriseNumber: 1,
-  canUndo: false,
   secondsRemaining: null,
 } as const
 
@@ -41,20 +40,85 @@ describe('CenterPanel', () => {
 
 
 
-  it('disables the undo button while there is nothing to undo', () => {
+  // --- Story 10.4 : `ANNULER` est descendu en barre basse, `PASSER LE TOUR` le remplace ---
+
+  // AC5 : la colonne est réduite à REP, le chrono et le CTA de passage de tour.
+  it('no longer holds the undo button', () => {
     const wrapper = mount(CenterPanel, { props: baseProps })
 
-    expect(wrapper.find('[data-testid="undo-button"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('[data-testid="undo-button"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('ANNULER')
   })
 
-  it('emits undo when there is something to undo', async () => {
-    const wrapper = mount(CenterPanel, { props: { ...baseProps, canUndo: true } })
-    const undo = wrapper.find('[data-testid="undo-button"]')
+  // AC6/AC7 : le geste change, la règle non — c'est `passTurn()` du store que la vue
+  // branche derrière, exactement comme le tap sur la carte avant elle (AR23).
+  it('emits pass-turn on the CTA', async () => {
+    const wrapper = mount(CenterPanel, { props: baseProps })
+    const cta = wrapper.find('[data-testid="pass-turn-button"]')
 
-    expect(undo.attributes('disabled')).toBeUndefined()
-    await undo.trigger('pointerdown')
+    expect(cta.text()).toContain('PASSER LE TOUR')
+    await cta.trigger('pointerdown')
 
-    expect(wrapper.emitted('undo')).toHaveLength(1)
+    expect(wrapper.emitted('pass-turn')).toHaveLength(1)
+  })
+
+  // AC8 : le CTA est TOUJOURS disponible en partie — il n'a pas d'état grisé propre.
+  it('offers the CTA whatever the state of the game', () => {
+    const wrapper = mount(CenterPanel, { props: { ...baseProps, secondsRemaining: 12 } })
+
+    expect(wrapper.find('[data-testid="pass-turn-button"]').attributes('disabled')).toBeUndefined()
+  })
+
+  // AC8 : inerte sous une pop-up de fin — `disabled` pour le visuel, garde pour le
+  // comportement (les navigateurs ne s'accordent pas sur les contrôles désactivés).
+  it('stays inert while an end-of-game prompt is open', async () => {
+    const wrapper = mount(CenterPanel, { props: { ...baseProps, passTurnDisabled: true } })
+    const cta = wrapper.find('[data-testid="pass-turn-button"]')
+
+    await cta.trigger('pointerdown')
+
+    expect(wrapper.emitted('pass-turn')).toBeUndefined()
+    expect(cta.attributes('disabled')).toBeDefined()
+  })
+
+  // AC9 : la pop-up de saisie se pose du côté opposé à la carte active et laisse la
+  // colonne centrale visible — le CTA s'efface pour ne pas se retrouver sous le voile.
+  it('hides the CTA while the score entry popup is open', () => {
+    const wrapper = mount(CenterPanel, { props: { ...baseProps, entryOpen: true } })
+
+    expect(wrapper.find('[data-testid="pass-turn-button"]').exists()).toBe(false)
+  })
+
+  // AC5 : conteneur à contour sur `--color-surface`, comme les autres panneaux de l'epic
+  // — la colonne ne doit plus se lire comme un trou noir entre deux cartes pleines.
+  it('is a bordered container on the epic surface', () => {
+    const classes = mount(CenterPanel, { props: baseProps }).classes()
+
+    expect(classes).toContain('bg-surface')
+    expect(classes).toContain('border-border')
+  })
+
+  // AC16 : l'anneau du chrono déborde sur les cartes voisines — la colonne doit donc
+  // laisser SORTIR son contenu. Si un `overflow-hidden` revient ici, le débordement meurt.
+  it('lets the shot clock ring overflow the column', () => {
+    const classes = mount(CenterPanel, { props: { ...baseProps, secondsRemaining: 40 } }).classes()
+
+    expect(classes).toContain('overflow-visible')
+    expect(classes).not.toContain('overflow-hidden')
+  })
+
+  // ⚠️ Le débordement se calcule sur la CONTENT BOX : la colonne portant `p-2` (16 px),
+  // `-mx-2` + `calc(100% + 32px)` ne reconstitue que sa border-box et l'anneau n'en sort
+  // PAS d'un pixel (défaut mesuré à la passe navigateur de la 10.4). Il faut le double.
+  // Aucun CSS n'étant calculé en test, seule la classe peut être verrouillée ici.
+  it('bleeds by twice the column padding, not by the padding itself', () => {
+    const bleed = mount(CenterPanel, {
+      props: { ...baseProps, secondsRemaining: 40 },
+    }).find('[data-testid="shot-clock-bleed"]')
+
+    expect(bleed.classes()).toContain('-mx-4')
+    expect(bleed.classes()).toContain('w-[calc(100%+64px)]')
+    expect(bleed.classes()).toContain('z-10')
   })
 
 

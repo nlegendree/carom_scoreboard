@@ -560,6 +560,21 @@ export const useGameStore = defineStore('game', () => {
     player2: bestSeriesOf('player2'),
   }))
 
+  // Série OUVERTE de chaque joueur (Story 10.4), exposée en LECTURE pour la carte joueur,
+  // qui l'affiche entre `−` et `+` (AC3c). Dérivé de `openSeriesValue`, écrite en 2.2 :
+  // aucun état nouveau, aucune persistance, `GameState` inchangé — `GAME_STORAGE_VERSION`
+  // ne bouge pas. Même famille que `averages`, `bestSeries` et `repriseCounts`.
+  // ⚠️ Borné au joueur qui A LA MAIN. `openSeriesValue` répond « la case que ce joueur a
+  // écrite dans la reprise que l'adversaire n'a pas encore close » : elle reste non nulle
+  // APRÈS le passage de main, ce qui convient à ses deux appelants internes (`passTurn` et
+  // `incrementSeries` l'interrogent toujours sur le joueur actif) mais ferait afficher une
+  // série « en cours » sur la carte d'un joueur assis. Une série en cours est celle de
+  // celui qui joue, par définition.
+  const openSeries = computed(() => ({
+    player1: activePlayer.value === 'player1' ? openSeriesValue('player1') : null,
+    player2: activePlayer.value === 'player2' ? openSeriesValue('player2') : null,
+  }))
+
   // Ligne REPRISES du récap (Story 1.10) : le même compte que celui de la moyenne.
   const repriseCounts = computed(() => ({
     player1: playedReprises('player1'),
@@ -709,6 +724,7 @@ export const useGameStore = defineStore('game', () => {
     completedReprises,
     averages,
     bestSeries,
+    openSeries,
     repriseCounts,
     winner,
     finishedAt,

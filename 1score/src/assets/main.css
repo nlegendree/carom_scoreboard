@@ -81,7 +81,7 @@
 
   /* Compte à rebours de l'auto-validation : l'échéance ne doit pas être silencieuse,
      d'autant qu'elle fait aussi changer le tour (AC9, AC13). La durée réelle est posée
-     par `ScoreEntryModal` (`animation-duration` liée à `AUTO_VALIDATE_DELAY_MS`) : le
+     par `ScoreEntryDock` (`animation-duration` liée à `AUTO_VALIDATE_DELAY_MS`) : le
      3000ms ci-dessous n'est qu'un repli. */
   --animate-input-countdown: input-countdown 3000ms linear forwards;
   @keyframes input-countdown {
@@ -151,6 +151,17 @@
      dupliquée, et une pop-up mal recentrée est la première chose qui se verra. */
   --setup-popup-inset-left: calc(152px + (100vw - 184px) * 0.375);
   --setup-popup-inset-right: calc((100vw - 184px) * 0.375 + 32px);
+
+  /* Recentrage de la pop-up de saisie du SCOREBOARD (Story 10.4). Même principe que les
+     `--setup-popup-inset-*` ci-dessus, GÉOMÉTRIE DIFFÉRENTE : le scoreboard n'a pas de
+     barre latérale, ses trois colonnes valent 2/5 · 1/5 · 2/5 de la largeur d'écran et les
+     cartes sont à fleur de bord. L'inset réserve donc la carte visée (40vw) plus une
+     gouttière de 32 px, pour que la pop-up ne la TOUCHE jamais (AC9).
+     ⚠️ À faire bouger AVEC la mise en page du scoreboard : c'est le seul endroit où elle
+     est dupliquée, et une pop-up qui mord sur la carte active est le défaut que la
+     décision 2 de Nathan cherche justement à éviter. */
+  --game-popup-inset-left: calc(100vw * 0.4 + 32px);
+  --game-popup-inset-right: calc(100vw * 0.4 + 32px);
 
   /* Touches des claviers intégrés (revue de rendu 10.3, réf. Cueuny) : plaques sombres
      légèrement adoucies, relief donné par un filet clair en haut et une ombre portée en

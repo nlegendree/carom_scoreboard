@@ -232,7 +232,7 @@ describe('GameView — saisie en popup et alternance', () => {
     await wrapper.find('[data-testid="entry-confirm-button"]').trigger('pointerdown')
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.find('[data-testid="modal-backdrop"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="score-entry-dock"]').exists()).toBe(false)
   })
 
   it('reaches the same state through the three-second path, popup closed included', async () => {
@@ -247,7 +247,7 @@ describe('GameView — saisie en popup et alternance', () => {
     expect(store.player1.score).toBe(12)
     expect(store.currentInput.player1).toBe('')
     expect(panels(wrapper)[1]!.props('active')).toBe(true)
-    expect(wrapper.find('[data-testid="modal-backdrop"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="score-entry-dock"]').exists()).toBe(false)
   })
 
   // AC12 : VALIDER sur une saisie vide ne fait RIEN — la pop-up reste ouverte, aucun
@@ -259,16 +259,16 @@ describe('GameView — saisie en popup et alternance', () => {
     await wrapper.find('[data-testid="entry-confirm-button"]').trigger('pointerdown')
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.find('[data-testid="modal-backdrop"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="score-entry-dock"]').exists()).toBe(true)
     expect(store.reprises).toEqual([])
     expect(store.activePlayer).toBe('player1')
   })
 
   // ⚠️ Tap fantôme : à l'auto-validation la pop-up disparaît sous le doigt et le tour a
-  // basculé — un appui qui arrive juste après tomberait sur le panneau devenu inactif et
-  // enregistrerait une série de 0. Les panneaux ignorent les appuis pendant une courte
-  // grâce après toute fermeture de la pop-up.
-  it('ignores a tap on the panels right after the popup closed by itself', async () => {
+  // basculé — un appui qui arrive juste après tombe désormais sur `PASSER LE TOUR`
+  // (colonne centrale, sous la carte de pop-up qui vient de se fermer) ou sur `−`/`+`.
+  // Deux actions annulables à portée immédiate : la grâce reste nécessaire (AC8).
+  it('ignores the panels and PASSER LE TOUR right after the popup closed by itself', async () => {
     vi.useFakeTimers()
     const { wrapper, store } = await startedGame()
 
@@ -278,7 +278,7 @@ describe('GameView — saisie en popup et alternance', () => {
     await wrapper.vm.$nextTick()
     expect(store.activePlayer).toBe('player2')
 
-    await panels(wrapper)[0]!.trigger('pointerdown')
+    await wrapper.find('[data-testid="pass-turn-button"]').trigger('pointerdown')
     await panels(wrapper)[0]!.find('[data-testid="score-plus"]').trigger('pointerdown')
     expect(store.reprises[0]!.player2).toBeNull()
     expect(store.player1.score).toBe(12)
@@ -286,7 +286,7 @@ describe('GameView — saisie en popup et alternance', () => {
 
     // Grâce écoulée : le même geste rend bien la main (série de 0 pour le jaune).
     vi.advanceTimersByTime(300)
-    await panels(wrapper)[0]!.trigger('pointerdown')
+    await wrapper.find('[data-testid="pass-turn-button"]').trigger('pointerdown')
     expect(store.reprises[0]!.player2).toBe(0)
     expect(store.activePlayer).toBe('player1')
   })
@@ -298,13 +298,13 @@ describe('GameView — saisie en popup et alternance', () => {
 
     await openEntry(wrapper)
     await type(wrapper, [9])
-    await wrapper.find('[data-testid="modal-close-button"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="entry-cancel-button"]').trigger('pointerdown')
     await wrapper.vm.$nextTick()
 
     expect(store.reprises).toEqual([])
     expect(store.currentInput.player1).toBe('')
     expect(store.activePlayer).toBe('player1')
-    expect(wrapper.find('[data-testid="modal-backdrop"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="score-entry-dock"]').exists()).toBe(false)
   })
 
   // ⚠️ Le CTA se place du côté du joueur qui N'A PAS la main : au billard, c'est
@@ -352,39 +352,40 @@ describe('GameView — saisie en popup et alternance', () => {
     expect(wrapper.find('[data-testid="exit-button"][data-side="player1"]').exists()).toBe(false)
   })
 
-  // Story 1.15 (AC1) : le picto RECOMMENCER tient la MÊME colonne que la sortie et change
-  // de côté avec elle. La sortie garde le bord extérieur, RECOMMENCER vient vers
-  // l'intérieur : à gauche sortie puis RECOMMENCER, à droite RECOMMENCER puis sortie.
-  it('keeps the restart control next to the exit control', async () => {
+  // Story 1.15 (AC1), Story 10.4 (AC12) : les quatre pictos tiennent la MÊME colonne, celle
+  // opposée au CTA, et changent de côté avec lui. L'ordre est fixe du bord EXTÉRIEUR vers
+  // l'intérieur — QUITTER · PARAMÈTRES · RECOMMENCER · ANNULER.
+  // ⚠️ L'ordre du DOM est celui-là quel que soit le côté : c'est `flex-row-reverse` qui
+  // retourne l'affichage (DT2). Lire un index de DOM pour juger de la position visuelle
+  // serait faux — ce test vérifie le VOISINAGE et la colonne, pas la position à l'écran.
+  it('keeps the four pictos together in the column opposite the CTA', async () => {
     const { wrapper, store } = await startedGame()
+    const groupOf = (testid: string) =>
+      wrapper.find(`[data-testid="${testid}"]`).element.parentElement
 
     expect(wrapper.find('[data-testid="restart-button"][data-side="player1"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="restart-button"][data-side="player2"]').exists()).toBe(false)
-    let exit = wrapper.find('[data-testid="exit-button"]')
-    let restart = wrapper.find('[data-testid="restart-button"]')
-    expect(restart.element.parentElement).toBe(exit.element.parentElement)
-    expect(exit.element.nextElementSibling).toBe(restart.element)
-    expect(restart.text()).toBe('')
-    expect(restart.attributes('aria-label')).toBe('Recommencer la partie')
+    for (const testid of ['settings-button', 'restart-button', 'undo-button']) {
+      expect(groupOf(testid)).toBe(groupOf('exit-button'))
+    }
+    expect(wrapper.find('[data-testid="restart-button"]').attributes('aria-label')).toBeUndefined()
 
     store.switchTurn()
     await wrapper.vm.$nextTick()
 
     expect(wrapper.find('[data-testid="restart-button"][data-side="player2"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="restart-button"][data-side="player1"]').exists()).toBe(false)
-    exit = wrapper.find('[data-testid="exit-button"]')
-    restart = wrapper.find('[data-testid="restart-button"]')
-    expect(restart.element.parentElement).toBe(exit.element.parentElement)
-    expect(restart.element.nextElementSibling).toBe(exit.element)
+    expect(groupOf('restart-button')).toBe(groupOf('exit-button'))
   })
 
-  // Picto seul : il ne porte plus de libellé, donc l'intention passe par `aria-label`.
-  it('leaves the game from the exit pictogram', async () => {
+  // Story 10.4 (AC15) : le picto porte désormais son LIBELLÉ sous lui — c'est la cible
+  // tactile entière, libellé compris, qui tient les 90 px. L'`aria-label` de secours de la
+  // 1.10 n'a plus de raison d'être : le texte est là, visible et lu.
+  it('leaves the game from the exit picto action', async () => {
     const { wrapper, store } = await startedGame()
     const exit = wrapper.find('[data-testid="exit-button"]')
 
-    expect(exit.text()).toBe('')
-    expect(exit.attributes('aria-label')).toBeTruthy()
+    expect(exit.text()).toContain('QUITTER')
 
     await exit.trigger('pointerdown')
 
@@ -429,17 +430,17 @@ describe('GameView — saisie en popup et alternance', () => {
     const { wrapper } = await startedGame()
 
     await openEntry(wrapper)
-    await wrapper.find('[data-testid="modal-backdrop"]').trigger('pointerup')
+    await wrapper.find('[data-testid="score-entry-dock"]').trigger('pointerup')
 
-    expect(wrapper.find('[data-testid="modal-backdrop"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="score-entry-dock"]').exists()).toBe(true)
   })
 
-  // Rendre la main sans marquer : on tape la zone de l'adversaire. Une série de 0 est
-  // enregistrée — la reprise compte, mais le total ne bouge pas.
-  it('hands over with a zero series when the opponent panel is tapped', async () => {
+  // AC6 : rendre la main sans marquer se fait par `PASSER LE TOUR`. Une série de 0 est
+  // enregistrée — la reprise compte, mais le total ne bouge pas. Seul LE GESTE a changé.
+  it('hands over with a zero series on PASSER LE TOUR', async () => {
     const { wrapper, store } = await startedGame()
 
-    await panels(wrapper)[1]!.trigger('pointerdown')
+    await wrapper.find('[data-testid="pass-turn-button"]').trigger('pointerdown')
     await wrapper.vm.$nextTick()
 
     expect(store.player1.score).toBe(0)
@@ -448,10 +449,14 @@ describe('GameView — saisie en popup et alternance', () => {
     expect(panels(wrapper)[1]!.props('active')).toBe(true)
   })
 
-  it('ignores a tap on the panel that already has the hand', async () => {
+  // AC4 : la carte est INERTE. Taper n'importe où dessus, hors `−`/`+`, ne fait plus rien
+  // — ni sur celle qui a la main, ni sur l'autre. C'est la dette du `role="button"`
+  // englobant (revue de la 1.5) qui se referme ici.
+  it('ignores a tap on either card, with or without the hand', async () => {
     const { wrapper, store } = await startedGame()
 
     await panels(wrapper)[0]!.trigger('pointerdown')
+    await panels(wrapper)[1]!.trigger('pointerdown')
     await wrapper.vm.$nextTick()
 
     expect(store.reprises).toEqual([])
@@ -554,7 +559,7 @@ describe('GameView — annulation', () => {
 
     expect(scoreOf(wrapper, 0)).toBe('0')
     expect(panels(wrapper)[0]!.props('active')).toBe(true)
-    expect(panels(wrapper)[0]!.classes()).toContain('ring-turn-active')
+    expect(panels(wrapper)[0]!.find('[data-testid="turn-ring"]').exists()).toBe(true)
     expect(panels(wrapper)[1]!.props('active')).toBe(false)
     expect(wrapper.find('[data-testid="add-points-button"]').attributes('data-side')).toBe('player2')
     expect(wrapper.find('[data-testid="reprise-number"]').text()).toBe('1')
@@ -621,18 +626,18 @@ describe('GameView — annulation', () => {
 
     await wrapper.find('[data-testid="add-points-button"]').trigger('pointerdown')
     await wrapper.find('[data-testid="digit-9"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="modal-close-button"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="entry-cancel-button"]').trigger('pointerdown')
     await wrapper.vm.$nextTick()
-    expect(wrapper.find('[data-testid="modal-backdrop"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="score-entry-dock"]').exists()).toBe(false)
     expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
 
     await wrapper.find('[data-testid="add-points-button"]').trigger('pointerdown')
     await wrapper.find('[data-testid="digit-9"]').trigger('pointerdown')
     // Le voile ferme sur un geste complet : appui ET relâchement.
-    await wrapper.find('[data-testid="modal-backdrop"]').trigger('pointerdown')
-    await wrapper.find('[data-testid="modal-backdrop"]').trigger('pointerup')
+    await wrapper.find('[data-testid="score-entry-dock"]').trigger('pointerdown')
+    await wrapper.find('[data-testid="score-entry-dock"]').trigger('pointerup')
     await wrapper.vm.$nextTick()
-    expect(wrapper.find('[data-testid="modal-backdrop"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="score-entry-dock"]').exists()).toBe(false)
     expect(store.canUndo).toBe(false)
     expect(undoButton(wrapper).attributes('disabled')).toBeDefined()
   })
@@ -745,7 +750,7 @@ describe('GameView — fin de partie', () => {
     expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('FIN DE PARTIE')
     expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="prompt-ball"]').classes()).toContain('bg-player-white')
-    expect(panels(wrapper)[1]!.classes()).toContain('ring-turn-active')
+    expect(panels(wrapper)[1]!.find('[data-testid="turn-ring"]').exists()).toBe(true)
   })
 
   // AC4, AC5 : OUI ramène au scoreboard, le jaune joue, sa série termine la partie.
@@ -857,7 +862,7 @@ describe('GameView — fin de partie', () => {
     vi.advanceTimersByTime(3000)
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.find('[data-testid="modal-backdrop"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="score-entry-dock"]').exists()).toBe(false)
     expect(prompt(wrapper).exists()).toBe(true)
     expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('MICHEL A ATTEINT SA DISTANCE')
   })
@@ -1170,7 +1175,7 @@ describe('GameView — reprise après fermeture', () => {
     expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('PARTIE EN COURS')
     expect(wrapper.find('[data-testid="prompt-primary"]').text()).toBe('REPRENDRE LA PARTIE')
     expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('ANNULER')
-    expect(wrapper.find('[data-testid="modal-close-button"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
   })
 
   // AC3 : le scoreboard revient exactement où il en était.
@@ -1246,11 +1251,11 @@ describe('GameView — reprise après fermeture', () => {
       store.appendScoreDigit('player1', 5)
     })
 
-    expect(wrapper.findComponent({ name: 'ScoreEntryModal' }).exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'ScoreEntryDock' }).exists()).toBe(false)
 
     await press(wrapper, 'prompt-primary')
 
-    const entry = wrapper.findComponent({ name: 'ScoreEntryModal' })
+    const entry = wrapper.findComponent({ name: 'ScoreEntryDock' })
     expect(entry.exists()).toBe(true)
     expect(wrapper.find('[data-testid="entry-value"]').text()).toBe('5')
     expect(wrapper.find('[data-testid="validate-countdown"]').exists()).toBe(true)
@@ -1314,11 +1319,11 @@ describe('GameView — reprise après fermeture', () => {
 
     await press(wrapper, 'add-points-button')
     expect(store.entryOpen).toBe(true)
-    expect(wrapper.findComponent({ name: 'ScoreEntryModal' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'ScoreEntryDock' }).exists()).toBe(true)
 
-    await press(wrapper, 'modal-close-button')
+    await press(wrapper, 'entry-cancel-button')
     expect(store.entryOpen).toBe(false)
-    expect(wrapper.findComponent({ name: 'ScoreEntryModal' }).exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'ScoreEntryDock' }).exists()).toBe(false)
   })
 })
 
@@ -1462,8 +1467,10 @@ describe('GameView — +1 POINT (3 Bandes)', () => {
   const score = (wrapper: VueWrapper, side: 0 | 1) =>
     panels(wrapper)[side]!.find('[data-testid="score"]').text()
   // La main se rend en tapant la carte du joueur ASSIS (le panneau inactif).
-  async function tapPanel(wrapper: VueWrapper, side: 0 | 1) {
-    await panels(wrapper)[side]!.trigger('pointerdown')
+  // Story 10.4 (AC4) : la carte n'est plus tapable — on rend la main par le CTA
+  // `PASSER LE TOUR` de la colonne centrale, quel que soit le joueur actif.
+  async function passTurn(wrapper: VueWrapper) {
+    await wrapper.find('[data-testid="pass-turn-button"]').trigger('pointerdown')
     await wrapper.vm.$nextTick()
   }
 
@@ -1480,23 +1487,24 @@ describe('GameView — +1 POINT (3 Bandes)', () => {
     return { wrapper, store }
   }
 
-  // AC1 : en 3 Bandes le CTA du joueur assis est `+1 POINT`, pas le pavé.
-  it('replaces AJOUTER LES POINTS with +1 POINT on the seated side', async () => {
+  // AC1 : en 3 Bandes le CTA du joueur assis compte au point, il n'ouvre pas le pavé.
+  // Story 10.4 : le libellé dit POUR QUI on compte (`data-testid` inchangé).
+  it('replaces the series CTA with +1 ADVERSAIRE on the seated side', async () => {
     const { wrapper } = await startThreeCushions()
 
     const cta = wrapper.find('[data-testid="plus-one-button"]')
     expect(cta.exists()).toBe(true)
-    expect(cta.text()).toBe('+1 POINT')
+    expect(cta.text()).toBe('+1 ADVERSAIRE')
     expect(cta.attributes('data-side')).toBe('player2')
     expect(wrapper.find('[data-testid="add-points-button"]').exists()).toBe(false)
   })
 
-  it('keeps AJOUTER LES POINTS in a series game', async () => {
+  it('keeps the series-entry CTA in a series game', async () => {
     const wrapper = mount(GameView)
     useGameStore().startGame('libre', 'MICHEL', 'ANDRÉ', { player1: 100, player2: 80 })
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.find('[data-testid="add-points-button"]').text()).toBe('AJOUTER LES POINTS')
+    expect(wrapper.find('[data-testid="add-points-button"]').text()).toBe('+ POINTS ADVERSAIRE')
     expect(wrapper.find('[data-testid="plus-one-button"]').exists()).toBe(false)
   })
 
@@ -1512,7 +1520,7 @@ describe('GameView — +1 POINT (3 Bandes)', () => {
     expect(score(wrapper, 1)).toBe('0')
     expect(store.activePlayer).toBe('player1')
     expect(store.entryOpen).toBe(false)
-    expect(wrapper.findComponent({ name: 'ScoreEntryModal' }).exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'ScoreEntryDock' }).exists()).toBe(false)
     expect(vibrate).toHaveBeenCalledTimes(2)
   })
 
@@ -1531,16 +1539,16 @@ describe('GameView — +1 POINT (3 Bandes)', () => {
     expect(clockValue(wrapper)).toBe('39')
   })
 
-  // La main rendue au tap sur la carte de l'assis clôture la série comptée et relance
-  // le chrono pour le joueur suivant.
-  it('passes the turn from the seated card, closing the tapped series and restarting the clock', async () => {
+  // AC7 : la main rendue par `PASSER LE TOUR` CLÔTURE la série comptée aux `+1` — aucun 0
+  // n'est ajouté par-dessus — et relance le chrono pour le joueur suivant.
+  it('passes the turn from the CTA, closing the counted series and restarting the clock', async () => {
     const { wrapper, store } = await startThreeCushions()
     await press(wrapper, 'plus-one-button')
     await press(wrapper, 'plus-one-button')
     await elapse(wrapper, 9000)
     expect(clockValue(wrapper)).toBe('33')
 
-    await tapPanel(wrapper, 1)
+    await passTurn(wrapper)
 
     expect(store.activePlayer).toBe('player2')
     expect(store.reprises).toEqual([expect.objectContaining({ player1: 2, player2: null })])
@@ -1551,12 +1559,12 @@ describe('GameView — +1 POINT (3 Bandes)', () => {
     expect(clockValue(wrapper)).toBe('39')
   })
 
-  // Rendre la main sans tap reste une série de 0 (comme en JDS) et relance aussi.
+  // AC6 : sans aucun `+1`, rendre la main reste une série de 0 (comme en JDS), et relance.
   it('records a zero series on a pass without any tap', async () => {
     const { wrapper, store } = await startThreeCushions()
     await elapse(wrapper, 5000)
 
-    await tapPanel(wrapper, 1)
+    await passTurn(wrapper)
 
     expect(store.reprises).toEqual([expect.objectContaining({ player1: 0, player2: null })])
     expect(clockValue(wrapper)).toBe('40')
@@ -1638,7 +1646,7 @@ describe('GameView — +1 POINT (3 Bandes)', () => {
     store.startGame('libre', 'MICHEL', 'ANDRÉ', { player1: 100, player2: 80 })
     await wrapper.vm.$nextTick()
 
-    await tapPanel(wrapper, 1)
+    await passTurn(wrapper)
 
     expect(store.reprises).toEqual([expect.objectContaining({ player1: 0, player2: null })])
     expect(wrapper.find('[data-testid="shot-clock"]').exists()).toBe(false)
