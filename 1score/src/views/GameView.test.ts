@@ -708,6 +708,13 @@ describe('GameView — fin de partie', () => {
   const prompt = (wrapper: VueWrapper) => wrapper.find('[data-testid="prompt-modal"]')
   const summary = (wrapper: VueWrapper) => wrapper.find('[data-testid="game-summary"]')
 
+  function bannerPart(wrapper: VueWrapper, side: PlayerId, testid: string) {
+    return wrapper
+      .find(`[data-testid="summary-banner"] [data-testid="summary-${side}"]`)
+      .find(`[data-testid="${testid}"]`)
+      .text()
+  }
+
   function summaryCell(wrapper: VueWrapper, side: PlayerId, testid: string) {
     return wrapper
       .find(`[data-testid="summary-column"][data-side="${side}"]`)
@@ -852,8 +859,10 @@ describe('GameView — fin de partie', () => {
     expect(store.status).toBe('finished')
     expect(summary(wrapper).exists()).toBe(true)
     expect(summaryCell(wrapper, 'player1', 'summary-result')).toBe('VICTOIRE')
+    // Depuis la 1re passe de rendu de la 10.5, l'aplat est porté par chaque CELLULE et
+    // non plus par la colonne : les blocs sont séparés d'une marge qui laisse voir le fond.
     expect(
-      wrapper.find('[data-testid="summary-column"][data-side="player1"]').classes(),
+      wrapper.find('[data-testid="summary-column"][data-side="player1"] [data-testid="summary-points"]').classes(),
     ).toContain('bg-victory-ribbon')
   })
 
@@ -1062,8 +1071,12 @@ describe('GameView — fin de partie', () => {
     await press(wrapper, 'prompt-secondary')
 
     const banner = wrapper.find('[data-testid="summary-banner"]')
-    expect(banner.text()).toContain('MICHEL / 10')
-    expect(banner.text()).toContain('ANDRÉ / 8')
+    // Depuis la 10.5, nom et distance sont deux éléments distincts (AC3, DT6) : le
+    // bandeau ne rend plus `MICHEL / 10` d'une seule pièce.
+    expect(bannerPart(wrapper, 'player1', 'summary-name')).toBe('MICHEL')
+    expect(bannerPart(wrapper, 'player1', 'summary-distance')).toBe('10')
+    expect(bannerPart(wrapper, 'player2', 'summary-name')).toBe('ANDRÉ')
+    expect(bannerPart(wrapper, 'player2', 'summary-distance')).toBe('8')
     expect(banner.text()).toContain('VS')
     expect(banner.text()).toContain('LIBRE')
     expect(summaryCell(wrapper, 'player1', 'summary-points')).toBe('10')
@@ -1088,7 +1101,7 @@ describe('GameView — fin de partie', () => {
     await press(wrapper, 'prompt-secondary')
     expect(summary(wrapper).exists()).toBe(true)
 
-    await press(wrapper, 'rematch-button')
+    await press(wrapper, 'sidebar-item-restart')
 
     expect(store.status).toBe('playing')
     expect(summary(wrapper).exists()).toBe(false)
@@ -1103,12 +1116,28 @@ describe('GameView — fin de partie', () => {
     expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(false)
   })
 
-  it('returns home from FIN DE PARTIE', async () => {
+  // AC2 : le récap passe à la coquille de l'epic — barre latérale à deux entrées, plus
+  // aucune barre basse. La sortie est isolée en bas (décision 2 de Nathan).
+  it('drives the summary from a sidebar, with no bottom bar left', async () => {
+    const { wrapper } = await startedGame()
+    await validateSeries(wrapper, [1, 0])
+    await press(wrapper, 'prompt-secondary')
+
+    expect(wrapper.find('[data-testid="sidebar"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="sidebar-item-restart"]').text()).toContain('RECOMMENCER')
+    expect(wrapper.find('[data-testid="sidebar-bottom"] [data-testid="sidebar-item-quit"]').text())
+      .toContain('QUITTER')
+    expect(wrapper.find('[data-testid="summary-bar"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="rematch-button"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="end-game-button"]').exists()).toBe(false)
+  })
+
+  it('returns home from QUITTER', async () => {
     const { wrapper, store } = await startedGame()
     await validateSeries(wrapper, [1, 0])
     await press(wrapper, 'prompt-secondary')
 
-    await press(wrapper, 'end-game-button')
+    await press(wrapper, 'sidebar-item-quit')
 
     expect(store.status).toBe('idle')
     expect(wrapper.find('[data-testid="step-category"]').exists()).toBe(true)
@@ -1288,7 +1317,7 @@ describe('GameView — reprise après fermeture', () => {
     await press(wrapper, 'prompt-primary')
 
     expect(wrapper.find('[data-testid="game-summary"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="rematch-button"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="sidebar-item-restart"]').exists()).toBe(true)
   })
 
   // AC5 : rien à reprendre → accueil sans pop-up.

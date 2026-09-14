@@ -29,7 +29,16 @@
   --color-victory-gold: #FFD54A;
   --color-on-victory-gold: #000000;
   --color-victory-ribbon: #E63946;
-  --color-on-victory-ribbon: #000000;
+  /* Blanc et non noir depuis la 3e passe de rendu de la 10.5 (Nathan) : partout ailleurs
+     dans l'app le texte est blanc, et la colonne perdante juste à côté l'est aussi — le
+     noir se lisait comme une inversion.
+     ⚠️ Chiffres de contraste sur `--color-victory-ribbon` : blanc 4,17:1, noir 5,04:1.
+     Les deux passent AA pour les tailles employées ici (tout est en `text-label`, ≥ 24 px
+     et gras, donc « grand texte », seuil 3:1), mais le blanc NE passe PAS le seuil 4,5:1
+     du texte courant. Ne pas descendre la taille de ces valeurs sans revoir la teinte —
+     assombrir le ruban vers `--color-brand-red` (#D0343F) porterait le blanc à 4,95:1.
+     À trancher à la passe contraste AA (Story 10.7). */
+  --color-on-victory-ribbon: #FFFFFF;
 
   /* Fond sombre (valeur de première passe, susceptible d'être affinée) */
   --color-bg: #0D1117;
@@ -103,6 +112,11 @@
   --color-surface: rgba(255, 255, 255, 0.06);
   --color-border: rgba(255, 255, 255, 0.18);
   --color-border-strong: rgba(255, 255, 255, 0.40);
+  /* Bande claire du bandeau de récap (Story 10.5, 2e passe de rendu, réf. Billiboard) :
+     le seul aplat clair de l'app hors cartes joueur. Blanc cassé et non blanc pur, pour
+     ne pas éblouir sur un écran de club en salle sombre. Le texte s'y pose en
+     `--color-bg`. */
+  --color-banner: #F2F0EA;
   --radius-container: 0px;
   --radius-cta: 0px;
   /* Seule exception aux angles vifs : la carte des pop-ups, très légèrement adoucie pour

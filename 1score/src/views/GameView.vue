@@ -11,7 +11,9 @@ import CenterPanel from '../components/CenterPanel.vue'
 import ScoreEntryDock from '../components/ScoreEntryDock.vue'
 import PromptModal from '../components/PromptModal.vue'
 import GameSummary from '../components/GameSummary.vue'
+import SideBar from '../components/SideBar.vue'
 import type { PlayerId, TableSide } from '../types/game'
+import type { SideBarItem } from '../types/ui'
 
 const gameStore = useGameStore()
 const {
@@ -261,6 +263,34 @@ function confirmRestart(): void {
   gameStore.restartGame()
   lockPanels()
 }
+
+// --- Barre latérale du récap (Story 10.5) ---
+// Le contenu est fourni par l'ÉCRAN, jamais codé dans la barre (UX-DR31) : deux closures
+// d'une ligne sur des actions de store qui existent déjà — rien à ajouter côté `useGameStore`.
+// ⚠️ La barre vit ici et non dans `GameSummary`, qui est strictement présentationnel (AC6,
+// verrouillé par un test lisant son source) : y mettre des items actionnables obligerait
+// à des emits. C'est le même partage que sur les trois étapes de `HomeScreen`.
+// `QUITTER` est dans le SLOT DE SORTIE, `RECOMMENCER` en item (décision 2 de Nathan,
+// 2026-09-14) : écart assumé à la lettre d'UX-DR31, qui les liste dans l'ordre inverse —
+// la convention de l'epic isole l'action la plus irréversible en bas, et la revanche est
+// l'action fréquente. Aucune confirmation sur l'une ni sur l'autre (décision 4) : la
+// partie est finie, il n'y a rien à perdre.
+const SUMMARY_SIDEBAR_ITEMS: SideBarItem[] = [
+  {
+    id: 'restart',
+    picto: 'rotate-ccw',
+    label: 'RECOMMENCER',
+    state: 'normal',
+    action: () => gameStore.rematch(),
+  },
+]
+const SUMMARY_SIDEBAR_EXIT: SideBarItem = {
+  id: 'quit',
+  picto: 'door',
+  label: 'QUITTER',
+  state: 'normal',
+  action: () => gameStore.resetGame(),
+}
 </script>
 
 <template>
@@ -397,40 +427,26 @@ function confirmRestart(): void {
          Terminal : ni retour, ni `ANNULER` — une fin détectée n'est pas rattrapable
          (revue de Nathan, 2026-09-10), la correction se fait avant la série gagnante. -->
     <template v-else-if="status === 'finished'">
-      <GameSummary
-        class="min-h-0 flex-1"
-        :mode="mode"
-        :player1="player1"
-        :player2="player2"
-        :averages="averages"
-        :bestSeries="bestSeries"
-        :repriseCounts="repriseCounts"
-        :winner="winner"
-        :whiteSide="whiteSide"
-      />
+      <!-- Story 10.5 : le récap rejoint la coquille des écrans hors jeu — dégradé gris/noir,
+           barre latérale collée au bord, panneau de contenu à contour. La barre basse
+           provisoire de la 10.4 a disparu avec ses deux boutons. -->
+      <div class="flex min-h-0 flex-1 bg-(image:--gradient-bg)">
+        <SideBar :items="SUMMARY_SIDEBAR_ITEMS" :exitItem="SUMMARY_SIDEBAR_EXIT" />
 
-      <!-- ⚠️ PROVISOIRE — supprimé par la Story 10.5, qui refond le récap (barre latérale
-           QUITTER / RECOMMENCER). `ActionBar` est devenue la barre basse du SCOREBOARD en
-           Story 10.4 et ne sert plus ici : ces deux boutons gardent leurs classes et leurs
-           `data-testid` tels quels, posés à plat, le temps de cette transition. -->
-      <nav data-testid="summary-bar" class="flex shrink-0 items-center gap-4 bg-bg px-4 py-2">
-        <div class="flex flex-1 items-center justify-between gap-4">
-          <button
-            data-testid="end-game-button"
-            class="min-h-[var(--size-touch-target)] rounded-2xl bg-white/10 px-10 text-label font-black text-white touch-manipulation select-none active:bg-white/20"
-            @pointerdown="gameStore.resetGame()"
-          >
-            FIN DE PARTIE
-          </button>
-          <button
-            data-testid="rematch-button"
-            class="min-h-[var(--size-touch-target)] rounded-2xl bg-accent px-10 text-label font-black text-on-accent touch-manipulation select-none active:brightness-90"
-            @pointerdown="gameStore.rematch()"
-          >
-            UNE PARTIE DE PLUS
-          </button>
-        </div>
-      </nav>
+        <main class="flex min-w-0 flex-1 flex-col p-4">
+          <GameSummary
+            class="min-h-0 flex-1"
+            :mode="mode"
+            :player1="player1"
+            :player2="player2"
+            :averages="averages"
+            :bestSeries="bestSeries"
+            :repriseCounts="repriseCounts"
+            :winner="winner"
+            :whiteSide="whiteSide"
+          />
+        </main>
+      </div>
     </template>
   </div>
 </template>

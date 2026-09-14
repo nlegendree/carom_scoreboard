@@ -430,7 +430,7 @@ Aucun — le design system est **Custom** (étape 8). Aucun composant équivalen
 - *Amende UX-DR11* : « aucune action de score hors des panneaux » se lit désormais comme « aucune action qui **modifie** un score hors des panneaux ». Le CTA n'écrit rien : il **ouvre** la pop-up de saisie. Les corrections `−` / `+`, elles, sont bien restées dans les panneaux.
 - *État « récap » (Story 1.10, 2026-09-10)* : sous l'écran de fin, la barre porte **deux CTA** sans retour — `FIN DE PARTIE` (neutre, à gauche → accueil) et `UNE PARTIE DE PLUS` (accent, à droite → revanche immédiate).
 
-**GameSummary** *(fiche réécrite le 2026-09-10, Story 1.10 — format Billiboard, `explore/resources/IMG_6632.JPG`)* — *(2026-09-11, Epic 10, §10.3 Récap : conteneur à contour, sidebar `QUITTER` / `RECOMMENCER` à la place de la barre basse, nom et distance séparés dans le bandeau.)*
+**GameSummary** *(fiche réécrite le 2026-09-10, Story 1.10 — format Billiboard, `explore/resources/IMG_6632.JPG`)* — *(2026-09-11, Epic 10, §10.3 Récap : conteneur à contour, sidebar `QUITTER` / `RECOMMENCER` à la place de la barre basse, nom et distance séparés dans le bandeau.)* *(**Livré le 2026-09-14, Story 10.5** : `RECOMMENCER` en item / `QUITTER` en sortie, sidebar portée par `GameView` ; bandeau `NOM │ distance` sans `/` ; pastilles aux PNG `/bille_blanche.png` · `/bille_jaune.png` ; plus aucun arrondi ni `bg-bg`.)*
 - *Rôle* : écran de fin de partie façon "battle" (Flow 3), qui **remplace** le scoreboard en plein écran — c'est un état de la partie, pas une pop-up. **Bandeau** haut `NOM / distance` **VS** `NOM / distance` (côté conservé : gauche = blanc), le mode de jeu en surtitre discret au-dessus du `VS`. En dessous, **trois colonnes** — joueur gauche, libellés, joueur droit — avec les lignes `RÉSULTAT` (`VICTOIRE` / `DÉFAITE` / `ÉGALITÉ` + bille), `POINTS`, `MOY` (3 décimales), `SÉRIE`, `REPRISES`. Aucune interaction dans le composant : le récap est **terminal**, la correction se fait avant la série gagnante (aucune pop-up de fin n'a de croix — revue au rendu, 2026-09-10).
 - *États* : **vainqueur à gauche** ou **à droite** — sa colonne entière est en couleur **victoire** (ruban rouge `--color-victory-ribbon`, fidèle au rose/rouge Billiboard ; l'or reste le repli, UX-DR5), l'autre neutre sur fond sombre, et le mot `VICTOIRE` porte le signal hors couleur (UX-DR22) · **égalité** — aucune colonne mise en avant, `ÉGALITÉ` des deux côtés · **nouveau record** par joueur (badge dans la colonne), prévu mais **non déclenché** avant la Story 3.5.
 
@@ -587,7 +587,7 @@ Nouveau primitif de coquille d'écran, modèle Cueuny : colonne **gauche**, larg
 | Sélection JDS | `RETOUR` → accueil | — |
 | Paramétrage joueurs | `RETOUR` → écran précédent (sélection JDS, ou accueil pour le 3 Bandes), **saisies conservées** · `CONFIGURATION` (BIENTÔT — réglera plus tard le chrono, etc.) | `ANNULER` (croix) → accueil, saisies effacées |
 | Scoreboard | **pas de barre latérale** — voir 10.4 | — |
-| Récap | `QUITTER` → accueil (ex-`FIN DE PARTIE`) · `RECOMMENCER` → revanche immédiate, mêmes joueurs et distances (ex-`UNE PARTIE DE PLUS`) | — |
+| Récap | `RECOMMENCER` → revanche immédiate, mêmes joueurs et distances (ex-`UNE PARTIE DE PLUS`) | `QUITTER` (porte) → accueil (ex-`FIN DE PARTIE`) |
 
 - **`FERMER L'APPLICATION`** : *(reporté hors Epic 10 — item inerte en 10.1, décision de Nathan du 2026-09-11)* `PromptModal` « FERMER 1SCORE ? » avec `FERMER` / `ANNULER`. Le comportement réel dépend du **spike de faisabilité** (aucune API fiable de fermeture d'une PWA installée) : cible = fermeture de la fenêtre ; repli documenté = retour à l'accueil de l'application, la pop-up restant identique. Le libellé ne promet rien de plus que ce que le spike confirmera.
 - **Le retour n'est plus dans une barre basse.** La barre d'action basse (`ActionBar`) **disparaît de tous les écrans hors jeu** — la sidebar la remplace. Elle **subsiste uniquement sur le scoreboard**, reconstruite (10.4). Sur les écrans hors jeu, la place libérée en bas revient au contenu (tuiles, cartes joueurs).
@@ -668,9 +668,28 @@ Nouveau primitif de coquille d'écran, modèle Cueuny : colonne **gauche**, larg
 
 #### Récap (`GameSummary`, Story 10.5)
 
-- Style Billiboard conservé (bandeau VS, trois colonnes, colonne du vainqueur en couleur victoire), désormais dans un **conteneur à contour** sur le dégradé, avec la **sidebar** : `QUITTER` · `RECOMMENCER` (10.2). La barre basse `FIN DE PARTIE` / `UNE PARTIE DE PLUS` **disparaît**.
+- Style Billiboard conservé (bandeau VS, trois colonnes, colonne du vainqueur en couleur victoire), désormais dans un **conteneur à contour** sur le dégradé, avec la **sidebar** : `RECOMMENCER` en item, `QUITTER` en sortie (10.2). La barre basse `FIN DE PARTIE` / `UNE PARTIE DE PLUS` **disparaît**.
 - **Bandeau** : nom et distance dans **deux éléments distincts** — le nom se tronque seul (ellipse), la distance n'est **jamais** masquée (dette reprise). Côtés = ceux du scoreboard (la carte blanche peut donc être à droite si les billes ont été changées).
 - Toujours **terminal**, aucune interaction dans le composant.
+
+> **Livré le 2026-09-14 (Story 10.5) — écarts assumés, décisions de Nathan :**
+> - **Places inversées dans la sidebar** : `RECOMMENCER` est un **item** sous l'en-tête, `QUITTER` est dans le **slot de sortie**, calé en bas et isolé. La table de §10.2 les listait tous deux en items dans l'ordre inverse ; la convention de l'epic (§10.2, « l'action la plus irréversible est la plus éloignée du geste courant ») tranche ainsi, et la revanche est l'action fréquente. **Ni l'une ni l'autre n'ouvre de confirmation** : la partie est finie, il n'y a rien à perdre.
+> - **Pastilles de bille aux assets PNG du paramétrage** (`/bille_blanche.png`, `/bille_jaune.png`), dans le bandeau **comme** dans la ligne `RÉSULTAT` — les aplats `bg-player-white` / `bg-player-yellow` ont disparu.
+> - **Bandeau** : `NOM │ distance`, nombre **nu** séparé d'un filet vertical, sans `/` — modèle de bandeau de carte validé à la 1re passe de rendu de la 10.4, les deux écrans se lisent pareil.
+> - **La `SideBar` est posée par `GameView`, pas par `GameSummary`** : la table de §10.4 range la sidebar dans la ligne « `GameSummary` — modifié », mais le composant est strictement présentationnel (aucun emit, verrouillé par un test lisant son source). Même partage que sur les trois étapes de `HomeScreen`.
+> - **Portrait caduc** (passe de rendu 10.1) : passe navigateur aux trois formats paysage uniquement.
+
+> **1re passe de rendu (Nathan, 2026-09-14) :**
+> - **Aucune pastille de bille dans le bandeau** — une seule par joueur, dans sa cellule `RÉSULTAT`. Le couple nom/distance monte à `text-tile-title` (28–36 px).
+> - **Les statistiques sont des BLOCS**, pas des tranches de colonne pleine (réf. `billiboard_recap_2`) : 8 px de marge entre les cellules, le fond se voit au travers, l'aplat de couleur est porté par la **cellule**. Écart assumé à UX-DR13 (« la colonne du vainqueur mise en couleur […] des colonnes, pas une grille de lignes ») : la colonne victorieuse se lit toujours d'un bloc, simplement rayée de fins traits de fond. La colonne de libellés prend le même aplat neutre que la colonne perdante, comme sur la référence.
+> - **Ordre des lignes : `RÉSULTAT` · POINTS · REPRISES · MOY · SÉRIE** — la moyenne vient après le nombre de reprises dont elle se déduit.
+
+
+> **2e passe de rendu (Nathan, 2026-09-14)** — deux ajustements :
+> - **Toutes les valeurs à la même taille.** `POINTS` tenait seul en `text-reprise` (48–120 px) et écrasait les quatre autres lignes ; il passe en `text-label` comme elles. Effet de bord bienvenu : le `VS` redescendant de `text-reprise` à `text-hero`, le bandeau perd 50 px (153 → 103) et les cinq blocs y gagnent.
+> - **Bandeau en BANDE CLAIRE** (réf. `billiboard_recap`) : un aplat `--color-banner` (#F2F0EA, blanc cassé — pas de blanc pur, l'écran est en salle sombre) court d'un bord à l'autre et porte les deux couples `NOM | distance` en `--color-bg`. Elle est fendue au milieu par une **échancrure en biais** — deux `clip-path` symétriques qui s'écartent vers le bas — où le `VS` se loge sur le fond sombre, le mode en surtitre au-dessus (AC13 tenu). Même grammaire que l'en-tête de `SideBar` : une coupe en biais pour casser la symétrie. ⚠️ Le rembourrage des deux bandes est **asymétrique** (`pr-10` / `pl-10`) : côté échancrure, le texte doit rester en deçà du biais, sans quoi la distance passerait dessous.
+
+> **3e passe de rendu (Nathan, 2026-09-14)** : texte de la colonne victorieuse en **blanc** et non en noir — cohérence avec le reste de l'app et avec la colonne perdante voisine. Le blanc est le moins contrasté des deux sur ce rouge (4,17:1 contre 5,04:1) ; il tient parce que toutes les valeurs sont en « grand texte » (≥ 24 px gras, seuil 3:1). À revoir à la passe contraste AA (Story 10.7).
 
 ### 10.4 — Composants : ce qui apparaît, change, disparaît
 
@@ -687,7 +706,7 @@ Nouveau primitif de coquille d'écran, modèle Cueuny : colonne **gauche**, larg
 | `CenterPanel` | **modifié** | REP · chrono · `PASSER LE TOUR` ; perd `ANNULER` et `ÉCHANGER` ; accueille le dock |
 | `ShotClock` | **modifié** | débordement optionnel sur les cartes, taille réexaminée |
 | `ActionBar` | **modifié** | scoreboard uniquement ; CTA de saisie + 4 `IconAction` ; markup unique |
-| `GameSummary` | **modifié** | conteneur, sidebar, bandeau nom/distance séparés |
+| `GameSummary` | **modifié** | conteneur à contour, bandeau nom/distance séparés, pastilles aux PNG de bille ; *(2026-09-14 : la **sidebar** de l'écran est posée par `GameView`, le composant reste présentationnel)* |
 | `NumericPad`, `AlphaKeyboard` | **modifiés** | style contour, clavier complété ; restent muets |
 | `PlayerSetupModal` | **supprimé** | remplacé par la saisie en place (dock + sheet) |
 | `ScoreEntryModal` | **supprimé** | remplacé par `NumericPadDock` en colonne centrale, même contrat |

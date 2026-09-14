@@ -9,11 +9,13 @@ import {
 } from '../types/game'
 
 // Écran de récapitulatif façon « battle » (Story 1.10, UX-DR13), inspiré de Billiboard :
-// bandeau `NOM / distance` VS `NOM / distance`, puis deux colonnes joueur autour d'une
+// bandeau `NOM | distance` VS `NOM | distance`, puis deux colonnes joueur autour d'une
 // colonne de libellés, la colonne du vainqueur mise en couleur. Strictement
 // PRÉSENTATIONNEL : aucun emit, aucun accès au store — `GameView` lui passe ce qu'il
-// affiche, et porte les deux boutons de la barre basse. Sans aucune interaction : le
-// récap est terminal, on n'y corrige rien.
+// affiche, et porte la barre latérale. Sans aucune interaction : le récap est terminal,
+// on n'y corrige rien (Story 10.5, AC6).
+// Story 10.5 : le composant est le PANNEAU de contenu de la coquille de l'Epic 10 — il
+// porte son conteneur à contour, la coquille (dégradé + `SideBar`) est dans `GameView`.
 type PerSide<T> = { player1: T; player2: T }
 
 const props = withDefaults(
@@ -44,18 +46,38 @@ const SIDES = computed<readonly PlayerId[]>(() =>
 const leftSide = computed<PlayerId>(() => SIDES.value[0]!)
 const rightSide = computed<PlayerId>(() => SIDES.value[1]!)
 
-// Classes écrites en toutes lettres pour le scanner JIT de Tailwind v4.
-const BALL_CLASSES: Record<PlayerId, string> = {
-  player1: 'bg-player-white',
-  player2: 'bg-player-yellow',
+// Pictos de bille fournis par Nathan (Story 10.3), servis depuis `public/` : aucune
+// ressource réseau, l'app doit tourner hors ligne (FR45, NFR13). Table LITTÉRALE, comme
+// partout — et non des aplats colorés, qui ne se lisaient pas sur le ruban rouge
+// (décision 3 de Nathan, 2026-09-14).
+// ⚠️ Une seule pastille par joueur, dans la ligne `RÉSULTAT` : celle du bandeau a été
+// retirée à la 1re passe de rendu (Nathan) — la bille y était dite deux fois, et le nom
+// avait besoin de la place pour grossir.
+const BALL_PICTOS: Record<PlayerId, string> = {
+  player1: '/bille_blanche.png',
+  player2: '/bille_jaune.png',
 }
 
 // Colonne du vainqueur : ruban rouge (décision du 2026-09-10, fidèle au rose/rouge
 // Billiboard ; l'or `victory-gold` reste le repli si le rendu ne convainc pas, UX-DR5).
 // L'autre reste neutre sur fond sombre. Égalité : les deux en neutre. Le signal ne
 // repose pas sur la seule teinte — le mot `VICTOIRE` est là (UX-DR22).
+// ⚠️ `--color-victory-ribbon` (#E63946) et `--color-brand-red` (#D0343F, en-tête de la
+// barre latérale) sont deux tokens VOISINS mais distincts : depuis la 10.5 ils se
+// côtoient à l'écran. Ne pas les fusionner sans arbitrage de Nathan.
 const VICTORY_COLUMN_CLASSES = 'bg-victory-ribbon text-on-victory-ribbon'
 const NEUTRAL_COLUMN_CLASSES = 'bg-white/6 text-white'
+
+// 1re passe de rendu (Nathan, réf. `billiboard_recap_2`) : chaque statistique est un BLOC,
+// pas une tranche de colonne pleine. Les blocs sont séparés d'une petite marge qui laisse
+// voir le fond — c'est ce qui rend les lignes lisibles une à une. L'aplat de couleur passe
+// donc de la COLONNE à la CELLULE ; la colonne victorieuse se lit toujours d'un bloc,
+// rayée de fins traits de fond. Écart assumé à UX-DR13, qui demandait des colonnes
+// entières « et pas une grille de lignes ».
+const CELL_CLASSES = 'flex flex-1 items-center justify-center'
+// La colonne de libellés prend le même aplat neutre que la colonne perdante : sur la
+// référence les deux se lisent dans la même tonalité, seul le texte les distingue.
+const LABEL_CELL_CLASSES = 'bg-white/6 text-white/50'
 
 const modeLabel = computed(() => GAME_MODE_LABELS[props.mode])
 
@@ -80,102 +102,139 @@ const players = computed<Record<PlayerId, Player>>(() => ({
 </script>
 
 <template>
-  <div data-testid="game-summary" class="flex h-full w-full flex-col bg-bg">
-    <!-- Bandeau : NOM / distance — VS — NOM / distance, dans l'ordre des côtés du
-         scoreboard. Le mode de jeu en surtitre discret au-dessus du VS, jamais en
-         concurrence avec les noms (AC13). -->
+  <div
+    data-testid="game-summary"
+    class="flex h-full w-full flex-col border border-border bg-surface"
+  >
+    <!-- Bandeau au modèle Billiboard (2e passe de rendu, Nathan, réf. `billiboard_recap`) :
+         une BANDE CLAIRE court d'un bord à l'autre et porte les deux couples
+         `NOM | distance` en sombre. Elle est fendue au milieu par une échancrure en biais
+         — deux `clip-path` symétriques, qui s'écartent vers le bas — où le `VS` se loge sur
+         le fond sombre, avec le mode en surtitre discret au-dessus (AC13). C'est la même
+         grammaire que l'en-tête de `SideBar` : une coupe en biais pour casser la symétrie.
+         ⚠️ Nom et distance sont DEUX éléments (Story 10.5, AC3 — DT6) : le nom se tronque
+         seul, la distance reste TOUJOURS lisible. Un nombre rogné deviendrait faux à la
+         lecture, jamais un nom. `min-w-0` sur le span ET sur chaque ancêtre flex, sans
+         quoi `truncate` laisse le conteneur grandir au lieu de couper — c'est exactement
+         ce qui manquait en 1.10. Nombre NU, séparé par un filet : modèle de bandeau de
+         carte validé par Nathan à la 1re passe de rendu de la 10.4.
+         ⚠️ Le rembourrage intérieur des deux bandes est ASYMÉTRIQUE (`pr-10` / `pl-10`) :
+         du côté de l'échancrure, le texte doit rester en deçà du biais, sans quoi la
+         distance passerait sous la coupe. -->
     <header
       data-testid="summary-banner"
-      class="flex shrink-0 items-center justify-between gap-4 px-4 py-3"
+      class="flex shrink-0 items-stretch border-b border-border"
     >
-      <div class="flex min-w-0 flex-1 items-center gap-3">
-        <span aria-hidden="true" class="h-5 w-5 shrink-0 rounded-full" :class="BALL_CLASSES[leftSide]" />
-        <span
-          :data-testid="`summary-${leftSide}`"
-          class="truncate text-label font-black text-white"
-        >
-          {{ players[leftSide].name }} / {{ players[leftSide].targetScore }}
+      <div
+        :data-testid="`summary-${leftSide}`"
+        class="flex min-w-0 flex-1 items-center gap-3 bg-banner py-3 pl-4 pr-10 text-tile-title font-black text-bg [clip-path:polygon(0_0,100%_0,calc(100%-32px)_100%,0_100%)]"
+      >
+        <span data-testid="summary-name" class="min-w-0 truncate">
+          {{ players[leftSide].name }}
+        </span>
+        <span aria-hidden="true" class="h-6 w-px shrink-0 bg-bg/30" />
+        <span data-testid="summary-distance" class="shrink-0 tabular-nums">
+          {{ players[leftSide].targetScore }}
         </span>
       </div>
 
-      <div class="flex shrink-0 flex-col items-center leading-none">
+      <div class="flex shrink-0 flex-col items-center justify-center px-4 leading-none">
         <span data-testid="summary-mode" class="text-stat tracking-[0.3em] text-white/50">
           {{ modeLabel }}
         </span>
-        <span class="text-reprise font-black italic text-white/50">VS</span>
+        <span class="text-hero font-black italic text-white/60">VS</span>
       </div>
 
-      <div class="flex min-w-0 flex-1 items-center justify-end gap-3">
-        <span
-          :data-testid="`summary-${rightSide}`"
-          class="truncate text-label font-black text-white"
-        >
-          {{ players[rightSide].name }} / {{ players[rightSide].targetScore }}
+      <div
+        :data-testid="`summary-${rightSide}`"
+        class="flex min-w-0 flex-1 items-center justify-end gap-3 bg-banner py-3 pl-10 pr-4 text-tile-title font-black text-bg [clip-path:polygon(0_0,100%_0,100%_100%,32px_100%)]"
+      >
+        <span data-testid="summary-distance" class="shrink-0 tabular-nums">
+          {{ players[rightSide].targetScore }}
         </span>
-        <span aria-hidden="true" class="h-5 w-5 shrink-0 rounded-full" :class="BALL_CLASSES[rightSide]" />
+        <span aria-hidden="true" class="h-6 w-px shrink-0 bg-bg/30" />
+        <span data-testid="summary-name" class="min-w-0 truncate">
+          {{ players[rightSide].name }}
+        </span>
       </div>
     </header>
 
-    <!-- Table : trois colonnes de hauteur égale, une cellule par statistique. Les
-         colonnes joueur sont colorées ENTIÈRES (d'où des colonnes, pas une grille de
-         lignes) ; les cellules `flex-1` gardent les lignes alignées entre elles. -->
-    <div class="flex min-h-0 flex-1 gap-2 px-4 pb-4">
+    <!-- Table : trois colonnes de hauteur égale, une CELLULE par statistique.
+         1re passe de rendu de la 10.5 (Nathan, réf. `billiboard_recap_2`) : les cellules
+         sont des blocs séparés d'une petite marge (`gap-1`) qui laisse voir le fond, et
+         l'aplat de couleur est porté par la CELLULE et non plus par la colonne entière.
+         Ordre des lignes revu : `RÉSULTAT` puis POINTS · REPRISES · MOY · SÉRIE — le
+         score d'abord, la moyenne après le nombre de reprises dont elle se déduit.
+         Angles vifs : aucun arrondi en dur, `--radius-container` vaut 0. -->
+    <div class="flex min-h-0 flex-1 gap-2 p-4">
       <template v-for="(side, index) in SIDES" :key="side">
         <div
           v-if="index === 1"
-          class="flex w-1/5 shrink-0 flex-col text-center text-stat font-bold tracking-[0.2em] text-white/50"
+          class="flex w-1/5 shrink-0 flex-col gap-1 text-center text-stat font-bold tracking-[0.2em]"
         >
-          <span class="flex flex-1 items-center justify-center">RÉSULTAT</span>
-          <span class="flex flex-1 items-center justify-center">POINTS</span>
-          <span class="flex flex-1 items-center justify-center">MOY</span>
-          <span class="flex flex-1 items-center justify-center">SÉRIE</span>
-          <span class="flex flex-1 items-center justify-center">REPRISES</span>
+          <span :class="[CELL_CLASSES, LABEL_CELL_CLASSES]">RÉSULTAT</span>
+          <span :class="[CELL_CLASSES, LABEL_CELL_CLASSES]">POINTS</span>
+          <span :class="[CELL_CLASSES, LABEL_CELL_CLASSES]">REPRISES</span>
+          <span :class="[CELL_CLASSES, LABEL_CELL_CLASSES]">MOY</span>
+          <span :class="[CELL_CLASSES, LABEL_CELL_CLASSES]">SÉRIE</span>
         </div>
 
         <div
           data-testid="summary-column"
           :data-side="side"
-          class="flex min-w-0 flex-1 flex-col rounded-3xl text-center"
-          :class="columnClasses(side)"
+          class="flex min-w-0 flex-1 flex-col gap-1 text-center"
         >
-          <div class="flex flex-1 flex-col items-center justify-center gap-1">
-            <span class="flex items-center gap-2">
-              <span aria-hidden="true" class="h-5 w-5 rounded-full" :class="BALL_CLASSES[side]" />
-              <span data-testid="summary-result" class="text-label font-black tracking-[0.1em]">
-                {{ resultOf(side) }}
+          <div :class="[CELL_CLASSES, columnClasses(side)]">
+            <div class="flex flex-col items-center gap-1">
+              <span class="flex items-center gap-2">
+                <img
+                  :src="BALL_PICTOS[side]"
+                  alt=""
+                  aria-hidden="true"
+                  class="size-5 shrink-0 object-contain"
+                />
+                <span data-testid="summary-result" class="text-label font-black tracking-[0.1em]">
+                  {{ resultOf(side) }}
+                </span>
               </span>
-            </span>
-            <span
-              v-if="records[side]"
-              data-testid="summary-record"
-              class="rounded-full bg-black/20 px-3 text-stat font-bold tracking-[0.2em]"
-            >
-              ★ RECORD
-            </span>
+              <span
+                v-if="records[side]"
+                data-testid="summary-record"
+                class="bg-black/20 px-3 text-stat font-bold tracking-[0.2em]"
+              >
+                ★ RECORD
+              </span>
+            </div>
           </div>
+          <!-- 2e passe de rendu (Nathan) : toutes les valeurs à la MÊME taille, `POINTS`
+               compris — il tenait seul en `text-reprise` et écrasait les quatre autres. -->
           <span
             data-testid="summary-points"
-            class="flex flex-1 items-center justify-center text-reprise leading-none font-black tabular-nums"
+            class="text-label font-black tabular-nums"
+            :class="[CELL_CLASSES, columnClasses(side)]"
           >
             {{ players[side].score }}
           </span>
           <span
+            data-testid="summary-reprises"
+            class="text-label font-black tabular-nums"
+            :class="[CELL_CLASSES, columnClasses(side)]"
+          >
+            {{ repriseCounts[side] }}
+          </span>
+          <span
             data-testid="summary-average"
-            class="flex flex-1 items-center justify-center text-label font-black tabular-nums"
+            class="text-label font-black tabular-nums"
+            :class="[CELL_CLASSES, columnClasses(side)]"
           >
             {{ averageOf(side) }}
           </span>
           <span
             data-testid="summary-best"
-            class="flex flex-1 items-center justify-center text-label font-black tabular-nums"
+            class="text-label font-black tabular-nums"
+            :class="[CELL_CLASSES, columnClasses(side)]"
           >
             {{ bestSeries[side] }}
-          </span>
-          <span
-            data-testid="summary-reprises"
-            class="flex flex-1 items-center justify-center text-label font-black tabular-nums"
-          >
-            {{ repriseCounts[side] }}
           </span>
         </div>
       </template>
