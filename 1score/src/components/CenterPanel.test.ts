@@ -166,7 +166,9 @@ describe('CenterPanel — une place fixe pour PASSER LE TOUR', () => {
       const wrapper = mount(CenterPanel, { props: { ...baseProps, secondsRemaining } })
       const column = wrapper.find('[data-testid="pass-turn-button"]').element.parentElement!
 
-      expect(wrapper.classes()).toContain('justify-between')
+      // `mt-auto` et non `justify-between` : sans chrono, le compteur est hors du flux et
+      // il ne reste plus rien pour pousser le CTA vers le bas.
+      expect(wrapper.find('[data-testid="pass-turn-button"]').classes()).toContain('mt-auto')
       expect(column.lastElementChild).toBe(wrapper.find('[data-testid="pass-turn-button"]').element)
     }
   })
@@ -178,9 +180,15 @@ describe('CenterPanel — une place fixe pour PASSER LE TOUR', () => {
     const block = (w: ReturnType<typeof mount>) =>
       w.find('[data-testid="reprise-number"]').element.parentElement!.className
 
+    // ⚠️ Sorti du flux et centré sur la HAUTEUR ENTIÈRE de la colonne : en `flex-1`, il se
+    // centrait sur la place restant au-dessus du CTA, soit une cinquantaine de pixels plus
+    // haut que les scores, qui se centrent eux dans une carte à bandeau et pied équilibrés.
     expect(block(withClock)).toContain('shrink-0')
-    expect(block(without)).toContain('flex-1')
-    expect(block(without)).toContain('justify-center')
+    expect(block(without)).toContain('absolute')
+    expect(block(without)).toContain('top-1/2')
+    expect(block(without)).toContain('-translate-y-1/2')
+    // La colonne doit être le référent de ce positionnement absolu.
+    expect(without.classes()).toContain('relative')
   })
 
   // ⚠️ Un seul markup : le compteur n'est pas dupliqué pour changer de place, seule sa

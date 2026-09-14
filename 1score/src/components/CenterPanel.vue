@@ -57,9 +57,15 @@ const emit = defineEmits<{ 'pass-turn': [] }>()
 // le chrono occupe en 3 Bandes, au lieu de laisser un vide.
 // Un seul markup pour les deux cas : c'est la CLASSE du bloc de reprises qui change, pas
 // sa position dans le gabarit — le dupliquer pour le déplacer rouvrirait DT2 en miniature.
+//
+// ⚠️ Sans chrono, le compteur est sorti du flux et centré sur la HAUTEUR ENTIÈRE de la
+// colonne (5e passe de rendu, Nathan : « il faut centrer les reprises entre les 2 scores »).
+// En `flex-1 justify-center`, il se centrait sur la place restant AU-DESSUS du CTA, donc
+// une cinquantaine de pixels trop haut : les scores, eux, se centrent dans une carte dont
+// le bandeau et le pied s'équilibrent à peu près, soit sur le milieu de la zone de jeu.
 const REPRISE_BLOCK_CLASSES = {
   clock: 'shrink-0',
-  noClock: 'flex-1 justify-center',
+  noClock: 'absolute inset-x-0 top-1/2 -translate-y-1/2',
 } as const
 
 // ⚠️ Sert à la CLASSE seulement : le `v-if` du chrono garde sa comparaison littérale
@@ -80,7 +86,7 @@ function passTurn(): void {
 
 <template>
   <div
-    class="flex w-1/5 min-w-0 shrink-0 flex-col items-center justify-between gap-3 overflow-visible bg-surface p-2"
+    class="relative flex w-1/5 min-w-0 shrink-0 flex-col items-center gap-3 overflow-visible bg-surface p-2"
   >
     <div class="flex w-full min-w-0 flex-col items-center" :class="repriseBlockClass">
       <span data-testid="reprise-label" class="text-stat text-white/60">REP</span>
@@ -131,7 +137,7 @@ function passTurn(): void {
       v-if="!entryOpen"
       data-testid="pass-turn-button"
       :disabled="passTurnDisabled"
-      class="flex min-h-[var(--size-touch-target)] w-full flex-col items-center justify-center gap-1 bg-(image:--gradient-neutral) px-2 text-center text-stat font-black leading-tight text-white rounded-cta touch-manipulation select-none active:brightness-90 disabled:opacity-30"
+      class="mt-auto flex min-h-[var(--size-touch-target)] w-full shrink-0 flex-col items-center justify-center gap-1 bg-(image:--gradient-neutral) px-2 text-center text-stat font-black leading-tight text-white rounded-cta touch-manipulation select-none active:brightness-90 disabled:opacity-30"
       @pointerdown="passTurn"
     >
       <PictoIcon name="pass-turn" class="size-4 shrink-0" />
