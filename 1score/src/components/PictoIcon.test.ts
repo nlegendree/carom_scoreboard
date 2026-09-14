@@ -17,7 +17,7 @@ const EXPECTED_PATH_COUNTS: Record<PictoName, number> = {
   door: 3,
   'rotate-ccw': 2,
   undo: 2,
-  'pass-turn': 3,
+  'pass-turn': 4,
 }
 
 describe('PictoIcon', () => {
@@ -41,14 +41,23 @@ describe('PictoIcon', () => {
     expect(svg.attributes('viewBox')).toBe('0 0 24 24')
   })
 
-  it('draws a different shape for each name', () => {
-    const shapes = (Object.keys(EXPECTED_PATH_COUNTS) as PictoName[]).map((name) =>
+  // ⚠️ `refresh` et `pass-turn` partagent volontairement le même tracé (boucle circulaire à
+  // deux flèches, réf. Billiboard) : ils vivent sur deux écrans qui ne se croisent jamais —
+  // CHANGER DE BILLE au paramétrage, PASSER LE TOUR au scoreboard — et restent deux entrées
+  // distinctes pour pouvoir diverger. Tous les AUTRES doivent être discernables.
+  const SHARED_SHAPES: readonly PictoName[] = ['refresh', 'pass-turn']
+
+  it('draws a different shape for each name, bar the two documented twins', () => {
+    const names = (Object.keys(EXPECTED_PATH_COUNTS) as PictoName[]).filter(
+      (name) => !SHARED_SHAPES.includes(name),
+    )
+    const shapeOf = (name: PictoName) =>
       mount(PictoIcon, { props: { name } })
         .findAll('path')
         .map((path) => path.attributes('d'))
-        .join('|'),
-    )
+        .join('|')
 
-    expect(new Set(shapes).size).toBe(shapes.length)
+    expect(new Set(names.map(shapeOf)).size).toBe(names.length)
+    expect(shapeOf('pass-turn')).toBe(shapeOf('refresh'))
   })
 })

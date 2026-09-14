@@ -86,31 +86,52 @@ describe('PlayerPanel — les quatre zones de la carte', () => {
     expect(wrapper.find('[data-testid="digit-5"]').exists()).toBe(false)
   })
 
-  // AC1 : le bandeau porte NOM (haut gauche), DISTANCE (haut droite) et RESTANT sous le
-  // nom. Les statistiques n'y sont plus — elles descendent sous le score.
-  it('puts the name, the distance and the remaining count in the top band', () => {
-    const wrapper = mountPanel(makePlayer({ name: 'MICHEL', score: 12, targetScore: 100 }))
+  // Bandeau au modèle Billiboard (1re passe de rendu, Nathan) : ligne 1 nom | distance,
+  // ligne 2 restant | MOY · SÉRIE. TOUT tient dans le bandeau, y compris les statistiques,
+  // qui remontent de sous le score.
+  it('puts the name, the distance, the remaining count AND the statistics in the top band', () => {
+    const wrapper = mount(PlayerPanel, {
+      props: {
+        player: makePlayer({ name: 'MICHEL', score: 12, targetScore: 100 }),
+        active: false,
+        average: 8 / 3,
+        bestSeries: 5,
+      },
+    })
 
     const band = wrapper.find('[data-testid="panel-header"]')
     expect(band.text()).toContain('MICHEL')
     expect(band.find('[data-testid="target-score"]').text()).toBe('100')
     expect(band.find('[data-testid="remaining-score"]').text()).toBe('88')
-    expect(band.find('[data-testid="average"]').exists()).toBe(false)
+    expect(band.find('[data-testid="average"]').text()).toBe('2.667')
+    expect(band.find('[data-testid="best-series"]').text()).toBe('5')
     expect(band.find('[data-testid="score"]').exists()).toBe(false)
   })
 
-  // AC1 : la ligne MOY · SÉRIE est SOUS le score, plus dans le bandeau.
-  it('puts the statistics under the score, outside the band', () => {
-    const wrapper = mount(PlayerPanel, {
-      props: { player: makePlayer({ score: 8 }), active: false, average: 8 / 3, bestSeries: 5 },
-    })
-
+  // La barre de statistiques qui vivait sous le score est SUPPRIMÉE (1re passe de rendu) :
+  // son aplat gris coupait la carte en deux pour trois valeurs secondaires.
+  it('holds no statistics band under the score any more', () => {
+    const wrapper = mountPanel(makePlayer({ score: 8 }))
     const stats = wrapper.find('[data-testid="panel-stats"]')
-    expect(stats.find('[data-testid="average"]').text()).toBe('2.667')
-    expect(stats.find('[data-testid="best-series"]').text()).toBe('5')
+
+    expect(stats.exists()).toBe(true)
     expect(wrapper.find('[data-testid="panel-header"] [data-testid="panel-stats"]').exists()).toBe(
-      false,
+      true,
     )
+    expect(stats.classes()).not.toContain('bg-black/8')
+  })
+
+  // Modèle Billiboard : la distance et le restant sont des NOMBRES NUS. Les mots
+  // « DISTANCE » et « RESTANT » encombraient un bandeau qui doit se lire d'un coup d'œil.
+  it('shows the distance and the remaining count as bare numbers, with no label', () => {
+    const wrapper = mountPanel(makePlayer({ name: 'MICHEL', score: 12, targetScore: 100 }))
+    const band = wrapper.find('[data-testid="panel-header"]')
+
+    expect(band.text()).not.toContain('DISTANCE')
+    expect(band.text()).not.toContain('RESTANT')
+    // MOY et SÉRIE gardent le leur, comme `AVG` et `HR` sur la référence.
+    expect(band.text()).toContain('MOY')
+    expect(band.text()).toContain('SÉRIE')
   })
 
   // Convention des fédérations de billard : moyenne générale à 3 décimales.
@@ -130,9 +151,7 @@ describe('PlayerPanel — les quatre zones de la carte', () => {
     const name = wrapper.find('[data-testid="panel-name"]')
     expect(name.classes()).toContain('line-clamp-2')
     expect(name.classes()).toContain('min-w-0')
-    expect(wrapper.find('[data-testid="target-score"]').element.parentElement!.className).toContain(
-      'shrink-0',
-    )
+    expect(wrapper.find('[data-testid="target-score"]').classes()).toContain('shrink-0')
   })
 
   // Le score occupe la carte : sa taille suit le nombre de chiffres, sinon un total à
@@ -259,6 +278,26 @@ describe('PlayerPanel — zone de série', () => {
 
     for (const id of ['entry-value', 'remaining', 'series-value']) {
       expect(wrapper.find(`[data-testid="${id}"]`).exists()).toBe(false)
+    }
+  })
+
+  // 1re passe de rendu (Nathan) : le nombre de la zone de série est ROUGE et plus gros —
+  // c'est le seul repère de couleur d'une carte en aplat uni, et la référence Billiboard
+  // le peint en rouge entre ses deux boutons de correction.
+  it('paints the series slot red, whatever it is showing', () => {
+    const cases = [
+      ['entry-value', { entryValue: '12' }],
+      ['series-value', { seriesValue: 4 }],
+      [
+        'remaining',
+        { showRemaining: true, player: makePlayer({ score: 28, targetScore: 30 }) },
+      ],
+    ] as const
+
+    for (const [testid, props] of cases) {
+      const slot = mountFooter(props as Record<string, unknown>).find(`[data-testid="${testid}"]`)
+
+      expect(slot.classes()).toContain('text-brand-red')
     }
   })
 

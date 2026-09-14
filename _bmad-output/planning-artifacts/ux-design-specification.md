@@ -639,7 +639,9 @@ Nouveau primitif de coquille d'écran, modèle Cueuny : colonne **gauche**, larg
 > **(b)** le bandeau de carte **ne porte pas de picto de bille** (décision 3) — la couleur pleine suffit en jeu ;
 > **(c)** le débordement du chrono est **systématique**, pas facultatif (décision 4) ;
 > **(d)** le **portrait** est hors périmètre produit (décision du 2026-09-11) — ni libellés masqués, ni pictos à 72 px ;
-> **(e)** le liseré de tour est un **overlay** posé après les quatre zones, et non un `ring` de racine : une ombre interne se peint sous les enfants, et le bandeau opaque l'effaçait sur les 22 % hauts de la carte (défaut mesuré à la passe navigateur, invisible en test).
+> **(e)** la carte n'a que **TROIS** zones depuis la 1re passe de rendu (2026-09-14) : le bandeau suit le modèle Billiboard de bout en bout — ligne 1 `NOM | DISTANCE`, ligne 2 `RESTANT | MOY · SÉRIE`, avec `DISTANCE` et `RESTANT` en **nombres nus** —, et la ligne `MOY · SÉRIE` posée sous le score est **supprimée** (son aplat gris coupait la carte en deux). La zone de série passe en **rouge** et plus gros, comme sur la référence ;
+> **(f)** `PASSER LE TOUR` est **sans contour** et porte le **picto de Billiboard** (boucle circulaire à deux flèches) ; le chrono attend **1 s** et non 2 avant de décompter, et son arc est **rentré** dans le disque (marge sombre autour, modèle Cueuny) ;
+> **(g)** le liseré de tour est un **overlay** posé après les quatre zones, et non un `ring` de racine : une ombre interne se peint sous les enfants, et le bandeau opaque l'effaçait sur les 22 % hauts de la carte (défaut mesuré à la passe navigateur, invisible en test).
 
 
 **Pas de barre latérale** : les cartes ont besoin de toute la largeur pour le score lu à 2 m, et la barre basse existante remplit déjà le rôle d'ancrage des actions. Layout conservé : 2/5 · 1/5 · 2/5, plus la barre basse.

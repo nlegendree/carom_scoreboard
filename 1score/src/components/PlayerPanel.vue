@@ -2,13 +2,17 @@
 import { computed } from 'vue'
 import type { Player, PlayerColor, TableSide } from '../types/game'
 
-// Carte joueur du scoreboard, refondue en QUATRE zones par la Story 10.4 (réf. Billiboard
-// pour le bandeau et le score géant, Cueuny pour le RESTANT et l'aplat de statistiques) :
-//   1. bandeau — NOM à gauche, DISTANCE à droite, RESTANT sous le nom ;
+// Carte joueur du scoreboard (Story 10.4), en TROIS zones depuis la 1re passe de rendu
+// (Nathan) — le bandeau suit désormais le modèle Billiboard de bout en bout :
+//   1. bandeau — ligne 1 `NOM | DISTANCE`, ligne 2 `RESTANT | MOY · SÉRIE` ;
 //   2. score géant, le plus gros élément de l'écran, sans exception ;
-//   3. ligne MOY · SÉRIE ;
-//   4. pied `−` / zone de série / `+`.
+//   3. pied `−` / zone de série / `+`.
 // Hiérarchie de lecture à 2 mètres : score ≫ RESTANT > NOM > DISTANCE > MOY/SÉRIE.
+//
+// ⚠️ La ligne `MOY · SÉRIE` posée sous le score en première livraison est SUPPRIMÉE : son
+// aplat gris coupait la carte en deux pour trois valeurs secondaires. Elle remonte dans le
+// bandeau, où la référence la place. Et `DISTANCE` comme `RESTANT` sont des nombres NUS —
+// leurs libellés encombraient un bandeau qui doit se lire d'un coup d'œil.
 //
 // ⚠️ La carte N'EST PLUS TAPABLE (AC4) : le passage de tour est passé au CTA
 // `PASSER LE TOUR` de la colonne centrale. Plus d'emit, plus de `role="button"` — mais
@@ -136,14 +140,6 @@ const SLOT_TESTIDS: Record<SeriesSlot['kind'], string> = {
   series: 'series-value',
 }
 
-// La valeur en cours de frappe est la seule à porter l'encre pleine de la carte : c'est
-// elle qu'on regarde pendant qu'on tape. Les deux autres restent des informations.
-const SLOT_INK_CLASSES: Record<SeriesSlot['kind'], string> = {
-  entry: 'opacity-100',
-  remaining: 'opacity-80',
-  series: 'opacity-80',
-}
-
 const seriesSlot = computed<SeriesSlot | null>(() => {
   // `0` en attente plutôt qu'un champ vide : c'est la valeur qu'on est en train de
   // composer, et le plus souvent la série réelle au carambole (repris de la 1.5).
@@ -165,47 +161,63 @@ function adjust(delta: number): void {
     class="@container relative flex h-full min-w-0 flex-1 flex-col overflow-hidden touch-manipulation select-none"
     :class="colorClasses"
   >
-    <!-- 1. BANDEAU (≈ 22 % de la carte). Fond pleine largeur — l'aplat ne s'interrompt pas
-         sur la gouttière de l'anneau —, contenu décalé par la gouttière intérieure.
+    <!-- 1. BANDEAU (≈ 22 % de la carte), au modèle Billiboard (1re passe de rendu, Nathan) :
+         ligne 1 **NOM | DISTANCE**, ligne 2 **RESTANT | MOY · SÉRIE**. Les statistiques
+         sont remontées ici — leur bandeau gris sous le score coupait la carte en deux pour
+         trois valeurs secondaires.
+         ⚠️ DISTANCE et RESTANT sont des **nombres nus** : leurs libellés encombraient un
+         bandeau qui doit se lire d'un coup d'œil. MOY et SÉRIE gardent le leur, comme
+         `AVG` et `HR` sur la référence — sans quoi trois nombres nus se confondraient.
+         Fond pleine largeur — l'aplat ne s'interrompt pas sur la gouttière de l'anneau —,
+         contenu décalé par la gouttière intérieure.
          Le nom est le SEUL élément élastique : deux lignes puis ellipse. Une valeur
          chiffrée rognée deviendrait fausse à la lecture, jamais elle. -->
     <div
       data-testid="panel-header"
-      class="flex h-[22%] shrink-0 items-start justify-between gap-2 overflow-hidden px-3 py-2"
+      class="flex h-[22%] shrink-0 flex-col justify-start gap-0.5 overflow-hidden px-3 py-2"
       :class="[bandClasses, gutterClass]"
     >
-      <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+      <div class="flex items-baseline justify-between gap-2">
         <span
           data-testid="panel-name"
           class="min-w-0 text-label font-black uppercase leading-tight line-clamp-2"
           >{{ player.name }}</span
         >
+        <!-- Distance libre (0) : l'emplacement disparaît entièrement, pas de tiret ni de
+             zéro à interpréter (NFR12). -->
+        <span
+          v-if="player.targetScore > 0"
+          data-testid="target-score"
+          class="shrink-0 text-label font-black tabular-nums leading-none"
+          >{{ player.targetScore }}</span
+        >
+      </div>
+
+      <div class="flex items-baseline gap-2">
         <!-- RESTANT : deuxième information de la carte après le score (réf. Cueuny,
              `남은 점수`). Champ dérivé, aucun état nouveau (AR25). -->
         <span
           v-if="remainingScore !== null"
-          class="flex items-baseline gap-1.5 whitespace-nowrap"
+          data-testid="remaining-score"
+          class="shrink-0 text-label font-black tabular-nums leading-none"
+          >{{ remainingScore }}</span
         >
-          <span class="text-stat font-bold opacity-60">RESTANT</span>
-          <span
-            data-testid="remaining-score"
-            class="text-label font-black tabular-nums leading-none"
-            >{{ remainingScore }}</span
-          >
-        </span>
+        <!-- `ml-auto` et non `justify-between` : sans distance, le restant disparaît et les
+             statistiques doivent rester calées à droite, pas glisser à gauche. -->
+        <div
+          data-testid="panel-stats"
+          class="ml-auto flex shrink-0 items-baseline gap-2 text-stat @min-[420px]:gap-3"
+        >
+          <span class="flex items-baseline gap-1">
+            <span class="font-bold opacity-60">MOY</span>
+            <span data-testid="average" class="font-black tabular-nums">{{ displayedAverage }}</span>
+          </span>
+          <span class="flex items-baseline gap-1">
+            <span class="font-bold opacity-60">SÉRIE</span>
+            <span data-testid="best-series" class="font-black tabular-nums">{{ bestSeries }}</span>
+          </span>
+        </div>
       </div>
-
-      <!-- Distance libre (0) : l'emplacement disparaît entièrement, pas de tiret ni de
-           zéro à interpréter (NFR12). -->
-      <span
-        v-if="player.targetScore > 0"
-        class="flex shrink-0 items-baseline gap-1.5 whitespace-nowrap"
-      >
-        <span class="text-stat font-bold opacity-60">DISTANCE</span>
-        <span data-testid="target-score" class="text-label font-black tabular-nums leading-none">{{
-          player.targetScore
-        }}</span>
-      </span>
     </div>
 
     <!-- 2. SCORE GÉANT — le plus gros élément de l'écran, sans exception. -->
@@ -222,25 +234,7 @@ function adjust(delta: number): void {
       >
     </div>
 
-    <!-- 3. MOY · SÉRIE, sous le score (elles ont quitté le bandeau en Story 10.4). Aplat
-         légèrement assombri, façon bandeau de statistiques Cueuny. -->
-    <div
-      data-testid="panel-stats"
-      class="flex shrink-0 items-baseline justify-center gap-3 bg-black/8 px-3 py-1 text-stat @min-[420px]:gap-4"
-      :class="gutterClass"
-    >
-      <span class="flex items-baseline gap-1.5">
-        <span class="font-bold opacity-60">MOY</span>
-        <span data-testid="average" class="font-black tabular-nums">{{ displayedAverage }}</span>
-      </span>
-      <span aria-hidden="true" class="opacity-40">·</span>
-      <span class="flex items-baseline gap-1.5">
-        <span class="font-bold opacity-60">SÉRIE</span>
-        <span data-testid="best-series" class="font-black tabular-nums">{{ bestSeries }}</span>
-      </span>
-    </div>
-
-    <!-- 4. PIED — correction du total sans toucher au déroulé de la partie : ni reprise,
+    <!-- 3. PIED — correction du total sans toucher au déroulé de la partie : ni reprise,
          ni bascule de tour. Posés aux deux coins bas et en filigrane : ce sont des
          rattrapages d'arbitrage, ils ne doivent pas attirer l'œil autant que le score.
          Entre les deux, la zone de série (AC3) : un seul contenu à la fois. -->
@@ -255,12 +249,16 @@ function adjust(delta: number): void {
       </button>
       <!-- La `key` recrée l'élément à chaque changement de valeur, ce qui rejoue le flash
            d'accusé de frappe (UX-DR17) LÀ OÙ LA VALEUR CHANGE, sans aucun timer JS. -->
+      <!-- ROUGE et plus gros que le reste du pied (1re passe de rendu, Nathan, réf.
+           Billiboard, qui peint ce nombre en rouge entre ses deux boutons de correction) :
+           c'est le seul repère de couleur d'une carte en aplat uni. `--color-brand-red`
+           plutôt que `--color-turn-active` : plus sombre, il tient le contraste du texte
+           large sur le jaune comme sur le blanc — à revalider à la passe AA de la 10.7. -->
       <span
         v-if="seriesSlot"
         :key="seriesSlot.text"
         :data-testid="SLOT_TESTIDS[seriesSlot.kind]"
-        class="relative text-[clamp(18px,7.5cqw,44px)] leading-none font-black tabular-nums whitespace-nowrap"
-        :class="SLOT_INK_CLASSES[seriesSlot.kind]"
+        class="relative text-[clamp(24px,10cqw,64px)] leading-none font-black tabular-nums whitespace-nowrap text-brand-red"
         >{{ seriesSlot.text }}
         <!-- Voile SOMBRE et non blanc : la carte est un aplat clair à encre noire, un
              flash blanc y serait invisible (le voile clair de la pop-up centrée jouait sur

@@ -1737,6 +1737,14 @@ So that je lis tout à 2 mètres et je passe la main par un geste explicite, san
 > 5. **Liseré de tour en overlay, pas en `ring` de racine** (passe navigateur) — un `ring-inset` se peint SOUS les enfants, et le bandeau opaque l'effaçait sur les 22 % hauts de la carte. Défaut invisible en test (happy-dom ne calcule aucun CSS).
 > 6. **`openSeries` borné au joueur qui a la main** — la fonction privée `openSeriesValue` reste non nulle après le passage de main, ce qui convient à ses appelants internes mais ferait afficher une série « en cours » sur la carte d'un joueur assis.
 > 7. **Barre du récap déplacée en `<nav>` inline dans `GameView`** — `ActionBar` est devenue la barre basse du scoreboard. Provisoire, supprimé par la Story 10.5.
+> **1re passe de rendu (Nathan, 2026-09-14)** — six changements, tous appliqués :
+> - **bandeau de carte au modèle Billiboard de bout en bout** : ligne 1 `NOM | DISTANCE`, ligne 2 `RESTANT | MOY · SÉRIE`. `DISTANCE` et `RESTANT` deviennent des **nombres nus**, sans libellé ;
+> - **la ligne `MOY · SÉRIE` sous le score est SUPPRIMÉE** : son aplat gris coupait la carte en deux pour trois valeurs secondaires. Elle remonte dans le bandeau. La carte n'a donc plus que **trois** zones ;
+> - **zone de série en ROUGE** (`--color-brand-red`) et plus grosse (`clamp(24px,10cqw,64px)`), comme la référence Billiboard qui peint ce nombre en rouge entre ses deux boutons de correction ;
+> - **`PASSER LE TOUR` perd son contour clair** (`--color-border-strong` dessinait un cadre dans un cadre) et prend le **picto de Billiboard** : la boucle circulaire à deux flèches, même tracé que `refresh` ;
+> - **latence du chrono ramenée de 2 s à 1 s** (`SHOT_CLOCK_GRACE_MS`) : 2 s se lisaient comme un chrono en panne ;
+> - **anneau du chrono rentré dans son disque** (rayon 36 au lieu de 42, trait 10 au lieu de 8) : collé au bord il se lisait comme un liseré ; avec sa marge sombre, le médaillon se détache des cartes sur lesquelles il déborde (modèle Cueuny).
+>
 > 8. **Écart constaté, non corrigé** : l'anneau débordant recouvre le liseré de tour sur ~15 px de large (la carte `@container` crée un contexte d'empilement qui confine le `z-20` du liseré). À trancher avec Nathan au rendu.
 
 **Acceptance Criteria:**

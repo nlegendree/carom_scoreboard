@@ -10,7 +10,9 @@ export const SHOT_CLOCK_SECONDS = 40
 // 2026-09-11 — « une petite latence de 2 s », révisée de 3 s à la création de la 2.1).
 // L'anneau s'affiche plein à 40 et attend ce délai avant de commencer à se vider : le
 // temps que le joueur assis retire son doigt et que celui qui joue se replace.
-export const SHOT_CLOCK_GRACE_MS = 2000
+// Ramenée à 1 s à la 1re passe de rendu de la 10.4 (Nathan, 2026-09-14) : 2 s se voyaient
+// comme un chrono en panne au moment même où l'attention est sur lui.
+export const SHOT_CLOCK_GRACE_MS = 1000
 
 /**
  * Chronomètre de série, toujours actif en 3 Bandes et inexistant ailleurs.

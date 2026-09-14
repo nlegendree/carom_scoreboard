@@ -46,12 +46,16 @@ const PATHS: Record<PictoName, readonly string[]> = {
   'rotate-ccw': ['M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8', 'M3 3v5h5'],
   // Flèche retour courbe : ANNULER (undo multi-niveaux).
   undo: ['M9 14 4 9l5-5', 'M4 9h10.5a5.5 5.5 0 0 1 0 11H11'],
-  // Flèche passant AU-DESSUS d'un rond : PASSER LE TOUR. Le rond est le joueur qu'on
-  // enjambe ; distinct des deux boucles ci-dessus, qui disent « refaire », pas « passer ».
+  // PASSER LE TOUR : la BOUCLE CIRCULAIRE à deux flèches du CTA `턴넘기기` de Billiboard
+  // (1re passe de rendu, Nathan : « prends le picto de billiboard »). Même tracé que
+  // `refresh` — les deux disent « la main tourne » — mais nommé à part : `refresh` sert
+  // CHANGER DE BILLE au paramétrage, et les deux écrans ne se croisent jamais. Ne pas les
+  // fusionner : ils divergeront au premier ajustement de l'un des deux.
   'pass-turn': [
-    'M11 17a1 1 0 1 0 2 0a1 1 0 1 0 -2 0',
-    'M21 7v6h-6',
-    'M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7',
+    'M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8',
+    'M21 3v5h-5',
+    'M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16',
+    'M8 16H3v5',
   ],
 }
 </script>

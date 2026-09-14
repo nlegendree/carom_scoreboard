@@ -321,6 +321,15 @@ Trois évolutions dépassent l'habillage visuel et touchent `useGameStore` :
 
 *Reste à trancher avec Nathan (non corrigé) :* l'anneau débordant **recouvre le liseré de tour** sur sa largeur, la carte `@container` créant un contexte d'empilement (`contain: layout`) qui confine le `z-20` du liseré.
 
+*1re passe de rendu de la Story 10.4 (Nathan, 2026-09-14)* — six ajustements, aucun changement de règle :
+- **carte à TROIS zones** : le bandeau prend le modèle Billiboard de bout en bout (`NOM | DISTANCE` puis `RESTANT | MOY · SÉRIE`, les deux premiers en **nombres nus**), et la ligne `MOY · SÉRIE` sous le score est supprimée avec son aplat ;
+- **zone de série en `--color-brand-red`** et plus grosse. Choisi plutôt que `--color-turn-active` : plus sombre, il tient le texte large sur le jaune (≈ 4,1:1) comme sur le blanc (≈ 5,4:1) — à revalider à la passe AA de la 10.7 ;
+- **`PASSER LE TOUR` sans contour**, et picto `pass-turn` **redéfini** sur la boucle circulaire à deux flèches de Billiboard. ⚠️ Même tracé que `refresh`, volontairement : les deux vivent sur des écrans qui ne se croisent jamais (CHANGER DE BILLE au paramétrage, PASSER LE TOUR au scoreboard) et restent deux entrées distinctes pour pouvoir diverger. `PictoIcon.test.ts` documente ce couple au lieu d'exiger l'unicité de toutes les formes ;
+- **`SHOT_CLOCK_GRACE_MS` : 2000 → 1000** ;
+- **`ShotClock` : arc rentré** (`RADIUS` 42 → 36, trait 8 → 10, chiffre 44 → 40 cqmin), marge sombre tout autour façon Cueuny.
+
+⚠️ **Dette de test remboursée au passage.** La grâce du chrono est un réglage de rendu (3 s → 2 s → 1 s) et une dizaine de cas la **recopiaient en dur** dans leurs `advanceTimersByTime` : le passage à 1 s en cassait huit dans `useTimer.test.ts` et huit dans `GameView.test.ts`, tous sans rapport avec ce qu'ils testent. Ils la **dérivent** désormais de `SHOT_CLOCK_GRACE_MS` (un seul cas la fige, volontairement). Deux pièges relevés à cette occasion : le premier décrément tombe à **grâce + un tick**, `startInterval` n'étant armé qu'à la fin de la grâce ; et le cas « relance pendant la grâce » avait des attentes en dur qui la dépassaient dès 1 s — il ne testait plus ce qu'il dit. Même traitement pour `ShotClock.test.ts`, qui recopiait le rayon de l'arc : il le **lit** sur l'élément et verrouille la relation `dashoffset = C × (1 − ratio)`, pas la valeur du jour.
+
 *Tokens ajoutés :* `--game-popup-inset-left` / `--game-popup-inset-right` (`calc(100vw * 0.4 + 32px)`) dans `@theme static`. ⚠️ Même dette de géométrie dupliquée que `--setup-popup-inset-*`, mais **pas la même géométrie** : le scoreboard n'a pas de barre latérale et ses colonnes valent 2/5 · 1/5 · 2/5. À faire bouger avec la mise en page.
 
 ### Architecture Frontend

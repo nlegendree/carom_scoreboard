@@ -8,7 +8,7 @@ import { useTimer, SHOT_CLOCK_SECONDS, SHOT_CLOCK_GRACE_MS } from './useTimer'
 // store en lecture seule et décompte via un `setInterval` natif — piloté ici aux fake
 // timers, comme l'auto-validation de `ScoreEntryModal`. Exécuté dans un `effectScope`
 // pour vérifier le désabonnement (`onScopeDispose`) en fin de test.
-// Story 2.2 : chaque relance (démarrage compris) affiche 40 et attend 2 s avant le
+// Story 2.2 : chaque relance (démarrage compris) affiche 40 et attend la grâce avant le
 // premier tick — les avances de temps ci-dessous incluent cette grâce.
 describe('useTimer', () => {
   let scope: EffectScope
@@ -34,9 +34,12 @@ describe('useTimer', () => {
     return store
   }
 
-  it('starts at 40 seconds with a 2 s grace', () => {
+  // ⚠️ Les deux valeurs sont sourcées des specs et ajustées au rendu (la grâce est passée
+  // de 3 s à 2 s puis à 1 s). Ce cas les FIGE ; tous les autres les DÉRIVENT, pour qu'un
+  // prochain ajustement se fasse en un seul endroit au lieu de casser dix cas.
+  it('starts at 40 seconds with a one-second grace', () => {
     expect(SHOT_CLOCK_SECONDS).toBe(40)
-    expect(SHOT_CLOCK_GRACE_MS).toBe(2000)
+    expect(SHOT_CLOCK_GRACE_MS).toBe(1000)
   })
 
   it('stays at rest while no game is running', async () => {
@@ -48,7 +51,7 @@ describe('useTimer', () => {
   })
 
   // AC5 (2.1) : le décompte démarre de lui-même dès le début d'une partie 3 Bandes —
-  // après la grâce de 2 s (2.2), puis une seconde par seconde.
+  // après la grâce (2.2), puis une seconde par seconde.
   it('counts down one second per second once a 3 Bandes game starts, after the grace', async () => {
     const { secondsRemaining } = timer()
     startThreeCushions()
@@ -56,7 +59,7 @@ describe('useTimer', () => {
     await nextTick()
 
     expect(secondsRemaining.value).toBe(40)
-    vi.advanceTimersByTime(1999)
+    vi.advanceTimersByTime(SHOT_CLOCK_GRACE_MS - 1)
     expect(secondsRemaining.value).toBe(40)
     vi.advanceTimersByTime(1001)
     expect(secondsRemaining.value).toBe(39)
@@ -101,7 +104,7 @@ describe('useTimer', () => {
     // Une action de jeu du 3 Bandes (le pavé n'y a pas de point d'entrée, Story 2.3
     // annulée) : le store seul ne relance pas le chrono, c'est la vue qui le fait.
     store.incrementSeries()
-    vi.advanceTimersByTime(30000)
+    vi.advanceTimersByTime(SHOT_CLOCK_GRACE_MS + 28000)
     expect(secondsRemaining.value).toBe(12)
 
     store.restartGame()
@@ -109,7 +112,7 @@ describe('useTimer', () => {
     await nextTick()
 
     expect(secondsRemaining.value).toBe(40)
-    vi.advanceTimersByTime(3000)
+    vi.advanceTimersByTime(SHOT_CLOCK_GRACE_MS + 1000)
     expect(secondsRemaining.value).toBe(39)
   })
 
@@ -119,7 +122,7 @@ describe('useTimer', () => {
     const store = startThreeCushions()
 
     await nextTick()
-    vi.advanceTimersByTime(30000)
+    vi.advanceTimersByTime(SHOT_CLOCK_GRACE_MS + 28000)
     expect(secondsRemaining.value).toBe(12)
     store.finishGame()
     await nextTick()
@@ -129,7 +132,7 @@ describe('useTimer', () => {
     await nextTick()
 
     expect(secondsRemaining.value).toBe(40)
-    vi.advanceTimersByTime(3000)
+    vi.advanceTimersByTime(SHOT_CLOCK_GRACE_MS + 1000)
     expect(secondsRemaining.value).toBe(39)
   })
 
@@ -140,7 +143,7 @@ describe('useTimer', () => {
     const store = startThreeCushions()
 
     await nextTick()
-    vi.advanceTimersByTime(12000)
+    vi.advanceTimersByTime(SHOT_CLOCK_GRACE_MS + 10000)
     expect(secondsRemaining.value).toBe(30)
 
     store.finishGame()
@@ -158,7 +161,7 @@ describe('useTimer', () => {
     const store = startThreeCushions()
 
     await nextTick()
-    vi.advanceTimersByTime(12000)
+    vi.advanceTimersByTime(SHOT_CLOCK_GRACE_MS + 10000)
     expect(secondsRemaining.value).toBe(30)
 
     store.resetGame()
@@ -170,20 +173,20 @@ describe('useTimer', () => {
     expect(secondsRemaining.value).toBe(40)
   })
 
-  // Story 2.2 : `resetTimer` (tap +1, main rendue) remet à 40 immédiatement, marque 2 s de
+  // Story 2.2 : `resetTimer` (tap +1, main rendue) remet à 40 immédiatement, marque la
   // grâce, puis reprend le décompte.
   it('resetTimer shows 40 at once, waits the grace, then counts down again', async () => {
     const { secondsRemaining, resetTimer } = timer()
     startThreeCushions()
 
     await nextTick()
-    vi.advanceTimersByTime(35000)
+    vi.advanceTimersByTime(SHOT_CLOCK_GRACE_MS + 33000)
     expect(secondsRemaining.value).toBe(7)
 
     resetTimer()
 
     expect(secondsRemaining.value).toBe(40)
-    vi.advanceTimersByTime(1999)
+    vi.advanceTimersByTime(SHOT_CLOCK_GRACE_MS - 1)
     expect(secondsRemaining.value).toBe(40)
     vi.advanceTimersByTime(1001)
     expect(secondsRemaining.value).toBe(39)
@@ -198,15 +201,20 @@ describe('useTimer', () => {
     startThreeCushions()
 
     await nextTick()
-    vi.advanceTimersByTime(10000)
+    // ⚠️ Le premier décrément tombe à `grâce + un tick`, pas à la grâce : `startInterval`
+    // n'est ARMÉ qu'à la fin de la grâce. Les deux attentes en dur (1500 ms) encadraient
+    // ce délai quand la grâce valait 2 s ; elles le dépassaient dès qu'elle est passée à
+    // 1 s, et le cas ne testait plus ce qu'il dit. Dérivées, elles suivent.
+    const FIRST_TICK_MS = SHOT_CLOCK_GRACE_MS + 1000
+    vi.advanceTimersByTime(SHOT_CLOCK_GRACE_MS + 8000)
     resetTimer()
-    vi.advanceTimersByTime(1500)
+    vi.advanceTimersByTime(FIRST_TICK_MS / 2)
     resetTimer()
-    vi.advanceTimersByTime(1500)
+    vi.advanceTimersByTime(FIRST_TICK_MS / 2)
 
-    // Sans relance de la grâce, le premier tick serait tombé à 3 s après le 1er reset.
+    // Sans relance de la grâce, le premier tick serait déjà tombé.
     expect(secondsRemaining.value).toBe(40)
-    vi.advanceTimersByTime(1500)
+    vi.advanceTimersByTime(FIRST_TICK_MS / 2)
     expect(secondsRemaining.value).toBe(39)
   })
 
@@ -216,13 +224,13 @@ describe('useTimer', () => {
     startThreeCushions()
 
     await nextTick()
-    vi.advanceTimersByTime(50000)
+    vi.advanceTimersByTime(SHOT_CLOCK_GRACE_MS + 48000)
     expect(secondsRemaining.value).toBe(0)
 
     resetTimer()
 
     expect(secondsRemaining.value).toBe(40)
-    vi.advanceTimersByTime(3000)
+    vi.advanceTimersByTime(SHOT_CLOCK_GRACE_MS + 1000)
     expect(secondsRemaining.value).toBe(39)
   })
 
@@ -249,7 +257,7 @@ describe('useTimer', () => {
     const store = startThreeCushions()
 
     await nextTick()
-    vi.advanceTimersByTime(5000)
+    vi.advanceTimersByTime(SHOT_CLOCK_GRACE_MS + 3000)
     expect(secondsRemaining.value).toBe(37)
 
     scope.stop()

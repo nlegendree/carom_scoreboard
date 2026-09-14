@@ -19,7 +19,13 @@ import { computed } from 'vue'
 //   ÉCHANGER hors de l'écran. Le chiffre suit (`cqmin`), pour ne jamais déborder du disque.
 const props = defineProps<{ secondsRemaining: number; totalSeconds: number }>()
 
-const RADIUS = 42
+// 1re passe de rendu de la 10.4 (Nathan, réf. `cueuny_scoreboard.png`) : l'arc est RENTRÉ
+// dans le disque, qui lui fait une marge sombre tout autour. Collé au bord (rayon 42 sur un
+// disque de 50), il se lisait comme un liseré ; à 36, le médaillon se détache des cartes sur
+// lesquelles il déborde et l'arc « passe autour » du chiffre. Le trait s'épaissit d'autant
+// pour rester franc à distance.
+const RADIUS = 36
+const STROKE_WIDTH = 10
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 const ratio = computed(() =>
@@ -67,9 +73,9 @@ const color = computed(() => {
             data-testid="shot-clock-track"
             cx="50"
             cy="50"
-            r="42"
+            :r="RADIUS"
             fill="none"
-            stroke-width="8"
+            :stroke-width="STROKE_WIDTH"
             class="opacity-20 transition-[stroke] duration-1000 ease-linear"
             :style="{ stroke: color }"
           />
@@ -77,20 +83,21 @@ const color = computed(() => {
             data-testid="shot-clock-arc"
             cx="50"
             cy="50"
-            r="42"
+            :r="RADIUS"
             fill="none"
-            stroke-width="8"
+            :stroke-width="STROKE_WIDTH"
             :stroke-linecap="linecap"
             class="transition-[stroke-dashoffset,stroke] duration-1000 ease-linear"
             :style="{ strokeDasharray: CIRCUMFERENCE, strokeDashoffset: dashoffset, stroke: color }"
           />
         </svg>
-        <!-- Le disque est lui-même un conteneur de taille : `44cqmin` = 44 % de SON diamètre
+        <!-- Le disque est lui-même un conteneur de taille : `40cqmin` = 40 % de SON diamètre
              (pas de celui de la zone), pour que deux chiffres tabulaires tiennent dans le
-             disque intérieur (76 % du diamètre) à toute taille. -->
+             disque intérieur — 62 % du diamètre depuis que l'arc est rentré à `RADIUS 36`,
+             contre 76 % avant : le chiffre descend d'autant. -->
         <span
           data-testid="shot-clock-value"
-          class="relative text-[44cqmin] leading-none font-black tabular-nums transition-colors duration-1000 ease-linear"
+          class="relative text-[40cqmin] leading-none font-black tabular-nums transition-colors duration-1000 ease-linear"
           :style="{ color }"
           >{{ secondsRemaining }}</span
         >

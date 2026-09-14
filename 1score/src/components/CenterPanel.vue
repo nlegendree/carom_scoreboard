@@ -75,14 +75,17 @@ function passTurn(): void {
       <ShotClock :secondsRemaining="secondsRemaining" :totalSeconds="SHOT_CLOCK_SECONDS" />
     </div>
 
-    <!-- AC5 : CTA neutre à contour fort, pleine largeur de colonne, ≥ 90 px de haut.
-         Il n'engage rien d'irréversible (`ANNULER` le défait, AC8) : ni bleu de réglage,
-         ni rouge d'engagement — le neutre opaque de l'epic. -->
+    <!-- AC5 : CTA neutre, pleine largeur de colonne, ≥ 90 px de haut. Il n'engage rien
+         d'irréversible (`ANNULER` le défait, AC8) : ni bleu de réglage, ni rouge
+         d'engagement — le neutre opaque de l'epic.
+         ⚠️ SANS contour (1re passe de rendu, Nathan) : le filet clair de
+         `--color-border-strong` dessinait un cadre dans un cadre au milieu de la colonne.
+         Le neutre opaque se détache seul du fond de la colonne. -->
     <button
       v-if="!entryOpen"
       data-testid="pass-turn-button"
       :disabled="passTurnDisabled"
-      class="flex min-h-[var(--size-touch-target)] w-full flex-col items-center justify-center gap-1 border border-border-strong bg-(image:--gradient-neutral) px-2 text-center text-stat font-black leading-tight text-white rounded-cta touch-manipulation select-none active:brightness-90 disabled:opacity-30"
+      class="flex min-h-[var(--size-touch-target)] w-full flex-col items-center justify-center gap-1 bg-(image:--gradient-neutral) px-2 text-center text-stat font-black leading-tight text-white rounded-cta touch-manipulation select-none active:brightness-90 disabled:opacity-30"
       @pointerdown="passTurn"
     >
       <PictoIcon name="pass-turn" class="size-4 shrink-0" />

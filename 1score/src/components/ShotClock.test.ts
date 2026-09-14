@@ -7,7 +7,12 @@ import ShotClock from './ShotClock.vue'
 // le temps s'écoule : 0 = anneau plein. Revue au rendu (Nathan, 2026-09-11) : la couleur
 // n'est plus un rouge fixe mais un fondu vert → jaune → orange → rouge, arc et chiffre.
 describe('ShotClock', () => {
-  const CIRCUMFERENCE = 2 * Math.PI * 42
+  // ⚠️ Le rayon de l'arc est un choix de RENDU (42 → 36 à la 1re passe de la 10.4, pour
+  // rentrer l'arc dans le disque façon Cueuny). Le lire sur l'élément plutôt que le recopier :
+  // ce qui doit être verrouillé ici, c'est la RELATION `dashoffset = C × (1 − ratio)`, pas
+  // la valeur du jour.
+  const circumference = (wrapper: ReturnType<typeof mount>) =>
+    2 * Math.PI * Number(arc(wrapper).attributes('r'))
 
   function arc(wrapper: ReturnType<typeof mount>) {
     return wrapper.find('[data-testid="shot-clock-arc"]')
@@ -35,7 +40,7 @@ describe('ShotClock', () => {
   it('draws a half ring at mid-countdown', () => {
     const wrapper = mount(ShotClock, { props: { secondsRemaining: 20, totalSeconds: 40 } })
 
-    expect(dashoffset(wrapper)).toBeCloseTo(CIRCUMFERENCE / 2, 5)
+    expect(dashoffset(wrapper)).toBeCloseTo(circumference(wrapper) / 2, 5)
     expect(wrapper.find('[data-testid="shot-clock-value"]').text()).toBe('20')
   })
 
@@ -43,7 +48,7 @@ describe('ShotClock', () => {
   it('empties the ring completely at zero and still shows the digit', () => {
     const wrapper = mount(ShotClock, { props: { secondsRemaining: 0, totalSeconds: 40 } })
 
-    expect(dashoffset(wrapper)).toBeCloseTo(CIRCUMFERENCE, 5)
+    expect(dashoffset(wrapper)).toBeCloseTo(circumference(wrapper), 5)
     expect(wrapper.find('[data-testid="shot-clock-value"]').text()).toBe('0')
   })
 
@@ -123,6 +128,8 @@ describe('ShotClock', () => {
     expect(ring.classes()).toContain('w-[min(100cqw,100cqh)]')
     expect(ring.classes()).not.toContain('w-full')
     expect(ring.classes()).toContain('[container-type:size]')
-    expect(wrapper.find('[data-testid="shot-clock-value"]').classes()).toContain('text-[44cqmin]')
+    // Le chiffre se dimensionne sur le DISQUE (`cqmin`), pas sur la zone : il a suivi l'arc
+    // quand celui-ci est rentré (44 → 40 cqmin), le disque intérieur ayant rétréci.
+    expect(wrapper.find('[data-testid="shot-clock-value"]').classes()).toContain('text-[40cqmin]')
   })
 })

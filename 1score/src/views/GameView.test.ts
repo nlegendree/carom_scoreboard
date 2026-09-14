@@ -4,6 +4,10 @@ import { setActivePinia, createPinia } from 'pinia'
 import { nextTick } from 'vue'
 import GameView from './GameView.vue'
 import { useGameStore } from '../stores/useGameStore'
+// ⚠️ La grâce du chrono est un réglage de rendu (3 s → 2 s → 1 s) : les attentes qui
+// l'englobent la DÉRIVENT, elles ne la recopient pas. Sans ça, chaque ajustement de
+// Nathan casse une dizaine de cas qui n'ont rien à voir avec ce qu'ils testent.
+import { SHOT_CLOCK_GRACE_MS } from '../composables/useTimer'
 import type { PlayerId } from '../types/game'
 
 describe('GameView', () => {
@@ -1389,7 +1393,7 @@ describe('GameView — chronomètre 3 Bandes', () => {
     expect(clock(wrapper).exists()).toBe(true)
     expect(clockValue(wrapper)).toBe('40')
 
-    await elapse(wrapper, 5000)
+    await elapse(wrapper, SHOT_CLOCK_GRACE_MS + 3000)
 
     expect(clockValue(wrapper)).toBe('37')
   })
@@ -1410,21 +1414,21 @@ describe('GameView — chronomètre 3 Bandes', () => {
   it('restarts the shot clock from 40 on RECOMMENCER', async () => {
     const { wrapper } = await startThreeCushionsFromHome()
     await press(wrapper, 'plus-one-button')
-    await elapse(wrapper, 11700)
+    await elapse(wrapper, SHOT_CLOCK_GRACE_MS + 9700)
     expect(clockValue(wrapper)).toBe('31')
 
     await press(wrapper, 'restart-button')
     await press(wrapper, 'prompt-primary')
 
     expect(clockValue(wrapper)).toBe('40')
-    await elapse(wrapper, 3000)
+    await elapse(wrapper, SHOT_CLOCK_GRACE_MS + 1000)
     expect(clockValue(wrapper)).toBe('39')
   })
 
   // AC9 : la sortie vers l'accueil fait disparaître le chrono, sans ré-apparition.
   it('drops the shot clock when leaving to the home screen', async () => {
     const { wrapper, store } = await startThreeCushionsFromHome()
-    await elapse(wrapper, 4000)
+    await elapse(wrapper, SHOT_CLOCK_GRACE_MS + 2000)
     expect(clockValue(wrapper)).toBe('38')
 
     await press(wrapper, 'exit-button')
@@ -1524,16 +1528,16 @@ describe('GameView — +1 POINT (3 Bandes)', () => {
     expect(vibrate).toHaveBeenCalledTimes(2)
   })
 
-  // AC2 : le tap relance le chrono à 40, qui attend 2 s avant de reprendre.
-  it('restarts the shot clock at 40 with a 2 s grace on each tap', async () => {
+  // AC2 : le tap relance le chrono à 40, qui attend la grâce avant de reprendre.
+  it('restarts the shot clock at 40 with its grace on each tap', async () => {
     const { wrapper } = await startThreeCushions()
-    await elapse(wrapper, 12000)
+    await elapse(wrapper, SHOT_CLOCK_GRACE_MS + 10000)
     expect(clockValue(wrapper)).toBe('30')
 
     await press(wrapper, 'plus-one-button')
 
     expect(clockValue(wrapper)).toBe('40')
-    await elapse(wrapper, 2000)
+    await elapse(wrapper, SHOT_CLOCK_GRACE_MS)
     expect(clockValue(wrapper)).toBe('40')
     await elapse(wrapper, 1000)
     expect(clockValue(wrapper)).toBe('39')
@@ -1545,7 +1549,7 @@ describe('GameView — +1 POINT (3 Bandes)', () => {
     const { wrapper, store } = await startThreeCushions()
     await press(wrapper, 'plus-one-button')
     await press(wrapper, 'plus-one-button')
-    await elapse(wrapper, 9000)
+    await elapse(wrapper, SHOT_CLOCK_GRACE_MS + 7000)
     expect(clockValue(wrapper)).toBe('33')
 
     await passTurn(wrapper)
@@ -1555,7 +1559,7 @@ describe('GameView — +1 POINT (3 Bandes)', () => {
     expect(clockValue(wrapper)).toBe('40')
     // Le CTA suit l'assis : il est maintenant côté blanc.
     expect(wrapper.find('[data-testid="plus-one-button"]').attributes('data-side')).toBe('player1')
-    await elapse(wrapper, 3000)
+    await elapse(wrapper, SHOT_CLOCK_GRACE_MS + 1000)
     expect(clockValue(wrapper)).toBe('39')
   })
 
@@ -1573,13 +1577,13 @@ describe('GameView — +1 POINT (3 Bandes)', () => {
   // Un chrono figé à 0 repart au tap suivant.
   it('revives a clock frozen at zero on the next tap', async () => {
     const { wrapper } = await startThreeCushions()
-    await elapse(wrapper, 50000)
+    await elapse(wrapper, SHOT_CLOCK_GRACE_MS + 48000)
     expect(clockValue(wrapper)).toBe('0')
 
     await press(wrapper, 'plus-one-button')
 
     expect(clockValue(wrapper)).toBe('40')
-    await elapse(wrapper, 3000)
+    await elapse(wrapper, SHOT_CLOCK_GRACE_MS + 1000)
     expect(clockValue(wrapper)).toBe('39')
   })
 
@@ -1611,7 +1615,7 @@ describe('GameView — +1 POINT (3 Bandes)', () => {
   it('neither vibrates nor restarts the clock when the tap credits nothing', async () => {
     const { wrapper, store } = await startThreeCushions({ player1: 1, player2: 25 })
     store.adjustScore('player1', 1)
-    await elapse(wrapper, 12000)
+    await elapse(wrapper, SHOT_CLOCK_GRACE_MS + 10000)
     expect(clockValue(wrapper)).toBe('30')
 
     await press(wrapper, 'plus-one-button')
@@ -1628,14 +1632,14 @@ describe('GameView — +1 POINT (3 Bandes)', () => {
 
     await press(wrapper, 'plus-one-button')
     expect(store.endPrompt).toEqual({ kind: 'equalizing-offer' })
-    await elapse(wrapper, 10000)
+    await elapse(wrapper, SHOT_CLOCK_GRACE_MS + 8000)
     expect(clockValue(wrapper)).toBe('32')
 
     await press(wrapper, 'prompt-primary')
 
     expect(store.equalizingReprise).toBe(true)
     expect(clockValue(wrapper)).toBe('40')
-    await elapse(wrapper, 3000)
+    await elapse(wrapper, SHOT_CLOCK_GRACE_MS + 1000)
     expect(clockValue(wrapper)).toBe('39')
   })
 
