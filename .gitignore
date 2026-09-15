@@ -1,3 +1,11 @@
 .DS_Store
 *.DS_Store
 explore/scoreboard_test/
+
+# Impeccable — artefacts locaux (le contexte commité : design.json, live/config.json, PRODUCT.md, DESIGN.md)
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+.impeccable/review/
+.impeccable/*.png
+.impeccable/live/*
+!.impeccable/live/config.json

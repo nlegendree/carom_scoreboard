@@ -1,0 +1,792 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-15T18:09:44+00:00",
+  "title": "Design System: 1Score",
+  "extensions": {
+    "colorMeta": {
+      "blanc-pur": {
+        "role": "tertiary",
+        "displayName": "Blanc pur",
+        "canonical": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(25% 0 0)",
+          "oklch(35% 0 0)",
+          "oklch(45% 0 0)",
+          "oklch(55% 0 0)",
+          "oklch(65% 0 0)",
+          "oklch(75% 0 0)",
+          "oklch(85% 0 0)"
+        ]
+      },
+      "jaune-franc": {
+        "role": "tertiary",
+        "displayName": "Jaune franc",
+        "canonical": "oklch(90.5% 0.188 99.1)",
+        "tonalRamp": [
+          "oklch(15.0% 0.120 99.1)",
+          "oklch(25.0% 0.188 99.1)",
+          "oklch(35.0% 0.188 99.1)",
+          "oklch(45.0% 0.188 99.1)",
+          "oklch(55.0% 0.188 99.1)",
+          "oklch(65.0% 0.188 99.1)",
+          "oklch(75.0% 0.188 99.1)",
+          "oklch(85.0% 0.188 99.1)"
+        ]
+      },
+      "encre-noire": {
+        "role": "neutral",
+        "displayName": "Encre noire",
+        "canonical": "oklch(0.0% 0.000 0.0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(25% 0 0)",
+          "oklch(35% 0 0)",
+          "oklch(45% 0 0)",
+          "oklch(55% 0 0)",
+          "oklch(65% 0 0)",
+          "oklch(75% 0 0)",
+          "oklch(85% 0 0)"
+        ]
+      },
+      "blanc-bandeau": {
+        "role": "tertiary",
+        "displayName": "Blanc bandeau",
+        "canonical": "oklch(94.3% 0.000 89.9)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(25% 0 0)",
+          "oklch(35% 0 0)",
+          "oklch(45% 0 0)",
+          "oklch(55% 0 0)",
+          "oklch(65% 0 0)",
+          "oklch(75% 0 0)",
+          "oklch(85% 0 0)"
+        ]
+      },
+      "jaune-bandeau": {
+        "role": "tertiary",
+        "displayName": "Jaune bandeau",
+        "canonical": "oklch(83.7% 0.174 99.1)",
+        "tonalRamp": [
+          "oklch(15.0% 0.120 99.1)",
+          "oklch(25.0% 0.174 99.1)",
+          "oklch(35.0% 0.174 99.1)",
+          "oklch(45.0% 0.174 99.1)",
+          "oklch(55.0% 0.174 99.1)",
+          "oklch(65.0% 0.174 99.1)",
+          "oklch(75.0% 0.174 99.1)",
+          "oklch(85.0% 0.174 99.1)"
+        ]
+      },
+      "blanc-casse": {
+        "role": "tertiary",
+        "displayName": "Blanc cassé",
+        "canonical": "oklch(95.5% 0.008 91.5)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(25% 0 0)",
+          "oklch(35% 0 0)",
+          "oklch(45% 0 0)",
+          "oklch(55% 0 0)",
+          "oklch(65% 0 0)",
+          "oklch(75% 0 0)",
+          "oklch(85% 0 0)"
+        ]
+      },
+      "rouge-vif": {
+        "role": "secondary",
+        "displayName": "Rouge vif (tour actif)",
+        "canonical": "oklch(64.7% 0.239 22.0)",
+        "tonalRamp": [
+          "oklch(15.0% 0.120 22.0)",
+          "oklch(25.0% 0.239 22.0)",
+          "oklch(35.0% 0.239 22.0)",
+          "oklch(45.0% 0.239 22.0)",
+          "oklch(55.0% 0.239 22.0)",
+          "oklch(65.0% 0.239 22.0)",
+          "oklch(75.0% 0.239 22.0)",
+          "oklch(85.0% 0.239 22.0)"
+        ]
+      },
+      "rouge-alerte": {
+        "role": "secondary",
+        "displayName": "Rouge alerte (chrono)",
+        "canonical": "oklch(65.4% 0.232 28.7)",
+        "tonalRamp": [
+          "oklch(15.0% 0.120 28.7)",
+          "oklch(25.0% 0.232 28.7)",
+          "oklch(35.0% 0.232 28.7)",
+          "oklch(45.0% 0.232 28.7)",
+          "oklch(55.0% 0.232 28.7)",
+          "oklch(65.0% 0.232 28.7)",
+          "oklch(75.0% 0.232 28.7)",
+          "oklch(85.0% 0.232 28.7)"
+        ]
+      },
+      "rouge-profond": {
+        "role": "secondary",
+        "displayName": "Rouge profond (marque)",
+        "canonical": "oklch(56.9% 0.192 22.3)",
+        "tonalRamp": [
+          "oklch(15.0% 0.120 22.3)",
+          "oklch(25.0% 0.192 22.3)",
+          "oklch(35.0% 0.192 22.3)",
+          "oklch(45.0% 0.192 22.3)",
+          "oklch(55.0% 0.192 22.3)",
+          "oklch(65.0% 0.192 22.3)",
+          "oklch(75.0% 0.192 22.3)",
+          "oklch(85.0% 0.192 22.3)"
+        ]
+      },
+      "rouge-profond-victoire": {
+        "role": "secondary",
+        "displayName": "Rouge profond (victoire)",
+        "canonical": "oklch(56.9% 0.192 22.3)",
+        "tonalRamp": [
+          "oklch(15.0% 0.120 22.3)",
+          "oklch(25.0% 0.192 22.3)",
+          "oklch(35.0% 0.192 22.3)",
+          "oklch(45.0% 0.192 22.3)",
+          "oklch(55.0% 0.192 22.3)",
+          "oklch(65.0% 0.192 22.3)",
+          "oklch(75.0% 0.192 22.3)",
+          "oklch(85.0% 0.192 22.3)"
+        ]
+      },
+      "rouge-clair": {
+        "role": "secondary",
+        "displayName": "Rouge clair",
+        "canonical": "oklch(63.3% 0.180 19.9)",
+        "tonalRamp": [
+          "oklch(15.0% 0.120 19.9)",
+          "oklch(25.0% 0.180 19.9)",
+          "oklch(35.0% 0.180 19.9)",
+          "oklch(45.0% 0.180 19.9)",
+          "oklch(55.0% 0.180 19.9)",
+          "oklch(65.0% 0.180 19.9)",
+          "oklch(75.0% 0.180 19.9)",
+          "oklch(85.0% 0.180 19.9)"
+        ]
+      },
+      "bleu-clair": {
+        "role": "primary",
+        "displayName": "Bleu clair",
+        "canonical": "oklch(63.1% 0.144 246.9)",
+        "tonalRamp": [
+          "oklch(15.0% 0.120 246.9)",
+          "oklch(25.0% 0.144 246.9)",
+          "oklch(35.0% 0.144 246.9)",
+          "oklch(45.0% 0.144 246.9)",
+          "oklch(55.0% 0.144 246.9)",
+          "oklch(65.0% 0.144 246.9)",
+          "oklch(75.0% 0.144 246.9)",
+          "oklch(85.0% 0.144 246.9)"
+        ]
+      },
+      "bleu-drap": {
+        "role": "primary",
+        "displayName": "Bleu drap",
+        "canonical": "oklch(54.0% 0.141 247.0)",
+        "tonalRamp": [
+          "oklch(15.0% 0.120 247.0)",
+          "oklch(25.0% 0.141 247.0)",
+          "oklch(35.0% 0.141 247.0)",
+          "oklch(45.0% 0.141 247.0)",
+          "oklch(55.0% 0.141 247.0)",
+          "oklch(65.0% 0.141 247.0)",
+          "oklch(75.0% 0.141 247.0)",
+          "oklch(85.0% 0.141 247.0)"
+        ]
+      },
+      "bleu-moyen": {
+        "role": "primary",
+        "displayName": "Bleu moyen",
+        "canonical": "oklch(50.5% 0.135 248.3)",
+        "tonalRamp": [
+          "oklch(15.0% 0.120 248.3)",
+          "oklch(25.0% 0.135 248.3)",
+          "oklch(35.0% 0.135 248.3)",
+          "oklch(45.0% 0.135 248.3)",
+          "oklch(55.0% 0.135 248.3)",
+          "oklch(65.0% 0.135 248.3)",
+          "oklch(75.0% 0.135 248.3)",
+          "oklch(85.0% 0.135 248.3)"
+        ]
+      },
+      "bleu-sombre": {
+        "role": "primary",
+        "displayName": "Bleu sombre",
+        "canonical": "oklch(35.9% 0.094 247.9)",
+        "tonalRamp": [
+          "oklch(15.0% 0.094 247.9)",
+          "oklch(25.0% 0.094 247.9)",
+          "oklch(35.0% 0.094 247.9)",
+          "oklch(45.0% 0.094 247.9)",
+          "oklch(55.0% 0.094 247.9)",
+          "oklch(65.0% 0.094 247.9)",
+          "oklch(75.0% 0.094 247.9)",
+          "oklch(85.0% 0.094 247.9)"
+        ]
+      },
+      "bleu-nuit": {
+        "role": "primary",
+        "displayName": "Bleu nuit",
+        "canonical": "oklch(42.4% 0.116 249.7)",
+        "tonalRamp": [
+          "oklch(15.0% 0.116 249.7)",
+          "oklch(25.0% 0.116 249.7)",
+          "oklch(35.0% 0.116 249.7)",
+          "oklch(45.0% 0.116 249.7)",
+          "oklch(55.0% 0.116 249.7)",
+          "oklch(65.0% 0.116 249.7)",
+          "oklch(75.0% 0.116 249.7)",
+          "oklch(85.0% 0.116 249.7)"
+        ]
+      },
+      "bleu-abysse": {
+        "role": "primary",
+        "displayName": "Bleu abysse",
+        "canonical": "oklch(28.3% 0.076 249.1)",
+        "tonalRamp": [
+          "oklch(15.0% 0.076 249.1)",
+          "oklch(25.0% 0.076 249.1)",
+          "oklch(35.0% 0.076 249.1)",
+          "oklch(45.0% 0.076 249.1)",
+          "oklch(55.0% 0.076 249.1)",
+          "oklch(65.0% 0.076 249.1)",
+          "oklch(75.0% 0.076 249.1)",
+          "oklch(85.0% 0.076 249.1)"
+        ]
+      },
+      "bleu-accent-focus": {
+        "role": "neutral",
+        "displayName": "Bleu accent (focus)",
+        "canonical": "oklch(61.8% 0.167 250.9)",
+        "tonalRamp": [
+          "oklch(15.0% 0.120 250.9)",
+          "oklch(25.0% 0.167 250.9)",
+          "oklch(35.0% 0.167 250.9)",
+          "oklch(45.0% 0.167 250.9)",
+          "oklch(55.0% 0.167 250.9)",
+          "oklch(65.0% 0.167 250.9)",
+          "oklch(75.0% 0.167 250.9)",
+          "oklch(85.0% 0.167 250.9)"
+        ]
+      },
+      "noir-bleute": {
+        "role": "neutral",
+        "displayName": "Noir bleuté",
+        "canonical": "oklch(17.6% 0.014 258.4)",
+        "tonalRamp": [
+          "oklch(15.0% 0.014 258.4)",
+          "oklch(25.0% 0.014 258.4)",
+          "oklch(35.0% 0.014 258.4)",
+          "oklch(45.0% 0.014 258.4)",
+          "oklch(55.0% 0.014 258.4)",
+          "oklch(65.0% 0.014 258.4)",
+          "oklch(75.0% 0.014 258.4)",
+          "oklch(85.0% 0.014 258.4)"
+        ]
+      },
+      "noir-barre": {
+        "role": "neutral",
+        "displayName": "Noir barre",
+        "canonical": "oklch(18.6% 0.011 260.6)",
+        "tonalRamp": [
+          "oklch(15.0% 0.011 260.6)",
+          "oklch(25.0% 0.011 260.6)",
+          "oklch(35.0% 0.011 260.6)",
+          "oklch(45.0% 0.011 260.6)",
+          "oklch(55.0% 0.011 260.6)",
+          "oklch(65.0% 0.011 260.6)",
+          "oklch(75.0% 0.011 260.6)",
+          "oklch(85.0% 0.011 260.6)"
+        ]
+      },
+      "anthracite-chrono": {
+        "role": "neutral",
+        "displayName": "Anthracite chrono",
+        "canonical": "oklch(23.9% 0.012 264.3)",
+        "tonalRamp": [
+          "oklch(15.0% 0.012 264.3)",
+          "oklch(25.0% 0.012 264.3)",
+          "oklch(35.0% 0.012 264.3)",
+          "oklch(45.0% 0.012 264.3)",
+          "oklch(55.0% 0.012 264.3)",
+          "oklch(65.0% 0.012 264.3)",
+          "oklch(75.0% 0.012 264.3)",
+          "oklch(85.0% 0.012 264.3)"
+        ]
+      },
+      "anthracite-touche": {
+        "role": "neutral",
+        "displayName": "Anthracite touche",
+        "canonical": "oklch(32.0% 0.016 259.8)",
+        "tonalRamp": [
+          "oklch(15.0% 0.016 259.8)",
+          "oklch(25.0% 0.016 259.8)",
+          "oklch(35.0% 0.016 259.8)",
+          "oklch(45.0% 0.016 259.8)",
+          "oklch(55.0% 0.016 259.8)",
+          "oklch(65.0% 0.016 259.8)",
+          "oklch(75.0% 0.016 259.8)",
+          "oklch(85.0% 0.016 259.8)"
+        ]
+      },
+      "anthracite-touche-active": {
+        "role": "neutral",
+        "displayName": "Anthracite touche active",
+        "canonical": "oklch(38.0% 0.019 257.3)",
+        "tonalRamp": [
+          "oklch(15.0% 0.019 257.3)",
+          "oklch(25.0% 0.019 257.3)",
+          "oklch(35.0% 0.019 257.3)",
+          "oklch(45.0% 0.019 257.3)",
+          "oklch(55.0% 0.019 257.3)",
+          "oklch(65.0% 0.019 257.3)",
+          "oklch(75.0% 0.019 257.3)",
+          "oklch(85.0% 0.019 257.3)"
+        ]
+      },
+      "gris-ardoise": {
+        "role": "neutral",
+        "displayName": "Gris ardoise",
+        "canonical": "oklch(36.9% 0.017 258.4)",
+        "tonalRamp": [
+          "oklch(15.0% 0.017 258.4)",
+          "oklch(25.0% 0.017 258.4)",
+          "oklch(35.0% 0.017 258.4)",
+          "oklch(45.0% 0.017 258.4)",
+          "oklch(55.0% 0.017 258.4)",
+          "oklch(65.0% 0.017 258.4)",
+          "oklch(75.0% 0.017 258.4)",
+          "oklch(85.0% 0.017 258.4)"
+        ]
+      },
+      "gris-ardoise-sombre": {
+        "role": "neutral",
+        "displayName": "Gris ardoise sombre",
+        "canonical": "oklch(28.4% 0.014 261.7)",
+        "tonalRamp": [
+          "oklch(15.0% 0.014 261.7)",
+          "oklch(25.0% 0.014 261.7)",
+          "oklch(35.0% 0.014 261.7)",
+          "oklch(45.0% 0.014 261.7)",
+          "oklch(55.0% 0.014 261.7)",
+          "oklch(65.0% 0.014 261.7)",
+          "oklch(75.0% 0.014 261.7)",
+          "oklch(85.0% 0.014 261.7)"
+        ]
+      },
+      "gris-panneau": {
+        "role": "neutral",
+        "displayName": "Gris panneau",
+        "canonical": "oklch(36.7% 0.018 264.3)",
+        "tonalRamp": [
+          "oklch(15.0% 0.018 264.3)",
+          "oklch(25.0% 0.018 264.3)",
+          "oklch(35.0% 0.018 264.3)",
+          "oklch(45.0% 0.018 264.3)",
+          "oklch(55.0% 0.018 264.3)",
+          "oklch(65.0% 0.018 264.3)",
+          "oklch(75.0% 0.018 264.3)",
+          "oklch(85.0% 0.018 264.3)"
+        ]
+      },
+      "gris-panneau-sombre": {
+        "role": "neutral",
+        "displayName": "Gris panneau sombre",
+        "canonical": "oklch(26.8% 0.012 264.4)",
+        "tonalRamp": [
+          "oklch(15.0% 0.012 264.4)",
+          "oklch(25.0% 0.012 264.4)",
+          "oklch(35.0% 0.012 264.4)",
+          "oklch(45.0% 0.012 264.4)",
+          "oklch(55.0% 0.012 264.4)",
+          "oklch(65.0% 0.012 264.4)",
+          "oklch(75.0% 0.012 264.4)",
+          "oklch(85.0% 0.012 264.4)"
+        ]
+      },
+      "gris-fond-clair": {
+        "role": "neutral",
+        "displayName": "Gris fond clair",
+        "canonical": "oklch(30.0% 0.014 261.7)",
+        "tonalRamp": [
+          "oklch(15.0% 0.014 261.7)",
+          "oklch(25.0% 0.014 261.7)",
+          "oklch(35.0% 0.014 261.7)",
+          "oklch(45.0% 0.014 261.7)",
+          "oklch(55.0% 0.014 261.7)",
+          "oklch(65.0% 0.014 261.7)",
+          "oklch(75.0% 0.014 261.7)",
+          "oklch(85.0% 0.014 261.7)"
+        ]
+      },
+      "gris-fond-sombre": {
+        "role": "neutral",
+        "displayName": "Gris fond sombre",
+        "canonical": "oklch(18.6% 0.009 264.3)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(25% 0 0)",
+          "oklch(35% 0 0)",
+          "oklch(45% 0 0)",
+          "oklch(55% 0 0)",
+          "oklch(65% 0 0)",
+          "oklch(75% 0 0)",
+          "oklch(85% 0 0)"
+        ]
+      },
+      "surface-voilee": {
+        "role": "neutral",
+        "displayName": "Surface voilée",
+        "canonical": "rgba(255, 255, 255, 0.06)"
+      },
+      "filet": {
+        "role": "neutral",
+        "displayName": "Filet",
+        "canonical": "rgba(255, 255, 255, 0.18)"
+      },
+      "filet-fort": {
+        "role": "neutral",
+        "displayName": "Filet fort",
+        "canonical": "rgba(255, 255, 255, 0.40)"
+      },
+      "voile": {
+        "role": "neutral",
+        "displayName": "Voile",
+        "canonical": "rgba(0, 0, 0, 0.25)"
+      }
+    },
+    "typographyMeta": {
+      "score": {
+        "displayName": "Score",
+        "purpose": "Le score du joueur, plus gros élément de l’écran ; taille choisie selon le nombre de chiffres (42/24/16/12 vw), plafonnée à 40vh et 320 px."
+      },
+      "reprise": {
+        "displayName": "Reprise",
+        "purpose": "Numéro de reprise de la colonne centrale (1/5 d’écran) ; le chrono suit en 40cqmin."
+      },
+      "hero": {
+        "displayName": "Hero",
+        "purpose": "Accroche d’accueil, titre de sélection JDS, VS du récap."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Titre de tuile, nom du mode en bandeau, nom et distance du bandeau de récap."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "CTA de pop-up, nom/distance/restant de la carte joueur, valeurs du récap, titres de pop-up."
+      },
+      "stat": {
+        "displayName": "Stat",
+        "purpose": "MOY / SÉRIE, REP, libellés de récap et de champ, CTA de réglage, PASSER LE TOUR, badge BIENTÔT."
+      },
+      "picto": {
+        "displayName": "Picto",
+        "purpose": "Libellé sous picto (barre latérale, barre basse) ; sans interlettrage."
+      },
+      "key-numeric": {
+        "displayName": "Touche numérique",
+        "purpose": "Chiffres du pavé, 3 colonnes."
+      },
+      "key-alpha": {
+        "displayName": "Touche alpha",
+        "purpose": "Lettres du clavier AZERTY, 10 colonnes."
+      }
+    },
+    "gradients": [
+      {
+        "name": "--gradient-blue",
+        "value": "linear-gradient(160deg, #2E8FDB 0%, #0573BB 100%)",
+        "purpose": "LE bleu : tuiles disponibles, CTA accent, CTA de réglage, CTA de barre basse."
+      },
+      {
+        "name": "--gradient-neutral",
+        "value": "linear-gradient(160deg, #3A4049 0%, #262A31 100%)",
+        "purpose": "CTA neutres opaques : ANNULER, secondaire de pop-up, PASSER LE TOUR."
+      },
+      {
+        "name": "--gradient-red",
+        "value": "linear-gradient(160deg, #E2515B 0%, #D0343F 100%)",
+        "purpose": "DÉMARRER, seul CTA rouge."
+      },
+      {
+        "name": "--gradient-panel",
+        "value": "linear-gradient(160deg, #3A3F49 0%, #23262C 100%)",
+        "purpose": "Colonne centrale du paramétrage."
+      },
+      {
+        "name": "--gradient-bg",
+        "value": "linear-gradient(160deg, #2A2E35 0%, #111317 55%, #000000 100%)",
+        "purpose": "Fond de tous les écrans hors jeu."
+      },
+      {
+        "name": "--gradient-tile-quilles",
+        "value": "linear-gradient(160deg, #0668AD 0%, #033F6B 100%)",
+        "purpose": "Tuile BIENTÔT Quilles."
+      },
+      {
+        "name": "--gradient-tile-casin",
+        "value": "linear-gradient(160deg, #05508A 0%, #022B4D 100%)",
+        "purpose": "Tuile BIENTÔT Casin."
+      },
+      {
+        "name": "--gradient-field",
+        "value": "linear-gradient(160deg, #454A54 0%, #1A1D22 100%)",
+        "purpose": "DÉCLARÉ, NON CONSOMMÉ : ancien fond de champ de pop-up, à supprimer."
+      }
+    ],
+    "shadows": [
+      {
+        "name": "key-relief",
+        "value": "inset 0 1px 0 rgba(255,255,255,0.10), 0 2px 0 rgba(0,0,0,0.45)",
+        "purpose": "Relief des touches de clavier ; disparaît à l’appui (la touche s’enfonce)."
+      },
+      {
+        "name": "key-relief-active",
+        "value": "inset 0 1px 0 rgba(255,255,255,0.06)",
+        "purpose": "Touche enfoncée, avec translateY(1px)."
+      },
+      {
+        "name": "light-edge-start",
+        "value": "inset 0 1px 0 rgba(255,255,255,0.25)",
+        "purpose": "Filet de lumière de DÉMARRER."
+      },
+      {
+        "name": "light-edge-field",
+        "value": "inset 0 1px 0 rgba(255,255,255,0.35)",
+        "purpose": "Filet de lumière des champs de paramétrage."
+      },
+      {
+        "name": "popup",
+        "value": "0 32px 80px rgba(0,0,0,0.65)",
+        "purpose": "Carte de toute pop-up ; la seule ombre diffuse du produit."
+      }
+    ],
+    "motion": [
+      {
+        "name": "--animate-input-flash",
+        "value": "input-flash 120ms ease-out forwards (opacity 1 → 0)",
+        "purpose": "Accusé de frappe, voile noir 25 % sur la valeur qui change. Coupé sous reduced-motion (avec opacity:0 forcé)."
+      },
+      {
+        "name": "--animate-input-reject",
+        "value": "input-reject 180ms ease-out (scale 1 → 1.12 → 1)",
+        "purpose": "Refus d’une frappe au plafond ; jamais de message. Coupé sous reduced-motion."
+      },
+      {
+        "name": "--animate-input-countdown",
+        "value": "input-countdown 3000ms linear forwards (scaleX 0 → 1)",
+        "purpose": "Barre de rebours de l’auto-validation sous VALIDER. Porteuse d’information : SURVIT à reduced-motion."
+      },
+      {
+        "name": "shot-clock",
+        "value": "transition stroke-dashoffset, stroke, color 1000ms linear",
+        "purpose": "Le chrono se vide en continu, calé sur le tick. Porteur d’information : survit à reduced-motion."
+      },
+      {
+        "name": "key-press",
+        "value": "transition all 75ms",
+        "purpose": "Enfoncement de touche. Tous les autres retours d’appui sont instantanés (brightness sans transition)."
+      },
+      {
+        "name": "rest",
+        "value": "none",
+        "purpose": "Rien ne bouge au repos : l’accueil est l’écran de veille."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1280px"
+      },
+      {
+        "name": "player-card @container",
+        "value": "420px"
+      },
+      {
+        "name": "format-reference",
+        "value": "1920×1080"
+      },
+      {
+        "name": "format-travail",
+        "value": "1180×733"
+      },
+      {
+        "name": "format-plancher",
+        "value": "1133×744"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "CTA accent (pop-up)",
+      "kind": "button",
+      "refersTo": "button-accent",
+      "description": "CTA principal de toute pop-up (VALIDER, RÉGLER LA DISTANCE, choix de cadre) : dégradé bleu du produit, rayon de touche.",
+      "html": "<button class=\"ds-btn-accent\">VALIDER</button>",
+      "css": ".ds-btn-accent{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;background:var(--gradient-blue);border-radius:var(--radius-key);padding:0 16px}.ds-btn-accent:hover{filter:brightness(1.05)}.ds-btn-accent:active{filter:brightness(.9)}.ds-btn-accent:focus-visible{outline:4px solid var(--color-accent);outline-offset:2px}"
+    },
+    {
+      "name": "CTA neutre (pop-up)",
+      "kind": "button",
+      "refersTo": "button-neutral",
+      "description": "Retour de toute pop-up (ANNULER) et PASSER LE TOUR : ardoise opaque, sans contour, jamais rouge.",
+      "html": "<button class=\"ds-btn-neutral\">ANNULER</button>",
+      "css": ".ds-btn-neutral{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;background:var(--gradient-neutral);border-radius:var(--radius-key);padding:0 16px}.ds-btn-neutral:active{filter:brightness(1.25)}.ds-btn-neutral:focus-visible{outline:4px solid var(--color-accent);outline-offset:2px}"
+    },
+    {
+      "name": "DÉMARRER",
+      "kind": "button",
+      "refersTo": "button-start",
+      "description": "Le seul CTA rouge : l’action qui engage la partie. Chevron nu à gauche, filet de lumière, 110 px, angles vifs.",
+      "html": "<button class=\"ds-btn-start\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg><span>DÉMARRER</span></button>",
+      "css": ".ds-btn-start{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;gap:16px;min-height:110px;background:var(--gradient-red);border-radius:var(--radius-cta);padding:0 16px;font-size:clamp(16px,1.6vw,26px);letter-spacing:.05em;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}.ds-btn-start svg{width:40px;height:40px;flex-shrink:0}.ds-btn-start:active{filter:brightness(.9)}"
+    },
+    {
+      "name": "CTA de réglage",
+      "kind": "button",
+      "refersTo": "button-setup",
+      "description": "Réglage retouchable du paramétrage (CHANGER DE BILLE, CHANGER DE CÔTÉ) : bleu, angles vifs, picto en ligne.",
+      "html": "<button class=\"ds-btn-setup\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m16 3 4 4-4 4\"/><path d=\"M20 7H4\"/><path d=\"m8 21-4-4 4-4\"/><path d=\"M4 17h16\"/></svg><span>CHANGER DE CÔTÉ</span></button>",
+      "css": ".ds-btn-setup{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;gap:16px;background:var(--gradient-blue);border-radius:var(--radius-cta);padding:0 16px;font-size:var(--text-stat);font-weight:700}.ds-btn-setup svg{width:24px;height:24px;flex-shrink:0}.ds-btn-setup:active{filter:brightness(.9)}"
+    },
+    {
+      "name": "Touche de clavier",
+      "kind": "custom",
+      "refersTo": "key",
+      "description": "Plaque anthracite en relief qui s’enfonce à l’appui. Partagée par les pavés numérique et alphabétique.",
+      "html": "<div class=\"ds-keys\"><button class=\"ds-key\">1</button><button class=\"ds-key\">2</button><button class=\"ds-key\">3</button></div>",
+      "css": ".ds-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:320px}.ds-key{display:flex;align-items:center;justify-content:center;min-height:60px;min-width:60px;background:var(--color-key);color:#fff;border:none;border-radius:var(--radius-key);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:clamp(30px,3.4vw,42px);font-weight:600;letter-spacing:-.025em;line-height:1;box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 2px 0 rgba(0,0,0,.45);transition:all 75ms;cursor:pointer;user-select:none}.ds-key:active{transform:translateY(1px);background:var(--color-key-active);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}.ds-key:disabled{opacity:.3}"
+    },
+    {
+      "name": "Picto d’action (barre basse)",
+      "kind": "nav",
+      "refersTo": "icon-action",
+      "description": "Commande secondaire du scoreboard : picto 32 px au-dessus d’un libellé court, surface voilée, filet, 90 × 90 px.",
+      "html": "<button class=\"ds-icon-action\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 14 4 9l5-5\"/><path d=\"M4 9h10.5a5.5 5.5 0 0 1 0 11H11\"/></svg><span>ANNULER</span></button>",
+      "css": ".ds-icon-action{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-width:var(--size-touch-target);min-height:var(--size-touch-target);padding:0 8px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-cta);color:#fff;font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-picto);font-weight:700;text-transform:uppercase;line-height:1.25;cursor:pointer;user-select:none}.ds-icon-action svg{width:32px;height:32px}.ds-icon-action:active{background:rgba(255,255,255,.15)}.ds-icon-action:disabled{opacity:.3}"
+    },
+    {
+      "name": "Tuile de mode",
+      "kind": "card",
+      "refersTo": "mode-tile",
+      "description": "Tuile jointive d’accueil : titre 900 en haut à gauche, flèche nue en bas à droite, dégradé bleu unique ; BIENTÔT atténue le fond à 45 % et ajoute un badge.",
+      "html": "<div class=\"ds-tiles\"><button class=\"ds-tile\"><span class=\"ds-tile-bg\"></span><span class=\"ds-tile-title\">3 BANDES</span><svg class=\"ds-tile-arrow\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></button><button class=\"ds-tile ds-tile--soon\" disabled><span class=\"ds-tile-bg ds-tile-bg--quilles\"></span><span class=\"ds-tile-title\">QUILLES</span><span class=\"ds-tile-badge\">BIENTÔT</span></button></div>",
+      "css": ".ds-tiles{display:grid;grid-template-columns:1fr 1fr;max-width:520px}.ds-tiles>.ds-tile+.ds-tile{border-left:1px solid var(--color-border)}.ds-tile{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:space-between;min-height:180px;padding:16px;background:none;border:none;text-align:left;color:#fff;cursor:pointer;user-select:none}.ds-tile-bg{position:absolute;inset:0;z-index:-1;background:var(--gradient-blue)}.ds-tile-bg--quilles{background:var(--gradient-tile-quilles)}.ds-tile--soon .ds-tile-bg{opacity:.45}.ds-tile-title{font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-tile-title);font-weight:900;text-transform:uppercase;line-height:1}.ds-tile-arrow{width:40px;height:40px;align-self:flex-end}.ds-tile-badge{align-self:flex-end;background:rgba(255,255,255,.15);padding:4px 12px;font-family:system-ui,sans-serif;font-size:var(--text-stat);font-weight:700}.ds-tile:not(.ds-tile--soon):hover{filter:brightness(1.1)}.ds-tile:not(.ds-tile--soon):active{filter:brightness(1.25)}"
+    },
+    {
+      "name": "Barre latérale",
+      "kind": "nav",
+      "refersTo": "sidebar-item",
+      "description": "Colonne de 120 px collée au bord : en-tête rouge coupé en biais, items picto + libellé, sortie isolée en bas. Contextuelle, nourrie par l’écran.",
+      "html": "<aside class=\"ds-sidebar\"><div class=\"ds-sidebar-header\"><span class=\"ds-sidebar-cut\"></span><span class=\"ds-sidebar-fold\"></span><span class=\"ds-sidebar-logo\">1S</span><span class=\"ds-sidebar-brand\">1Score</span></div><button class=\"ds-sidebar-item\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M19 12H5\"/><path d=\"m12 19-7-7 7-7\"/></svg><span>RETOUR</span></button><button class=\"ds-sidebar-item ds-sidebar-item--exit\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/></svg><span>ANNULER</span></button></aside>",
+      "css": ".ds-sidebar{display:flex;flex-direction:column;gap:12px;width:120px;height:420px;padding-bottom:24px;background:var(--color-sidebar);border-right:1px solid var(--color-border)}.ds-sidebar-header{position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;gap:4px;height:120px;padding-top:16px;flex-shrink:0}.ds-sidebar-cut,.ds-sidebar-fold{position:absolute;inset:0;z-index:-1;background:var(--color-brand-red)}.ds-sidebar-cut{clip-path:polygon(0 0,100% 0,100% 92%,0 72%)}.ds-sidebar-fold{opacity:.35;clip-path:polygon(0 72%,100% 92%,100% 100%,0 84%)}.ds-sidebar-logo{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:#222;color:#fff;font-weight:900;font-family:system-ui,sans-serif}.ds-sidebar-brand{color:#fff;font-family:system-ui,sans-serif;font-size:var(--text-picto);font-weight:900;letter-spacing:.04em}.ds-sidebar-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:var(--size-touch-target);width:100%;padding:0 4px;background:none;border:none;color:#fff;font-family:system-ui,sans-serif;font-size:var(--text-picto);font-weight:700;text-transform:uppercase;line-height:1.25;text-align:center;cursor:pointer}.ds-sidebar-item svg{width:32px;height:32px}.ds-sidebar-item--exit{margin-top:auto}"
+    },
+    {
+      "name": "Carte joueur (blanche)",
+      "kind": "card",
+      "refersTo": "player-card-white",
+      "description": "Aplat plein à encre noire : bandeau NOM | DISTANCE puis RESTANT | MOY · SÉRIE, score géant, pied − / série / +. Liseré rouge vif quand le joueur a la main.",
+      "html": "<div class=\"ds-player ds-player--active\"><div class=\"ds-player-band\"><div class=\"ds-player-row\"><span class=\"ds-player-name\">MICHEL</span><span class=\"ds-player-num\">40</span></div><div class=\"ds-player-row\"><span class=\"ds-player-num\">28</span><span class=\"ds-player-stats\"><span><b>MOY</b> 0.750</span><span><b>SÉRIE</b> 4</span></span></div></div><div class=\"ds-player-score\">12</div><div class=\"ds-player-foot\"><button class=\"ds-player-adjust\">−</button><span class=\"ds-player-series\">3</span><button class=\"ds-player-adjust\">+</button></div><span class=\"ds-player-ring\"></span></div>",
+      "css": ".ds-player{position:relative;display:flex;flex-direction:column;width:360px;height:300px;overflow:hidden;background:var(--color-player-white);color:var(--color-on-player-white);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;user-select:none}.ds-player-band{display:flex;flex-direction:column;gap:8px;padding:20px 24px;background:var(--color-panel-white-band)}.ds-player-row{display:flex;align-items:baseline;justify-content:space-between;gap:16px}.ds-player-name{font-size:var(--text-label);font-weight:900;text-transform:uppercase;line-height:1.25}.ds-player-num{font-size:var(--text-label);font-weight:900;font-variant-numeric:tabular-nums;line-height:1}.ds-player-stats{margin-left:auto;display:flex;gap:16px;font-size:var(--text-stat);font-weight:900;font-variant-numeric:tabular-nums}.ds-player-stats b{font-weight:700;opacity:.6;margin-right:4px}.ds-player-score{flex:1;display:flex;align-items:center;justify-content:center;font-size:min(42vw,40vh,120px);font-weight:900;line-height:1;font-variant-numeric:tabular-nums}.ds-player-foot{display:flex;align-items:center;justify-content:space-between;padding:0 16px 16px}.ds-player-adjust{display:flex;align-items:center;justify-content:center;min-width:var(--size-touch-target);min-height:var(--size-touch-target);background:rgba(0,0,0,.08);border:none;border-radius:var(--radius-cta);font-size:30px;font-weight:900;opacity:.6;cursor:pointer}.ds-player-adjust:active{background:rgba(0,0,0,.16);opacity:1}.ds-player-series{font-size:clamp(24px,10cqw,64px);font-weight:900;color:var(--color-brand-red);font-variant-numeric:tabular-nums;line-height:1}.ds-player-ring{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 8px var(--color-turn-active)}.ds-player:not(.ds-player--active) .ds-player-ring{display:none}"
+    },
+    {
+      "name": "Carte de pop-up",
+      "kind": "card",
+      "refersTo": "popup-card",
+      "description": "Le patron des quatre pop-ups : voile noir 25 % sans flou, carte sombre à 12 px, titre centré, pied ANNULER (1/3) + VALIDER. Jamais de croix.",
+      "html": "<div class=\"ds-veil\"><div class=\"ds-popup\"><h2 class=\"ds-popup-title\">DISTANCE MANQUANTE</h2><div class=\"ds-popup-foot\"><button class=\"ds-popup-secondary\">ANNULER</button><button class=\"ds-popup-primary\">RÉGLER LA DISTANCE</button></div></div></div>",
+      "css": ".ds-veil{display:flex;align-items:center;justify-content:center;padding:32px;background:var(--color-bg)}.ds-veil{background:linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,.25)),var(--gradient-bg)}.ds-popup{display:flex;flex-direction:column;gap:24px;width:100%;max-width:560px;padding:24px;background:color-mix(in srgb,var(--color-bg) 95%,transparent);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-modal);box-shadow:0 32px 80px rgba(0,0,0,.65)}.ds-popup-title{margin:0;text-align:center;color:#fff;font-family:system-ui,sans-serif;font-size:var(--text-label);font-weight:900;letter-spacing:.1em;text-transform:uppercase}.ds-popup-foot{display:flex;gap:16px}.ds-popup-secondary,.ds-popup-primary{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;border-radius:var(--radius-key);padding:0 16px}.ds-popup-secondary{width:33%;background:var(--gradient-neutral)}.ds-popup-primary{flex:1;background:var(--gradient-blue)}.ds-popup-primary:active{filter:brightness(.9)}.ds-popup-secondary:active{filter:brightness(1.25)}"
+    },
+    {
+      "name": "Bandeau de récap",
+      "kind": "custom",
+      "refersTo": "summary-banner",
+      "description": "Bande claire échancrée en biais autour du VS : NOM | distance de chaque côté, en noir bleuté sur blanc cassé. Coupe en biais signature.",
+      "html": "<header class=\"ds-banner\"><div class=\"ds-banner-side ds-banner-side--left\"><span class=\"ds-banner-name\">MICHEL</span><span class=\"ds-banner-sep\"></span><span class=\"ds-banner-num\">40</span></div><div class=\"ds-banner-vs\"><span class=\"ds-banner-mode\">LIBRE</span><span class=\"ds-banner-vs-word\">VS</span></div><div class=\"ds-banner-side ds-banner-side--right\"><span class=\"ds-banner-num\">40</span><span class=\"ds-banner-sep\"></span><span class=\"ds-banner-name\">DIDIER</span></div></header>",
+      "css": ".ds-banner{display:flex;align-items:stretch;background:var(--color-bg);border-bottom:1px solid var(--color-border);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif}.ds-banner-side{display:flex;flex:1;min-width:0;align-items:center;gap:24px;padding:24px 32px;background:var(--color-banner);color:var(--color-bg);font-size:var(--text-tile-title);font-weight:900}.ds-banner-side--left{padding-right:80px;clip-path:polygon(0 0,100% 0,calc(100% - 32px) 100%,0 100%)}.ds-banner-side--right{justify-content:flex-end;padding-left:80px;clip-path:polygon(0 0,100% 0,100% 100%,32px 100%)}.ds-banner-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ds-banner-sep{width:1px;height:48px;background:rgba(13,17,23,.3);flex-shrink:0}.ds-banner-num{font-variant-numeric:tabular-nums;flex-shrink:0}.ds-banner-vs{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 32px;line-height:1}.ds-banner-mode{color:rgba(255,255,255,.5);font-size:var(--text-stat);letter-spacing:.3em}.ds-banner-vs-word{color:rgba(255,255,255,.6);font-size:var(--text-hero);font-weight:900;font-style:italic}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Le Tableau sous les projecteurs",
+    "overview": "**Creative North Star: \"Le Tableau sous les projecteurs\"**\n\n1Score est un **tableau d'affichage de compétition**, pas une application. Sa structure vient des scoreboards coréens de club (Cueuny, Billiboard) : une grille dense collée aux bords, des bandeaux, des chiffres tabulaires énormes, des tuiles jointives séparées d'un filet, une coupe en biais qui casse la symétrie. Sa hiérarchie vient de la lumière : dans une salle noire, **les deux cartes joueur sont les seuls aplats clairs**, comme une table sous les projecteurs. Tout le reste, barre latérale, colonne centrale, fond, recule dans l'anthracite et le noir pour que le score se lise à deux mètres.\n\nL'énergie est celle d'une retransmission esport, assumée sur tous les écrans : bleu saturé du drap sur les tuiles et les CTA, rouge profond pour ce qui engage (démarrer) et pour la marque, ruban rouge de victoire au récap, `VS` en italique gras. Elle ne cède jamais sur deux choses : la lisibilité en salle sombre, et le calme de la correction (l'erreur est réversible, jamais punie). Le système est plat par défaut ; seuls les objets qu'on tape ont du corps : les touches s'enfoncent, les CTA en dégradé s'assombrissent sous le doigt.\n\n**Arbitrages ouverts**, hérités de l'Epic 10 et confiés à la passe design system (Nathan, 2026-09-15 : « j'attends de voir ce que ça peut donner ») : trois rayons coexistent sur des objets tapables (0, 8 et 12 px) ; les deux rouges `--color-brand-red` et `--color-victory-ribbon` valent la même couleur ; le bleu `--color-accent` (#1E88E5) ne sert plus qu'à l'anneau de focus ; l'échelle typographique plafonne dès la tablette alors que la cible est 1920×1080 ; le fond gris→noir « pourrait être plus engageant ».",
+    "keyCharacteristics": [
+      "Salle noire, cartes claires : le contraste clair/sombre porte toute la hiérarchie.",
+      "Angles vifs et surfaces jointives, filets blancs à 18 % comme seul séparateur.",
+      "Un seul bleu (drap → bleu clair), un seul rouge profond, un jaune franc sans bleu résiduel.",
+      "Chiffres tabulaires en graisse 900, majuscules partout, aucune minuscule hors accroche.",
+      "Coupe en biais (`clip-path`) comme signature : en-tête de la barre latérale, bandeau du récap.",
+      "Rien ne bouge au repos ; le mouvement n'existe que comme retour d'appui ou porteur d'information.",
+      "Pictos Lucide inline, trait 2 px, jamais remplis, jamais en police d'icônes."
+    ],
+    "rules": [
+      {
+        "name": "La Règle de la bille",
+        "body": "Gauche = blanche, droite = jaune, encre noire sur les deux, fixées au côté de la table. Le tour actif se signale par le liseré rouge vif, jamais par la teinte du bloc. Le récap et le paramétrage conservent les côtés du scoreboard.",
+        "section": "colors"
+      },
+      {
+        "name": "La Règle du bleu unique",
+        "body": "Un seul dégradé bleu pour toutes les tuiles disponibles et tout CTA qui demande du bleu : les modes sont des pairs, on ne les hiérarchise pas par la nuance. Le bleu drap n'est jamais posé seul sur un bouton. *(En vigueur ; Nathan veut voir des alternatives à la passe.)*",
+        "section": "colors"
+      },
+      {
+        "name": "La Règle du rouge qui engage",
+        "body": "Le rouge est réservé à la marque, à l'action qui engage la partie (`DÉMARRER`), à la valeur de série en cours et à la victoire. Un réglage qu'on peut retoucher est bleu ; un retour (`ANNULER`) est neutre. Jamais de rouge sur un refus.",
+        "section": "colors"
+      },
+      {
+        "name": "La Règle du voile clair",
+        "body": "Une pop-up pose un voile noir à 25 % et rien d'autre : jamais de flou, parce que la carte qu'on remplit doit rester lisible sous la pop-up.",
+        "section": "colors"
+      },
+      {
+        "name": "La Règle des chiffres nus",
+        "body": "Distance et restant s'écrivent sans libellé sur la carte joueur ; `MOY` et `SÉRIE` gardent le leur, sinon trois nombres nus se confondent. Un nom peut se tronquer (deux lignes puis ellipse) ; **un nombre rogné deviendrait faux, il ne se tronque jamais**.",
+        "section": "typography"
+      },
+      {
+        "name": "La Règle de la moyenne",
+        "body": "La moyenne s'affiche à trois décimales (convention fédérale), en tabulaire, partout.",
+        "section": "typography"
+      },
+      {
+        "name": "La Règle du relief tapable",
+        "body": "Un conteneur est plat et cerné ; seul un objet qu'on tape a du corps. Une ombre sur une carte joueur, une tuile ou une colonne est une faute.",
+        "section": "elevation"
+      },
+      {
+        "name": "La Règle de l'inactif",
+        "body": "Ce qui n'est pas disponible s'atténue (`disabled` à 30 %, `BIENTÔT` à 45 % du fond) **et** porte un badge : l'information ne repose jamais sur la couleur seule. Cette atténuation ne se « corrige » pas au contraste (WCAG §1.4.3).",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "poser toute nouvelle commande sur l'un des quatre gabarits de CTA existants (accent, neutre, réglage, barre basse) plutôt qu'en créer un cinquième ; la passe a pour critère qu'un écran de plus n'ajoute ni composant de base ni token.",
+      "écrire chaque libellé en majuscules, chaque nombre en `tabular-nums`, chaque texte sur carte joueur en encre noire.",
+      "tenir 90 × 90 px sur toute commande de jeu, et mesurer le contraste sur la surface réelle (bandeau, boîte de champ), pas sur la carte nue.",
+      "ranger une pop-up de saisie du côté opposé à la carte qu'elle remplit, carte entièrement visible et nette.",
+      "reprendre la coupe en biais et le filet à 18 % comme vocabulaire de tout nouvel écran ; angles vifs sur les conteneurs, en attendant l'arbitrage des rayons.",
+      "ajouter toute animation d'ornement à la garde `prefers-reduced-motion` de `main.css`, nommément ; une animation porteuse d'information (chrono, rebours) n'y entre pas.",
+      "consigner tout écart au détecteur avec sa raison, en citant `deferred-work.md`."
+    ],
+    "donts": [
+      "mettre une croix de fermeture, ni un champ natif, ni le clavier système : le retour est un gros CTA `ANNULER`, la saisie passe par les claviers dessinés. *(Interdit durable, Nathan 2026-09-15.)*",
+      "signaler le tour, la disponibilité ou un champ visé par la couleur seule : liseré, badge, atténuation.",
+      "flouter un voile, ni assombrir au-delà de 25 % : ce qu'il y a dessous doit rester lisible.",
+      "utiliser `text-score` hors d'une carte joueur, ni un rouge sur un refus, ni le bleu drap seul sur un bouton.",
+      "construire une classe Tailwind à la volée, ni placer un commentaire HTML à la racine d'un gabarit, ni ajouter d'`overflow-hidden` sur la colonne centrale ou ses ancêtres (l'anneau du chrono serait rogné sans erreur).",
+      "charger une police, une icône ou une image depuis le réseau : tout est inline ou dans `public/`.",
+      "fusionner `--color-brand-red` et `--color-victory-ribbon`, ni changer `--color-shot-clock-face`, sans le faire dans ce document d'abord : c'est ici que la palette s'arbitre, plus story par story."
+    ]
+  }
+}

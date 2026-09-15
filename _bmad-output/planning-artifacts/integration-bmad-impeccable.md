@@ -2,7 +2,7 @@
 
 **Date :** 2026-09-15
 **Auteur :** Amelia (Developer, agent IA) pour Nathan
-**Statut :** proposition de méthode, à valider avant la passe design system
+**Statut :** validé par Nathan le 2026-09-15 (décisions du §12 tranchées, voir la note de fin)
 **Origine :** rétrospective Epic 10 (`epic-10-retro-2026-09-15.md`, décisions 5 et 6)
 
 ---
@@ -94,7 +94,7 @@ npx impeccable install --providers=claude --scope=project
 #    public = joueurs de club, 50-70 ans, pas de formation
 #    usage  = salle sombre, écran allumé en continu, lecture à 2 m, doigt sur verre
 #    format = paysage exclusivement ; cible 21,5"/22" en 1920x1080 ; travail en 1180x733
-#    voix   = sobre, aucune animation décorative, l'accueil est l'écran de veille
+#    voix   = ~~sobre, aucune animation décorative~~ → **esport assumé partout** (réponse de Nathan à l'init du 2026-09-15 ; l'accueil reste l'écran de veille)
 /impeccable init
 
 # 3. Extraire le design system de ce qui existe déjà — NE PAS repartir de zéro
@@ -108,7 +108,7 @@ npx impeccable detect http://localhost:5173 --json > .impeccable/baseline.json
 
 **Points d'attention à l'installation :**
 
-- `/impeccable init` propose `buildPath` → choisir **`comp`**.
+- `/impeccable init` propose `buildPath` → choisir **`comp`**. *(2026-09-15 : non proposé — le chemin comp exige une génération d'images, absente de la session Claude Code ; rien n'est écrit dans `.impeccable/config.json`, le chemin effectif est code-first. La décision 1 de la rétro — gabarit statique validé avant câblage — est une étape du cycle du §5, pas ce réglage.)*
 - L'installation pose des **hooks Claude Code** (`hook.enabled`). Sur un projet qui a déjà ses conventions, les laisser actifs au début pour voir ce qu'ils font, et les couper (`hook.enabled: false`) s'ils parasitent le flux BMAD. Un run ponctuel sans hooks : `--settings '{"disableAllHooks": true}'`.
 - **Commiter** `.impeccable/config.json`, `PRODUCT.md`, `DESIGN.md`, `.impeccable/surfaces/`. **Ne pas commiter** `.impeccable/*.png`, `review/`, `live/`, `hook.cache.json` — l'outil pose les `.gitignore` qu'il faut, à vérifier.
 
@@ -282,3 +282,15 @@ Honnêtement, et c'est important pour ne pas se tromper d'attente :
 2. **`buildPath: "comp"`** confirmé (cohérent avec la décision 1 de la rétro).
 3. **Périmètre de la passe** : les cinq chantiers du point 7, ou un sous-ensemble.
 4. **Le contrôle WebKit** (point 2) est-il dans la passe ou traité à part ?
+
+---
+
+## 13. Décisions prises par Nathan (2026-09-15, à l'`init`)
+
+1. **DESIGN.md source unique du visuel : oui.** `/impeccable document` s'enchaîne immédiatement ; la purge de `CLAUDE.md` §7/§10 et des px de la spec UX est la première tâche de la passe (§2).
+2. **`buildPath: "comp"` : sans objet** dans cette session (voir la note du §4). Le gabarit statique avant câblage reste obligatoire.
+3. **Périmètre de la passe, dans les mots de Nathan :** *« la création d'un vrai design system : réutilisation de composants, identicité des composants (CTA identiques, mêmes arrondis), il faut qu'il y ait une unité, mêmes couleurs, etc. Tout ce qui fait une belle interface de jeu agréable à jouer. »* Les cinq chantiers du §11.7 sont des moyens ; le critère est l'**unité** — un seul CTA, un seul rayon, une seule palette, partout — et le plaisir de jeu.
+4. **Contrôle WebKit : à part, plus tard.** Reste une action de la rétro Epic 10, hors passe.
+
+Note d'`init` : `PRODUCT.md` écrit à la racine ; `.impeccable/live/config.json` posé (mode live inerte tant qu'il n'est pas lancé, aucun script `impeccable:manual-edit-validate` défini).
+
