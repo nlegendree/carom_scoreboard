@@ -1,6 +1,6 @@
 # Story 10.5: Refonte du récap — barre latérale et bandeau corrigé
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 

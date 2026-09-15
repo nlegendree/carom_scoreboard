@@ -12,7 +12,14 @@ export type PlayerId = 'player1' | 'player2'
 // par la vue : un pilotage déporté (V2+) la voit, et la persistance (1.12) pourra la
 // restaurer. `equalizing-offer` : le blanc a atteint sa distance, le jaune a droit à la
 // reprise égalisatrice. `over` : la partie est jouée, `winner` à `null` signifie égalité.
-export type EndPrompt = { kind: 'equalizing-offer' } | { kind: 'over'; winner: PlayerId | null }
+// `revertible` (revue de fin d'Epic 10, décision de Nathan) : la fin a été atteinte par une
+// CORRECTION `+`, pas par une série — la pop-up offre alors `ANNULER`, qui défait le `+` et
+// rend le scoreboard. Absent (et non `false`) sur une fin par série : champ OPTIONNEL,
+// donc sans incidence sur `GAME_STORAGE_VERSION` — une sauvegarde antérieure le lit
+// `undefined`, ce que `resumeGame` pose sans casser aucun type.
+export type EndPrompt =
+  | { kind: 'equalizing-offer'; revertible?: true }
+  | { kind: 'over'; winner: PlayerId | null; revertible?: true }
 
 // La bille est l'identité du joueur dans la partie : `player1` est blanc, `player2` jaune,
 // et ça ne bouge plus une fois la partie démarrée (Story 10.3 — `ÉCHANGER` a disparu du

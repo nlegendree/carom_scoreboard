@@ -329,6 +329,21 @@ describe('PlayerPanel — zone de série', () => {
 
     expect(wrapper.find('[data-testid="input-flash"]').attributes('data-flash')).not.toBe(before)
   })
+
+  // Sur une FRAPPE seulement (revue de fin d'Epic 10) : le `0` d'attente à l'ouverture de la
+  // pop-up, et après `C`, n'en est pas une — il s'affiche sans flasher.
+  it('does not flash the waiting zero of an empty buffer', async () => {
+    const wrapper = mountFooter({ entryValue: '' })
+
+    expect(wrapper.find('[data-testid="entry-value"]').text()).toBe('0')
+    expect(wrapper.find('[data-testid="input-flash"]').exists()).toBe(false)
+
+    await wrapper.setProps({ entryValue: '7' })
+    expect(wrapper.find('[data-testid="input-flash"]').exists()).toBe(true)
+
+    await wrapper.setProps({ entryValue: '' })
+    expect(wrapper.find('[data-testid="input-flash"]').exists()).toBe(false)
+  })
 })
 
 // --- Story 10.4, AC4 : la carte n'est plus tapable ---

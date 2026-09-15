@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import {
   GAME_STORAGE_KEY,
   GAME_STORAGE_VERSION,
+  LEGACY_GAME_STORAGE_KEY,
   clearGameState,
   loadGameState,
   saveGameState,
@@ -87,6 +88,18 @@ describe('storageService', () => {
 
   it('returns null when nothing is saved, without warning', () => {
     expect(loadGameState()).toBeNull()
+    expect(console.warn).not.toHaveBeenCalled()
+  })
+
+  // Story 10.6 a renommé la clé sans migration (sauvegarde v1, inexploitable) : l'ancienne
+  // entrée est PURGÉE au chargement, sans être proposée, pour ne pas rester orpheline sur
+  // chaque tablette (revue de fin d'Epic 10).
+  it('purges the legacy key on load without offering its content', () => {
+    localStorage.setItem(LEGACY_GAME_STORAGE_KEY, JSON.stringify({ version: 1, state: {} }))
+
+    expect(loadGameState()).toBeNull()
+
+    expect(localStorage.getItem(LEGACY_GAME_STORAGE_KEY)).toBeNull()
     expect(console.warn).not.toHaveBeenCalled()
   })
 

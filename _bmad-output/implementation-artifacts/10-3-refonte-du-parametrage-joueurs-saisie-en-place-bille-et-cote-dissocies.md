@@ -1,6 +1,6 @@
 # Story 10.3: Refonte du paramétrage joueurs — saisie en place, bille et côté dissociés
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -29,7 +29,7 @@ so that la table est prête sans pop-up ni écran supplémentaire, et la répart
 
 5. **Bandeau du nom (UX-DR40)** — **Given** une carte **When** je tape son champ `NOM` **Then** `AlphaKeyboardSheet` s'ouvre en **bandeau bas pleine largeur** (conteneur à contour, croix à gauche, `VALIDER` à droite) **And** les deux cartes restent **entièrement visibles au-dessus du bandeau** — la zone principale se réduit, le bandeau ne recouvre aucune carte — et le champ `NOM` visé s'actualise à chaque touche **And** la saisie est en majuscules, plafonnée à 20 caractères utiles, sans espace en tête ni espaces consécutifs **And** les touches font **≥ 57 px** et rien ne déborde au format le plus petit (1133×744) **And** `VALIDER` applique, la croix abandonne et restaure la valeur précédente.
 
-6. **Passage d'un champ à l'autre** — **Given** une saisie ouverte (dock ou bandeau) **When** je tape un autre champ, sur l'une ou l'autre carte **Then** la saisie en cours est **validée** et le nouveau champ s'ouvre (le dock cède la place au bandeau, ou l'inverse) — un seul geste, aucun tap mort **And** une seule saisie est ouverte à la fois.
+6. **Passage d'un champ à l'autre** — *(réécrit à la revue de fin d'Epic 10, décision de Nathan du 2026-09-15 : les claviers sont des pop-ups à voile plein écran depuis la 2e passe de rendu)* **Given** une saisie ouverte (pavé ou clavier) **When** je tape hors de la pop-up — l'autre champ, l'autre carte, la colonne centrale **Then** la saisie en cours est **annulée** (l'ancienne valeur revient, comme par `ANNULER`) et la pop-up se ferme ; le champ suivant s'ouvre d'un second tap **And** une seule saisie est ouverte à la fois. Seul l'enchaînement du rattrapage (« DISTANCE MANQUANTE ») passe d'une saisie à l'autre en validant la première.
 
 7. **Clavier complété (DT4)** — **Given** `AlphaKeyboard` **When** la story est livrée **Then** il porte en plus le **tiret**, l'**apostrophe** et `Ë Ï Î Ô Û`, `ESPACE` et `⌫` conservés **And** `JEAN-PIERRE`, `D'ARTAGNAN`, `JOËL`, `ANAÏS`, `BENOÎT` et `JÉRÔME` sont saisissables.
 
@@ -105,6 +105,16 @@ so that la table est prête sans pop-up ni écran supplémentaire, et la répart
   - [x] 9.2 Annoter `epics.md` (AC de la 10.3 : voile supprimé, conteneurs espacés), la spec UX §10.3 (UX-DR39/UX-DR40 : plus de voile) et `architecture.md` (section « Navigation & Shell » : forme retenue pour `whiteSide`, confirmation de la piste de la passe epics).
   - [x] 9.3 `deferred-work.md` : clore l'entrée « voile et flou des pop-ups à revoir avec le pavé » ; consigner les reports éventuels de cette story.
   - [x] 9.4 `sprint-status.yaml` : `10-3-…` → `review` (revue de code groupée en fin d'epic, ne pas proposer `bmad-code-review`).
+
+### Review Findings
+
+*(revue de code groupée de fin d'Epic 10, 2026-09-15 — Blind Hunter + Edge Case Hunter + Acceptance Auditor)*
+
+- [x] [Review][Decision] **Résolu (Nathan, 2026-09-15) : option 2 — l'annulation est conservée, l'AC6 est réécrit ci-dessus, les quatre gardes mortes (`openEntry`, `confirm`, `changeBall`, `changeSide`) sont retirées.** Le tap en dehors des pop-ups de paramétrage vaut ANNULER et perd la frappe — le voile `fixed inset-0` de `NumericPadDock`/`AlphaKeyboardSheet` couvre les cartes ET la colonne centrale : taper l'autre champ (AC6 « une saisie ouverte est validée au passage »), CHANGER DE BILLE / DE CÔTÉ ou DÉMARRER pendant une saisie tombe sur le voile, qui appelle `abandonEntry()` et restaure l'ancienne valeur sans avertissement. Le chemin `openEntry() → applyEntry()` (et les gardes de `confirm()`, `changeBall()`, `changeSide()`) n'est atteignable que par les tests, qui déclenchent `pointerdown` directement sur le champ. Options : (1) au paramétrage, le tap dehors VALIDE (`@cancel` du voile → `applyEntry`, le CTA ANNULER reste le seul abandon) ; (2) garder l'annulation, réécrire l'AC6 et supprimer les gardes mortes ; (3) voile non couvrant (cartes tapables sous la pop-up).
+- [x] [Review][Decision] **Résolu (Nathan, 2026-09-15) : option 1 — `goHome()` efface (`clearSetup`), le retour d'un cran vers la sélection JDS conserve ; test « forgets names and distances when RETOUR reaches the home screen ».** `RETOUR` jusqu'à l'accueil reconduit noms et distances sur une autre catégorie ou un autre mode — `back()` → `goHome()` ne vide ni `players` ni `whiteSide`, seul `ANNULER` appelle `clearSetup()`. Parcours : 3 BANDES, distance 30 → RETOUR → JEUX DE SÉRIES → LIBRE : la carte arrive à 30, DÉMARRER part sans pop-up. C'est le défaut que le commentaire de `cancelSetup()` (revue 1.3) dit éviter ; l'AC2 ne parle que du retour d'un cran vers la sélection JDS. Options : (1) `goHome()` efface, le retour d'un cran conserve ; (2) conserver partout et le documenter comme règle.
+- [x] [Review][Patch] *(corrigé : `:key="entry.ball"` sur les deux pop-ups, test « remounts the distance pad when the entry moves to the other ball »)* `NumericPadDock` : `pristine` est figé à la création de l'instance, et le dock reste monté quand l'entrée change de bille (`v-if` seul — l'ancienne `PlayerSetupModal` était remontée par `:key="editing"`). Reproduit par test : distance du jaune réglée à 25, saisie du blanc ouverte puis bascule sur la distance du jaune, la frappe `4` donne `254` au lieu de `4` [1score/src/components/HomeScreen.vue:537]
+- [x] [Review][Patch] *(corrigé : `tap()` sur frappe acceptée, `reject()` + `sheet-reject` pulsé au plafond, plafond mesuré sur `(value + char).trim()` ; trois tests)* `AlphaKeyboardSheet` sans haptique ni pulsation de refus, contrairement à CLAUDE.md §10, UX-DR54 et à la Task 3 de cette story : aucun `tap()` sur frappe acceptée, `return` silencieux au plafond de 20 caractères (le clavier paraît en panne) ; et le plafond, mesuré après `trim()`, laisse passer un 21e caractère après un espace final [1score/src/components/AlphaKeyboardSheet.vue:34-41]
+- [x] [Review][Patch] *(corrigé)* `undoLastAction` : `const snapshot = previous` est un alias sans objet, vestige de `mirrorSnapshot`, avec son commentaire de trois lignes [1score/src/stores/useGameStore.ts:544-547]
 
 ## Dev Notes
 

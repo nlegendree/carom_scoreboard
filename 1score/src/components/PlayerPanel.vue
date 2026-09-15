@@ -287,9 +287,11 @@ function adjust(delta: number): void {
         >{{ seriesSlot.text }}
         <!-- Voile SOMBRE et non blanc : la carte est un aplat clair à encre noire, un
              flash blanc y serait invisible (le voile clair de la pop-up centrée jouait sur
-             fond sombre). -->
+             fond sombre). Sur une FRAPPE seulement (UX-DR17, comme le `hasInput` de
+             l'ancienne modale) : le `0` d'attente à l'ouverture et après `C` n'en est pas
+             une, il ne flashe pas (revue de fin d'Epic 10). -->
         <span
-          v-if="seriesSlot.kind === 'entry'"
+          v-if="seriesSlot.kind === 'entry' && entryValue !== ''"
           data-testid="input-flash"
           :data-flash="seriesSlot.text"
           class="pointer-events-none absolute -inset-x-2 -inset-y-1 bg-black/25 animate-input-flash"

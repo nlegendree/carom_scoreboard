@@ -23,10 +23,13 @@ function press(item: SideBarItem): void {
   if (item.state === 'soon') return
   item.action?.()
 }
+
+// Largeur fixe : l'app ne tourne qu'en paysage (décision de Nathan, 2026-09-11).
+// ⚠️ Aucun commentaire HTML à la racine du gabarit (CLAUDE.md §12) : il en ferait un
+// fragment, et la racine perdrait `classes()` comme ses attributs.
 </script>
 
 <template>
-  <!-- Largeur fixe : l'app ne tourne qu'en paysage (décision de Nathan, 2026-09-11). -->
   <aside
     data-testid="sidebar"
     class="flex h-full w-15 shrink-0 flex-col gap-1.5 border-r border-border bg-sidebar pb-3"

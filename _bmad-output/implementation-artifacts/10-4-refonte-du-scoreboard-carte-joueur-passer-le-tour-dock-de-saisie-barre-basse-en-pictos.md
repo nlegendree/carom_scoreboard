@@ -1,6 +1,6 @@
 # Story 10.4: Refonte du scoreboard — carte joueur, `PASSER LE TOUR`, dock de saisie, barre basse en pictos
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -115,6 +115,16 @@ so that je lis tout à 2 mètres et je passe la main par un geste explicite, san
   - [x] 10.1 Annoter `epics.md` (Story 10.4, UX-DR48, UX-DR50, UX-DR51), `ux-design-specification.md` §10.3 « Scoreboard » et §10.6, et `architecture.md` (composants nouveaux) avec les décisions 1 à 4 et les écarts constatés à la livraison.
   - [x] 10.2 `deferred-work.md` : clore DT2 ; consigner les tokens `--game-popup-inset-*` (même dette de géométrie dupliquée que `--setup-popup-inset-*`) ; rappeler que `NumericPad` et le style des pop-ups restent à aligner en 10.7.
   - [x] 10.3 `CLAUDE.md` : rien à ajouter si aucune convention nouvelle n'apparaît — la mise à jour §7 (exceptions aux angles vifs) est déjà prévue en 10.7.
+
+### Review Findings
+
+*(revue de code groupée de fin d'Epic 10, 2026-09-15)*
+
+- [x] [Review][Decision] **Résolu (Nathan, 2026-09-15), au-delà des deux options : « +/− servent à corriger, mais si on arrive au score final la mécanique de fin se met en place, avec un moyen de revenir en arrière ». Implémenté dans cette revue : `adjustScore` déclenche `checkEndOfGame` sur la TRANSITION vers la distance (JDS et 3 Bandes, série ouverte close au passage), la pop-up porte `revertible: true` (`EndPrompt`, champ optionnel — `GAME_STORAGE_VERSION` inchangé), et `ANNULER` (`revertEndPrompt` = undo du `+` + fermeture) s'ajoute à « PARTIE TERMINÉE » et remplace le secondaire de l'offre d'égalisatrice, dont les deux issues passent en variante liste. Le voile reste inerte : `dismissible` devient opt-in dans TOUTES les variantes de `PromptModal` (le CADRE le pose). Règle 1.10 AC8 « ni adjustScore » caduque ; une fin par SÉRIE reste non rattrapable. Sept tests store, trois tests vue, PromptModal ajusté.** 3 Bandes : `+` sur la série ouverte du joueur actif écrit dans la reprise (2e passe de rendu) mais ne déclenche ni la détection de fin ni la relance du chrono — à 24/25, `+` → 25 sans offre d'égalisatrice, le `+1` suivant est refusé sans aucun retour (garde `hasReachedTarget`), et la fin n'est détectée qu'au `PASSER LE TOUR`. Même point compté, deux comportements selon le bouton. Options : (1) en 3 Bandes, `+` sur une série ouverte = `incrementSeries()` (fin détectée, chrono relancé, haptique), `−` inchangé ; (2) statu quo, documenté (« ni `adjustScore` », 1.10 AC8) [1score/src/stores/useGameStore.ts:226-239]
+- [x] [Review][Decision] **Compléments de Nathan à la passe de rendu de la revue (2026-09-15)** : (1) le titre de l'offre d'égalisatrice devient « `<NOM>` A FINI » (plus court, noms longs à venir) ; (2) RÈGLE : toute pop-up portant un CTA `ANNULER`/`FERMER` se referme au tap dehors, qui vaut ce CTA — portée par `PromptModal` (`CANCEL_LABELS`, dérivée du libellé du secondaire, prop `dismissible` supprimée), consignée dans CLAUDE.md §10 ; la fermeture exigeant un geste complet, la pop-up qui monte sous le doigt du `+` n'est pas refermée par le relâchement de ce geste (test « reverts the correction on a complete tap outside the revertible prompt »).
+- [x] [Review][Patch] *(corrigé : un `+` rembourse d'abord un ajustement négatif ; test « refunds a negative adjustment before growing the open series »)* `adjustScore` 3 Bandes : série ouverte à 0, `−` puis `+` → ajustement −1 ET série 1 : total juste, mais série en cours, meilleure série et moyenne faux — la divergence corrigée à la 2e passe ressurgit par ce coin [1score/src/stores/useGameStore.ts:226-237]
+- [x] [Review][Patch] *(corrigé : les neuf assertions supprimées)* Neuf assertions `prompt-close` inertes : aucun composant n'émet ce testid, dette explicitement renvoyée à cette revue par la 10.4 et la 10.5 [1score/src/views/GameView.test.ts:762,792,827,848,909,999,1211 ; 1score/src/components/HomeScreen.test.ts:840 ; 1score/src/components/PromptModal.test.ts:62]
+- [x] [Review][Patch] *(corrigé : `v-if` conditionné à `entryValue !== ''` ; test « does not flash the waiting zero of an empty buffer »)* Le flash d'accusé de frappe (UX-DR17) joue à l'ouverture du dock et après `C` : `input-flash` est rendu dès `seriesSlot.kind === 'entry'`, dont le texte `'0'` recrée l'élément, là où `ScoreEntryModal` le conditionnait à `hasInput` [1score/src/components/PlayerPanel.vue:291-296]
 
 ## Dev Notes
 

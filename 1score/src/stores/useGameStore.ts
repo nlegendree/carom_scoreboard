@@ -211,6 +211,7 @@ export const useGameStore = defineStore('game', () => {
   function adjustScore(playerId: PlayerId, delta: number): void {
     if (status.value !== 'playing') return
     pushHistory()
+    const reachedBefore = hasReachedTarget(playerId)
 
     // ⚠️ Défaut relevé par Nathan à la 2e passe de rendu de la 10.4 : quand une SÉRIE EST
     // OUVERTE (3 Bandes, joueur qui a la main), la correction doit porter sur CE QUI VIENT
@@ -230,13 +231,33 @@ export const useGameStore = defineStore('game', () => {
 
     // Une série ne peut pas devenir négative : sous zéro, on retombe sur l'ajustement, qui
     // n'est volontairement pas borné (un score peut descendre sous zéro, Story 1.9).
-    if (open !== null && open + delta >= 0) {
+    // ⚠️ Et un `+` qui suit ce `−` REMBOURSE d'abord l'ajustement (revue de fin d'Epic 10) :
+    // sinon la série passait à 1 avec un ajustement à −1 — total juste, mais série en
+    // cours, meilleure série et moyenne faux, la divergence que la 2e passe venait de
+    // corriger. `−` puis `+` doivent se compenser exactement.
+    if (open !== null && delta > 0 && scoreAdjustments.value[playerId] < 0) {
+      scoreAdjustments.value[playerId] += delta
+    } else if (open !== null && open + delta >= 0) {
       writeLastReprise(playerId, open + delta)
     } else {
       scoreAdjustments.value[playerId] += delta
     }
 
     recomputeScore(playerId)
+
+    // Distance ATTEINTE par la correction (décision de Nathan, revue de fin d'Epic 10) :
+    // `+`/`−` corrigent, mais arriver au score final déclenche la mécanique de fin comme une
+    // série — l'ancienne règle « ni `adjustScore` » (1.10, AC8) laissait un `+1` refusé
+    // sans retour et une fin détectée seulement au `PASSER LE TOUR` suivant. Une série
+    // ouverte est close au passage (même geste que `incrementSeries` à la distance). La
+    // pop-up est `revertible` : `ANNULER` y défait ce `+` — c'est le filet demandé au cas
+    // où le point n'aurait pas dû être compté. Seule la TRANSITION compte : un score déjà
+    // à la distance (pilotage déporté, `dismissEndPrompt`) ne rouvre rien, et une pop-up
+    // déjà ouverte n'est jamais écrasée.
+    if (!reachedBefore && hasReachedTarget(playerId) && endPrompt.value === null) {
+      if (open !== null) switchTurn()
+      checkEndOfGame(playerId, true)
+    }
     lastSaved.value = new Date().toISOString()
   }
 
@@ -431,18 +452,21 @@ export const useGameStore = defineStore('game', () => {
   // s'il atteint sa distance le premier, il a joué une reprise de plus et le jaune a
   // droit à UNE série pour égaliser. Le jaune, lui, gagne immédiatement s'il atteint le
   // premier : les deux ont alors joué le même nombre de reprises.
-  // Appelée en FIN des deux actions de série (`validateScoreInput`, `passTurn`) et
-  // d'elles seules (AC8) : ni `adjustScore`, ni `addReprise`.
+  // Appelée en FIN des deux actions de série (`validateScoreInput`, `passTurn`), de
+  // `incrementSeries` à la distance, et — depuis la revue de fin d'Epic 10 — d'une
+  // correction `+` qui ATTEINT la distance (`revertible`, voir `adjustScore`). Jamais
+  // d'`addReprise` : c'est une primitive.
   // Le premier cas passe AVANT les autres : en égalisatrice, la série du jaune termine
   // la partie même s'il n'atteint pas sa distance.
-  function checkEndOfGame(playerId: PlayerId): void {
+  function checkEndOfGame(playerId: PlayerId, revertible = false): void {
     const reached = hasReachedTarget(playerId)
+    const tag = revertible ? { revertible: true as const } : {}
     if (equalizingReprise.value && playerId === 'player2') {
-      endPrompt.value = { kind: 'over', winner: reached ? null : 'player1' }
+      endPrompt.value = { kind: 'over', winner: reached ? null : 'player1', ...tag }
     } else if (reached && playerId === 'player1') {
-      endPrompt.value = { kind: 'equalizing-offer' }
+      endPrompt.value = { kind: 'equalizing-offer', ...tag }
     } else if (reached && playerId === 'player2') {
-      endPrompt.value = { kind: 'over', winner: 'player2' }
+      endPrompt.value = { kind: 'over', winner: 'player2', ...tag }
     }
   }
 
@@ -463,6 +487,17 @@ export const useGameStore = defineStore('game', () => {
   function dismissEndPrompt(): void {
     if (endPrompt.value?.kind !== 'over') return
     endPrompt.value = null
+  }
+
+  // `ANNULER` d'une pop-up de fin ouverte par une correction (`revertible`) : le `+` qui a
+  // atteint la distance est défait — c'est l'undo du snapshot pris par `adjustScore`, qui
+  // rend aussi la main si une série ouverte avait été close au passage — et le scoreboard
+  // revient. Rien à faire sur une fin par série : la pop-up n'est pas `revertible`, et la
+  // règle de la 1.10 (une fin détectée par une série n'est pas rattrapable) tient toujours.
+  function revertEndPrompt(): void {
+    if (!endPrompt.value?.revertible) return
+    endPrompt.value = null
+    undoLastAction()
   }
 
   // Fin manuelle (AC11) : le plus avancé vers SA distance gagne, égalité si égal — 0‑0
@@ -542,19 +577,16 @@ export const useGameStore = defineStore('game', () => {
 
     history.value = history.value.slice(0, -1)
     // Restauration DIRECTE depuis la Story 10.3 : sans `ÉCHANGER` en cours de partie, la
-    // parité des côtés ne varie plus et la mise en miroir d'un snapshot (`mirrorSnapshot`)
-    // est devenue du code mort — supprimée, pas gardée « au cas où ».
-    const snapshot = previous
-
-    player1.value = snapshot.player1
-    player2.value = snapshot.player2
-    activePlayer.value = snapshot.activePlayer
-    reprises.value = snapshot.reprises
+    // parité des côtés ne varie plus, la mise en miroir d'un snapshot a disparu avec elle.
+    player1.value = previous.player1
+    player2.value = previous.player2
+    activePlayer.value = previous.activePlayer
+    reprises.value = previous.reprises
     // Copies défensives : l'état vivant ne doit jamais aliaser un objet de snapshot —
     // `adjustScore` et `appendScoreDigit` mutent ces deux objets en place.
-    scoreAdjustments.value = { ...snapshot.scoreAdjustments }
-    currentInput.value = { ...snapshot.currentInput }
-    equalizingReprise.value = snapshot.equalizingReprise
+    scoreAdjustments.value = { ...previous.scoreAdjustments }
+    currentInput.value = { ...previous.currentInput }
+    equalizingReprise.value = previous.equalizingReprise
     lastSaved.value = new Date().toISOString()
   }
 
@@ -772,6 +804,7 @@ export const useGameStore = defineStore('game', () => {
     finishGame,
     acceptEqualizingReprise,
     dismissEndPrompt,
+    revertEndPrompt,
     rematch,
     restartGame,
     checkSavedGame,

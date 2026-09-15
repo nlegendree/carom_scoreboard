@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useId } from 'vue'
+import { computed, useId } from 'vue'
 import type { PlayerColor } from '../types/game'
 import type { PromptAction } from '../types/ui'
 
@@ -14,20 +14,22 @@ import type { PromptAction } from '../types/ui'
 // « annuler » une fin de partie ?), et surtout la pop-up de fin monte SOUS LE DOIGT qui
 // vient de valider une série : le `pointerup` de ce geste retombe sur le voile, qui ne
 // doit rien en faire (AC18, Décision 12). Le voile reste donc inerte pour ces pop-ups.
-// EXCEPTION, variante LISTE (revue de rendu de Nathan, 2026-09-12) : un choix, lui, est
-// annulable — taper à côté y vaut `ANNULER`, et émet donc `secondary`. La fermeture exige
-// un geste COMPLET sur le voile (`armBackdropClose`, repris de `PlayerSetupModal`), sans
-// quoi le `pointerup` du geste qui vient d'ouvrir la pop-up la refermerait aussitôt.
-// La prop `dismissible` ouvre la même porte aux pop-ups à deux CTA qui, elles aussi,
-// s'annulent sans conséquence — « DISTANCE MANQUANTE » en est une (revue du 2026-09-12).
-// Elle est OPT-IN et le restera : les pop-ups de FIN DE PARTIE doivent garder leur voile
-// inerte (AC18, Décision 12), sans quoi le doigt qui vient de valider une série les
-// refermerait au passage.
+// RÈGLE (Nathan, revue de fin d'Epic 10, 2026-09-15) : **toute pop-up qui porte un CTA
+// `ANNULER` ou `FERMER` se referme au tap dehors, et ce tap VAUT ce CTA** (émet
+// `secondary`). La règle est portée ICI, dérivée du libellé du secondaire, et non par une
+// prop que chaque écran devrait penser à poser : le CADRE, « DISTANCE MANQUANTE », les
+// confirmations de sortie et de RECOMMENCER, « PARTIE EN COURS » et les fins de partie
+// ouvertes par une correction `+` (`ANNULER`) en héritent d'un coup. Une pop-up SANS retour
+// — « PARTIE TERMINÉE » par série, ou l'offre d'égalisatrice dont le secondaire est
+// `FIN DE PARTIE` — garde son voile inerte : taper à côté d'une décision sans « annuler »
+// ne veut rien dire (AC18, Décision 12).
+// La fermeture exige un geste COMPLET sur le voile (`armBackdropClose`, repris de
+// `PlayerSetupModal`) : appui ET relâchement du même pointeur. C'est ce qui rend la règle
+// sûre pour les pop-ups qui montent SOUS LE DOIGT (au `pointerdown` de `VALIDER` ou de `+`) —
+// le `pointerup` de ce geste retombe sur le voile sans y avoir appuyé, et ne ferme rien.
 // Purement présentationnel : aucun accès au store, la vue appelle les actions.
-// Le voile est INERTE par défaut : les gardes vivent dans les handlers, qui ne font rien
-// hors variante liste ou `dismissible`. Seule exception à `@pointerdown` (AR8) : la
-// fermeture demande un geste complet. Pas de `role="button"` sur un voile plein écran,
-// exception assumée à CLAUDE.md §2 (DT3).
+// Seule exception à `@pointerdown` (AR8) : la fermeture demande un geste complet. Pas de
+// `role="button"` sur un voile plein écran, exception assumée à CLAUDE.md §2 (DT3).
 // ⚠️ Aucun commentaire HTML à la racine du gabarit : il en ferait un fragment, et la
 // racine perdrait `classes()`, `trigger()` et son `data-testid`.
 const props = withDefaults(
@@ -43,8 +45,6 @@ const props = withDefaults(
     actions?: readonly PromptAction[]
     // Bille en en-tête, comme les autres pop-ups, quand la décision concerne un joueur.
     ball?: PlayerColor
-    // Taper à côté referme et vaut `secondary`. Opt-in : voir l'en-tête du script.
-    dismissible?: boolean
   }>(),
   {
     message: undefined,
@@ -52,8 +52,14 @@ const props = withDefaults(
     secondaryLabel: undefined,
     actions: undefined,
     ball: undefined,
-    dismissible: false,
   },
+)
+
+// Les libellés de retour : un secondaire qui porte l'un d'eux ouvre le tap dehors (règle
+// ci-dessus). Table littérale, à étendre si un nouveau libellé de retour apparaît.
+const CANCEL_LABELS: readonly string[] = ['ANNULER', 'FERMER']
+const closesOnBackdrop = computed(
+  () => props.secondaryLabel !== undefined && CANCEL_LABELS.includes(props.secondaryLabel),
 )
 
 const emit = defineEmits<{ primary: []; secondary: []; select: [id: string] }>()
@@ -84,13 +90,13 @@ const BUTTON_CLASSES =
 const ACCENT_CLASSES = `${BUTTON_CLASSES} bg-(image:--gradient-blue) text-white active:brightness-90`
 const NEUTRAL_CLASSES = `${BUTTON_CLASSES} bg-(image:--gradient-neutral) text-white active:brightness-125`
 
-// Tap en dehors, variante liste seulement. `pointerId` mémorisé et non un booléen, pour
+// Tap en dehors, pop-ups à retour seulement. `pointerId` mémorisé et non un booléen, pour
 // qu'une paume posée sur le voile n'arme pas la fermeture au profit d'un autre doigt ;
 // `pointercancel` désarme (même mécanique que `PlayerSetupModal`, revue du 2026-09-09).
 let backdropPointerId: number | null = null
 
 function armBackdropClose(event: PointerEvent): void {
-  if (!props.dismissible && !props.actions?.length) return
+  if (!closesOnBackdrop.value) return
   backdropPointerId = event.pointerId
 }
 

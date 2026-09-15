@@ -1,6 +1,6 @@
 # Story 10.7: Finition transverse — sémantique des pop-ups, `reduced-motion`, contraste
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -138,6 +138,19 @@ so that l'interface premium est aussi propre sous le capot qu'à l'écran (NFR10
   - [x] Mesurer les zones tactiles ≥ 90×90 px hors claviers, et relire les libellés longs (`FERMER L'APPLICATION`, `CONFIGURATION`, `ENTRAÎNEMENT`, `RECOMMENCER`, `PASSER LE TOUR`, `CHANGER DE BILLE`)
   - [x] Contrôler le ruban de victoire assombri **à côté** de l'en-tête rouge de la sidebar du récap : c'est le seul endroit où les deux rouges, désormais identiques, se touchent
   - [x] Harnais `_viewport-harness.html` **supprimé en fin de passe**
+
+### Review Findings
+
+*(revue de code groupée de fin d'Epic 10, 2026-09-15 — constats transverses et reports)*
+
+- [x] [Review][Patch] *(corrigé : commentaires déplacés dans le `<script setup>`)* Commentaire HTML à la racine du gabarit (CLAUDE.md §12, règle écrite par cette story sans balayer le code) : `SideBar.vue:29` et `ShotClock.vue:79` sont rendus en fragment en dev/test — racine sans `classes()`/`attributes()` [1score/src/components/SideBar.vue:29 ; 1score/src/components/ShotClock.vue:79]
+- [x] [Review][Patch] *(corrigé, les six)* Commentaires périmés qui contredisent le code livré : `GameSummary.vue:65-67` (deux rouges « distincts », même valeur depuis la 10.7), `HomeScreen.vue:447-448` (bandeau « monté dans le flux »), `:478-481` (« colonne 1/5 », le dock « prend la place des CTA » — 1re passe abandonnée, classe `w-1/4`), `:556-558` (commentaire DISTANCE MANQUANTE posé au-dessus de la pop-up CADRE), `CenterPanel.vue:110-114` (`-mx-4` / 24 px pour un code à 40 / 32 px), `main.css` (la garde renvoie à « CLAUDE.md §10 », la règle est au §11)
+- [x] [Review][Patch] *(consigné ci-dessous, dans les Completion Notes)* Couple de contraste non consigné (AC4, « chaque couple ») : `text-brand-red` de la zone de série sur les cartes blanche et jaune, renvoyé « à la passe AA de la 10.7 » par `PlayerPanel.vue:280-281` ; recalculé ≈ 4,95:1 (blanc) et ≈ 3,75:1 (jaune `#FFE000`), conforme au seuil 3:1 du grand texte (`clamp(24px,…)` gras) — à consigner dans les Dev Notes, le code est bon
+- [x] [Review][Defer] Rechargement PWA appliqué dès `status === 'idle'`, donc aussi en plein paramétrage : noms et distances tapés perdus [1score/src/composables/usePwaUpdate.ts:68-77] — deferred, pre-existing (1.13)
+- [x] [Review][Defer] Auto-validation 3 s après `REPRENDRE` quand `entryOpen` et le buffer sont restaurés, sans frappe (`watch` `immediate`) [1score/src/components/ScoreEntryDock.vue:97-107] — deferred, pre-existing (1.5/1.12, même code dans `ScoreEntryModal`)
+- [x] [Review][Defer] Deux joueurs à la distance (joueur 1 amené par `+` hors de son tour, joueur 2 par série) → joueur 2 seul vainqueur au lieu d'une égalité [1score/src/stores/useGameStore.ts:438-447] — deferred, pre-existing (1.10)
+- [x] [Review][Defer] Quatre copies de `armBackdropClose`/`disarmBackdropClose`/`closeFromBackdrop` (`ScoreEntryDock`, `NumericPadDock`, `AlphaKeyboardSheet`, `PromptModal`), deux d'`ALIGN_CLASSES`, deux de `BALL_PICTOS` → composable `useBackdropClose` et constantes partagées — deferred, refactor sans bug, hors correctif de revue
+- [x] [Review][Defer] Demi-anneau de tour du chrono : clip fixe de `--game-clock-bleed` qui suppose un disque débordant d'exactement 24 px ; si la hauteur contraint `min(100cqw,100cqh)` (iPad avec barre Safari, ~1180×673), le disque ne déborde plus et le demi-anneau se peint en pleine colonne [1score/src/components/ShotClock.vue:40-43 ; CenterPanel.vue:121 ; PlayerPanel.vue:76-79] — deferred, indécidable en revue de code, à vérifier au navigateur à ce format
 
 ## Dev Notes
 
@@ -330,6 +343,8 @@ Claude Opus 5 (`claude-opus-5`) — bmad-dev-story, 2026-09-14.
 - **`PlayerSetupCard` placeholders : 4,20:1 et non 4,43:1** sur la carte jaune — ils sont posés sur la **box du champ** (`bg-black/8`), pas sur la carte nue. L'échec est donc **pire** que prévu ; la correction prescrite tient quand même.
 - `GameSummary` libellés `text-white/50` : **5,05:1** mesuré (4,65 annoncé) — ✅ dans les deux cas.
 - `REP`/`VS` : les deux lignes de la table étaient interverties (`VS` = 7,18:1 sur le fond médian, `REP` = 6,62:1 sur `--color-surface`) — ✅ dans les deux cas.
+
+**Couple renvoyé par le code et oublié à la livraison, consigné à la revue de fin d'Epic 10 (2026-09-15)** : la zone de série de `PlayerPanel` en `text-brand-red` (`#D0343F`) sur les cartes — **4,95:1** sur `--color-player-white`, **3,75:1** sur `--color-player-yellow` `#FFE000` — conforme au seuil 3:1 du grand texte (`clamp(24px,10cqw,64px)` en `font-black`), sous 4,5:1 sur le jaune : ne pas réduire cette taille sans revoir la teinte.
 
 **Couples hors table, mesurés au titre de la décision 4**, tous conformes : libellé de bille `opacity-75` (9,68 / 8,24:1), intitulés `opacity-65` sur box de champ (6,55 / 5,85:1), `−`/`+` de `PlayerPanel` `opacity-60` sur `bg-black/8` (5,44 / 4,98:1, seuil 3:1 car `text-3xl`), `MOY`/`SÉRIE` sur les bandeaux réels `#ECECEC` / `#E6CA00` (5,49 / 4,87:1). Les `disabled:opacity-30` (`CenterPanel`, `IconAction`) et les `BIENTÔT` à `opacity-45` sont **exclus** (WCAG §1.4.3, commandes inactives).
 

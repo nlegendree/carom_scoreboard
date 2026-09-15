@@ -277,7 +277,7 @@ button:focus-visible {
    qui n'exemptait que le chrono. Les deux coupées ci-dessous sont des retours de CONFORT :
    l'haptique et l'affichage du chiffre disent déjà la même chose.
    Toute nouvelle animation d'ORNEMENT vient se couper ici ; une animation porteuse
-   d'information ne s'y ajoute pas, et la décision se documente (CLAUDE.md §10). */
+   d'information ne s'y ajoute pas, et la décision se documente (CLAUDE.md §11). */
 @media (prefers-reduced-motion: reduce) {
   /* Pulsation de refus de plafond : ses keyframes partent et reviennent à `scale(1)`,
      sans `forwards`. Couper l'animation suffit, l'élément reste dans son état normal. */

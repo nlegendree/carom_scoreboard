@@ -10,6 +10,11 @@ import type { GameState } from '../types/game'
 
 // Changer la clé sans migration ferait perdre la partie sauvegardée à la mise à jour.
 export const GAME_STORAGE_KEY = '1score:game'
+// Clé d'avant le renommage (Story 10.6). Ce qu'elle contient est une sauvegarde en version
+// 1, inexploitable depuis la 10.3 : elle n'est pas migrée, seulement PURGÉE au premier
+// chargement, pour ne pas laisser une entrée orpheline sur chaque tablette (revue de fin
+// d'Epic 10). À retirer avec ce commentaire une fois toutes les tablettes passées.
+export const LEGACY_GAME_STORAGE_KEY = 'carom-scoreboard:game'
 // Enveloppe versionnée : une autre version est jetée, pas migrée (rien à migrer pour un
 // filet de sécurité — la partie perdue est celle du rechargement qui suit une mise à jour
 // incompatible, et c'est acceptable). RÈGLE : tout changement de forme de `GameState`
@@ -88,6 +93,7 @@ function parseJson(raw: string): unknown {
 export function loadGameState(): GameState | null {
   let raw: string | null
   try {
+    localStorage.removeItem(LEGACY_GAME_STORAGE_KEY)
     raw = localStorage.getItem(GAME_STORAGE_KEY)
   } catch (e) {
     console.error('[storage] loadGameState failed:', e)

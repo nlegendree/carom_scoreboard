@@ -434,6 +434,42 @@ describe('HomeScreen', () => {
     expect(distanceOn(wrapper, 'left').text()).toBe('100')
   })
 
+  // Revue de fin d'Epic 10 (décision de Nathan) : RETOUR jusqu'à l'ACCUEIL efface, comme
+  // ANNULER — un handicap réglé pour un mode abandonné ne se reconduit pas sur une autre
+  // catégorie. Seul le retour d'un cran, vers la sélection JDS, conserve (cas précédent).
+  it('forgets names and distances when RETOUR reaches the home screen', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await wrapper.find('[data-testid="category-3bandes"]').trigger('pointerdown')
+    await typeName(wrapper, 'white', 'MICHEL')
+    await press(wrapper, ['sheet-confirm'])
+    await typeDistance(wrapper, 'white', [3, 0])
+    await press(wrapper, ['dock-confirm', 'change-ball-button'])
+    await goBack(wrapper)
+    await goToPlayersStep(wrapper)
+
+    expect(nameOn(wrapper, 'left').text()).toBe('NOM')
+    expect(distanceOn(wrapper, 'left').text()).toBe('DISTANCE')
+    expect(ballOn(wrapper, 'left')).toBe('white')
+  })
+
+  // Revue de fin d'Epic 10 : `NumericPadDock` fige à sa création sa règle « la première
+  // frappe remplace » ; passer d'une distance à l'autre sans démonter la pop-up (chemin des
+  // tests et de l'enchaînement) laissait la frappe S'AJOUTER à une distance déjà réglée
+  // (25 → 254). La `key` par bille remonte la pop-up.
+  it('remounts the distance pad when the entry moves to the other ball', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    await typeDistance(wrapper, 'yellow', [2, 5])
+    await press(wrapper, ['dock-confirm'])
+    await typeDistance(wrapper, 'white', [3, 0])
+    await focusField(wrapper, 'yellow', 'distance')
+    await press(wrapper, ['digit-4'])
+
+    expect(distanceOn(wrapper, sideOfBall(wrapper, 'yellow')).text()).toBe('4')
+  })
+
   // AC2 : ANNULER, lui, efface tout et ramène à l'accueil, sans confirmation.
   it('clears everything and goes home on ANNULER', async () => {
     const wrapper = mount(HomeScreen)
@@ -667,11 +703,10 @@ describe('HomeScreen', () => {
     expect(nameOn(wrapper, 'left').text()).toBe('MICHEL')
   })
 
-  // AC6 relu le 2026-09-12 : depuis que les claviers sont des POP-UPS à voile plein écran,
-  // un joueur ne peut plus taper l'autre champ pendant une saisie — les issues sont la
-  // croix et VALIDER. La garde « ouvrir une saisie valide celle en cours » reste néanmoins
-  // dans `openEntry`, et elle est bel et bien atteinte par l'enchaînement du rattrapage
-  // (« DISTANCE MANQUANTE ») : une valeur en cours n'y est jamais perdue en silence.
+  // AC6 réécrit à la revue de fin d'Epic 10 : les claviers sont des POP-UPS à voile plein
+  // écran, un joueur ne peut pas taper l'autre champ pendant une saisie — les issues sont
+  // ANNULER, VALIDER et le tap dehors (= ANNULER). Le seul enchaînement d'une saisie à
+  // l'autre est celui du rattrapage (« DISTANCE MANQUANTE »), qui valide d'abord la sienne.
   it('never loses a running entry when another one is opened', async () => {
     const wrapper = mount(HomeScreen)
 
@@ -837,7 +872,6 @@ describe('HomeScreen', () => {
     expect(wrapper.find('[data-testid="prompt-message"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="prompt-primary"]').text()).toBe('RÉGLER LA DISTANCE')
     expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('ANNULER')
-    expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
 
     await press(wrapper, ['prompt-secondary'])
     await typeDistance(wrapper, 'yellow', [8, 0])

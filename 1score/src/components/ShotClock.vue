@@ -73,13 +73,16 @@ const color = computed(() => {
   const lightness = Math.round(59 - 9 * ratio.value)
   return `hsl(${hue} ${saturation}% ${lightness}%)`
 })
+
+// Racine = conteneur de taille (`container-type: size`) : elle prend la place laissée par
+// REP et les commandes et y centre l'anneau, qui vaut le plus petit de ses deux côtés —
+// jamais plus large que la colonne, jamais plus haut que la place restante. Pas de libellé
+// (retiré au rendu par Nathan, 2026-09-11) : l'anneau se suffit.
+// ⚠️ Aucun commentaire HTML à la racine du gabarit (CLAUDE.md §12) : il en ferait un
+// fragment, et la racine perdrait `classes()` comme ses attributs.
 </script>
 
 <template>
-  <!-- Racine = conteneur de taille (`container-type: size`) : elle prend la place laissée
-       par REP et les commandes et y centre l'anneau, qui vaut le plus petit de ses deux
-       côtés — jamais plus large que la colonne, jamais plus haut que la place restante.
-       Pas de libellé (retiré au rendu par Nathan, 2026-09-11) : l'anneau se suffit. -->
   <div
     data-testid="shot-clock"
     class="flex min-h-0 w-full flex-1 flex-col items-center justify-center [container-type:size]"

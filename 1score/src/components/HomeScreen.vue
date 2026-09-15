@@ -180,7 +180,12 @@ const cadreActions = computed<PromptAction[]>(() =>
   }),
 )
 
+// Revenir à l'accueil EFFACE les saisies (revue de fin d'Epic 10, décision de Nathan) : un
+// handicap ou un nom réglés pour un mode abandonné ne se reconduisent pas sur une autre
+// catégorie — même règle que `resetGame()` en revue 1.3. Seul le retour d'UN cran, vers la
+// sélection JDS, conserve (AC2 : revenir choisir un autre cadre ne coûte pas les noms).
 function goHome(): void {
+  clearSetup()
   step.value = 'category'
   selectedCategory.value = null
 }
@@ -218,8 +223,9 @@ function selectCadre(id: string): void {
   cadrePromptOpen.value = false
 }
 
-// `RETOUR` : on remonte d'un écran en CONSERVANT les saisies — revenir choisir un autre
-// cadre ne doit pas coûter les deux noms déjà tapés (Story 10.3, AC2).
+// `RETOUR` : on remonte d'un écran. Vers la sélection JDS, les saisies sont CONSERVÉES —
+// revenir choisir un autre cadre ne doit pas coûter les deux noms déjà tapés (Story 10.3,
+// AC2) ; jusqu'à l'accueil, `goHome()` les efface.
 function back(): void {
   closeSetupEntry()
 
@@ -230,11 +236,8 @@ function back(): void {
   goHome()
 }
 
-// `ANNULER` : retour à l'accueil en EFFAÇANT tout, sans confirmation. Un handicap saisi
-// pour un mode abandonné ne doit pas être silencieusement reconduit sur le mode suivant
-// (même défaut que celui corrigé sur `resetGame()` en revue 1.3).
+// `ANNULER` : retour à l'accueil, sans confirmation — `goHome()` efface tout.
 function cancelSetup(): void {
-  clearSetup()
   closeSetupEntry()
   goHome()
 }
@@ -286,10 +289,15 @@ function normalizeName(raw: string, fallback: string): string {
   return cleanName(raw) || fallback
 }
 
-// Ouvre une saisie. Une saisie déjà ouverte est VALIDÉE au passage (AC6) : taper un autre
-// champ est un seul geste, jamais un tap mort suivi d'un second.
+// Ouvre une saisie. ⚠️ Jamais par-dessus une autre (revue de fin d'Epic 10, décision de
+// Nathan) : les deux claviers sont des pop-ups à voile PLEIN ÉCRAN, donc pendant une saisie
+// les cartes et la colonne centrale ne sont pas tapables — taper à côté tombe sur le voile
+// et vaut `ANNULER` (`abandonEntry`). L'AC6 d'origine (« taper un autre champ valide au
+// passage ») a été réécrite en conséquence, et la garde `if (entry) applyEntry()` qui
+// vivait ici — comme dans `confirm`, `changeBall`, `changeSide` — est partie avec elle :
+// aucun geste réel ne l'atteignait. Les seuls appelants sont la carte (aucune saisie
+// ouverte, par construction) et l'enchaînement du rattrapage, qui a déjà refermé la sienne.
 function openEntry(ball: PlayerColor, field: 'name' | 'distance'): void {
-  if (entry.value) applyEntry()
   draft.value = players.value[ball][field]
   entry.value = { ball, field }
 }
@@ -331,19 +339,17 @@ function abandonEntry(): void {
 // - `CHANGER DE CÔTÉ` : les BILLES restent en place (gauche blanche, droite jaune), les
 //   noms et les distances s'échangent. Une simple permutation des entrées suffit — c'était
 //   le bug : basculer aussi `whiteSide` faisait voyager la bille avec le joueur.
-// Une saisie en cours est validée d'abord : sa carte va changer sous le doigt.
+// Aucune saisie ne peut être ouverte ici : les deux CTA sont sous le voile des claviers.
 function swapPlayerEntries(): void {
   players.value = { white: players.value.yellow, yellow: players.value.white }
 }
 
 function changeBall(): void {
-  if (entry.value) applyEntry()
   swapPlayerEntries()
   whiteSide.value = whiteSide.value === 'left' ? 'right' : 'left'
 }
 
 function changeSide(): void {
-  if (entry.value) applyEntry()
   swapPlayerEntries()
 }
 
@@ -351,7 +357,6 @@ function changeSide(): void {
 // `player1` est la bille BLANCHE et reste celui qui ouvre (AR24) : le côté part à part,
 // en 5e paramètre, et ne touche à aucune règle de jeu.
 function confirm(): void {
-  if (entry.value) applyEntry()
   if (missingDistance.value.length > 0) {
     distanceError.value = true
     return
@@ -444,8 +449,8 @@ function fixDistance(): void {
          au « Bloc Plein contenu » d'origine : trois colonnes ESPACÉES, chacune à contour,
          avec une marge autour. Divergence assumée avec les tuiles jointives des deux
          écrans précédents (décision de Nathan, 2026-09-12).
-         Le bandeau de nom est monté DANS LE FLUX sous la zone principale : les cartes
-         rapetissent, restent entières, et le champ qu'on remplit reste sous les yeux. -->
+         Les deux claviers sont des pop-ups à voile (2e passe de rendu) : rien n'est monté
+         dans le flux, la carte visée reste visible sous le voile et se remplit à vue. -->
     <div v-else data-testid="step-players" class="flex h-full w-full bg-(image:--gradient-bg)">
       <SideBar :items="PLAYERS_SIDEBAR_ITEMS" :exitItem="PLAYERS_SIDEBAR_EXIT" />
 
@@ -475,10 +480,9 @@ function fixDistance(): void {
             @focus="openEntry(leftBall, $event)"
           />
 
-          <!-- Colonne centrale, 1/5 de la zone : surtitre du mode, les deux CTA de réglage
-               et DÉMARRER au repos ; le dock de distance prend la place des CTA pendant la
-               saisie. Il ne recouvre RIEN — la colonne s'élargit et les cartes se
-               resserrent, les deux restent lisibles (décision de Nathan, 2026-09-12). -->
+          <!-- Colonne centrale, 1/4 de la zone (3e passe de rendu) : les deux CTA de réglage
+               et DÉMARRER, en bloc calé en bas. Le mode est en bandeau de titre au-dessus,
+               les claviers sont des pop-ups : la colonne ne change jamais de largeur. -->
           <section
             data-testid="setup-center"
             class="flex min-h-0 w-1/4 shrink-0 flex-col gap-2 border border-border bg-(image:--gradient-panel) p-3"
@@ -533,9 +537,14 @@ function fixDistance(): void {
 
       <!-- Les deux claviers sont des POP-UPS alignées sur le côté OPPOSÉ à la carte qu'on
            remplit (revue de rendu du 2026-09-12) : celle-ci reste entièrement visible et se
-           remplit à vue, ce qui rend inutile tout rappel de la valeur dans la pop-up. -->
+           remplit à vue, ce qui rend inutile tout rappel de la valeur dans la pop-up.
+           ⚠️ `key` par bille (revue de fin d'Epic 10) : l'enchaînement du rattrapage passe
+           du blanc au jaune SANS démonter la pop-up, et `NumericPadDock` fige à sa création
+           sa règle « la première frappe remplace » — sans `key`, un 4 tapé sur une
+           distance déjà à 25 donnait 254. L'ancienne modale avait `:key="editing"`. -->
       <NumericPadDock
         v-if="entry?.field === 'distance'"
+        :key="entry.ball"
         :value="draft"
         :align="entryPopupSide"
         @update="draft = $event"
@@ -545,6 +554,7 @@ function fixDistance(): void {
 
       <AlphaKeyboardSheet
         v-if="entry?.field === 'name'"
+        :key="entry.ball"
         :value="draft"
         :align="entryPopupSide"
         @update="draft = $event"
@@ -553,11 +563,9 @@ function fixDistance(): void {
       />
     </div>
 
-    <!-- Titre et deux CTA, sans message ni croix (revue de Nathan, 2026-09-10) : la modale
-         qui suit dit d'elle-même de quel joueur il s'agit, et `ANNULER` est le retour de
-         toutes les pop-ups de décision. -->
     <!-- Choix du cadre (Story 10.2), en variante liste : le titre porte le mot, les
-         commandes la variante, `ANNULER` ferme sans rien choisir. -->
+         commandes la variante, `ANNULER` ferme sans rien choisir — et le tap dehors aussi,
+         comme sur toute pop-up à `ANNULER` (règle portée par `PromptModal`). -->
     <PromptModal
       v-if="cadrePromptOpen && step === 'mode'"
       title="CADRE"
@@ -567,15 +575,15 @@ function fixDistance(): void {
       @secondary="cadrePromptOpen = false"
     />
 
-    <!-- `dismissible` : cette décision-ci s'annule sans conséquence, taper à côté vaut donc
-         `ANNULER` (revue de rendu du 2026-09-12). Les pop-ups de FIN DE PARTIE gardent, elles,
-         leur voile inerte. -->
+    <!-- Titre et deux CTA, sans message ni croix (revue de Nathan, 2026-09-10) : la saisie
+         qui suit dit d'elle-même de quel joueur il s'agit, et `ANNULER` est le retour de
+         toutes les pop-ups de décision — et le tap dehors le vaut aussi (règle portée par
+         `PromptModal` : tout `ANNULER` ouvre le voile). -->
     <PromptModal
       v-if="distanceError"
       title="DISTANCE MANQUANTE"
       primaryLabel="RÉGLER LA DISTANCE"
       secondaryLabel="ANNULER"
-      dismissible
       @primary="fixDistance"
       @secondary="distanceError = false"
     />

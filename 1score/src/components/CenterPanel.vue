@@ -108,10 +108,11 @@ function passTurn(): void {
          restait visible en travers du disque (3e passe de rendu, Nathan). Le débordement est porté ICI, par
          la colonne, et non par `ShotClock`, qui reste dimensionné par son conteneur.
          ⚠️ Le calcul se fait sur la CONTENT BOX, padding déduit : la colonne porte `p-2`
-         (16 px), donc `-mx-2` + `calc(100% + 32px)` ne fait que reconstituer sa border-box —
-         l'anneau remplit alors la colonne sans en sortir d'un pixel (mesuré à la passe
-         navigateur). Il faut le double : `-mx-4` (32 px) pour 16 px de débordement réel de
-         chaque côté. Les cartes réservent 24 px (`INNER_GUTTER_CLASSES`), de quoi l'absorber.
+         (16 px), et une marge négative de 16 px ne ferait que reconstituer sa border-box —
+         l'anneau remplirait la colonne sans en sortir d'un pixel (mesuré à la passe
+         navigateur). D'où `bleed + 16px` de chaque côté : les 16 px du padding, puis
+         `--game-clock-bleed` (24 px) de débordement réel dans chaque carte. Les cartes
+         réservent 32 px (`INNER_GUTTER_CLASSES`, `pr-4`/`pl-4`), de quoi l'absorber.
          ⚠️ Aucun `overflow-hidden` sur cette colonne ni sur ses ancêtres, sans quoi
          l'anneau serait rogné au bord sans le moindre message d'erreur. Les cartes
          réservent en contrepartie une gouttière intérieure (`INNER_GUTTER_CLASSES`). -->

@@ -1087,14 +1087,96 @@ describe('useGameStore — fin de partie', () => {
     expect(store.endPrompt).toEqual({ kind: 'over', winner: 'player2' })
   })
 
-  // AC8 : seules les séries déclenchent la détection.
-  it('never ends the game on a correction', () => {
+  // Revue de fin d'Epic 10 (décision de Nathan) : `+`/`−` corrigent, mais ATTEINDRE la
+  // distance par une correction déclenche la mécanique de fin comme une série — la pop-up
+  // est alors `revertible`, pour offrir un retour arrière si le point n'était pas dû.
+  it('ends the game when a correction reaches the distance, revertibly', () => {
     const store = startedGame()
 
     store.adjustScore('player1', 10)
 
     expect(store.player1.score).toBe(10)
+    expect(store.endPrompt).toEqual({ kind: 'equalizing-offer', revertible: true })
+    expect(store.status).toBe('playing')
+  })
+
+  it('declares the yellow player winner when a correction brings him to his distance', () => {
+    const store = startedGame()
+    validate(store, 'player1', 3)
+
+    store.adjustScore('player2', 8)
+
+    expect(store.endPrompt).toEqual({ kind: 'over', winner: 'player2', revertible: true })
+  })
+
+  // Une correction qui ne fait qu'approcher, ou qui retire, ne déclenche rien ; et un score
+  // DÉJÀ à la distance (`dismissEndPrompt`, pilotage déporté) ne rouvre rien au `+` suivant.
+  it('leaves the game running on a correction that does not reach the distance', () => {
+    const store = startedGame()
+
+    store.adjustScore('player1', 9)
     expect(store.endPrompt).toBeNull()
+    store.adjustScore('player1', -1)
+    expect(store.endPrompt).toBeNull()
+  })
+
+  it('does not reopen a prompt on a correction past a distance already reached', () => {
+    const store = startedGame()
+    validate(store, 'player1', 4)
+    validate(store, 'player2', 8)
+    store.dismissEndPrompt()
+
+    store.adjustScore('player2', 1)
+
+    expect(store.endPrompt).toBeNull()
+  })
+
+  // `ANNULER` de la pop-up : le `+` est défait (undo), le scoreboard revient. Une fin par
+  // série, elle, n'est pas `revertible` et l'action est un no-op (règle de la 1.10).
+  it('reverts a correction-triggered end, restoring the score and closing the prompt', () => {
+    const store = startedGame()
+    validate(store, 'player1', 4)
+    validate(store, 'player2', 3)
+    store.adjustScore('player1', 6)
+    expect(store.endPrompt?.revertible).toBe(true)
+
+    store.revertEndPrompt()
+
+    expect(store.endPrompt).toBeNull()
+    expect(store.player1.score).toBe(4)
+    expect(store.activePlayer).toBe('player1')
+    expect(store.status).toBe('playing')
+  })
+
+  it('never reverts an end reached by a series', () => {
+    const store = startedGame()
+    validate(store, 'player1', 10)
+
+    store.revertEndPrompt()
+
+    expect(store.endPrompt).toEqual({ kind: 'equalizing-offer' })
+    expect(store.player1.score).toBe(10)
+  })
+
+  // 3 Bandes : le `+` sur la série ouverte qui atteint la distance la CLÔT au passage,
+  // comme `incrementSeries` — même bascule de tour, même pop-up ; l'undo rend la main.
+  it('closes an open three-cushion series when a correction reaches the distance', () => {
+    const store = useGameStore()
+    store.startGame('3bandes', 'MICHEL', 'ANDRE', { player1: 3, player2: 25 })
+    store.incrementSeries()
+    store.incrementSeries()
+
+    store.adjustScore('player1', 1)
+
+    expect(store.reprises[0]!.player1).toBe(3)
+    expect(store.activePlayer).toBe('player2')
+    expect(store.endPrompt).toEqual({ kind: 'equalizing-offer', revertible: true })
+
+    store.revertEndPrompt()
+
+    expect(store.reprises[0]!.player1).toBe(2)
+    expect(store.activePlayer).toBe('player1')
+    expect(store.openSeries.player1).toBe(2)
   })
 
   it('never ends the game automatically when the distance is free', () => {
@@ -2290,5 +2372,30 @@ describe('useGameStore — série ouverte', () => {
 
     expect(store.openSeries.player1).toBeNull()
     expect(store.openSeries.player2).toBeNull()
+  })
+
+  // Revue de fin d'Epic 10 : sur une série à 0, `−` tombe en ajustement (−1) ; le `+` qui
+  // suit doit REMBOURSER cet ajustement, pas ouvrir une série à 1 par-dessus — sinon série,
+  // meilleure série et moyenne divergeaient du total, exactement le défaut de la 2e passe.
+  it('refunds a negative adjustment before growing the open series', () => {
+    const store = useGameStore()
+    store.startGame('3bandes', 'MICHEL', 'ANDRE')
+    store.incrementSeries()
+    store.adjustScore('player1', -1)
+    expect(store.openSeries.player1).toBe(0)
+    store.adjustScore('player1', -1)
+    expect(store.scoreAdjustments.player1).toBe(-1)
+
+    store.adjustScore('player1', 1)
+
+    expect(store.scoreAdjustments.player1).toBe(0)
+    expect(store.openSeries.player1).toBe(0)
+    expect(store.player1.score).toBe(0)
+    expect(store.bestSeries.player1).toBe(0)
+
+    store.adjustScore('player1', 1)
+
+    expect(store.openSeries.player1).toBe(1)
+    expect(store.player1.score).toBe(1)
   })
 })

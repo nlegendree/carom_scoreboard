@@ -754,12 +754,11 @@ describe('GameView — fin de partie', () => {
     await validateSeries(wrapper, [1, 0])
 
     expect(prompt(wrapper).exists()).toBe(true)
-    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('MICHEL A ATTEINT SA DISTANCE')
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('MICHEL A FINI')
     // Revue de Nathan (2026-09-10) : pas de message, les deux CTA disent tout.
     expect(wrapper.find('[data-testid="prompt-message"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="prompt-primary"]').text()).toBe('ANDRÉ JOUE')
     expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('FIN DE PARTIE')
-    expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="prompt-ball"]').classes()).toContain('bg-player-white')
     expect(panels(wrapper)[1]!.find('[data-testid="turn-ring"]').exists()).toBe(true)
   })
@@ -789,7 +788,6 @@ describe('GameView — fin de partie', () => {
     expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('PARTIE TERMINÉE')
     expect(wrapper.find('[data-testid="prompt-message"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="prompt-ball"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="prompt-primary"]').text()).toBe('VOIR LE RÉCAP')
 
     await press(wrapper, 'prompt-primary')
@@ -824,7 +822,6 @@ describe('GameView — fin de partie', () => {
     await validateSeries(wrapper, [8])
 
     expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('PARTIE TERMINÉE')
-    expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="prompt-secondary"]').exists()).toBe(false)
 
     await press(wrapper, 'prompt-primary')
@@ -845,7 +842,6 @@ describe('GameView — fin de partie', () => {
     await wrapper.vm.$nextTick()
 
     expect(prompt(wrapper).exists()).toBe(true)
-    expect(wrapper.findAll('[data-testid="prompt-close"]')).toHaveLength(0)
     expect(store.status).toBe('playing')
   })
 
@@ -877,12 +873,15 @@ describe('GameView — fin de partie', () => {
 
     expect(wrapper.find('[data-testid="score-entry-dock"]').exists()).toBe(false)
     expect(prompt(wrapper).exists()).toBe(true)
-    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('MICHEL A ATTEINT SA DISTANCE')
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('MICHEL A FINI')
   })
 
-  // AC8 : les corrections ne déclenchent jamais la détection.
-  it('never ends the game on a correction', async () => {
-    const { wrapper } = await startedGame()
+  // Revue de fin d'Epic 10 (décision de Nathan) : une correction `+` qui ATTEINT la distance
+  // déclenche la fin, et la pop-up offre `ANNULER` — le retour arrière si le point n'était
+  // pas dû. Elle monte sous le doigt qui a pressé `+` : le relâchement de CE geste retombe
+  // sur le voile et ne ferme rien, seul un tap complet dehors vaut `ANNULER`.
+  it('ends the game on a correction that reaches the distance, with a way back', async () => {
+    const { wrapper, store } = await startedGame()
 
     for (let i = 0; i < 10; i += 1) {
       await panels(wrapper)[0]!.find('[data-testid="score-plus"]').trigger('pointerdown')
@@ -890,7 +889,72 @@ describe('GameView — fin de partie', () => {
     await wrapper.vm.$nextTick()
 
     expect(scoreOf(wrapper, 0)).toBe('10')
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('MICHEL A FINI')
+    expect(wrapper.find('[data-testid="prompt-action-play"]').text()).toBe('ANDRÉ JOUE')
+    expect(wrapper.find('[data-testid="prompt-action-finish"]').text()).toBe('FIN DE PARTIE')
+    expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('ANNULER')
+
+    await prompt(wrapper).trigger('pointerup', { pointerId: 1 })
+    expect(prompt(wrapper).exists()).toBe(true)
+
+    await press(wrapper, 'prompt-secondary')
+    await wrapper.vm.$nextTick()
+
     expect(prompt(wrapper).exists()).toBe(false)
+    expect(scoreOf(wrapper, 0)).toBe('9')
+    expect(store.status).toBe('playing')
+  })
+
+  // Règle de Nathan (2026-09-15) : un CTA `ANNULER` rend le voile refermable — sur cette
+  // pop-up-ci, taper à côté défait donc le `+` comme `ANNULER` ; sur l'offre par SÉRIE
+  // (`FIN DE PARTIE`), le voile reste inerte (cas « offers no way back… » ci-dessus).
+  it('reverts the correction on a complete tap outside the revertible prompt', async () => {
+    const { wrapper } = await startedGame()
+    for (let i = 0; i < 10; i += 1) {
+      await panels(wrapper)[0]!.find('[data-testid="score-plus"]').trigger('pointerdown')
+    }
+    await wrapper.vm.$nextTick()
+
+    await prompt(wrapper).trigger('pointerdown', { pointerId: 2 })
+    await prompt(wrapper).trigger('pointerup', { pointerId: 2 })
+    await wrapper.vm.$nextTick()
+
+    expect(prompt(wrapper).exists()).toBe(false)
+    expect(scoreOf(wrapper, 0)).toBe('9')
+  })
+
+  it('keeps the three-way offer wired to the equalizing reprise and to the summary', async () => {
+    const first = await startedGame()
+    first.store.adjustScore('player1', 10)
+    await first.wrapper.vm.$nextTick()
+    await press(first.wrapper, 'prompt-action-play')
+    expect(first.store.equalizingReprise).toBe(true)
+    expect(prompt(first.wrapper).exists()).toBe(false)
+
+    const second = await startedGame()
+    second.store.adjustScore('player1', 10)
+    await second.wrapper.vm.$nextTick()
+    await press(second.wrapper, 'prompt-action-finish')
+    expect(second.store.status).toBe('finished')
+    expect(second.store.winner).toBe('player1')
+  })
+
+  it('adds ANNULER to PARTIE TERMINÉE only when a correction opened it', async () => {
+    const { wrapper, store } = await startedGame()
+    await validateSeries(wrapper, [3])
+    store.adjustScore('player2', 8)
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('PARTIE TERMINÉE')
+    expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('ANNULER')
+
+    await press(wrapper, 'prompt-secondary')
+    await wrapper.vm.$nextTick()
+    expect(prompt(wrapper).exists()).toBe(false)
+    expect(scoreOf(wrapper, 1)).toBe('0')
+
+    await validateSeries(wrapper, [8])
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('PARTIE TERMINÉE')
+    expect(wrapper.find('[data-testid="prompt-secondary"]').exists()).toBe(false)
   })
 
   // AC10, AC11 : la sortie demande confirmation ; confirmée, le vainqueur est au prorata.
@@ -906,7 +970,6 @@ describe('GameView — fin de partie', () => {
     expect(wrapper.find('[data-testid="prompt-primary"]').text()).toBe('VOIR LE RÉCAP')
     // Revue de Nathan (2026-09-10) : un gros CTA `ANNULER` plutôt qu'une croix.
     expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('ANNULER')
-    expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
     expect(store.status).toBe('playing')
 
     await press(wrapper, 'prompt-secondary')
@@ -996,7 +1059,6 @@ describe('GameView — fin de partie', () => {
     expect(wrapper.find('[data-testid="prompt-ball"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="prompt-primary"]').text()).toBe('RECOMMENCER')
     expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('ANNULER')
-    expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
     expect(store.status).toBe('playing')
     expect(scoreOf(wrapper, 0)).toBe('4')
     expect(scoreOf(wrapper, 1)).toBe('4')
@@ -1208,7 +1270,6 @@ describe('GameView — reprise après fermeture', () => {
     expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('PARTIE EN COURS')
     expect(wrapper.find('[data-testid="prompt-primary"]').text()).toBe('REPRENDRE LA PARTIE')
     expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('ANNULER')
-    expect(wrapper.find('[data-testid="prompt-close"]').exists()).toBe(false)
   })
 
   // AC3 : le scoreboard revient exactement où il en était.
@@ -1303,7 +1364,7 @@ describe('GameView — reprise après fermeture', () => {
     await press(wrapper, 'prompt-primary')
 
     expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe(
-      'MICHEL A ATTEINT SA DISTANCE',
+      'MICHEL A FINI',
     )
   })
 
@@ -1636,7 +1697,7 @@ describe('GameView — +1 POINT (3 Bandes)', () => {
     await press(wrapper, 'plus-one-button')
     await press(wrapper, 'plus-one-button')
 
-    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('MICHEL A ATTEINT SA DISTANCE')
+    expect(wrapper.find('[data-testid="prompt-title"]').text()).toBe('MICHEL A FINI')
   })
 
   // Revue de code (2026-09-11) : à distance déjà atteinte (correction `+`), le tap est

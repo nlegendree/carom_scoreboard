@@ -59,7 +59,6 @@ describe('PromptModal', () => {
     const wrapper = mountPrompt({ secondaryLabel: 'ANNULER' })
 
     expect(find(wrapper, 'prompt-secondary').exists()).toBe(true)
-    expect(find(wrapper, 'prompt-close').exists()).toBe(false)
     expect(find(mountPrompt(), 'prompt-secondary').exists()).toBe(false)
     expect(find(mountPrompt(), 'prompt-message').exists()).toBe(false)
     expect(source).not.toContain('✕')
@@ -236,20 +235,26 @@ describe('PromptModal', () => {
     ])
   })
 
-  // `dismissible` ouvre le tap dehors aux pop-ups à deux CTA qui s'annulent sans
-  // conséquence. Opt-in : une FIN DE PARTIE garde son voile inerte (AC18, Décision 12).
-  it('closes a dismissible two-CTA prompt on a complete tap outside', async () => {
-    const wrapper = mountPrompt({ secondaryLabel: 'ANNULER', dismissible: true })
-    const veil = find(wrapper, 'prompt-modal')
+  // Règle de Nathan (2026-09-15) : toute pop-up à CTA `ANNULER` ou `FERMER` se referme au
+  // tap dehors, qui vaut ce CTA. Dérivée du libellé, portée par le composant : aucun écran
+  // n'a de prop à poser.
+  it.each(['ANNULER', 'FERMER'])(
+    'closes a two-CTA prompt carrying %s on a complete tap outside',
+    async (secondaryLabel) => {
+      const wrapper = mountPrompt({ secondaryLabel })
+      const veil = find(wrapper, 'prompt-modal')
 
-    await veil.trigger('pointerdown', { pointerId: 4 })
-    await veil.trigger('pointerup', { pointerId: 4 })
+      await veil.trigger('pointerdown', { pointerId: 4 })
+      await veil.trigger('pointerup', { pointerId: 4 })
 
-    expect(wrapper.emitted('secondary')).toHaveLength(1)
-  })
+      expect(wrapper.emitted('secondary')).toHaveLength(1)
+    },
+  )
 
-  it('keeps the veil inert on a decision prompt that is not dismissible', async () => {
-    const wrapper = mountPrompt({ secondaryLabel: 'ANNULER' })
+  // Une décision SANS retour garde son voile inerte (AC18, Décision 12) : l'offre
+  // d'égalisatrice (`FIN DE PARTIE` n'est pas un « annuler ») et « PARTIE TERMINÉE ».
+  it('keeps the veil inert on a prompt whose secondary is not a way back', async () => {
+    const wrapper = mountPrompt({ secondaryLabel: 'FIN DE PARTIE' })
     const veil = find(wrapper, 'prompt-modal')
 
     await veil.trigger('pointerdown', { pointerId: 5 })
@@ -258,9 +263,20 @@ describe('PromptModal', () => {
     expect(wrapper.emitted('secondary')).toBeUndefined()
   })
 
-  // Un choix est annulable : taper à côté revient à `ANNULER` (revue de rendu de Nathan,
-  // 2026-09-12). Un tap est un geste COMPLET — appui ET relâchement sur le voile — sinon
-  // le `pointerup` du geste qui vient d'ouvrir la pop-up la referme aussitôt.
+  it('keeps the veil inert on a prompt without any secondary', async () => {
+    const wrapper = mountPrompt({ primaryLabel: 'VOIR LE RÉCAP' })
+    const veil = find(wrapper, 'prompt-modal')
+
+    await veil.trigger('pointerdown', { pointerId: 6 })
+    await veil.trigger('pointerup', { pointerId: 6 })
+
+    expect(wrapper.emitted('secondary')).toBeUndefined()
+  })
+
+  // Le choix du CADRE est annulable : taper à côté revient à `ANNULER` (revue de rendu de
+  // Nathan, 2026-09-12) — par la même règle que les autres, son secondaire est `ANNULER`.
+  // Un tap est un geste COMPLET — appui ET relâchement sur le voile — sinon le `pointerup`
+  // du geste qui vient d'ouvrir la pop-up la referme aussitôt.
   it('closes the list variant on a complete tap outside', async () => {
     const wrapper = mountPrompt({ title: 'CADRE', actions: CADRES, secondaryLabel: 'ANNULER' })
     const backdrop = find(wrapper, 'prompt-modal')
@@ -269,6 +285,16 @@ describe('PromptModal', () => {
     await backdrop.trigger('pointerup', { pointerId: 1 })
 
     expect(wrapper.emitted('secondary')).toHaveLength(1)
+  })
+
+  it('keeps the veil inert on a list variant without ANNULER', async () => {
+    const wrapper = mountPrompt({ title: 'CADRE', actions: CADRES })
+    const backdrop = find(wrapper, 'prompt-modal')
+
+    await backdrop.trigger('pointerdown', { pointerId: 1 })
+    await backdrop.trigger('pointerup', { pointerId: 1 })
+
+    expect(wrapper.emitted('secondary')).toBeUndefined()
   })
 
   it('ignores a release on the backdrop that did not start there', async () => {

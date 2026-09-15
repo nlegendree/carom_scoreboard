@@ -13,7 +13,7 @@ import PromptModal from '../components/PromptModal.vue'
 import GameSummary from '../components/GameSummary.vue'
 import SideBar from '../components/SideBar.vue'
 import type { PlayerId, TableSide } from '../types/game'
-import type { SideBarItem } from '../types/ui'
+import type { PromptAction, SideBarItem } from '../types/ui'
 
 const gameStore = useGameStore()
 const {
@@ -223,6 +223,30 @@ function acceptEqualizingReprise(): void {
   lockPanels()
 }
 
+// Fin atteinte par une correction `+` (revue de fin d'Epic 10, décision de Nathan) : la
+// pop-up est `revertible` et offre `ANNULER`, qui défait le `+` et rend le scoreboard sous
+// le doigt — même grâce anti-tap fantôme que les autres fermetures. L'offre d'égalisatrice
+// a alors TROIS issues : les deux choix passent en rang (variante liste, même accent), et
+// `ANNULER` prend la place du secondaire — et comme sur toute pop-up à `ANNULER`, le tap
+// dehors le vaut (règle de `PromptModal`). Sans risque pour la pop-up qui monte au
+// `pointerdown` du `+` : la fermeture exige un geste complet, le `pointerup` de ce geste
+// retombe sur le voile sans y avoir appuyé. Titre « A FINI » (Nathan, 2026-09-15), plus
+// court que « a atteint sa distance » pour un nom qui peut être long.
+const equalizingActions = computed<PromptAction[]>(() => [
+  { id: 'play', label: `${player2.value.name} JOUE` },
+  { id: 'finish', label: 'FIN DE PARTIE' },
+])
+
+function chooseEqualizingAction(id: string): void {
+  if (id === 'play') acceptEqualizingReprise()
+  else gameStore.finishGame()
+}
+
+function revertEnd(): void {
+  gameStore.revertEndPrompt()
+  lockPanels()
+}
+
 // `ANNULER` : le CTA est au-dessus des panneaux — même grâce anti-tap fantôme.
 function closeExitPrompt(): void {
   exitPromptOpen.value = false
@@ -385,8 +409,17 @@ const SUMMARY_SIDEBAR_EXIT: SideBarItem = {
            de `VALIDER`, sous le doigt. Leur voile est inerte (AC18) — le `pointerup` qui
            retombe dessus est sans effet. Aucun handler sur ce voile. -->
       <PromptModal
-        v-if="endPrompt?.kind === 'equalizing-offer'"
-        :title="`${player1.name} A ATTEINT SA DISTANCE`"
+        v-if="endPrompt?.kind === 'equalizing-offer' && endPrompt.revertible"
+        :title="`${player1.name} A FINI`"
+        ball="white"
+        :actions="equalizingActions"
+        secondaryLabel="ANNULER"
+        @select="chooseEqualizingAction"
+        @secondary="revertEnd"
+      />
+      <PromptModal
+        v-else-if="endPrompt?.kind === 'equalizing-offer'"
+        :title="`${player1.name} A FINI`"
         ball="white"
         :primaryLabel="`${player2.name} JOUE`"
         secondaryLabel="FIN DE PARTIE"
@@ -397,7 +430,9 @@ const SUMMARY_SIDEBAR_EXIT: SideBarItem = {
         v-else-if="endPrompt?.kind === 'over'"
         title="PARTIE TERMINÉE"
         primaryLabel="VOIR LE RÉCAP"
+        :secondaryLabel="endPrompt.revertible ? 'ANNULER' : undefined"
         @primary="gameStore.finishGame()"
+        @secondary="revertEnd"
       />
       <!-- Pas de croix (revue de Nathan, 2026-09-10 : les croix ne sont pas intuitives pour
            les joueurs, un gros CTA l'est) : `ANNULER` est le retour, comme sur toutes les

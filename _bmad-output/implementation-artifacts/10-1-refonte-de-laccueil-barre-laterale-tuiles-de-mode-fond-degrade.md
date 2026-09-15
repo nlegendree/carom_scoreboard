@@ -1,6 +1,6 @@
 # Story 10.1: Refonte de l'accueil — barre latérale, tuiles de mode, fond dégradé
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 

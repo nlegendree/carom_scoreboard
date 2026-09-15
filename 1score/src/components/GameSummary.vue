@@ -62,9 +62,10 @@ const BALL_PICTOS: Record<PlayerId, string> = {
 // Billiboard ; l'or `victory-gold` reste le repli si le rendu ne convainc pas, UX-DR5).
 // L'autre reste neutre sur fond sombre. Égalité : les deux en neutre. Le signal ne
 // repose pas sur la seule teinte — le mot `VICTOIRE` est là (UX-DR22).
-// ⚠️ `--color-victory-ribbon` (#E63946) et `--color-brand-red` (#D0343F, en-tête de la
-// barre latérale) sont deux tokens VOISINS mais distincts : depuis la 10.5 ils se
-// côtoient à l'écran. Ne pas les fusionner sans arbitrage de Nathan.
+// ⚠️ `--color-victory-ribbon` et `--color-brand-red` (en-tête de la barre latérale) valent
+// la MÊME couleur (#D0343F) depuis la passe contraste de la 10.7, et restent deux tokens
+// distincts par décision de Nathan : deux rôles qui peuvent rediverger, un design system
+// des couleurs à venir tranchera. Ne pas les fusionner sans lui.
 const VICTORY_COLUMN_CLASSES = 'bg-victory-ribbon text-on-victory-ribbon'
 const NEUTRAL_COLUMN_CLASSES = 'bg-white/6 text-white'
 

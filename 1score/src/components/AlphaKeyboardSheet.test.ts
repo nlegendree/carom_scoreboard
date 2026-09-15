@@ -1,7 +1,15 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import source from './AlphaKeyboardSheet.vue?raw'
 import { mount } from '@vue/test-utils'
 import AlphaKeyboardSheet from './AlphaKeyboardSheet.vue'
+
+// `navigator.vibrate` est absent de happy-dom : on le pose pour observer les retours.
+const vibrate = vi.fn()
+
+beforeEach(() => {
+  vibrate.mockClear()
+  Object.defineProperty(navigator, 'vibrate', { value: vibrate, configurable: true })
+})
 
 function press(wrapper: ReturnType<typeof mount>, testid: string) {
   return wrapper.find(`[data-testid="${testid}"]`).trigger('pointerdown')
@@ -12,6 +20,39 @@ function sheet(props: { value: string; align?: 'left' | 'right' }) {
 }
 
 describe('AlphaKeyboardSheet', () => {
+  // UX-DR54, CLAUDE.md §10 : l'hôte porte les retours — haptique à chaque frappe acceptée,
+  // haptique distincte et pulsation au plafond. Manquaient à la livraison de la 10.3 (revue
+  // de fin d'Epic 10) : un clavier qui refuse sans rien dire paraît en panne.
+  it('answers an accepted key with a tap haptic', async () => {
+    const wrapper = sheet({ value: 'JEA' })
+
+    await press(wrapper, 'key-N')
+
+    expect(vibrate).toHaveBeenCalledWith(40)
+    expect(wrapper.find('[data-testid="sheet-reject"]').attributes('data-reject')).toBe('0')
+  })
+
+  it('answers a key refused at the cap with a reject haptic and a pulse', async () => {
+    const wrapper = sheet({ value: 'A'.repeat(20) })
+
+    await press(wrapper, 'key-B')
+
+    expect(wrapper.emitted('update')).toBeUndefined()
+    expect(vibrate).toHaveBeenCalledWith(15)
+    expect(wrapper.find('[data-testid="sheet-reject"]').attributes('data-reject')).toBe('1')
+  })
+
+  // Le plafond se mesure sur ce que la frappe DONNERAIT : « 19 lettres + espace » puis une
+  // lettre ferait 21 caractères utiles — refusé. L'espace de fin, lui, passe toujours.
+  it('never lets a letter after a trailing space exceed the cap', async () => {
+    const wrapper = sheet({ value: `${'A'.repeat(19)} `})
+
+    await press(wrapper, 'key-B')
+
+    expect(wrapper.emitted('update')).toBeUndefined()
+    expect(vibrate).toHaveBeenCalledWith(15)
+  })
+
   it('emits the complete new value on every key pressed', async () => {
     const wrapper = sheet({ value: 'JEA' })
 
