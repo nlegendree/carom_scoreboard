@@ -95,7 +95,7 @@ development_status:
 
   epic-11: in-progress # ajoutée le 2026-09-15 — « Passe design system : unité et réutilisation » (V1.2), intercalée AVANT l'Epic 4 (rétro Epic 10 décisions 5-6, integration-bmad-impeccable.md §13) ; spec = DESIGN.md, ligne de base = design-system-audit-2026-09-15.md (14/20) + .impeccable/baseline/
   11-0-sources-uniques-claude-md-et-spec-ux-en-renvois-vers-design-md: done # livrée le 2026-09-15 en session, sans fiche : CLAUDE.md §7/§10 réduits aux contrats de code + renvoi DESIGN.md ; spec UX : sections normatives en intentions, notes de rendu datées conservées sous bandeau « historique »
-  11-1-echelle-typographique-et-interlettrage-pour-1920x1080: backlog
+  11-1-echelle-typographique-et-interlettrage-pour-1920x1080: ready-for-dev # fiche créée le 2026-09-15 (bmad-create-story) — aucune référence visuelle, 1920×1080 jamais format de conception (combinaison inédite annoncée) ; échelle proposée : plancher = rendu validé à 1180, plafond atteint à 1920 ; AC4 contraste par la taille (réglages → label, DÉMARRER plancher 20 px) ; rendu statique validé par Nathan AVANT tests
   11-2-palette-rayons-et-tokens-arbitres: backlog
   11-3-bibliotheque-de-base-cta-pop-up-composable-et-constantes-partagees: backlog
   11-4-garde-fou-outille-scans-contraste-et-ecarts-documentes: backlog
