@@ -124,23 +124,16 @@ src/components/
 ├── PlayerPanel.test.ts   ← co-localisé, pas de dossier __tests__/
 ```
 
-### 7. Échelle d'espacement Tailwind — `--spacing` vaut 8px
+### 7. Tokens visuels — `DESIGN.md` est la source, `main.css` applique
 
-`main.css` fixe `--spacing: 8px`, alors que le défaut de Tailwind v4 est `0.25rem` (4px). **Tout utilitaire numérique vaut donc le double de sa lecture naïve** :
+**Toute valeur visuelle (couleur, échelle typographique, interlettrage, espacement, rayon, ombre, taille de cible) vit dans `DESIGN.md`** (racine du dépôt, frontmatter normatif + sections) et dans son miroir `.impeccable/design.json`. `main.css` les **applique** dans ses blocs `@theme` / `@theme static` ; ce fichier n'en redit aucune. Décision de Nathan du 2026-09-15 (`integration-bmad-impeccable.md` §2, §13).
 
-| Classe écrite | Valeur réelle | Valeur si l'on suppose le défaut Tailwind |
-|---|---|---|
-| `p-4` | 32px | ~16px |
-| `p-6` | 48px | ~24px |
-| `gap-4` | 32px | ~16px |
-| `px-10` | 80px | ~40px |
-| `h-16 w-16` | 128×128px | ~64×64px |
+Règles de code qui en découlent :
 
-Dimensionner en gardant cette table en tête : une valeur choisie « à la Tailwind » produira un élément deux fois trop grand. C'est une convention assumée du projet (grille de 8px), pas un bug — ne pas « corriger » `--spacing` sans arbitrage produit.
-
-Les tokens typographiques suivent une échelle distincte, en `clamp()` fluide : `text-score` (score joueur), `text-reprise` (numéro de reprise, dimensionné pour la colonne centrale `w-1/5`), `text-label`, `text-stat`, et depuis l'Epic 10 `text-hero` (accroche d'accueil), `text-tile-title` (titre de tuile de mode), `text-picto` (libellé sous picto). Ne pas utiliser `text-score` hors d'un panneau joueur : son plancher de 120px déborde de la console centrale dès deux chiffres.
-
-Les tokens de l'Epic 10 (`--color-surface`, `--color-border`/`--color-border-strong`, `--radius-container`/`--radius-cta`, `--color-sidebar`, `--color-brand-red`, `--color-cloth`, `--gradient-tile-*`, `--gradient-bg`) vivent dans le bloc `@theme static` de `main.css` : `static` force leur émission même quand aucun utilitaire ne les emploie encore. Direction visuelle (passe de rendu 10.1) : **angles vifs** (rayons à 0), palette **bleus / noir-gris / rouge**, fonds en dégradé posés par `bg-(image:--gradient-…)`, **coupes en biais** pour casser la symétrie (ex. bandeau rouge de l'en-tête de `SideBar`, `clip-path` en valeur arbitraire). `--color-brand-red` est le rouge de marque : ne pas le confondre avec `--color-alert` (chrono) ni `--color-turn-active` (liseré de tour).
+- **Une valeur qui manque s'ajoute d'abord dans `DESIGN.md`, puis dans `main.css`, jamais dans un gabarit.** Aucune taille de texte, rayon, ombre ou interlettrage en valeur arbitraire `[...]` dans un `.vue` : si le token n'existe pas, c'est le design system qui a un trou, pas le composant.
+- **Piège `--spacing`** : `main.css` fixe l'unité Tailwind à **8 px**, le double du défaut. Tout utilitaire numérique (`p-4`, `gap-2`, `h-16`…) vaut donc le double de sa lecture « Tailwind par défaut ». Convention assumée (grille de 8), à ne pas « corriger » sans arbitrage produit. La table de correspondance est dans `DESIGN.md` › Layout › Rythme.
+- **`@theme static`** force l'émission des variables que Tailwind élaguerait faute d'utilitaire consommateur (lues par `bg-(image:--gradient-…)` ou par `var()`). Tout nouveau token d'image ou de calcul y va.
+- Les clés `--text-*` sont le namespace qui génère `text-<nom>` (`--font-size-*` ne génère rien).
 
 ### 8. Breakpoints Tailwind mobile-first (AR19)
 
@@ -159,17 +152,19 @@ Pour toute session de développement assistée par IA (dev-story ou autre) :
 - **Pendant l'implémentation** : valider chaque élément de code (composant, store, composable) uniquement via les tests unitaires/`vue-tsc` au fur et à mesure — cycle red-green décrit dans la règle 6. **Ne pas** ouvrir de navigateur ni driver Chrome après chaque composant : ça consomme des tokens pour un gain marginal, les tests unitaires suffisent à valider la correction unitaire.
 - **En fin de story** : une fois toutes les tâches complètes et la suite de tests/`vue-tsc`/`build` au vert, faire **une seule** passe de validation visuelle/intégration dans un vrai navigateur (extension Claude for Chrome) pour parcourir les critères d'acceptation de bout en bout, avant de passer la story en statut "review". Cette passe se fait **en paysage uniquement** — l'app n'est jamais utilisée en portrait (décision de Nathan, 2026-09-11) — et couvre au moins l'**iPad mini 1133×744** et l'**iPad 11″ 1194×834**, plus l'**écran 21,5″ 1920×1080** visé à terme, car happy-dom ne compile ni ne calcule le CSS Tailwind : aucun débordement de layout n'est détectable par les tests unitaires. Le téléphone et le portrait sont hors périmètre produit : ne pas écrire de variantes `portrait:`.
 
-### 10. Composants et conventions de l'Epic 10 (refonte UI/UX « 1Score »)
+### 10. Composants réutilisables — inventaire et contrat dans `DESIGN.md`
 
-Cinq écrans partagent une même coquille : fond `bg-(image:--gradient-bg)`, `SideBar` à gauche, `<main>` à droite.
+**L'inventaire des composants, leurs variantes, états et tokens consommés sont dans `DESIGN.md` › Components** (CTA, touches, cartes, barre latérale, pop-ups, chrono). Ne pas les redécrire ici ; ne pas créer un cinquième gabarit de CTA ou un nouveau token sans passer par `DESIGN.md` d'abord (critère de la passe design system : un écran de plus n'ajoute ni composant de base ni token).
+
+Restent ici les **contrats de code** qui ne se voient pas à l'écran :
 
 - **`SideBar` est CONTEXTUELLE et nourrie par l'écran.** Elle reçoit `items: SideBarItem[]` et `exitItem?: SideBarItem` ; elle ne code **aucun** contenu en propre. Chaque écran déclare ses propres constantes (`HOME_SIDEBAR_ITEMS`, `SUMMARY_SIDEBAR_ITEMS`/`SUMMARY_SIDEBAR_EXIT`…) et les lui passe. Ajouter un item **dans** `SideBar` est une faute : la barre ne sait pas sur quel écran elle est. Un `SideBarItem` porte `id`, `picto`, `label`, `state` et un `action?` optionnel ; l'`exitItem` est calé en bas, isolé du reste.
-- **`ModeTile`** — tuile de mode de l'accueil et de la sélection JDS : `title`, `tagline?`, `color` (famille `--gradient-tile-*`), `soon`. L'état `BIENTÔT` atténue le fond à `opacity-45` **et** affiche un badge : l'information ne dépend jamais de la couleur seule (UX-DR30). Cette atténuation ne se « corrige » pas au contraste — WCAG §1.4.3 exempte les commandes inactives.
-- **`IconAction`** — bouton picto + libellé de la barre basse du scoreboard : `picto`, `label`, `state?`, `disabled?`, émet `press`.
-- **`PictoIcon`** — SVG **inline**, jamais de fichier ni de police d'icônes : une table `name` → tracés (Lucide, licence ISC), `viewBox` 24, trait 2 px, sans remplissage, `aria-hidden`. Ajouter un picto = ajouter une entrée dans `PATHS` et son nom au type `PictoName`.
+- **L'état inactif ne repose jamais sur la couleur seule** (`ModeTile` et items `BIENTÔT` : atténuation **et** badge, UX-DR30). Cette atténuation ne se « corrige » pas au contraste — WCAG §1.4.3 exempte les commandes inactives ; elle ne dispense pas de la taille minimale du badge.
+- **`PictoIcon`** — SVG **inline**, jamais de fichier ni de police d'icônes : une table `name` → tracés (Lucide, licence ISC), `aria-hidden`. Ajouter un picto = ajouter une entrée dans `PATHS` et son nom au type `PictoName`.
 - **Les trois hôtes de saisie portent les règles, les pavés restent muets** (UX-DR54). `NumericPadDock`, `AlphaKeyboardSheet` et `ScoreEntryDock` tiennent le plafond, le timer d'auto-validation, l'haptique et les animations de retour ; `NumericPad` et `AlphaKeyboard` n'émettent que la frappe. **Le buffer de saisie vit dans l'ÉCRAN**, pas dans l'hôte : l'hôte émet la valeur COMPLÈTE, jamais le seul caractère frappé — deux buffers divergeraient à la première frappe.
-- **Les quatre pop-ups ont un seul patron** : racine `fixed inset-0 z-50 … bg-black/25` portant `role="dialog"`, `aria-modal="true"` et son nom accessible (`aria-labelledby` vers le titre visible pour `PromptModal`, `aria-label` statique pour les trois autres, qui n'ont pas de titre), puis une carte en `@pointerdown.stop`. L'`id` de titre vient de `useId()`, jamais d'une chaîne littérale. **Règle du voile (Nathan, 2026-09-15) : toute pop-up qui porte un CTA `ANNULER` ou `FERMER` se referme au tap dehors, et ce tap vaut ce CTA.** `PromptModal` la porte lui-même, dérivée du libellé du secondaire (`CANCEL_LABELS`) — aucune prop à poser par l'écran ; les trois hôtes de saisie ferment de même sur leur `ANNULER`. Une pop-up sans retour (« PARTIE TERMINÉE » par série, offre d'égalisatrice à `FIN DE PARTIE`) garde un voile inerte. La fermeture exige un geste **complet** (appui et relâchement du même pointeur sur le voile), ce qui protège les pop-ups qui montent sous le doigt au `pointerdown` de `VALIDER` ou de `+`. **Rien d'autre en ARIA** : pas de piège à focus, pas de `tabindex`, pas d'écoute de `Escape` — l'app tourne sur une tablette de club sans clavier (arbitrage « borne fixe »).
-- **Tokens de conteneur** : `--size-touch-target` (90 px, le plancher de toute zone tactile hors claviers), `--game-popup-inset-left`/`-right` (les pop-ups de paramétrage se logent dans la zone libre, du côté OPPOSÉ à la carte visée), `--game-clock-bleed` (24 px — le débordement du chrono hors de la colonne centrale, **même token** que la largeur qui le clippe : trois usages dans trois fichiers doivent rester cohérents). Les cartes joueur sont des conteneurs `@container` : leurs variantes s'écrivent en `@min-[420px]:`, jamais en breakpoints d'écran.
+- **Les quatre pop-ups ont un seul patron** : racine `fixed inset-0 z-50` portant le voile, `role="dialog"`, `aria-modal="true"` et son nom accessible (`aria-labelledby` vers le titre visible pour `PromptModal`, `aria-label` statique pour les trois autres, qui n'ont pas de titre), puis une carte en `@pointerdown.stop`. L'`id` de titre vient de `useId()`, jamais d'une chaîne littérale. **Règle du voile (Nathan, 2026-09-15) : toute pop-up qui porte un CTA `ANNULER` ou `FERMER` se referme au tap dehors, et ce tap vaut ce CTA.** `PromptModal` la porte lui-même, dérivée du libellé du secondaire (`CANCEL_LABELS`) — aucune prop à poser par l'écran ; les trois hôtes de saisie ferment de même sur leur `ANNULER`. Une pop-up sans retour (« PARTIE TERMINÉE » par série, offre d'égalisatrice à `FIN DE PARTIE`) garde un voile inerte. La fermeture exige un geste **complet** (appui et relâchement du même pointeur sur le voile), ce qui protège les pop-ups qui montent sous le doigt au `pointerdown` de `VALIDER` ou de `+`. **Rien d'autre en ARIA** : pas de piège à focus, pas de `tabindex`, pas d'écoute de `Escape` — l'app tourne sur une tablette de club sans clavier (arbitrage « borne fixe »).
+- **Géométrie couplée** : `--game-clock-bleed` est lu par `ShotClock`, `CenterPanel` et `PlayerPanel` (le débordement du chrono, la largeur qui le clippe et la gouttière de la carte doivent coïncider au pixel) — trois usages dans trois fichiers qui restent cohérents tant qu'ils lisent le **même** token. Les `--*-popup-inset-*` recopient la mise en page d'un écran : ce ne sont pas des tokens, la passe design system (Story 11.3) les rapatrie dans l'hôte.
+- **Les cartes joueur sont des conteneurs `@container`** : leurs variantes s'écrivent en `@min-[…]:`, jamais en breakpoints d'écran.
 
 ### 11. Animations et `prefers-reduced-motion`
 

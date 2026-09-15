@@ -294,3 +294,17 @@ Honnêtement, et c'est important pour ne pas se tromper d'attente :
 
 Note d'`init` : `PRODUCT.md` écrit à la racine ; `.impeccable/live/config.json` posé (mode live inerte tant qu'il n'est pas lancé, aucun script `impeccable:manual-edit-validate` défini).
 
+
+---
+
+## 14. Exécution du §11 (2026-09-15, session de reprise)
+
+| Étape du §11 | État |
+|---|---|
+| 1. Pousser `main` | fait (`a03488e`, contexte Impeccable commité et poussé) |
+| 2. Contrôle WebKit | **hors passe**, à part (décision §13.4) |
+| 3-4. `install`, `init`, `document` | faits (`PRODUCT.md`, `DESIGN.md`, `.impeccable/design.json`) |
+| 5. Scan de référence | fait : `.impeccable/baseline/` (statique : 0 constat ; accueil rendu à 1920×1080 et 1180×733 : 3 × `BIENTÔT` à 10 px) + audit `/impeccable audit` → `design-system-audit-2026-09-15.md`, **14/20**. Limite : l'app n'a qu'une route, seul l'accueil est rendu par le scan d'URL (Story 11.4) |
+| 6. Section 2 appliquée | fait : `CLAUDE.md` §7/§10 réduits aux contrats de code + renvoi `DESIGN.md` ; spec UX vidée de ses valeurs normatives (notes de rendu datées conservées sous bandeau historique) — tracé comme Story 11.0 |
+| 7. Stories | fait : **Epic 11** dans `epics.md` (11.0 livrée, 11.1 échelle typographique 1920×1080, 11.2 palette / rayons / tokens, 11.3 bibliothèque de base, 11.4 garde-fou outillé et ré-audit), `sprint-status.yaml` à jour |
+| 8. Critère de sortie | à vérifier sur la première story de l'Epic 4 (identification joueur, contrat d'écran par `/impeccable shape`) |

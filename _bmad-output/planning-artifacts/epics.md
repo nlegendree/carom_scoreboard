@@ -7,6 +7,10 @@ revisions:
     scope: 'Epic 10 — Refonte UI/UX Premium (1Score) : exigences AR20-AR27 et UX-DR25-UX-DR56 ajoutées, supersessions annotées, section Epic 10 et stories 10.1-10.7'
     stepsCompleted: ['step-01-validate-prerequisites', 'step-02-design-epics', 'step-03-create-stories', 'step-04-final-validation']
     completed_at: '2026-09-11'
+  - date: '2026-09-15'
+    scope: 'Epic 11 — Passe design system (unité et réutilisation), intercalée avant l''Epic 4 : stories 11.0-11.4, DESIGN.md en spec, design-system-audit-2026-09-15.md en ligne de base'
+    stepsCompleted: ['step-02-design-epics', 'step-03-create-stories']
+    completed_at: '2026-09-15'
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/architecture.md'
@@ -1939,3 +1943,161 @@ So that l'interface premium est aussi propre sous le capot qu'à l'écran (NFR10
 
 **Note de périmètre :** pas d'ARIA au-delà des rôles de dialogue, pas de navigation clavier (hors scope V1). Le `focus-visible` sans chemin clavier (dette revue 1.4) reste tel quel.
 
+
+## Epic 11: Passe design system — unité et réutilisation (V1.2)
+
+*Section ajoutée le 2026-09-15 (rétrospective Epic 10, décisions 5 et 6 ; `integration-bmad-impeccable.md` §13). S'exécute **juste après l'Epic 10, avant l'Epic 4**, dans l'ordre **11.0 → 11.1 → 11.2 → 11.3 → 11.4**. Spec : `DESIGN.md` (source unique du visuel, extrait du code livré) et `PRODUCT.md` ; ligne de base chiffrée : `design-system-audit-2026-09-15.md` (14/20) et les scans `.impeccable/baseline/`. Le jeu (règles, stores, persistance) est hors périmètre : `src/stores/` reste intact sur toute l'epic, et `useGameStore.test.ts` sans retouche en est la preuve.*
+
+> **Critère de sortie, dans les mots de Nathan (2026-09-15) :** *« la création d'un vrai design system : réutilisation de composants, identicité des composants (CTA identiques, mêmes arrondis), il faut qu'il y ait une unité, mêmes couleurs, etc. Tout ce qui fait une belle interface de jeu agréable à jouer. »* Mesure : **la première story de l'Epic 4 (identification joueur, seul écran neuf à venir) se construit sans créer un composant de base ni ajouter un token.** Son contrat d'écran passera par `/impeccable shape`.
+>
+> **Méthode, valable pour les quatre stories de code (`integration-bmad-impeccable.md` §5) :** `DESIGN.md` se modifie **avant** `main.css` ; tout changement visible passe par un **gabarit statique validé par Nathan avant câblage** (rendu figé aux trois formats 1920×1080 / 1180×733 / petit iPad) ; `npx impeccable detect` aux trois formats et passe navigateur manuelle avant `review` ; `/impeccable polish` en clôture. Chaque story cite, à sa création, la nature de sa référence visuelle (aucune, capture, photo = intention seule) et signale toute combinaison inédite.
+
+Un club qui reçoit la tablette voit une interface **une** : un seul gabarit de CTA, un seul rayon par famille d'objets, une palette arbitrée, une échelle typographique conçue pour l'écran de référence — et l'équipe ajoute un écran sans rouvrir le système.
+
+### Story 11.0: Sources uniques — `CLAUDE.md` §7/§10 en renvois, spec UX en intentions
+
+As a agent ou développeur qui ouvre le projet,
+I want que chaque valeur visuelle n'ait qu'une seule source (`DESIGN.md`), `CLAUDE.md` et la spec UX renvoyant vers elle,
+So that deux outils (BMAD, Impeccable) ne créent pas une divergence de plus (règle d'or, `integration-bmad-impeccable.md` §2).
+
+*Livrée le 2026-09-15 en session, sans fiche de story (travail de documentation). Tracée ici pour la mesure de l'epic.*
+
+**Acceptance Criteria:**
+
+**Given** `1score/CLAUDE.md`
+**When** on lit les §7 et §10
+**Then** ils ne contiennent plus aucune valeur de token ni description visuelle de composant, seulement les contrats de code (contextualité de `SideBar`, hôtes de saisie, patron des pop-ups, règle du voile, géométrie couplée) et un renvoi explicite vers `DESIGN.md`
+**And** le piège `--spacing` (grille de 8) reste décrit comme piège de code, sans table de valeurs
+
+**Given** `ux-design-specification.md`
+**When** on lit ses sections normatives (Visual Design Foundation, Responsive, §10.1, §10.2, §10.3 hors notes de rendu, §10.6, §10.7)
+**Then** elles expriment des intentions et renvoient à `DESIGN.md` pour toute valeur ; les notes de rendu datées de l'Epic 10 sont conservées sous un bandeau qui les déclare historiques et non normatives
+
+### Story 11.1: Échelle typographique et d'interlettrage conçue pour 1920×1080
+
+As a joueur debout à deux mètres de l'écran de 21,5″ du club,
+I want que scores, titres, libellés et pictos soient dimensionnés pour cet écran, et non pour la tablette sur laquelle ils ont été dessinés,
+So that l'écran de référence du produit (`PRODUCT.md`) porte une interface à sa taille, lisible sans effort (NFR10).
+
+*Justification : dette n° 1 de `DESIGN.md` ; audit P2 « échelle calée sur la tablette », P2 « onze tailles hors échelle », P2 « sept interlettrages », P1 « CTA de réglage sous AA », P1 « `DÉMARRER` sous AA », P2 « `BIENTÔT` à 10 px ». Toute l'échelle `clamp()` plafonne entre 1091 et 1200 px : à 1920×1080 l'UI a la taille en pixels de la tablette.*
+
+**Exigences :** NFR10, UX-DR30 (badge lisible), audit §4 P1 ×2 / P2 ×3, `DESIGN.md` › Typography.
+
+**Acceptance Criteria:**
+
+**Given** `DESIGN.md` › Typography et le frontmatter `typography`
+**When** la story démarre
+**Then** l'échelle cible est écrite **d'abord** dans `DESIGN.md` : un nom par rôle (score par nombre de chiffres, reprise, hero, title, label, stat, picto, touche numérique, touche alpha, valeur de champ, série en cours, `DÉMARRER`), chaque rôle avec sa plage `clamp()`, sa graisse et son interlettrage nommé (au plus trois valeurs d'interlettrage), le plafond de chaque `clamp()` étant **atteint à 1920 px de large**, pas avant 1280
+
+**Given** un gabarit statique des cinq écrans et des quatre pop-ups avec la nouvelle échelle (données en dur)
+**When** Nathan le passe en revue aux trois formats (1920×1080, 1180×733, petit iPad)
+**Then** il le valide ou le casse **avant** tout câblage ; aucune ligne de test n'est écrite avant cette validation
+
+**Given** `main.css` et les 19 gabarits `.vue`
+**When** la story est livrée
+**Then** chaque rôle de `DESIGN.md` est un token `--text-*` / `--tracking-*` de `main.css`, et **aucun gabarit** ne porte plus de `text-[...]` ni de `tracking-[...]` arbitraire (les cinq paliers du score inclus, exprimés en tokens ou en une règle unique)
+**And** le badge `BIENTÔT` (`SideBar`, `IconAction`) n'est plus sous 11 px à aucun format
+
+**Given** les CTA de réglage (`CHANGER DE BILLE`, `CHANGER DE CÔTÉ`) et `DÉMARRER`
+**When** on mesure le contraste du blanc sur le **stop clair** de leur dégradé, à la taille rendue aux trois formats
+**Then** chacun tient WCAG AA (4,5:1, ou 3:1 si le texte est ≥ 18,66 px gras à ce format) — par la taille dans cette story ; si la taille ne suffit pas, l'assombrissement du stop est tranché en 11.2 et consigné
+
+**Given** les trois formats
+**When** `npx impeccable detect` et la passe navigateur manuelle sont rejoués
+**Then** zéro constat `undersized-ui-text`, aucun débordement, aucun libellé coupé, aucune commande de jeu sous 90×90 px ; les touches alpha sont re-mesurées et leur largeur consignée (l'écart de la 10.7 se ferme en 11.3 avec les insets, pas ici)
+**And** `src/stores/` est intact (`git diff --stat` vide)
+
+### Story 11.2: Palette, rayons et tokens arbitrés — `DESIGN.md` d'abord, `main.css` ensuite
+
+As a joueur qui passe d'un écran à l'autre,
+I want les mêmes couleurs, les mêmes arrondis et les mêmes reliefs partout,
+So that l'interface se lit comme un seul objet, pas comme cinq écrans dessinés l'un après l'autre.
+
+*Justification : les arbitrages ouverts de `DESIGN.md` (deux rouges de même valeur, trois rayons sur des objets tapables, bleu accent réduit au focus, fond « pourrait être plus engageant ») ; audit P3 « tokens morts », P3 « deux rouges, trois rayons », P3 « ombres en littéraux », P3 « hauteurs en dur ». Nathan, 2026-09-15 : « j'attends de voir ce que ça peut donner » — donc une story de **propositions au rendu**, pas d'application mécanique.*
+
+**Exigences :** audit §4 P3 ×4, `DESIGN.md` › Colors / Shapes / Elevation (arbitrages ouverts).
+
+**Acceptance Criteria:**
+
+**Given** les arbitrages ouverts de `DESIGN.md`
+**When** la story démarre
+**Then** un gabarit statique présente à Nathan, côte à côte aux trois formats, **au plus deux propositions** par arbitrage : rayons (angles vifs partout / un rayon unique sur les objets tapables), rouges (un seul token / deux rôles à valeurs distinctes), fond `--gradient-bg` (actuel / une alternative plus engageante), bleu accent (retiré / requalifié) ; Nathan tranche sur le rendu, avant câblage
+
+**Given** les décisions de Nathan
+**When** elles sont prises
+**Then** `DESIGN.md` est réécrit **en premier** (frontmatter, Colors, Shapes, Elevation, Named Rules, Do's and Don'ts), puis `main.css` l'applique ; aucune valeur ne change dans `main.css` sans son entrée dans `DESIGN.md`
+
+**Given** `main.css`
+**When** la story est livrée
+**Then** aucun token déclaré n'est sans consommateur (`--color-victory-gold`, `--color-on-victory-gold`, `--gradient-field`, `--color-on-accent`, `--color-on-alert`, `--color-border-strong`, `--breakpoint-lg`, `--text-score` retirés ou requalifiés), et `main.css.test.ts` verrouille la nouvelle palette, plus l'ancienne (le cas qui interdisait la fusion des deux rouges est remplacé par la décision prise)
+**And** l'ombre de pop-up, le relief de touche et le filet de lumière sont des tokens `--shadow-*` ; la hauteur de `DÉMARRER`, celle des champs de paramétrage et celles des grilles de claviers sont des tokens de taille ou des valeurs de grille, plus des `[...]` de gabarit
+**And** `--color-shot-clock-face` est recalculé si `--color-surface` ou `--color-bg` a bougé (règle de `DESIGN.md`)
+
+**Given** les trois formats
+**When** `npx impeccable detect` et la passe navigateur manuelle sont rejoués
+**Then** aucun constat de contraste, aucun débordement ; `src/stores/` intact
+
+### Story 11.3: Bibliothèque de base — CTA et carte de pop-up communs, `useBackdropClose`, constantes partagées, insets rapatriés
+
+As a agent qui ajoute l'écran d'identification joueur (Epic 4),
+I want poser un CTA, une pop-up ou une touche en consommant un composant de base existant, sans recopier une chaîne de classes ni un mécanisme,
+So that l'écran se construit sans créer un composant de strate 3 ni ajouter un token — le critère de sortie de l'epic.
+
+*Justification : `integration-bmad-impeccable.md` §6 (quatre strates) ; audit P2 « mécanismes et constantes dupliqués », P2 « retour d'appui divergent », P2 « quatre tokens qui sont des positions », P3 « redondances de classes » ; report de la revue Epic 10 (`useBackdropClose`). Story de refactor : **aucun changement visuel attendu**, le gabarit statique est remplacé par une comparaison avant/après aux trois formats, pixel pour pixel sur les cinq écrans et les quatre pop-ups.*
+
+**Exigences :** AR20 (modèle `SideBar`), UX-DR54, audit §4 P2 ×3 / P3 ×1, `DESIGN.md` › Components.
+
+**Acceptance Criteria:**
+
+**Given** les quatre pop-ups (`PromptModal`, `ScoreEntryDock`, `NumericPadDock`, `AlphaKeyboardSheet`)
+**When** la story est livrée
+**Then** `armBackdropClose` / `disarmBackdropClose` / `closeFromBackdrop` n'existent plus qu'une fois, dans un composable `useBackdropClose()` testé seul, et les quatre pop-ups le consomment ; la règle du voile (`CLAUDE.md` §10) est inchangée au comportement
+**And** `ALIGN_CLASSES` et `BALL_PICTOS` vivent dans un seul module partagé
+
+**Given** un composant de base **CTA** (strate 3 : sans connaissance du jeu ni du store), avec ses variantes `accent` / `neutral` / `start` / `setup` / `bar` et son retour d'appui **unique** par variante
+**When** on cherche une chaîne de classes de CTA dans les gabarits
+**Then** aucune n'est recopiée : `PromptModal`, les trois hôtes de saisie, `HomeScreen` (réglages, `DÉMARRER`), `ActionBar` (CTA de barre) et `CenterPanel` (`PASSER LE TOUR`) consomment le composant ; le CTA neutre a **un seul** retour d'appui, celui que `DESIGN.md` nomme
+**And** une **carte de pop-up** commune (voile, carte, `role="dialog"`, pied de CTA) porte le patron des quatre pop-ups ; `DESIGN.md` › Components documente le contrat de chaque composant de base (props, variantes, états, tokens consommés) via `/impeccable extract`
+
+**Given** `--setup-popup-inset-*` et `--game-popup-inset-*`
+**When** la story est livrée
+**Then** les quatre variables ont disparu de `main.css` ; la pop-up de saisie se place dans la zone libre **calculée ou transmise par son hôte** (côté et largeur de la carte visée), et le rendu aux trois formats est identique au pixel à l'avant
+**And** la largeur des touches alpha est re-mesurée ; si elle reste sous le plancher UX-DR8 à un format, la décision (élargir la pop-up ou réduire les colonnes) est prise au rendu avec Nathan et consignée
+
+**Given** `main.css` et les gabarits
+**When** la story est livrée
+**Then** `touch-manipulation select-none` n'est plus répété sur les boutons (la règle globale de `main.css` suffit), `min-width: 320px` est retiré, et `CLAUDE.md` §8 est réécrit : pas de breakpoint d'écran, container queries sur les cartes
+**And** `npm test` et `npm run build` verts, `src/stores/` intact, passe navigateur aux trois formats sans écart visuel
+
+### Story 11.4: Garde-fou outillé — scans aux trois formats, contraste calculé, écarts documentés, ré-audit
+
+As a développeur qui livre une story visuelle,
+I want qu'un script mesure ce que 704 tests ne voient pas (contraste, tailles, cibles, rythme) aux trois formats, et que chaque écart assumé soit encodé avec sa raison,
+So that le design system se maintient mécaniquement, sans repasser par une table de contraste à la main (rétro Epic 10 : « 704 tests ne protègent d'aucun défaut visuel »).
+
+*Justification : `integration-bmad-impeccable.md` §7 et §8 ; audit §1 (un seul écran rendu par le scan d'URL), §6 (contraste mesuré à la main en 10.7). Dernière story de l'epic : elle rejoue l'audit et mesure l'écart avec la ligne de base.*
+
+**Exigences :** NFR9, NFR10, audit §1 et §7, `integration-bmad-impeccable.md` §7-§8.
+
+**Acceptance Criteria:**
+
+**Given** `1score/package.json`
+**When** on lance `npm run design:check`
+**Then** le détecteur Impeccable scanne l'application rendue aux trois formats (1920×1080, 1180×733, petit iPad) et `npm run design:check:file` scanne `src` ; les deux sortent en JSON dans `.impeccable/baseline/` datés
+
+**Given** l'application, qui enchaîne ses écrans par état de store
+**When** le scan d'URL tourne
+**Then** chacun des cinq écrans et des quatre pop-ups est **adressable** en développement (paramètre d'URL ou état injecté, désactivé en production) et scanné ; aucun écran ne reste hors scan
+
+**Given** un écart assumé par Nathan (police système, noirs profonds, atténuation des inactifs…)
+**When** le détecteur le signale
+**Then** il est encodé dans `.impeccable/config.json` (`ignoreRules` / `ignoreValues`) ou en commentaire en ligne, **toujours avec une raison** qui cite l'entrée de `deferred-work.md` ou la décision d'`epics.md` ; aucun ignore sans raison
+
+**Given** le contraste
+**When** une story visuelle est livrée
+**Then** il est calculé par l'outil sur la surface réelle (bandeau, box de champ, stop de dégradé), plus par une table manuelle dans la fiche de story ; `CLAUDE.md` §9 décrit la passe outillée comme étape de fin de story
+
+**Given** `design-system-audit-2026-09-15.md`
+**When** l'epic est close
+**Then** `/impeccable audit` est rejoué et son score consigné à côté de la ligne de base ; `DESIGN.md` est régénéré (`/impeccable document`) et relu ; `deferred-work.md` reçoit les reports restants
+**And** le critère de sortie est vérifié sur la fiche de la première story de l'Epic 4 : zéro composant de base créé, zéro token ajouté — sinon la brique manquante est nommée
