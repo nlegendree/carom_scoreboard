@@ -120,7 +120,7 @@ const pictoActions = computed<BarAction[]>(() => [
         <button
           :data-testid="ctaTestId"
           :data-side="ctaOwner"
-          class="flex w-full min-h-[var(--size-touch-target)] items-center justify-center bg-(image:--gradient-blue) px-4 text-label font-black tracking-label text-white rounded-cta touch-manipulation select-none active:brightness-90"
+          class="flex w-full min-h-[var(--size-touch-target)] items-center justify-center bg-(image:--gradient-blue) px-4 text-label font-black tracking-label text-white rounded-tappable touch-manipulation select-none active:brightness-90"
           @pointerdown="emit('cta')"
         >
           {{ ctaLabel }}

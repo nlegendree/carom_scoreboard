@@ -11,7 +11,8 @@ import type { TableSide } from '../types/game'
 // Revue de Nathan au rendu (2026-09-11) :
 // - Couleur : un fondu VERT (40 s) → jaune → orange → ROUGE (0 s), sur l'arc ET le chiffre,
 //   comme sur les chronos de tir traditionnels — le rouge permanent d'UX-DR4 ne reste que
-//   comme point d'arrivée (`--color-alert`, hsl(3 100% 59%)). Teinte interpolée en HSL, la
+//   comme point d'arrivée (rouge alerte de `DESIGN.md`, hsl(3 100% 59%), calculé ici sans
+//   token). Teinte interpolée en HSL, la
 //   transition CSS lisse aussi la couleur entre deux ticks.
 // - Taille : l'anneau prend la place qui RESTE dans la colonne (`flex-1 min-h-0`) et se
 //   dimensionne en unités de conteneur — `min(100cqw, 100cqh)` — au lieu d'un `w-full`
@@ -71,7 +72,9 @@ const dashoffset = computed(() => CIRCUMFERENCE * (1 - ratio.value))
 
 // Vert → rouge par le jaune et l'orange : la teinte descend linéairement de 130° à 3°
 // (le rouge d'alerte du projet). Saturation et luminosité glissent vers celles de
-// `--color-alert` pour que l'arrivée soit exactement la couleur d'UX-DR4.
+// rouge alerte de `DESIGN.md` (#FF3B30, hsl 3 100 % 59 %) pour que l'arrivée soit exactement la
+// couleur d'UX-DR4. Calculé ici, sans token `--color-*` : exception connue au miroir
+// couleurs ↔ tokens (Story 11.2).
 const color = computed(() => {
   const hue = Math.round(3 + 127 * ratio.value)
   const saturation = Math.round(100 - 30 * ratio.value)
@@ -95,7 +98,7 @@ const color = computed(() => {
     <div class="flex min-h-0 w-full items-center justify-center">
       <div
         data-testid="shot-clock-ring"
-        class="relative flex items-center justify-center rounded-full bg-shot-clock-face [container-type:size]"
+        class="relative flex items-center justify-center rounded-full bg-bg [container-type:size]"
         :class="DISC_SIZE_CLASSES"
         role="timer"
         aria-live="off"

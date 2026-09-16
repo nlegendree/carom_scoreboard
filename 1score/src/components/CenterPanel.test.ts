@@ -89,17 +89,20 @@ describe('CenterPanel', () => {
     expect(wrapper.find('[data-testid="pass-turn-button"]').exists()).toBe(false)
   })
 
-  // AC5 : conteneur sur `--color-surface` — la colonne ne doit pas se lire comme un trou
-  // noir entre deux cartes pleines.
+  // AC5 demandait un conteneur sur `--color-surface` ; la Story 11.2 (Nathan, au rendu) fait
+  // de la colonne la BASE NUE, `--color-bg` par héritage : un creux entre les deux cartes,
+  // dans lequel le disque du chrono se fond sans aucun recalcul (il lit la même couleur).
   // ⚠️ SANS contour, contrairement à la lettre de l'AC (3e passe de rendu, Nathan) : le
   // filet clair s'interrompait derrière le disque du chrono qui déborde, et le raccord du
   // liseré de tour y laissait voir un trait gris. Ne pas le remettre sans revoir ce raccord.
-  it('is a borderless container on the epic surface', () => {
+  it('is a bare, borderless column on the page ground', () => {
     const classes = mount(CenterPanel, { props: baseProps }).classes()
 
-    expect(classes).toContain('bg-surface')
+    expect(classes).not.toContain('bg-surface')
     expect(classes).not.toContain('border-border')
     expect(classes).not.toContain('border')
+    // Aucun fond du tout, pas seulement « pas le voile » : la colonne EST la base.
+    expect(classes.filter((c) => c.startsWith('bg-'))).toEqual([])
   })
 
   // AC16 : l'anneau du chrono déborde sur les cartes voisines — la colonne doit donc

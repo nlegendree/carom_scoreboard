@@ -810,7 +810,9 @@ describe('GameView — fin de partie', () => {
 
     expect(summaryCell(wrapper, 'player1', 'summary-result')).toBe('ÉGALITÉ')
     expect(summaryCell(wrapper, 'player2', 'summary-result')).toBe('ÉGALITÉ')
-    expect(wrapper.findAll('.bg-victory-ribbon')).toHaveLength(0)
+    // Restreint au récap : depuis la Story 11.2 le ruban de victoire et le bandeau de la barre
+    // latérale partagent LE rouge profond (`bg-brand-red`), et la barre est dans la vue.
+    expect(wrapper.find('[data-testid="game-summary"]').findAll('.bg-brand-red')).toHaveLength(0)
   })
 
   // AC6 : le jaune atteint le premier → fin immédiate, sans offre ni croix, et le récap
@@ -859,7 +861,7 @@ describe('GameView — fin de partie', () => {
     // non plus par la colonne : les blocs sont séparés d'une marge qui laisse voir le fond.
     expect(
       wrapper.find('[data-testid="summary-column"][data-side="player1"] [data-testid="summary-points"]').classes(),
-    ).toContain('bg-victory-ribbon')
+    ).toContain('bg-brand-red')
   })
 
   // AC8, UX-DR15 : l'auto-validation à 3 s aboutit au même état que le bouton.

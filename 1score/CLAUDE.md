@@ -132,7 +132,7 @@ Règles de code qui en découlent :
 
 - **Une valeur qui manque s'ajoute d'abord dans `DESIGN.md`, puis dans `main.css`, jamais dans un gabarit.** Aucune taille de texte, rayon, ombre ou interlettrage en valeur arbitraire `[...]` dans un `.vue` : si le token n'existe pas, c'est le design system qui a un trou, pas le composant.
 - **Piège `--spacing`** : `main.css` fixe l'unité Tailwind à **8 px sur tablette, fluide jusqu'à 13 px à 1920** (`clamp(8px, 0.678vw, 13px)`, Story 11.1), soit le double du défaut au plancher. Tout utilitaire numérique (`p-4`, `gap-2`, `h-16`…) vaut donc le double de sa lecture « Tailwind par défaut », et grandit avec l'écran. Convention assumée (grille de 8, fluide), à ne pas « corriger » sans arbitrage produit. Les tailles de boîte nommées (`--size-touch-target`, `--size-sidebar`, `--size-popup-*`, `--size-key-*`, `--size-pad-min`…) en dérivent dans `main.css` et se lisent par `min-h-(--size-…)` / `w-(--size-…)` : aucun multiple de grille recopié ni `calc()` de taille dans un gabarit. La table de correspondance est dans `DESIGN.md` › Layout › Rythme.
-- **Ne pas nommer un rôle `--text-*` comme un utilitaire Tailwind** (`start`, `center`, `nowrap`…) : `text-start` est `text-align: start`, Tailwind émettrait les deux règles pour la même classe (revue de la 11.1). `typography.test.ts` tient le miroir `DESIGN.md` ↔ `main.css` dans les deux sens pour `--text-*`, `--tracking-*` et `--size-*`.
+- **Ne pas nommer un rôle `--text-*` comme un utilitaire Tailwind** (`start`, `center`, `nowrap`…) : `text-start` est `text-align: start`, Tailwind émettrait les deux règles pour la même classe (revue de la 11.1). `typography.test.ts` tient le miroir `DESIGN.md` ↔ `main.css` dans les deux sens pour `--text-*`, `--tracking-*` et `--size-*` ; `tokens.test.ts` fait de même pour `--radius-*` et `--shadow-*`, vérifie que tout `--color-*` / `--gradient-*` / `--radius-*` / `--shadow-*` a un consommateur, et que les gabarits n'écrivent que des `rounded-<token>` / `shadow-<token>` (un utilitaire inconnu n'émet rien, en silence).
 - **`@theme static`** force l'émission des variables que Tailwind élaguerait faute d'utilitaire consommateur (lues par `bg-(image:--gradient-…)` ou par `var()`). Tout nouveau token d'image ou de calcul y va.
 - Les clés `--text-*` sont le namespace qui génère `text-<nom>` (`--font-size-*` ne génère rien).
 
@@ -141,7 +141,7 @@ Règles de code qui en découlent :
 Mobile-first obligatoire, 3 breakpoints :
 - Défaut (< 768px) : smartphone / portrait
 - `md:` (≥ 768px) : tablette paysage
-- `lg:` (≥ 1280px) : signage 22" / desktop
+- `lg:` (≥ 1280px) : signage 22" / desktop — **supprimé depuis la Story 11.2** (`--breakpoint-lg: initial` dans `@theme` — retirer la ligne ne suffirait pas, Tailwind v4 le fournirait à 1024 px, donc sur l'iPad — ; aucun `lg:` dans `src` ; le 1920 se sert par la grille fluide et les `clamp()`, pas par un palier). La réécriture de cette section est prévue en 11.3.
 
 Ordre des classes Tailwind : Layout → Sizing → Spacing → Typography → Colors → Effects → Responsive modifiers.
 

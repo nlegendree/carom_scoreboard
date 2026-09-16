@@ -66,7 +66,7 @@ describe('IconAction', () => {
     expect(classes).toContain('min-w-[var(--size-touch-target)]')
     expect(classes).toContain('bg-surface')
     expect(classes).toContain('border-border')
-    expect(classes).toContain('rounded-cta')
+    expect(classes).toContain('rounded-tappable')
     expect(classes).toContain('touch-manipulation')
   })
 })

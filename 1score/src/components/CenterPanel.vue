@@ -17,6 +17,9 @@ import type { TableSide } from '../types/game'
 // le tracé doit être invisible. Les deux cartes en aplat plein la délimitent déjà par
 // contraste — le contour n'apportait rien qu'un défaut. Ne pas le remettre sans revoir ce
 // raccord.
+// Et SANS VOILE depuis la Story 11.2 (Nathan, au rendu) : la colonne est la base nue,
+// `--color-bg` par héritage, un creux entre les deux cartes ; le disque du chrono lit la même
+// couleur et n'a plus de token propre.
 //
 // ⚠️ Et AUCUN commentaire HTML à la racine du gabarit : il en ferait un fragment, et la
 // racine perdrait `classes()` comme ses attributs (piège payé en 10.1 sur `ModeTile`, et
@@ -86,7 +89,7 @@ function passTurn(): void {
 
 <template>
   <div
-    class="relative flex w-1/5 min-w-0 shrink-0 flex-col items-center gap-3 overflow-visible bg-surface p-2"
+    class="relative flex w-1/5 min-w-0 shrink-0 flex-col items-center gap-3 overflow-visible p-2"
   >
     <div class="flex w-full min-w-0 flex-col items-center" :class="repriseBlockClass">
       <span data-testid="reprise-label" class="text-stat text-white/60">REP</span>
@@ -129,17 +132,19 @@ function passTurn(): void {
       />
     </div>
 
-    <!-- AC5 : CTA neutre, pleine largeur de colonne, ≥ 90 px de haut. Il n'engage rien
-         d'irréversible (`ANNULER` le défait, AC8) : ni bleu de réglage, ni rouge
-         d'engagement — le neutre opaque de l'epic.
-         ⚠️ SANS contour (1re passe de rendu, Nathan) : le filet clair de
-         `--color-border-strong` dessinait un cadre dans un cadre au milieu de la colonne.
-         Le neutre opaque se détache seul du fond de la colonne. -->
+    <!-- AC5 : CTA pleine largeur de colonne, ≥ 90 px de haut. Il n'engage rien
+         d'irréversible (`ANNULER` le défait, AC8), donc pas de rouge. BLEU depuis la
+         Story 11.2 (Nathan, au rendu) : une action de jeu, comme `+1`, pas un retour — le
+         neutre opaque de l'epic ne reste qu'à `ANNULER` et au secondaire de pop-up. Son
+         libellé `stat` se pose au milieu du dégradé (blanc 4,95:1).
+         ⚠️ SANS contour (1re passe de rendu, Nathan) : un filet clair dessinait un cadre
+         dans un cadre au milieu de la colonne. Le dégradé se détache seul du fond de la
+         colonne. Rayon tapable comme tout ce qui se tape (Story 11.2). -->
     <button
       v-if="!entryOpen"
       data-testid="pass-turn-button"
       :disabled="passTurnDisabled"
-      class="mt-auto flex min-h-[var(--size-touch-target)] w-full shrink-0 flex-col items-center justify-center gap-1 bg-(image:--gradient-neutral) px-2 text-center text-stat font-black leading-tight text-white rounded-cta touch-manipulation select-none active:brightness-90 disabled:opacity-30"
+      class="mt-auto flex min-h-[var(--size-touch-target)] w-full shrink-0 flex-col items-center justify-center gap-1 rounded-tappable bg-(image:--gradient-blue) px-2 text-center text-stat font-black leading-tight text-white touch-manipulation select-none active:brightness-90 disabled:opacity-30"
       @pointerdown="passTurn"
     >
       <PictoIcon name="pass-turn" class="size-4 shrink-0" />

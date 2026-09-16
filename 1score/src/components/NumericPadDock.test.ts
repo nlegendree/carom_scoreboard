@@ -193,8 +193,8 @@ describe('NumericPadDock', () => {
     const wrapper = pad({ value: '47' })
 
     expect(wrapper.find('[data-testid="dock-close"]').text()).toBe('ANNULER')
-    expect(wrapper.find('[data-testid="dock-close"]').classes()).toContain('rounded-key')
-    expect(wrapper.find('[data-testid="dock-confirm"]').classes()).toContain('rounded-key')
+    expect(wrapper.find('[data-testid="dock-close"]').classes()).toContain('rounded-tappable')
+    expect(wrapper.find('[data-testid="dock-confirm"]').classes()).toContain('rounded-tappable')
   })
 
   // Un tap en dehors ferme, mais sur un geste COMPLET : appui ET relâchement sur le voile.

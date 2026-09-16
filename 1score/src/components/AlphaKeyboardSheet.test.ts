@@ -180,8 +180,8 @@ describe('AlphaKeyboardSheet', () => {
     const wrapper = sheet({ value: '' })
 
     expect(wrapper.find('[data-testid="sheet-close"]').text()).toBe('ANNULER')
-    expect(wrapper.find('[data-testid="sheet-close"]').classes()).toContain('rounded-key')
-    expect(wrapper.find('[data-testid="sheet-confirm"]').classes()).toContain('rounded-key')
+    expect(wrapper.find('[data-testid="sheet-close"]').classes()).toContain('rounded-tappable')
+    expect(wrapper.find('[data-testid="sheet-confirm"]').classes()).toContain('rounded-tappable')
   })
 
   it('closes on a complete gesture outside, and ignores a partial one', async () => {

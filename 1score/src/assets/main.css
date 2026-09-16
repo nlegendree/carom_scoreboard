@@ -1,6 +1,36 @@
 @import "tailwindcss";
 
+/* Police du produit : SAIRA (Omnibus-Type, licence OFL 1.1 — `fonts/OFL-Saira.txt`), choisie au
+   rendu par Nathan (Story 11.2, 2026-09-16) parmi six candidates face à `system-ui` : géométrique
+   sportive, chiffres tabulaires, 95 % de la largeur de la police système (l'échelle 11.1 tient sans
+   retouche). Fonte VARIABLE (axe de graisse 100–900, un seul fichier par sous-ensemble), latin et
+   latin-ext pour les accents français, AUTO-HÉBERGÉE : aucune ressource réseau au runtime (FR45,
+   NFR13), précachée par le service worker (`woff2` dans les `globPatterns`). `font-display: block`
+   plutôt que `swap` : la police est toujours en cache, un rendu système transitoire serait un
+   clignotement à chaque ouverture. DESIGN.md › Typography. */
+@font-face {
+  font-family: 'Saira';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: block;
+  src: url('./fonts/Saira-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Saira';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: block;
+  src: url('./fonts/Saira-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 @theme {
+  /* Police du produit en TOKEN Tailwind (namespace `--font-*` → utilitaire `font-sans`, et le
+     preflight de Tailwind v4 la pose sur `html` via `--default-font-family`) : `:root` la lit,
+     et aucun `font-sans` ne peut rétablir la pile système sans Saira (revue de la 11.2). */
+  --font-sans: 'Saira', system-ui, Avenir, Helvetica, Arial, sans-serif;
+
   /* Couleurs joueur : la bille est liée au côté (gauche blanc, droite jaune),
      chacune en bloc plein à chiffres noirs (convention Billiboard). */
   /* Jaune : trois essais avant celui-ci (2026-09-12, Nathan). `#FFC72C` puis `#FFD60A`
@@ -21,34 +51,17 @@
      Rôle distinct du rouge d'alerte, réservé au chrono (UX-DR4). */
   --color-turn-active: #FF2D46;
 
-  /* Accent système, alerte, victoire */
-  --color-accent: #1E88E5;
-  --color-on-accent: #000000;
-  --color-alert: #FF3B30;
-  --color-on-alert: #000000;
-  --color-victory-gold: #FFD54A;
-  --color-on-victory-gold: #000000;
-  /* Assombri de #E63946 à #D0343F à la passe contraste AA (Story 10.7, décision de
-     Nathan) : le texte blanc qu'il porte passe de 4,17:1 à 4,95:1. La dette ouverte par
-     la 3e passe de rendu de la 10.5 est donc close PAR LA COULEUR, et non par une note.
-     ⚠️ Cette valeur est désormais celle de `--color-brand-red`, et ce sont pourtant DEUX
-     tokens, à garder tels quels : deux rôles distincts (ruban de victoire / rouge de
-     marque) qui peuvent rediverger. Ne pas en supprimer un, ne pas écrire l'un en `var()`
-     de l'autre, ne pas remplacer les usages. Un design system des couleurs est prévu plus
-     tard, hors Epic 10 (demande de Nathan, 2026-09-14) : fusionner ici, ce serait
-     improviser la palette story par story. */
-  --color-victory-ribbon: #D0343F;
-  /* Blanc et non noir depuis la 3e passe de rendu de la 10.5 (Nathan) : partout ailleurs
-     dans l'app le texte est blanc, et la colonne perdante juste à côté l'est aussi — le
-     noir se lisait comme une inversion.
-     Contraste sur le ruban assombri : blanc 4,95:1, noir 4,24:1 — le blanc est désormais
-     le PLUS contrasté des deux, et il passe même le seuil 4,5:1 du texte courant, alors
-     que les valeurs du récap sont toutes en `text-label` (≥ 24 px gras, seuil 3:1). La
-     marge ne dépend donc plus de la taille : descendre une de ces valeurs ne rouvre rien. */
-  --color-on-victory-ribbon: #FFFFFF;
+  /* Retirés par la Story 11.2 (DESIGN.md › Colors › Neutral, « Retirés en 11.2 ») : le bleu
+     accent (l'anneau de focus lit `--color-turn-active`), le rouge alerte (`ShotClock` le
+     calcule en HSL, aucun token ne le portait), l'or de victoire et le second rouge
+     `--color-victory-ribbon` (même valeur que `--color-brand-red`, un seul token désormais).
+     Aucun `--color-*` déclaré ici n'est sans consommateur : `tokens.test.ts` le vérifie. */
 
-  /* Fond sombre (valeur de première passe, susceptible d'être affinée) */
-  --color-bg: #0D1117;
+  /* Marine sombre, NIVEAU 0 du modèle Cueuny (DESIGN.md › Colors › Neutral, Story 11.2,
+     Nathan : deux niveaux de marine, pas de noir pur, pas de dégradé) : fond de page, barre
+     latérale, base du scoreboard et sa barre basse, colonne centrale (nue), disque du chrono,
+     encre du bandeau du récap. Le niveau 1 est `--color-bg-raised`, plus bas. */
+  --color-bg: #1E2438;
 
   /* Échelle typographique (DESIGN.md › Typography, Story 11.1). Clés `--text-*` : c'est le
      namespace que Tailwind v4 utilise pour générer les utilitaires `text-<nom>`
@@ -124,8 +137,11 @@
   --size-pad-min: calc(var(--size-key-numeric) * 4 + var(--spacing) * 6);   /* 288 → 468 : 4 rangées, gap-2 */
   --size-alpha-min: calc(var(--size-key-alpha) * 6 + var(--spacing) * 5);   /* 382 → 621 : 6 rangées, gap-1 */
 
-  /* Breakpoints responsive (mobile-first) : md reste au défaut Tailwind (768px) */
-  --breakpoint-lg: 1280px;
+  /* Palier `lg` SUPPRIMÉ, pas seulement non déclaré (revue de la 11.2) : Tailwind v4 le
+     fournit par défaut à 64rem (1024 px), un `lg:` s'appliquerait donc sur l'iPad à 1180.
+     `initial` le retire ; `md` (768) reste le seul palier, le 1920 se sert par la grille
+     fluide et les `clamp()` (CLAUDE.md §8). */
+  --breakpoint-lg: initial;
 
   /* Retours visuels de la saisie au pavé (Story 1.5). Portés par des animations CSS et
      non par des timers JS : le navigateur les compose hors du thread principal, ce qui
@@ -162,48 +178,43 @@
 
 /* Epic 10 — Bloc Plein contenu (UX-DR27). `static` force l'émission de toutes les
    variables : Tailwind élague sinon celles qu'aucun utilitaire n'emploie encore (bandeaux
-   de carte de la 10.4, `--gradient-bg` lu par `bg-(image:…)`). */
+   de carte de la 10.4, les dégradés lus par `bg-(image:…)`). */
 @theme static {
-  /* Drap de billard : médiane des pixels de simonis-prestige.gif, hors texte blanc. Base
-     des bleus des tuiles. */
-  --color-cloth: #0573BB;
-
-  /* Conteneurs : fond translucide, contour, rayons. Angles vifs (passe de rendu 10.1,
-     Nathan : « trop arrondi », l'app doit se lire comme un outil tactile). */
-  --color-surface: rgba(255, 255, 255, 0.06);
-  --color-border: rgba(255, 255, 255, 0.18);
-  --color-border-strong: rgba(255, 255, 255, 0.40);
+  /* Conteneurs : voile blanc et filet (DESIGN.md › Colors › Neutral). Montés de 6 à 8 % et
+     de 18 à 22 % par la Story 11.2 pour garder leur marche sur le marine. */
+  --color-surface: rgba(255, 255, 255, 0.08);
+  --color-border: rgba(255, 255, 255, 0.22);
   /* Bande claire du bandeau de récap (Story 10.5, 2e passe de rendu, réf. Billiboard) :
      le seul aplat clair de l'app hors cartes joueur. Blanc cassé et non blanc pur, pour
      ne pas éblouir sur un écran de club en salle sombre. Le texte s'y pose en
      `--color-bg`. */
   --color-banner: #F2F0EA;
-  --radius-container: 0px;
-  --radius-cta: 0px;
-  /* Seule exception aux angles vifs : la carte des pop-ups, très légèrement adoucie pour
-     se détacher du fond flouté (revue de rendu de Nathan, 2026-09-12). */
-  --radius-modal: 12px;
 
-  /* Barre latérale : aplat sombre collé au bord de l'écran (modèle Cueuny). */
-  --color-sidebar: #101318;
+  /* Rayons, nommés par FAMILLE d'objets (DESIGN.md › Shapes, Story 11.2, Nathan) : 8 px sur
+     tout ce qui se tape, 12 px sur la carte de pop-up, rien sur les conteneurs (aucun token :
+     un conteneur n'a pas de `rounded-*`). Remplacent `--radius-cta` / `--radius-key` /
+     `--radius-modal` / `--radius-container`. */
+  --radius-tappable: 8px;
+  --radius-popup: 12px;
 
-  /* Rouge de marque (palette bleus / noir-gris / rouge) : bandeau en biais de l'en-tête
-     de la barre latérale. Blanc dessus ≈ 4,9:1. Distinct de `--color-alert` (chrono) et de
-     `--color-turn-active` (liseré de tour), qui gardent leur rôle. */
+  /* Rouge de marque (palette bleus / marine / rouge) : bandeau en biais de l'en-tête de la
+     barre latérale, série en cours, ruban de victoire du récap. Blanc dessus 4,95:1. UN SEUL
+     rouge de marque (Story 11.2) ; `DÉMARRER` a son propre dégradé (`--gradient-red`), et le
+     rouge vif `--color-turn-active` (liseré de tour, champ visé, focus) garde son rôle à part. */
   --color-brand-red: #D0343F;
 
   /* LE bleu du produit (décision de Nathan, 2026-09-12) : une seule teinte pour toutes les
      tuiles de mode, à l'accueil comme en sélection JDS, et pour tout CTA qui demande du
-     bleu. Haut de l'échelle, ancré sur le drap (`--color-cloth`) : une pop-up monte sur un
-     fond déjà sombre qu'elle floute, elle doit ressortir. L'échelle d'une nuance par tuile
-     de la 10.1 est abandonnée — plus simple, et rien ne distinguait vraiment les nuances.
-     Le neutre est le même dégradé en blanc voilé (CTA secondaires). */
-  --gradient-blue: linear-gradient(160deg, #2E8FDB 0%, var(--color-cloth) 100%);
+     bleu, `PASSER LE TOUR` compris. BLEU ROI depuis la Story 11.2 (DESIGN.md › Colors ›
+     Primary, Nathan au rendu sur le marine) : le bleu drap #0573BB de l'Epic 10 ne
+     s'accordait plus au fond. L'échelle d'une nuance par tuile de la 10.1 est abandonnée. */
+  --gradient-blue: linear-gradient(160deg, #3B82F6 0%, #1D4ED8 100%);
   /* Neutre OPAQUE depuis le 2026-09-12 (Nathan) : le blanc voilé laissait voir l'écran au
      travers d'`ANNULER`, ce qui le rendait sale sur tout fond un peu chargé. Même famille
      que `--color-key` pour qu'il s'assoie naturellement au pied d'un clavier. Il ne porte
-     PLUS de contour clair : la teinte suffit à le distinguer de la carte de pop-up. */
-  --gradient-neutral: linear-gradient(160deg, #3A4049 0%, #262A31 100%);
+     PLUS de contour clair : la teinte suffit à le distinguer de la carte de pop-up.
+     Teinté dans la famille du marine (228°) par la Story 11.2 (ardoise CTA → sombre). */
+  --gradient-neutral: linear-gradient(160deg, #464B5D 0%, #323643 100%);
 
   /* Seules survivantes de l'échelle par tuile : les nuances sombres des tuiles BIENTÔT,
      laissées telles quelles (Nathan, 2026-09-12) — elles disent l'inactivité autant que le
@@ -213,9 +224,10 @@
 
   /* Rouge du CTA de démarrage (revue de rendu 10.3, Nathan, 2026-09-12, réf.
      `explore/resources` #3 façon Cueuny) : les deux réglages sont bleus, l'action qui
-     ENGAGE la partie est rouge. Ancré sur `--color-brand-red`, qui garde par ailleurs son
-     rôle de rouge de marque (bandeau en biais de la barre latérale). */
-  --gradient-red: linear-gradient(160deg, #E2515B 0%, var(--color-brand-red) 100%);
+     ENGAGE la partie est rouge. Rouge SATURÉ depuis la Story 11.2 (DESIGN.md › Colors ›
+     Secondary, Nathan : six candidats face au bleu roi), détaché de `--color-brand-red`, qui
+     garde son rôle de rouge de marque (bandeau en biais, série, ruban de victoire). */
+  --gradient-red: linear-gradient(160deg, #F04553 0%, #C41F2C 100%);
 
   /* Recentrage des pop-ups de saisie du paramétrage (revue de rendu 10.3, 2026-09-12) :
      la pop-up ne se colle pas au bord, elle se CENTRE dans la zone laissée libre par la
@@ -239,24 +251,16 @@
   --game-popup-inset-left: calc(100vw * 0.4 + var(--spacing) * 4);
   --game-popup-inset-right: calc(100vw * 0.4 + var(--spacing) * 4);
 
-  /* Touches des claviers intégrés (revue de rendu 10.3, réf. Cueuny) : plaques sombres
-     légèrement adoucies, relief donné par un filet clair en haut et une ombre portée en
-     bas — la touche s'enfonce à l'appui. SEULE exception aux angles vifs avec la carte de
-     pop-up : une touche de clavier se lit comme un objet physique, pas comme un panneau. */
-  --radius-key: 8px;
-  --color-key: #2E333B;
-  --color-key-active: #3C434D;
+  /* Touches des claviers intégrés (revue de rendu 10.3, réf. Cueuny) : plaques sombres au
+     rayon tapable, relief donné par un filet clair en haut et une ombre portée en bas
+     (`--shadow-key-relief`) — la touche s'enfonce à l'appui. Ardoise teintée marine
+     (Story 11.2) pour s'asseoir sur la carte de pop-up en verre. */
+  --color-key: #3C4153;
+  --color-key-active: #494E65;
 
-  /* Surface des panneaux posés sur le fond d'écran (colonne centrale du paramétrage) :
-     nettement plus claire que `--gradient-bg`, pour que la colonne ne se lise pas comme un
-     trou noir entre deux cartes pleines (revue de rendu 10.3, Nathan : « c'est un peu
-     sombre »). */
-  --gradient-panel: linear-gradient(160deg, #3A3F49 0%, #23262C 100%);
-
-  /* Fond des champs des POP-UPS de saisie, posés sur une carte sombre (revue de rendu 10.3) :
-     un fondu grisé, lisible aussi bien sur la carte blanche que sur la jaune. Remplace le
-     médaillon rond sombre, retiré à la même revue. */
-  --gradient-field: linear-gradient(160deg, #454A54 0%, #1A1D22 100%);
+  /* `--gradient-panel` (colonne du paramétrage) et `--gradient-field` (mort) sont retirés
+     par la Story 11.2 : la colonne du paramétrage n'a plus ni fond ni cadre (Nathan, au
+     rendu), les trois commandes flottent sur le niveau 1. */
 
   /* Débordement de l'anneau du chrono sur CHAQUE carte voisine (Story 10.4, AC16).
      ⚠️ Une seule définition pour DEUX usages qui doivent coïncider au pixel : la colonne
@@ -266,23 +270,33 @@
      rouge. Les deux valeurs recopiées séparément se décalaient visiblement au raccord. */
   --game-clock-bleed: calc(var(--spacing) * 3);
 
-  /* Disque du chrono de tir (2e passe de rendu de la 10.4, Nathan : « il faut que le chrono
-     se fonde au maximum avec le background »). Le disque portait un `bg-black` littéral qui
-     tranchait nettement sur la colonne centrale, gris-bleu : il se lisait comme une pastille
-     posée dessus au lieu d'un médaillon creusé dedans.
-     ⚠️ Cette valeur est `--color-surface` COMPOSÉ sur `--color-bg`, c'est-à-dire exactement
-     ce que rend la colonne centrale — un aplat translucide sur le fond de page. Une variable
-     CSS ne sait pas faire cette composition : elle est donc figée ici, et doit être
-     RECALCULÉE si `--color-surface` ou `--color-bg` bouge. Le disque déborde sur les cartes
-     claires, il lui faut une couleur opaque, pas la translucide de la colonne. */
-  --color-shot-clock-face: #1C1F25;
+  /* Disque du chrono de tir : `--color-shot-clock-face` est retiré (Story 11.2). La colonne
+     centrale du scoreboard est désormais la base NUE (`--color-bg`, sans voile), et le disque
+     est la colonne : il lit `bg-bg` et ne se distingue que là où il déborde sur les cartes
+     claires (2e passe de rendu de la 10.4, Nathan : « il faut que le chrono se fonde au
+     maximum avec le background »). Plus rien à recalculer. */
 
   /* Bandeaux de carte joueur (Story 10.4). */
   --color-panel-white-band: #ECECEC;
   --color-panel-yellow-band: #E6CA00;
 
-  /* Fond d'écran gris/noir, appliqué écran par écran avec sa story. */
-  --gradient-bg: linear-gradient(160deg, #2A2E35 0%, #111317 55%, #000000 100%);
+  /* Marine clair, NIVEAU 1 (Story 11.2, modèle Cueuny) : fond des quatre écrans hors jeu
+     (accueil, JDS, paramétrage, récap — à PLAT, `--gradient-bg` est retiré) et carte de
+     pop-up en verre léger (`bg-bg-raised/88 backdrop-blur-sm`). Le scoreboard n'en a pas. */
+  --color-bg-raised: #272E49;
+
+  /* Ombres (DESIGN.md › Elevation & Depth › Shadow Vocabulary, Story 11.2) : namespace
+     `--shadow-*` → utilitaire `shadow-<nom>`. Une valeur qui mêle un `inset` et une ombre
+     portée tient dans un seul token (liste), pas besoin d'`--inset-shadow-*`. Aucun gabarit
+     n'écrit une ombre en `shadow-[…]` : `tokens.test.ts` le verrouille. */
+  --shadow-key-relief: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 2px 0 rgba(0, 0, 0, 0.45);
+  --shadow-key-relief-active: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --shadow-light-edge-start: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  --shadow-light-edge-field: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --shadow-popup: 0 32px 80px rgba(0, 0, 0, 0.65);
+  /* La barre latérale la porte sur le contenu, à sa droite : c'est elle qui la sépare du
+     fond, plus aucun filet droit (modèle Cueuny). */
+  --shadow-sidebar: 6px 0 28px rgba(0, 0, 0, 0.45);
 }
 
 * {
@@ -296,7 +310,7 @@ button,
 }
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
 
@@ -318,8 +332,11 @@ body,
   height: 100%;
 }
 
+/* Anneau de focus ROUGE VIF (Story 11.2) : le bleu accent est retiré, le rouge vif est déjà
+   le signal « visé » du produit (tour actif, champ ciblé). Sans clavier sur la borne, il
+   n'apparaît jamais en usage. */
 button:focus-visible {
-  outline: 4px solid var(--color-accent);
+  outline: 4px solid var(--color-turn-active);
   outline-offset: 2px;
 }
 

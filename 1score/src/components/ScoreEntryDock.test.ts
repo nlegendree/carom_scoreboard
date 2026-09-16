@@ -339,7 +339,7 @@ describe('ScoreEntryDock', () => {
 
   // AC5 (Story 10.7) : la barre de rebours est un OBJET GRAPHIQUE porteur d'information
   // (WCAG 1.4.11, seuil 3:1), pas du texte. En `bg-white/70` elle donnait 2,45:1 sur le
-  // stop clair de `--gradient-blue` ; en blanc plein, 3,46:1.
+  // stop clair de `--gradient-blue` ; en blanc plein, 3,46:1 (3,68:1 sur le bleu roi de la 11.2).
   it('draws the countdown bar at full opacity', () => {
     const wrapper = mountDock('12')
     const classes = wrapper.find('[data-testid="validate-countdown"]').classes()

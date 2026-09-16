@@ -82,12 +82,13 @@ describe('ShotClock', () => {
   // Fond noir littéral (UX-DR4), sans libellé (retiré au rendu par Nathan, 2026-09-11).
   // 2e passe de rendu de la 10.4 (Nathan) : le disque se FOND dans la colonne au lieu de
   // trancher dessus. `bg-black` littéral le faisait lire comme une pastille posée sur un
-  // fond gris-bleu ; le token vaut `--color-surface` composé sur `--color-bg`, soit
-  // exactement ce que rend la colonne — mais opaque, le disque débordant sur les cartes.
+  // fond gris-bleu. Depuis la Story 11.2 la colonne est la base NUE (`--color-bg`) et le
+  // disque lit la même couleur (`bg-bg`) : plus de token propre, plus rien à recalculer, il
+  // ne se distingue que là où il déborde sur les cartes claires.
   it('paints the ring on the column ground, blended, and without any label', () => {
     const wrapper = mount(ShotClock, { props: { secondsRemaining: 40, totalSeconds: 40 } })
 
-    expect(wrapper.find('[role="timer"]').classes()).toContain('bg-shot-clock-face')
+    expect(wrapper.find('[role="timer"]').classes()).toContain('bg-bg')
     expect(wrapper.find('[role="timer"]').classes()).not.toContain('bg-black')
     expect(wrapper.find('[data-testid="shot-clock-label"]').exists()).toBe(false)
     expect(wrapper.text()).not.toContain('CHRONO')

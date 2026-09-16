@@ -3,9 +3,12 @@ import { computed } from 'vue'
 import PictoIcon from './PictoIcon.vue'
 import type { SideBarItem } from '../types/ui'
 
-// Colonne gauche de l'Epic 10 (UX-DR28 à UX-DR31), aplat sombre collé au bord de l'écran
-// (modèle Cueuny, passe de rendu 10.1). Purement présentationnelle : l'écran fournit ses
-// items et leurs actions, la barre ne connaît aucun contenu d'écran.
+// Colonne gauche de l'Epic 10 (UX-DR28 à UX-DR31), aplat marine sombre collé au bord de
+// l'écran (modèle Cueuny, passe de rendu 10.1). Depuis la Story 11.2 elle n'a plus de filet
+// droit : c'est son OMBRE (`--shadow-sidebar`, portée sur le contenu) qui la sépare du fond
+// marine clair — d'où `relative z-10`, pour que l'ombre passe au-dessus de `<main>`.
+// Purement présentationnelle : l'écran fournit ses items et leurs actions, la barre ne
+// connaît aucun contenu d'écran.
 const props = defineProps<{ items: SideBarItem[]; exitItem?: SideBarItem }>()
 
 // Deux groupes, un seul gabarit d'item : la sortie est calée en bas (`mt-auto`), isolée
@@ -32,7 +35,7 @@ function press(item: SideBarItem): void {
 <template>
   <aside
     data-testid="sidebar"
-    class="flex h-full w-(--size-sidebar) shrink-0 flex-col gap-1.5 border-r border-border bg-sidebar pb-3"
+    class="relative z-10 flex h-full w-(--size-sidebar) shrink-0 flex-col gap-1.5 bg-bg shadow-sidebar pb-3"
   >
     <!-- En-tête : une marque, pas une commande (UX-DR29) — ni bouton, ni handler. Bandeau
          rouge coupé en biais puis pli translucide (modèle Cueuny, passe de rendu 10.1) : le

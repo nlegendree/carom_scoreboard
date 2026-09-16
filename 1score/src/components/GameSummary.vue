@@ -59,15 +59,15 @@ const BALL_PICTOS: Record<PlayerId, string> = {
 }
 
 // Colonne du vainqueur : ruban rouge (décision du 2026-09-10, fidèle au rose/rouge
-// Billiboard ; l'or `victory-gold` reste le repli si le rendu ne convainc pas, UX-DR5).
-// L'autre reste neutre sur fond sombre. Égalité : les deux en neutre. Le signal ne
-// repose pas sur la seule teinte — le mot `VICTOIRE` est là (UX-DR22).
-// ⚠️ `--color-victory-ribbon` et `--color-brand-red` (en-tête de la barre latérale) valent
-// la MÊME couleur (#D0343F) depuis la passe contraste de la 10.7, et restent deux tokens
-// distincts par décision de Nathan : deux rôles qui peuvent rediverger, un design system
-// des couleurs à venir tranchera. Ne pas les fusionner sans lui.
-const VICTORY_COLUMN_CLASSES = 'bg-victory-ribbon text-on-victory-ribbon'
-const NEUTRAL_COLUMN_CLASSES = 'bg-white/6 text-white'
+// Billiboard, UX-DR5). L'autre reste neutre sur fond sombre. Égalité : les deux en neutre.
+// Le signal ne repose pas sur la seule teinte — le mot `VICTOIRE` est là (UX-DR22).
+// Le ruban est LE rouge profond du produit, `--color-brand-red` (DESIGN.md › Colors, Règle du
+// rouge qui engage) : la Story 11.2 a fusionné `--color-victory-ribbon`, qui valait la même
+// couleur — un second rouge repasserait par DESIGN.md. Blanc dessus : 4,95:1.
+// Les cellules neutres sont la surface voilée que DESIGN.md nomme (`bg-surface`), la même
+// que le conteneur : un voile, pas une couleur.
+const VICTORY_COLUMN_CLASSES = 'bg-brand-red text-white'
+const NEUTRAL_COLUMN_CLASSES = 'bg-surface text-white'
 
 // 1re passe de rendu (Nathan, réf. `billiboard_recap_2`) : chaque statistique est un BLOC,
 // pas une tranche de colonne pleine. Les blocs sont séparés d'une petite marge qui laisse
@@ -78,7 +78,7 @@ const NEUTRAL_COLUMN_CLASSES = 'bg-white/6 text-white'
 const CELL_CLASSES = 'flex flex-1 items-center justify-center'
 // La colonne de libellés prend le même aplat neutre que la colonne perdante : sur la
 // référence les deux se lisent dans la même tonalité, seul le texte les distingue.
-const LABEL_CELL_CLASSES = 'bg-white/6 text-white/50'
+const LABEL_CELL_CLASSES = 'bg-surface text-white/50'
 
 const modeLabel = computed(() => GAME_MODE_LABELS[props.mode])
 
@@ -166,7 +166,7 @@ const players = computed<Record<PlayerId, Player>>(() => ({
          l'aplat de couleur est porté par la CELLULE et non plus par la colonne entière.
          Ordre des lignes revu : `RÉSULTAT` puis POINTS · REPRISES · MOY · SÉRIE — le
          score d'abord, la moyenne après le nombre de reprises dont elle se déduit.
-         Angles vifs : aucun arrondi en dur, `--radius-container` vaut 0. -->
+         Angles vifs : un conteneur n'a aucun `rounded-*` (DESIGN.md › Shapes). -->
     <div class="flex min-h-0 flex-1 gap-2 p-4">
       <template v-for="(side, index) in SIDES" :key="side">
         <div

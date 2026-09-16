@@ -155,7 +155,7 @@ function closeFromBackdrop(event: PointerEvent): void {
   >
     <div
       data-testid="score-entry-card"
-      class="flex max-h-full w-full max-w-(--size-popup-pad) flex-col gap-2 rounded-modal border border-border bg-bg/95 p-3 shadow-[0_32px_80px_rgba(0,0,0,0.65)]"
+      class="flex max-h-full w-full max-w-(--size-popup-pad) flex-col gap-2 rounded-popup border border-border bg-bg-raised/88 p-3 shadow-popup backdrop-blur-sm"
       @pointerdown.stop
       @pointerup.stop
     >
@@ -177,14 +177,14 @@ function closeFromBackdrop(event: PointerEvent): void {
       <footer class="flex shrink-0 gap-2">
         <button
           data-testid="entry-cancel-button"
-          class="min-h-[var(--size-touch-target)] w-1/3 rounded-key bg-(image:--gradient-neutral) text-label font-black text-white touch-manipulation select-none active:brightness-90"
+          class="min-h-[var(--size-touch-target)] w-1/3 rounded-tappable bg-(image:--gradient-neutral) text-label font-black text-white touch-manipulation select-none active:brightness-90"
           @pointerdown="emit('cancel')"
         >
           ANNULER
         </button>
         <button
           data-testid="entry-confirm-button"
-          class="relative min-h-[var(--size-touch-target)] flex-1 overflow-hidden rounded-key bg-(image:--gradient-blue) text-label font-black text-white touch-manipulation select-none active:brightness-90"
+          class="relative min-h-[var(--size-touch-target)] flex-1 overflow-hidden rounded-tappable bg-(image:--gradient-blue) text-label font-black text-white touch-manipulation select-none active:brightness-90"
           @pointerdown="onValidate"
         >
           VALIDER

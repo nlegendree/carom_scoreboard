@@ -78,7 +78,7 @@ const JDS_TILE_LAYOUT = [
 // comme la référence coréenne — ce que la disposition côte à côte, à 73 px par bouton,
 // rendait impossible.
 const SETUP_CTA_CLASSES =
-  'flex min-h-[var(--size-touch-target)] w-full min-w-0 items-center justify-center gap-2 rounded-cta bg-(image:--gradient-blue) px-2 text-center text-label font-bold text-white touch-manipulation select-none active:brightness-90'
+  'flex min-h-[var(--size-touch-target)] w-full min-w-0 items-center justify-center gap-2 rounded-tappable bg-(image:--gradient-blue) px-2 text-center text-label font-bold text-white touch-manipulation select-none active:brightness-90'
 
 // Les trois cadres du catalogue, dans l'ordre d'affichage de la pop-up.
 const CADRE_MODES = ['cadre-47-2', 'cadre-47-1', 'cadre-71-2'] as const satisfies readonly GameMode[]
@@ -387,11 +387,11 @@ function fixDistance(): void {
     <div
       v-if="step === 'category'"
       data-testid="step-category"
-      class="flex h-full w-full bg-(image:--gradient-bg)"
+      class="flex h-full w-full"
     >
       <SideBar :items="HOME_SIDEBAR_ITEMS" :exitItem="HOME_SIDEBAR_EXIT" />
 
-      <main class="flex min-w-0 flex-1 flex-col">
+      <main class="flex min-w-0 flex-1 flex-col bg-bg-raised">
         <p
           data-testid="home-tagline"
           class="px-4 pt-5 text-hero font-black leading-tight text-white"
@@ -422,11 +422,11 @@ function fixDistance(): void {
     <div
       v-else-if="step === 'mode'"
       data-testid="step-mode"
-      class="flex h-full w-full bg-(image:--gradient-bg)"
+      class="flex h-full w-full"
     >
       <SideBar :items="JDS_SIDEBAR_ITEMS" />
 
-      <main class="flex min-w-0 flex-1 flex-col">
+      <main class="flex min-w-0 flex-1 flex-col bg-bg-raised">
         <p data-testid="jds-title" class="px-4 pt-5 text-hero font-black leading-tight text-white">
           {{ selectedCategory?.label }}
         </p>
@@ -451,10 +451,10 @@ function fixDistance(): void {
          écrans précédents (décision de Nathan, 2026-09-12).
          Les deux claviers sont des pop-ups à voile (2e passe de rendu) : rien n'est monté
          dans le flux, la carte visée reste visible sous le voile et se remplit à vue. -->
-    <div v-else data-testid="step-players" class="flex h-full w-full bg-(image:--gradient-bg)">
+    <div v-else data-testid="step-players" class="flex h-full w-full">
       <SideBar :items="PLAYERS_SIDEBAR_ITEMS" :exitItem="PLAYERS_SIDEBAR_EXIT" />
 
-      <div class="flex min-w-0 flex-1 flex-col">
+      <div class="flex min-w-0 flex-1 flex-col bg-bg-raised">
         <!-- Bandeau de titre (revue de rendu de Nathan, 2026-09-12, réf. Cueuny) : le mode
              se lit en grand, centré, en haut de l'écran — il ne tient plus en surtitre
              discret de la colonne centrale, où personne ne le voyait. -->
@@ -485,7 +485,7 @@ function fixDistance(): void {
                les claviers sont des pop-ups : la colonne ne change jamais de largeur. -->
           <section
             data-testid="setup-center"
-            class="flex min-h-0 w-1/4 shrink-0 flex-col gap-2 border border-border bg-(image:--gradient-panel) p-3"
+            class="flex min-h-0 w-1/4 shrink-0 flex-col gap-2 p-3"
           >
             <!-- Les trois commandes forment un BLOC, calé en bas de la colonne (modèle
                  Cueuny) : deux réglages bleus côte à côte, puis l'action qui engage. -->
@@ -514,7 +514,7 @@ function fixDistance(): void {
                    du 2026-09-12). -->
               <button
                 data-testid="confirm-button"
-                class="flex min-h-(--size-start-button) w-full items-center justify-center gap-2 rounded-cta bg-(image:--gradient-red) px-2 text-start-button font-black tracking-label text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] touch-manipulation select-none active:brightness-90"
+                class="flex min-h-(--size-start-button) w-full items-center justify-center gap-2 rounded-tappable bg-(image:--gradient-red) px-2 text-start-button font-black tracking-label text-white shadow-light-edge-start touch-manipulation select-none active:brightness-90"
                 @pointerdown="confirm"
               >
                 <PictoIcon name="chevron-right" class="size-5 shrink-0" />

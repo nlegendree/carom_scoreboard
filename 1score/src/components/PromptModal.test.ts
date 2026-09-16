@@ -176,17 +176,15 @@ describe('PromptModal', () => {
     ).toBe(false)
   })
 
-  // Direction visuelle de l'Epic 10 : CTA à angles vifs (`--radius-cta`, 0), carte à peine
-  // adoucie (`--radius-modal`) pour se détacher du fond flouté — jamais un `rounded-*` de
-  // l'échelle Tailwind (revue de rendu de Nathan, 2026-09-12).
-  // Les CTA prennent le rayon des TOUCHES depuis le 2026-09-12 : à côté des claviers en
-  // relief, des boutons parfaitement rectangulaires juraient.
-  it('takes its radii from the tokens, keys radius on controls and a softened card', () => {
+  // DESIGN.md › Shapes (Story 11.2) : deux rayons nommés par famille — `--radius-tappable`
+  // sur tout ce qui se tape, `--radius-popup` sur la carte, qui se détache du fond — jamais
+  // un `rounded-*` de l'échelle Tailwind (revue de rendu de Nathan, 2026-09-12).
+  it('takes its radii from the tokens, tappable radius on controls and popup radius on the card', () => {
     const wrapper = mountPrompt({ title: 'CADRE', actions: CADRES, secondaryLabel: 'ANNULER' })
 
-    expect(find(wrapper, 'prompt-card').classes()).toContain('rounded-modal')
+    expect(find(wrapper, 'prompt-card').classes()).toContain('rounded-popup')
     for (const button of wrapper.findAll('footer button')) {
-      expect(button.classes()).toContain('rounded-key')
+      expect(button.classes()).toContain('rounded-tappable')
     }
     expect(source).not.toContain('rounded-2xl')
     expect(source).not.toContain('rounded-3xl')

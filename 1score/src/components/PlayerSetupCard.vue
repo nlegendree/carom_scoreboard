@@ -53,7 +53,7 @@ const BALL_LABELS: Record<PlayerColor, string> = {
 // disponible (`flex-1`) entre un plancher confortable et un plafond raisonnable, pour que
 // la carte ne soit pas un grand vide avec deux petites boîtes au milieu.
 const FIELD_CLASSES =
-  'flex min-h-(--size-field-min) max-h-(--size-field-max) w-full flex-1 flex-col items-center justify-center gap-2 rounded-cta border-2 bg-black/8 px-3 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] touch-manipulation select-none'
+  'flex min-h-(--size-field-min) max-h-(--size-field-max) w-full flex-1 flex-col items-center justify-center gap-2 rounded-tappable border-2 bg-black/8 px-3 py-3 text-center shadow-light-edge-field touch-manipulation select-none'
 
 // Le champ visé se signale par une PRÉSENCE (liseré), pas par une teinte de fond seule :
 // même signal non chromatique que l'indicateur de tour (UX-DR22). Conservé tel quel à la

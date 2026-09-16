@@ -47,7 +47,7 @@ Scoreboard tactile pour billard carambole français, PWA installée sur la table
 **Livré (Epics 1, 2, 10)** : six modes JDS (Libre, Cadre 47/2, 47/1, 71/2, 1 Bande, 4 Billes) ; 3 Bandes avec chrono ; distance par joueur (handicap implicite) ; saisie au pavé, score négatif, auto-validation temporisée ; undo à deux niveaux (saisie en cours, dernière série) ; `PASSER LE TOUR` ; fin de partie détectée, égalisatrice ; récap automatique (total, moyenne, meilleure série) ; annonce vocale on/off ; alerte d'inactivité ; état sauvegardé après chaque action ; PWA installable, mise à jour appliquée à l'accueil.
 
 **Contraintes techniques durables**
-- Aucune ressource réseau au runtime : polices auto-hébergées, jamais de CDN, images en assets locaux ; zéro poids inutile hors ligne.
+- Aucune ressource réseau au runtime : polices auto-hébergées (Saira, tranchée à la Story 11.2), jamais de CDN, images en assets locaux ; zéro poids inutile hors ligne.
 - Pointer Events sur tout élément tactile (retour < 100 ms), retour haptique.
 - Identité de la PWA installée intouchable : `id`, `start_url`, `scope`, nom du manifest, clé `localStorage` `1score:game` (migration obligatoire sinon).
 - Cibles Android 10+ et iPad 9e génération+ ; la cible d'installation est Safari/WebKit alors que le développement se fait sous Chrome — **WebKit n'a jamais vu l'UI de l'Epic 10** (contrôle à faire).
@@ -55,14 +55,14 @@ Scoreboard tactile pour billard carambole français, PWA installée sur la table
 
 **Terminologie** (français, libellés d'action en MAJUSCULES) : *reprise*, *série*, *distance* (objectif de score du joueur), *moyenne*, *meilleure série*, *RESTANT*, *JDS* (jeux de séries), *3 Bandes*, *bille blanche / bille jaune* (gauche = blanche, droite = jaune, fixées au côté), *PASSER LE TOUR*, *égalisatrice*, *invité*, *BIENTÔT* (mode visible, atténué, inerte).
 
-**Faits explicitement non décidés** (ne pas inventer) : nombre de sets (FR15) ; règles de 5/9 Quilles et Casin (vitrine BIENTÔT jusqu'à validation fédérale) ; comportement réel de « Fermer l'application » ; police display (système en attendant) ; format du nom affiché pour les noms longs (fixé avec les comptes, Epic 4) ; architecture backend (prérequis de l'Epic 4) ; outillage lint/format.
+**Faits explicitement non décidés** (ne pas inventer) : nombre de sets (FR15) ; règles de 5/9 Quilles et Casin (vitrine BIENTÔT jusqu'à validation fédérale) ; comportement réel de « Fermer l'application » ; format du nom affiché pour les noms longs (fixé avec les comptes, Epic 4) ; architecture backend (prérequis de l'Epic 4) ; outillage lint/format.
 
 ## Brand Commitments
 
 - **Nom : 1Score** (Story 10.6). L'hésitation 1Score/1Shot est close. Le dépôt GitHub, le dossier local et le site Netlify gardent l'ancien nom `carom_scoreboard` (renommage différé).
 - **Voix : esport assumé, partout** *(confirmé)*. L'énergie compétitive des systèmes coréens s'exprime à tous les écrans, pas seulement au récap. Elle ne cède jamais sur la lisibilité à 2 m ni sur le calme de la correction : l'erreur reste réversible, visible, jamais punitive.
 - **Assets actuels, non figés** *(confirmé : « pas provisoire, mais tout peut évoluer »)* : monogramme « 1S » blanc sur carré noir (`1score/public/logo.png`), images de billes blanche et jaune (`bille_blanche.png`, `bille_jaune.png`), icônes PWA. À traiter comme la marque en place, sans interdire leur évolution.
-- **Direction visuelle acquise, validée au rendu par Nathan (Epic 10)** : paysage seul, angles vifs, palette resserrée bleus / noir-gris / rouge, coupes en biais, modèle Cueuny + Billiboard, référence du drap Simonis Prestige. Elle se **codifie** dans `DESIGN.md`, elle ne se rejuge pas ici.
+- **Direction visuelle acquise, validée au rendu par Nathan (Epic 10)** : paysage seul, angles vifs, palette resserrée bleus / marine / rouge (deux niveaux, modèle Cueuny, Story 11.2), coupes en biais, modèle Cueuny + Billiboard, référence du drap Simonis Prestige. Elle se **codifie** dans `DESIGN.md`, elle ne se rejuge pas ici.
 - **Symétrie stricte des deux joueurs** : mêmes contrôles des deux côtés, seule la bille diffère ; le tour actif se signale par un liseré, jamais par la teinte du bloc.
 
 ## Evidence on Hand
@@ -71,7 +71,7 @@ Scoreboard tactile pour billard carambole français, PWA installée sur la table
 - **Brief écran par écran de Nathan** : `explore/basic-ui-brainstorming-2026-09-11.md`.
 - **Assets** : logo, billes, icônes PWA dans `1score/public/`.
 - **Qualité** : 704 tests verts, `vue-tsc` et build verts (rétro Epic 10) ; happy-dom ne calcule aucun CSS, donc aucun défaut visuel n'est couvert par les tests.
-- **Absences à ne pas fabriquer** : aucune vraie partie jouée en club, aucun club pilote, aucun témoignage, aucune donnée d'usage, aucun chiffre de marché propre, aucune police display choisie, aucun tarif public.
+- **Absences à ne pas fabriquer** : aucune vraie partie jouée en club, aucun club pilote, aucun témoignage, aucune donnée d'usage, aucun chiffre de marché propre, aucun tarif public.
 
 ## Product Principles
 

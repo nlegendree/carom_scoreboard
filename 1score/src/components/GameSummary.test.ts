@@ -139,7 +139,7 @@ describe('GameSummary', () => {
 // donc à ses cinq cellules, toutes en ruban.
 function ribbonCells(wrapper: Wrapper, side: PlayerId) {
   const cells = column(wrapper, side).element.children
-  return [...cells].map((c) => c.classList.contains('bg-victory-ribbon'))
+  return [...cells].map((c) => c.classList.contains('bg-brand-red'))
 }
 
   // AC14 : la colonne du vainqueur entière en ruban rouge, l'autre neutre — et le mot.
@@ -165,7 +165,7 @@ function ribbonCells(wrapper: Wrapper, side: PlayerId) {
 
     expect(cell(wrapper, 'player1', 'summary-result')).toBe('ÉGALITÉ')
     expect(cell(wrapper, 'player2', 'summary-result')).toBe('ÉGALITÉ')
-    expect(wrapper.findAll('.bg-victory-ribbon')).toHaveLength(0)
+    expect(wrapper.findAll('.bg-brand-red')).toHaveLength(0)
   })
 
   // Ordre revu à la 1re passe de rendu (Nathan) : le score d'abord, puis la moyenne APRÈS

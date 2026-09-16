@@ -109,7 +109,7 @@ const scoreSizeClass = computed(
 // Les deux blocs joueur portent un texte noir : un filigrane sombre convient donc au
 // blanc comme au jaune, sans dupliquer le style par couleur.
 const ADJUST_BUTTON_CLASSES =
-  'flex min-h-[var(--size-touch-target)] min-w-[var(--size-touch-target)] items-center justify-center rounded-cta bg-black/8 text-adjust font-black leading-none opacity-60 touch-manipulation select-none active:bg-black/16 active:opacity-100'
+  'flex min-h-[var(--size-touch-target)] min-w-[var(--size-touch-target)] items-center justify-center rounded-tappable bg-black/8 text-adjust font-black leading-none opacity-60 touch-manipulation select-none active:bg-black/16 active:opacity-100'
 
 // Convention des fédérations de billard : moyenne générale à 3 décimales.
 const displayedAverage = computed(() => props.average.toFixed(3))

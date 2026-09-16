@@ -462,13 +462,15 @@ const SUMMARY_SIDEBAR_EXIT: SideBarItem = {
          Terminal : ni retour, ni `ANNULER` — une fin détectée n'est pas rattrapable
          (revue de Nathan, 2026-09-10), la correction se fait avant la série gagnante. -->
     <template v-else-if="status === 'finished'">
-      <!-- Story 10.5 : le récap rejoint la coquille des écrans hors jeu — dégradé gris/noir,
-           barre latérale collée au bord, panneau de contenu à contour. La barre basse
+      <!-- Story 10.5 : le récap rejoint la coquille des écrans hors jeu — barre latérale
+           collée au bord, panneau de contenu à contour. Le marine clair (niveau 1, Story 11.2)
+           est porté par `<main>` et non par la coquille : la barre est le niveau 0, et un
+           conteneur coloré sans marge intérieure est un constat du détecteur. La barre basse
            provisoire de la 10.4 a disparu avec ses deux boutons. -->
-      <div class="flex min-h-0 flex-1 bg-(image:--gradient-bg)">
+      <div class="flex min-h-0 flex-1">
         <SideBar :items="SUMMARY_SIDEBAR_ITEMS" :exitItem="SUMMARY_SIDEBAR_EXIT" />
 
-        <main class="flex min-w-0 flex-1 flex-col p-4">
+        <main class="flex min-w-0 flex-1 flex-col bg-bg-raised p-4">
           <GameSummary
             class="min-h-0 flex-1"
             :mode="mode"

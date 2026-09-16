@@ -78,15 +78,13 @@ const BALL_CLASSES: Record<PlayerColor, string> = {
 
 // Un seul gabarit de bouton pour les trois familles du pied (choix, secondaire, principal) :
 // c'est ce qui fait que toutes les pop-ups du produit se ressemblent. Rayon pris au token
-// `--radius-cta` (0 depuis la passe de rendu 10.1) plutôt qu'à l'échelle de Tailwind : les
-// angles vifs de l'Epic 10 valent pour les pop-ups aussi (revue de Nathan, 2026-09-12).
+// `--radius-tappable` (Story 11.2 : 8 px sur tout objet tapable) plutôt qu'à l'échelle de
+// Tailwind — à côté des claviers en relief, des CTA parfaitement rectangulaires juraient
+// (revue du 2026-09-12) ; c'est la même famille d'objets tapables, elle porte le même arrondi.
 // Chaque CTA porte SON dégradé, jamais un dégradé étalé sur la rangée. L'accent est LE
 // bleu du produit, celui des tuiles de mode (décision de Nathan, 2026-09-12).
-// Rayon pris au token des TOUCHES depuis la revue du 2026-09-12 : à côté des claviers en
-// relief, des CTA parfaitement rectangulaires juraient. C'est la même famille d'objets
-// tapables, elle porte le même arrondi.
 const BUTTON_CLASSES =
-  'w-full min-h-[var(--size-touch-target)] rounded-key text-label font-black touch-manipulation select-none'
+  'w-full min-h-[var(--size-touch-target)] rounded-tappable text-label font-black touch-manipulation select-none'
 const ACCENT_CLASSES = `${BUTTON_CLASSES} bg-(image:--gradient-blue) text-white active:brightness-90`
 const NEUTRAL_CLASSES = `${BUTTON_CLASSES} bg-(image:--gradient-neutral) text-white active:brightness-125`
 
@@ -126,7 +124,7 @@ function closeFromBackdrop(event: PointerEvent): void {
          l'écran. En variante liste, le titre se centre au-dessus du rang de choix. -->
     <div
       data-testid="prompt-card"
-      class="relative flex max-h-full w-full max-w-(--size-popup-decision) flex-col gap-3 overflow-hidden rounded-modal border border-white/12 bg-bg/95 p-3 shadow-[0_32px_80px_rgba(0,0,0,0.65)]"
+      class="relative flex max-h-full w-full max-w-(--size-popup-decision) flex-col gap-3 overflow-hidden rounded-popup border border-border bg-bg-raised/88 p-3 shadow-popup backdrop-blur-sm"
       @pointerdown.stop
       @pointerup.stop
     >

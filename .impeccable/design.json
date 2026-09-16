@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-15T20:00:00+00:00",
+  "generatedAt": "2026-09-16T19:52:11+00:00",
   "title": "Design System: 1Score",
   "extensions": {
     "colorMeta": {
@@ -139,64 +139,64 @@
           "oklch(85.0% 0.192 22.3)"
         ]
       },
-      "rouge-profond-victoire": {
+      "rouge-cta-clair": {
         "role": "secondary",
-        "displayName": "Rouge profond (victoire)",
-        "canonical": "oklch(56.9% 0.192 22.3)",
+        "displayName": "Rouge CTA clair",
+        "canonical": "oklch(64.2% 0.207 20.9)",
         "tonalRamp": [
-          "oklch(15.0% 0.120 22.3)",
-          "oklch(25.0% 0.192 22.3)",
-          "oklch(35.0% 0.192 22.3)",
-          "oklch(45.0% 0.192 22.3)",
-          "oklch(55.0% 0.192 22.3)",
-          "oklch(65.0% 0.192 22.3)",
-          "oklch(75.0% 0.192 22.3)",
-          "oklch(85.0% 0.192 22.3)"
+          "oklch(15.0% 0.120 20.9)",
+          "oklch(25.0% 0.207 20.9)",
+          "oklch(35.0% 0.207 20.9)",
+          "oklch(45.0% 0.207 20.9)",
+          "oklch(55.0% 0.207 20.9)",
+          "oklch(65.0% 0.207 20.9)",
+          "oklch(75.0% 0.207 20.9)",
+          "oklch(85.0% 0.207 20.9)"
         ]
       },
-      "rouge-clair": {
+      "rouge-cta-sombre": {
         "role": "secondary",
-        "displayName": "Rouge clair",
-        "canonical": "oklch(63.3% 0.180 19.9)",
+        "displayName": "Rouge CTA sombre",
+        "canonical": "oklch(52.9% 0.197 24.2)",
         "tonalRamp": [
-          "oklch(15.0% 0.120 19.9)",
-          "oklch(25.0% 0.180 19.9)",
-          "oklch(35.0% 0.180 19.9)",
-          "oklch(45.0% 0.180 19.9)",
-          "oklch(55.0% 0.180 19.9)",
-          "oklch(65.0% 0.180 19.9)",
-          "oklch(75.0% 0.180 19.9)",
-          "oklch(85.0% 0.180 19.9)"
+          "oklch(15.0% 0.120 24.2)",
+          "oklch(25.0% 0.197 24.2)",
+          "oklch(35.0% 0.197 24.2)",
+          "oklch(45.0% 0.197 24.2)",
+          "oklch(55.0% 0.197 24.2)",
+          "oklch(65.0% 0.197 24.2)",
+          "oklch(75.0% 0.197 24.2)",
+          "oklch(85.0% 0.197 24.2)"
         ]
       },
-      "bleu-clair": {
+      "bleu-roi-clair": {
         "role": "primary",
-        "displayName": "Bleu clair",
-        "canonical": "oklch(63.1% 0.144 246.9)",
+        "displayName": "Bleu roi clair",
+        "canonical": "oklch(62.3% 0.188 259.8)",
         "tonalRamp": [
-          "oklch(15.0% 0.120 246.9)",
-          "oklch(25.0% 0.144 246.9)",
-          "oklch(35.0% 0.144 246.9)",
-          "oklch(45.0% 0.144 246.9)",
-          "oklch(55.0% 0.144 246.9)",
-          "oklch(65.0% 0.144 246.9)",
-          "oklch(75.0% 0.144 246.9)",
-          "oklch(85.0% 0.144 246.9)"
+          "oklch(15.0% 0.120 259.8)",
+          "oklch(25.0% 0.188 259.8)",
+          "oklch(35.0% 0.188 259.8)",
+          "oklch(45.0% 0.188 259.8)",
+          "oklch(55.0% 0.188 259.8)",
+          "oklch(65.0% 0.188 259.8)",
+          "oklch(75.0% 0.188 259.8)",
+          "oklch(85.0% 0.188 259.8)"
         ]
       },
-      "bleu-drap": {
+      "bleu-roi": {
         "role": "primary",
-        "displayName": "Bleu drap",
-        "canonical": "oklch(54.0% 0.141 247.0)",
+        "displayName": "Bleu roi",
+        "canonical": "oklch(48.8% 0.217 264.4)",
         "tonalRamp": [
-          "oklch(15.0% 0.120 247.0)",
-          "oklch(25.0% 0.141 247.0)",
-          "oklch(35.0% 0.141 247.0)",
-          "oklch(45.0% 0.141 247.0)",
-          "oklch(55.0% 0.141 247.0)",
-          "oklch(65.0% 0.141 247.0)",
-          "oklch(75.0% 0.141 247.0)",
-          "oklch(85.0% 0.141 247.0)"
+          "oklch(15.0% 0.120 264.4)",
+          "oklch(25.0% 0.217 264.4)",
+          "oklch(35.0% 0.217 264.4)",
+          "oklch(45.0% 0.217 264.4)",
+          "oklch(55.0% 0.217 264.4)",
+          "oklch(65.0% 0.217 264.4)",
+          "oklch(75.0% 0.217 264.4)",
+          "oklch(85.0% 0.217 264.4)"
         ]
       },
       "bleu-moyen": {
@@ -259,200 +259,105 @@
           "oklch(85.0% 0.076 249.1)"
         ]
       },
-      "bleu-accent-focus": {
+      "marine-sombre": {
         "role": "neutral",
-        "displayName": "Bleu accent (focus)",
-        "canonical": "oklch(61.8% 0.167 250.9)",
+        "displayName": "Marine sombre",
+        "canonical": "oklch(26.4% 0.039 270.8)",
         "tonalRamp": [
-          "oklch(15.0% 0.120 250.9)",
-          "oklch(25.0% 0.167 250.9)",
-          "oklch(35.0% 0.167 250.9)",
-          "oklch(45.0% 0.167 250.9)",
-          "oklch(55.0% 0.167 250.9)",
-          "oklch(65.0% 0.167 250.9)",
-          "oklch(75.0% 0.167 250.9)",
-          "oklch(85.0% 0.167 250.9)"
+          "oklch(15.0% 0.039 270.8)",
+          "oklch(25.0% 0.039 270.8)",
+          "oklch(35.0% 0.039 270.8)",
+          "oklch(45.0% 0.039 270.8)",
+          "oklch(55.0% 0.039 270.8)",
+          "oklch(65.0% 0.039 270.8)",
+          "oklch(75.0% 0.039 270.8)",
+          "oklch(85.0% 0.039 270.8)"
         ]
       },
-      "noir-bleute": {
+      "marine-clair": {
         "role": "neutral",
-        "displayName": "Noir bleuté",
-        "canonical": "oklch(17.6% 0.014 258.4)",
+        "displayName": "Marine clair",
+        "canonical": "oklch(30.8% 0.050 272.1)",
         "tonalRamp": [
-          "oklch(15.0% 0.014 258.4)",
-          "oklch(25.0% 0.014 258.4)",
-          "oklch(35.0% 0.014 258.4)",
-          "oklch(45.0% 0.014 258.4)",
-          "oklch(55.0% 0.014 258.4)",
-          "oklch(65.0% 0.014 258.4)",
-          "oklch(75.0% 0.014 258.4)",
-          "oklch(85.0% 0.014 258.4)"
+          "oklch(15.0% 0.050 272.1)",
+          "oklch(25.0% 0.050 272.1)",
+          "oklch(35.0% 0.050 272.1)",
+          "oklch(45.0% 0.050 272.1)",
+          "oklch(55.0% 0.050 272.1)",
+          "oklch(65.0% 0.050 272.1)",
+          "oklch(75.0% 0.050 272.1)",
+          "oklch(85.0% 0.050 272.1)"
         ]
       },
-      "noir-barre": {
+      "ardoise-touche": {
         "role": "neutral",
-        "displayName": "Noir barre",
-        "canonical": "oklch(18.6% 0.011 260.6)",
+        "displayName": "Ardoise touche",
+        "canonical": "oklch(37.8% 0.032 272.7)",
         "tonalRamp": [
-          "oklch(15.0% 0.011 260.6)",
-          "oklch(25.0% 0.011 260.6)",
-          "oklch(35.0% 0.011 260.6)",
-          "oklch(45.0% 0.011 260.6)",
-          "oklch(55.0% 0.011 260.6)",
-          "oklch(65.0% 0.011 260.6)",
-          "oklch(75.0% 0.011 260.6)",
-          "oklch(85.0% 0.011 260.6)"
+          "oklch(15.0% 0.032 272.7)",
+          "oklch(25.0% 0.032 272.7)",
+          "oklch(35.0% 0.032 272.7)",
+          "oklch(45.0% 0.032 272.7)",
+          "oklch(55.0% 0.032 272.7)",
+          "oklch(65.0% 0.032 272.7)",
+          "oklch(75.0% 0.032 272.7)",
+          "oklch(85.0% 0.032 272.7)"
         ]
       },
-      "anthracite-chrono": {
+      "ardoise-touche-active": {
         "role": "neutral",
-        "displayName": "Anthracite chrono",
-        "canonical": "oklch(23.9% 0.012 264.3)",
+        "displayName": "Ardoise touche active",
+        "canonical": "oklch(42.9% 0.039 275.1)",
         "tonalRamp": [
-          "oklch(15.0% 0.012 264.3)",
-          "oklch(25.0% 0.012 264.3)",
-          "oklch(35.0% 0.012 264.3)",
-          "oklch(45.0% 0.012 264.3)",
-          "oklch(55.0% 0.012 264.3)",
-          "oklch(65.0% 0.012 264.3)",
-          "oklch(75.0% 0.012 264.3)",
-          "oklch(85.0% 0.012 264.3)"
+          "oklch(15.0% 0.039 275.1)",
+          "oklch(25.0% 0.039 275.1)",
+          "oklch(35.0% 0.039 275.1)",
+          "oklch(45.0% 0.039 275.1)",
+          "oklch(55.0% 0.039 275.1)",
+          "oklch(65.0% 0.039 275.1)",
+          "oklch(75.0% 0.039 275.1)",
+          "oklch(85.0% 0.039 275.1)"
         ]
       },
-      "anthracite-touche": {
+      "ardoise-cta": {
         "role": "neutral",
-        "displayName": "Anthracite touche",
-        "canonical": "oklch(32.0% 0.016 259.8)",
+        "displayName": "Ardoise CTA",
+        "canonical": "oklch(41.5% 0.031 272.8)",
         "tonalRamp": [
-          "oklch(15.0% 0.016 259.8)",
-          "oklch(25.0% 0.016 259.8)",
-          "oklch(35.0% 0.016 259.8)",
-          "oklch(45.0% 0.016 259.8)",
-          "oklch(55.0% 0.016 259.8)",
-          "oklch(65.0% 0.016 259.8)",
-          "oklch(75.0% 0.016 259.8)",
-          "oklch(85.0% 0.016 259.8)"
+          "oklch(15.0% 0.031 272.8)",
+          "oklch(25.0% 0.031 272.8)",
+          "oklch(35.0% 0.031 272.8)",
+          "oklch(45.0% 0.031 272.8)",
+          "oklch(55.0% 0.031 272.8)",
+          "oklch(65.0% 0.031 272.8)",
+          "oklch(75.0% 0.031 272.8)",
+          "oklch(85.0% 0.031 272.8)"
         ]
       },
-      "anthracite-touche-active": {
+      "ardoise-cta-sombre": {
         "role": "neutral",
-        "displayName": "Anthracite touche active",
-        "canonical": "oklch(38.0% 0.019 257.3)",
+        "displayName": "Ardoise CTA sombre",
+        "canonical": "oklch(33.4% 0.024 271.7)",
         "tonalRamp": [
-          "oklch(15.0% 0.019 257.3)",
-          "oklch(25.0% 0.019 257.3)",
-          "oklch(35.0% 0.019 257.3)",
-          "oklch(45.0% 0.019 257.3)",
-          "oklch(55.0% 0.019 257.3)",
-          "oklch(65.0% 0.019 257.3)",
-          "oklch(75.0% 0.019 257.3)",
-          "oklch(85.0% 0.019 257.3)"
-        ]
-      },
-      "gris-ardoise": {
-        "role": "neutral",
-        "displayName": "Gris ardoise",
-        "canonical": "oklch(36.9% 0.017 258.4)",
-        "tonalRamp": [
-          "oklch(15.0% 0.017 258.4)",
-          "oklch(25.0% 0.017 258.4)",
-          "oklch(35.0% 0.017 258.4)",
-          "oklch(45.0% 0.017 258.4)",
-          "oklch(55.0% 0.017 258.4)",
-          "oklch(65.0% 0.017 258.4)",
-          "oklch(75.0% 0.017 258.4)",
-          "oklch(85.0% 0.017 258.4)"
-        ]
-      },
-      "gris-ardoise-sombre": {
-        "role": "neutral",
-        "displayName": "Gris ardoise sombre",
-        "canonical": "oklch(28.4% 0.014 261.7)",
-        "tonalRamp": [
-          "oklch(15.0% 0.014 261.7)",
-          "oklch(25.0% 0.014 261.7)",
-          "oklch(35.0% 0.014 261.7)",
-          "oklch(45.0% 0.014 261.7)",
-          "oklch(55.0% 0.014 261.7)",
-          "oklch(65.0% 0.014 261.7)",
-          "oklch(75.0% 0.014 261.7)",
-          "oklch(85.0% 0.014 261.7)"
-        ]
-      },
-      "gris-panneau": {
-        "role": "neutral",
-        "displayName": "Gris panneau",
-        "canonical": "oklch(36.7% 0.018 264.3)",
-        "tonalRamp": [
-          "oklch(15.0% 0.018 264.3)",
-          "oklch(25.0% 0.018 264.3)",
-          "oklch(35.0% 0.018 264.3)",
-          "oklch(45.0% 0.018 264.3)",
-          "oklch(55.0% 0.018 264.3)",
-          "oklch(65.0% 0.018 264.3)",
-          "oklch(75.0% 0.018 264.3)",
-          "oklch(85.0% 0.018 264.3)"
-        ]
-      },
-      "gris-panneau-sombre": {
-        "role": "neutral",
-        "displayName": "Gris panneau sombre",
-        "canonical": "oklch(26.8% 0.012 264.4)",
-        "tonalRamp": [
-          "oklch(15.0% 0.012 264.4)",
-          "oklch(25.0% 0.012 264.4)",
-          "oklch(35.0% 0.012 264.4)",
-          "oklch(45.0% 0.012 264.4)",
-          "oklch(55.0% 0.012 264.4)",
-          "oklch(65.0% 0.012 264.4)",
-          "oklch(75.0% 0.012 264.4)",
-          "oklch(85.0% 0.012 264.4)"
-        ]
-      },
-      "gris-fond-clair": {
-        "role": "neutral",
-        "displayName": "Gris fond clair",
-        "canonical": "oklch(30.0% 0.014 261.7)",
-        "tonalRamp": [
-          "oklch(15.0% 0.014 261.7)",
-          "oklch(25.0% 0.014 261.7)",
-          "oklch(35.0% 0.014 261.7)",
-          "oklch(45.0% 0.014 261.7)",
-          "oklch(55.0% 0.014 261.7)",
-          "oklch(65.0% 0.014 261.7)",
-          "oklch(75.0% 0.014 261.7)",
-          "oklch(85.0% 0.014 261.7)"
-        ]
-      },
-      "gris-fond-sombre": {
-        "role": "neutral",
-        "displayName": "Gris fond sombre",
-        "canonical": "oklch(18.6% 0.009 264.3)",
-        "tonalRamp": [
-          "oklch(15% 0 0)",
-          "oklch(25% 0 0)",
-          "oklch(35% 0 0)",
-          "oklch(45% 0 0)",
-          "oklch(55% 0 0)",
-          "oklch(65% 0 0)",
-          "oklch(75% 0 0)",
-          "oklch(85% 0 0)"
+          "oklch(15.0% 0.024 271.7)",
+          "oklch(25.0% 0.024 271.7)",
+          "oklch(35.0% 0.024 271.7)",
+          "oklch(45.0% 0.024 271.7)",
+          "oklch(55.0% 0.024 271.7)",
+          "oklch(65.0% 0.024 271.7)",
+          "oklch(75.0% 0.024 271.7)",
+          "oklch(85.0% 0.024 271.7)"
         ]
       },
       "surface-voilee": {
         "role": "neutral",
         "displayName": "Surface voilée",
-        "canonical": "rgba(255, 255, 255, 0.06)"
+        "canonical": "rgba(255, 255, 255, 0.08)"
       },
       "filet": {
         "role": "neutral",
         "displayName": "Filet",
-        "canonical": "rgba(255, 255, 255, 0.18)"
-      },
-      "filet-fort": {
-        "role": "neutral",
-        "displayName": "Filet fort",
-        "canonical": "rgba(255, 255, 255, 0.40)"
+        "canonical": "rgba(255, 255, 255, 0.22)"
       },
       "voile": {
         "role": "neutral",
@@ -551,28 +456,18 @@
     "gradients": [
       {
         "name": "--gradient-blue",
-        "value": "linear-gradient(160deg, #2E8FDB 0%, #0573BB 100%)",
-        "purpose": "LE bleu : tuiles disponibles, CTA accent, CTA de réglage, CTA de barre basse."
+        "value": "linear-gradient(160deg, #3B82F6 0%, #1D4ED8 100%)",
+        "purpose": "LE bleu (bleu roi, Story 11.2) : tuiles disponibles, CTA accent, CTA de réglage, CTA de barre basse, PASSER LE TOUR."
       },
       {
         "name": "--gradient-neutral",
-        "value": "linear-gradient(160deg, #3A4049 0%, #262A31 100%)",
-        "purpose": "CTA neutres opaques : ANNULER, secondaire de pop-up, PASSER LE TOUR."
+        "value": "linear-gradient(160deg, #464B5D 0%, #323643 100%)",
+        "purpose": "CTA neutres opaques : ANNULER, secondaire de pop-up (PASSER LE TOUR est bleu depuis la 11.2). Famille du marine (228°), même teinte que les touches."
       },
       {
         "name": "--gradient-red",
-        "value": "linear-gradient(160deg, #E2515B 0%, #D0343F 100%)",
-        "purpose": "DÉMARRER, seul CTA rouge."
-      },
-      {
-        "name": "--gradient-panel",
-        "value": "linear-gradient(160deg, #3A3F49 0%, #23262C 100%)",
-        "purpose": "Colonne centrale du paramétrage."
-      },
-      {
-        "name": "--gradient-bg",
-        "value": "linear-gradient(160deg, #2A2E35 0%, #111317 55%, #000000 100%)",
-        "purpose": "Fond de tous les écrans hors jeu."
+        "value": "linear-gradient(160deg, #F04553 0%, #C41F2C 100%)",
+        "purpose": "DÉMARRER, seul CTA rouge : rouge saturé, détaché du rouge de marque (Story 11.2)."
       },
       {
         "name": "--gradient-tile-quilles",
@@ -583,38 +478,38 @@
         "name": "--gradient-tile-casin",
         "value": "linear-gradient(160deg, #05508A 0%, #022B4D 100%)",
         "purpose": "Tuile BIENTÔT Casin."
-      },
-      {
-        "name": "--gradient-field",
-        "value": "linear-gradient(160deg, #454A54 0%, #1A1D22 100%)",
-        "purpose": "DÉCLARÉ, NON CONSOMMÉ : ancien fond de champ de pop-up, à supprimer."
       }
     ],
     "shadows": [
       {
-        "name": "key-relief",
+        "name": "--shadow-key-relief",
         "value": "inset 0 1px 0 rgba(255,255,255,0.10), 0 2px 0 rgba(0,0,0,0.45)",
         "purpose": "Relief des touches de clavier ; disparaît à l’appui (la touche s’enfonce)."
       },
       {
-        "name": "key-relief-active",
+        "name": "--shadow-key-relief-active",
         "value": "inset 0 1px 0 rgba(255,255,255,0.06)",
         "purpose": "Touche enfoncée, avec translateY(1px)."
       },
       {
-        "name": "light-edge-start",
+        "name": "--shadow-light-edge-start",
         "value": "inset 0 1px 0 rgba(255,255,255,0.25)",
         "purpose": "Filet de lumière de DÉMARRER."
       },
       {
-        "name": "light-edge-field",
+        "name": "--shadow-light-edge-field",
         "value": "inset 0 1px 0 rgba(255,255,255,0.35)",
         "purpose": "Filet de lumière des champs de paramétrage."
       },
       {
-        "name": "popup",
+        "name": "--shadow-popup",
         "value": "0 32px 80px rgba(0,0,0,0.65)",
-        "purpose": "Carte de toute pop-up ; la seule ombre diffuse du produit."
+        "purpose": "Carte de toute pop-up, posée sur le voile à 25 %."
+      },
+      {
+        "name": "--shadow-sidebar",
+        "value": "6px 0 28px rgba(0,0,0,0.45)",
+        "purpose": "La barre latérale la porte sur le contenu, à sa droite (modèle Cueuny, Story 11.2) ; elle remplace le filet droit."
       }
     ],
     "motion": [
@@ -655,10 +550,6 @@
         "value": "768px"
       },
       {
-        "name": "lg",
-        "value": "1280px"
-      },
-      {
         "name": "player-card @container",
         "value": "420px"
       },
@@ -689,49 +580,49 @@
       "name": "CTA accent (pop-up)",
       "kind": "button",
       "refersTo": "button-accent",
-      "description": "CTA principal de toute pop-up (VALIDER, RÉGLER LA DISTANCE, choix de cadre) : dégradé bleu du produit, rayon de touche.",
+      "description": "CTA principal de toute pop-up (VALIDER, RÉGLER LA DISTANCE, choix de cadre) : dégradé bleu du produit, rayon tapable.",
       "html": "<button class=\"ds-btn-accent\">VALIDER</button>",
-      "css": ".ds-btn-accent{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;background:var(--gradient-blue);border-radius:var(--radius-key);padding:0 16px}.ds-btn-accent:hover{filter:brightness(1.05)}.ds-btn-accent:active{filter:brightness(.9)}.ds-btn-accent:focus-visible{outline:4px solid var(--color-accent);outline-offset:2px}"
+      "css": ".ds-btn-accent{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:Saira,system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;background:var(--gradient-blue);border-radius:var(--radius-tappable);padding:0 16px}.ds-btn-accent:hover{filter:brightness(1.05)}.ds-btn-accent:active{filter:brightness(.9)}.ds-btn-accent:focus-visible{outline:4px solid var(--color-turn-active);outline-offset:2px}"
     },
     {
       "name": "CTA neutre (pop-up)",
       "kind": "button",
       "refersTo": "button-neutral",
-      "description": "Retour de toute pop-up (ANNULER) et PASSER LE TOUR : ardoise opaque, sans contour, jamais rouge.",
+      "description": "Retour de toute pop-up (ANNULER) et secondaire : ardoise opaque, sans contour, jamais rouge. PASSER LE TOUR est bleu depuis la 11.2.",
       "html": "<button class=\"ds-btn-neutral\">ANNULER</button>",
-      "css": ".ds-btn-neutral{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;background:var(--gradient-neutral);border-radius:var(--radius-key);padding:0 16px}.ds-btn-neutral:active{filter:brightness(1.25)}.ds-btn-neutral:focus-visible{outline:4px solid var(--color-accent);outline-offset:2px}"
+      "css": ".ds-btn-neutral{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:Saira,system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;background:var(--gradient-neutral);border-radius:var(--radius-tappable);padding:0 16px}.ds-btn-neutral:active{filter:brightness(1.25)}.ds-btn-neutral:focus-visible{outline:4px solid var(--color-turn-active);outline-offset:2px}"
     },
     {
       "name": "DÉMARRER",
       "kind": "button",
       "refersTo": "button-start",
-      "description": "Le seul CTA rouge : l’action qui engage la partie. Chevron nu à gauche, filet de lumière, 110 px, angles vifs.",
+      "description": "Le seul CTA rouge : l’action qui engage la partie. Chevron nu à gauche, filet de lumière, 110 px, rayon tapable.",
       "html": "<button class=\"ds-btn-start\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg><span>DÉMARRER</span></button>",
-      "css": ".ds-btn-start{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-start-button);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-start-button);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;gap:calc(var(--spacing) * 2);background:var(--gradient-red);border-radius:var(--radius-cta);padding:0 calc(var(--spacing) * 2);letter-spacing:var(--tracking-label);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}.ds-btn-start svg{width:40px;height:40px;flex-shrink:0}.ds-btn-start:active{filter:brightness(.9)}"
+      "css": ".ds-btn-start{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-start-button);font-family:Saira,system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-start-button);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;gap:calc(var(--spacing) * 2);background:var(--gradient-red);border-radius:var(--radius-tappable);padding:0 calc(var(--spacing) * 2);letter-spacing:var(--tracking-label);box-shadow:var(--shadow-light-edge-start)}.ds-btn-start svg{width:40px;height:40px;flex-shrink:0}.ds-btn-start:active{filter:brightness(.9)}"
     },
     {
       "name": "CTA de réglage",
       "kind": "button",
       "refersTo": "button-setup",
-      "description": "Réglage retouchable du paramétrage (CHANGER DE BILLE, CHANGER DE CÔTÉ) : bleu, angles vifs, picto en ligne.",
+      "description": "Réglage retouchable du paramétrage (CHANGER DE BILLE, CHANGER DE CÔTÉ) : bleu, rayon tapable, picto en ligne.",
       "html": "<button class=\"ds-btn-setup\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m16 3 4 4-4 4\"/><path d=\"M20 7H4\"/><path d=\"m8 21-4-4 4-4\"/><path d=\"M4 17h16\"/></svg><span>CHANGER DE CÔTÉ</span></button>",
-      "css": ".ds-btn-setup{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;gap:16px;background:var(--gradient-blue);border-radius:var(--radius-cta);padding:0 16px;font-size:var(--text-label);font-weight:700}.ds-btn-setup svg{width:24px;height:24px;flex-shrink:0}.ds-btn-setup:active{filter:brightness(.9)}"
+      "css": ".ds-btn-setup{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:Saira,system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;gap:16px;background:var(--gradient-blue);border-radius:var(--radius-tappable);padding:0 16px;font-size:var(--text-label);font-weight:700}.ds-btn-setup svg{width:24px;height:24px;flex-shrink:0}.ds-btn-setup:active{filter:brightness(.9)}"
     },
     {
       "name": "Touche de clavier",
       "kind": "custom",
       "refersTo": "key",
-      "description": "Plaque anthracite en relief qui s’enfonce à l’appui. Partagée par les pavés numérique et alphabétique.",
+      "description": "Plaque ardoise en relief qui s’enfonce à l’appui. Partagée par les pavés numérique et alphabétique.",
       "html": "<div class=\"ds-keys\"><button class=\"ds-key\">1</button><button class=\"ds-key\">2</button><button class=\"ds-key\">3</button></div>",
-      "css": ".ds-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(var(--spacing) * 2);max-width:320px}.ds-key{display:flex;align-items:center;justify-content:center;min-height:var(--size-key-numeric);min-width:var(--size-key-numeric);background:var(--color-key);color:#fff;border:none;border-radius:var(--radius-key);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-key-numeric);font-weight:600;letter-spacing:-.025em;line-height:1;box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 2px 0 rgba(0,0,0,.45);transition:all 75ms;cursor:pointer;user-select:none}.ds-key:active{transform:translateY(1px);background:var(--color-key-active);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}.ds-key:disabled{opacity:.3}"
+      "css": ".ds-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(var(--spacing) * 2);max-width:320px}.ds-key{display:flex;align-items:center;justify-content:center;min-height:var(--size-key-numeric);min-width:var(--size-key-numeric);background:var(--color-key);color:#fff;border:none;border-radius:var(--radius-tappable);font-family:Saira,system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-key-numeric);font-weight:600;letter-spacing:-.025em;line-height:1;box-shadow:var(--shadow-key-relief);transition:all 75ms;cursor:pointer;user-select:none}.ds-key:active{transform:translateY(1px);background:var(--color-key-active);box-shadow:var(--shadow-key-relief-active)}.ds-key:disabled{opacity:.3}"
     },
     {
       "name": "Picto d’action (barre basse)",
       "kind": "nav",
       "refersTo": "icon-action",
-      "description": "Commande secondaire du scoreboard : picto 32 px au-dessus d’un libellé court, surface voilée, filet, 90 × 90 px.",
+      "description": "Commande secondaire du scoreboard : picto 32 px au-dessus d’un libellé court, surface voilée, filet, rayon tapable, 90 × 90 px.",
       "html": "<button class=\"ds-icon-action\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 14 4 9l5-5\"/><path d=\"M4 9h10.5a5.5 5.5 0 0 1 0 11H11\"/></svg><span>ANNULER</span></button>",
-      "css": ".ds-icon-action{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-width:var(--size-touch-target);min-height:var(--size-touch-target);padding:0 8px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-cta);color:#fff;font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-picto);font-weight:700;text-transform:uppercase;line-height:1.25;cursor:pointer;user-select:none}.ds-icon-action svg{width:32px;height:32px}.ds-icon-action:active{background:rgba(255,255,255,.15)}.ds-icon-action:disabled{opacity:.3}"
+      "css": ".ds-icon-action{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-width:var(--size-touch-target);min-height:var(--size-touch-target);padding:0 8px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-tappable);color:#fff;font-family:Saira,system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-picto);font-weight:700;text-transform:uppercase;line-height:1.25;cursor:pointer;user-select:none}.ds-icon-action svg{width:32px;height:32px}.ds-icon-action:active{background:rgba(255,255,255,.15)}.ds-icon-action:disabled{opacity:.3}"
     },
     {
       "name": "Tuile de mode",
@@ -739,15 +630,15 @@
       "refersTo": "mode-tile",
       "description": "Tuile jointive d’accueil : titre 900 en haut à gauche, flèche nue en bas à droite, dégradé bleu unique ; BIENTÔT atténue le fond à 45 % et ajoute un badge.",
       "html": "<div class=\"ds-tiles\"><button class=\"ds-tile\"><span class=\"ds-tile-bg\"></span><span class=\"ds-tile-title\">3 BANDES</span><svg class=\"ds-tile-arrow\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></button><button class=\"ds-tile ds-tile--soon\" disabled><span class=\"ds-tile-bg ds-tile-bg--quilles\"></span><span class=\"ds-tile-title\">QUILLES</span><span class=\"ds-tile-badge\">BIENTÔT</span></button></div>",
-      "css": ".ds-tiles{display:grid;grid-template-columns:1fr 1fr;max-width:520px}.ds-tiles>.ds-tile+.ds-tile{border-left:1px solid var(--color-border)}.ds-tile{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:space-between;min-height:var(--size-tile-min);padding:calc(var(--spacing) * 2);background:none;border:none;text-align:left;color:#fff;cursor:pointer;user-select:none}.ds-tile-bg{position:absolute;inset:0;z-index:-1;background:var(--gradient-blue)}.ds-tile-bg--quilles{background:var(--gradient-tile-quilles)}.ds-tile--soon .ds-tile-bg{opacity:.45}.ds-tile-title{font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-title);font-weight:900;text-transform:uppercase;line-height:1}.ds-tile-arrow{width:40px;height:40px;align-self:flex-end}.ds-tile-badge{align-self:flex-end;background:rgba(255,255,255,.15);padding:4px 12px;font-family:system-ui,sans-serif;font-size:var(--text-stat);font-weight:700}.ds-tile:not(.ds-tile--soon):hover{filter:brightness(1.1)}.ds-tile:not(.ds-tile--soon):active{filter:brightness(1.25)}"
+      "css": ".ds-tiles{display:grid;grid-template-columns:1fr 1fr;max-width:520px}.ds-tiles>.ds-tile+.ds-tile{border-left:1px solid var(--color-border)}.ds-tile{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:space-between;min-height:var(--size-tile-min);padding:calc(var(--spacing) * 2);background:none;border:none;text-align:left;color:#fff;cursor:pointer;user-select:none}.ds-tile-bg{position:absolute;inset:0;z-index:-1;background:var(--gradient-blue)}.ds-tile-bg--quilles{background:var(--gradient-tile-quilles)}.ds-tile--soon .ds-tile-bg{opacity:.45}.ds-tile-title{font-family:Saira,system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-title);font-weight:900;text-transform:uppercase;line-height:1}.ds-tile-arrow{width:40px;height:40px;align-self:flex-end}.ds-tile-badge{align-self:flex-end;background:rgba(255,255,255,.15);padding:4px 12px;font-family:Saira,system-ui,sans-serif;font-size:var(--text-stat);font-weight:700}.ds-tile:not(.ds-tile--soon):hover{filter:brightness(1.1)}.ds-tile:not(.ds-tile--soon):active{filter:brightness(1.25)}"
     },
     {
       "name": "Barre latérale",
       "kind": "nav",
       "refersTo": "sidebar-item",
-      "description": "Colonne de 120 px collée au bord : en-tête rouge coupé en biais, items picto + libellé, sortie isolée en bas. Contextuelle, nourrie par l’écran.",
+      "description": "Colonne de 120 px collée au bord, marine sombre, ombre portée sur le contenu : en-tête rouge coupé en biais, items picto + libellé, sortie isolée en bas. Contextuelle, nourrie par l’écran.",
       "html": "<aside class=\"ds-sidebar\"><div class=\"ds-sidebar-header\"><span class=\"ds-sidebar-cut\"></span><span class=\"ds-sidebar-fold\"></span><span class=\"ds-sidebar-logo\">1S</span><span class=\"ds-sidebar-brand\">1Score</span></div><button class=\"ds-sidebar-item\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M19 12H5\"/><path d=\"m12 19-7-7 7-7\"/></svg><span>RETOUR</span></button><button class=\"ds-sidebar-item ds-sidebar-item--exit\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/></svg><span>ANNULER</span></button></aside>",
-      "css": ".ds-sidebar{display:flex;flex-direction:column;gap:calc(var(--spacing) * 1.5);width:var(--size-sidebar);height:420px;padding-bottom:24px;background:var(--color-sidebar);border-right:1px solid var(--color-border)}.ds-sidebar-header{position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;gap:4px;height:120px;padding-top:16px;flex-shrink:0}.ds-sidebar-cut,.ds-sidebar-fold{position:absolute;inset:0;z-index:-1;background:var(--color-brand-red)}.ds-sidebar-cut{clip-path:polygon(0 0,100% 0,100% 92%,0 72%)}.ds-sidebar-fold{opacity:.35;clip-path:polygon(0 72%,100% 92%,100% 100%,0 84%)}.ds-sidebar-logo{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:#222;color:#fff;font-weight:900;font-family:system-ui,sans-serif}.ds-sidebar-brand{color:#fff;font-family:system-ui,sans-serif;font-size:var(--text-picto);font-weight:900;letter-spacing:var(--tracking-title)}.ds-sidebar-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:var(--size-touch-target);width:100%;padding:0 4px;background:none;border:none;color:#fff;font-family:system-ui,sans-serif;font-size:var(--text-picto);font-weight:700;text-transform:uppercase;line-height:1.25;text-align:center;cursor:pointer}.ds-sidebar-item svg{width:32px;height:32px}.ds-sidebar-item--exit{margin-top:auto}"
+      "css": ".ds-sidebar{display:flex;flex-direction:column;gap:calc(var(--spacing) * 1.5);width:var(--size-sidebar);height:420px;padding-bottom:24px;background:var(--color-bg);box-shadow:var(--shadow-sidebar);position:relative;z-index:1}.ds-sidebar-header{position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;gap:4px;height:120px;padding-top:16px;flex-shrink:0}.ds-sidebar-cut,.ds-sidebar-fold{position:absolute;inset:0;z-index:-1;background:var(--color-brand-red)}.ds-sidebar-cut{clip-path:polygon(0 0,100% 0,100% 92%,0 72%)}.ds-sidebar-fold{opacity:.35;clip-path:polygon(0 72%,100% 92%,100% 100%,0 84%)}.ds-sidebar-logo{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:#222;color:#fff;font-weight:900;font-family:Saira,system-ui,sans-serif}.ds-sidebar-brand{color:#fff;font-family:Saira,system-ui,sans-serif;font-size:var(--text-picto);font-weight:900;letter-spacing:var(--tracking-title)}.ds-sidebar-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:var(--size-touch-target);width:100%;padding:0 4px;background:none;border:none;color:#fff;font-family:Saira,system-ui,sans-serif;font-size:var(--text-picto);font-weight:700;text-transform:uppercase;line-height:1.25;text-align:center;cursor:pointer}.ds-sidebar-item svg{width:32px;height:32px}.ds-sidebar-item--exit{margin-top:auto}"
     },
     {
       "name": "Carte joueur (blanche)",
@@ -755,97 +646,67 @@
       "refersTo": "player-card-white",
       "description": "Aplat plein à encre noire : bandeau NOM | DISTANCE puis RESTANT | MOY · SÉRIE, score géant, pied − / série / +. Liseré rouge vif quand le joueur a la main.",
       "html": "<div class=\"ds-player ds-player--active\"><div class=\"ds-player-band\"><div class=\"ds-player-row\"><span class=\"ds-player-name\">MICHEL</span><span class=\"ds-player-num\">40</span></div><div class=\"ds-player-row\"><span class=\"ds-player-num\">28</span><span class=\"ds-player-stats\"><span><b>MOY</b> 0.750</span><span><b>SÉRIE</b> 4</span></span></div></div><div class=\"ds-player-score\">12</div><div class=\"ds-player-foot\"><button class=\"ds-player-adjust\">−</button><span class=\"ds-player-series\">3</span><button class=\"ds-player-adjust\">+</button></div><span class=\"ds-player-ring\"></span></div>",
-      "css": ".ds-player{position:relative;display:flex;flex-direction:column;width:360px;height:300px;overflow:hidden;background:var(--color-player-white);color:var(--color-on-player-white);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;user-select:none}.ds-player-band{display:flex;flex-direction:column;gap:8px;padding:20px 24px;background:var(--color-panel-white-band)}.ds-player-row{display:flex;align-items:baseline;justify-content:space-between;gap:16px}.ds-player-name{font-size:var(--text-label);font-weight:900;text-transform:uppercase;line-height:1.25}.ds-player-num{font-size:var(--text-label);font-weight:900;font-variant-numeric:tabular-nums;line-height:1}.ds-player-stats{margin-left:auto;display:flex;gap:16px;font-size:var(--text-stat);font-weight:900;font-variant-numeric:tabular-nums}.ds-player-stats b{font-weight:700;opacity:.6;margin-right:4px}.ds-player-score{flex:1;display:flex;align-items:center;justify-content:center;font-size:var(--text-score-1);font-weight:900;line-height:1;font-variant-numeric:tabular-nums}.ds-player-foot{display:flex;align-items:center;justify-content:space-between;padding:0 16px 16px}.ds-player-adjust{display:flex;align-items:center;justify-content:center;min-width:var(--size-touch-target);min-height:var(--size-touch-target);background:rgba(0,0,0,.08);border:none;border-radius:var(--radius-cta);font-size:var(--text-adjust);font-weight:900;opacity:.6;cursor:pointer}.ds-player-adjust:active{background:rgba(0,0,0,.16);opacity:1}.ds-player-series{font-size:var(--text-series);font-weight:900;color:var(--color-brand-red);font-variant-numeric:tabular-nums;line-height:1}.ds-player-ring{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 8px var(--color-turn-active)}.ds-player:not(.ds-player--active) .ds-player-ring{display:none}"
+      "css": ".ds-player{position:relative;display:flex;flex-direction:column;width:360px;height:300px;overflow:hidden;background:var(--color-player-white);color:var(--color-on-player-white);font-family:Saira,system-ui,Avenir,Helvetica,Arial,sans-serif;user-select:none}.ds-player-band{display:flex;flex-direction:column;gap:8px;padding:20px 24px;background:var(--color-panel-white-band)}.ds-player-row{display:flex;align-items:baseline;justify-content:space-between;gap:16px}.ds-player-name{font-size:var(--text-label);font-weight:900;text-transform:uppercase;line-height:1.25}.ds-player-num{font-size:var(--text-label);font-weight:900;font-variant-numeric:tabular-nums;line-height:1}.ds-player-stats{margin-left:auto;display:flex;gap:16px;font-size:var(--text-stat);font-weight:900;font-variant-numeric:tabular-nums}.ds-player-stats b{font-weight:700;opacity:.6;margin-right:4px}.ds-player-score{flex:1;display:flex;align-items:center;justify-content:center;font-size:var(--text-score-1);font-weight:900;line-height:1;font-variant-numeric:tabular-nums}.ds-player-foot{display:flex;align-items:center;justify-content:space-between;padding:0 16px 16px}.ds-player-adjust{display:flex;align-items:center;justify-content:center;min-width:var(--size-touch-target);min-height:var(--size-touch-target);background:rgba(0,0,0,.08);border:none;border-radius:var(--radius-tappable);font-size:var(--text-adjust);font-weight:900;opacity:.6;cursor:pointer}.ds-player-adjust:active{background:rgba(0,0,0,.16);opacity:1}.ds-player-series{font-size:var(--text-series);font-weight:900;color:var(--color-brand-red);font-variant-numeric:tabular-nums;line-height:1}.ds-player-ring{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 8px var(--color-turn-active)}.ds-player:not(.ds-player--active) .ds-player-ring{display:none}"
     },
     {
       "name": "Carte de pop-up",
       "kind": "card",
       "refersTo": "popup-card",
-      "description": "Le patron des quatre pop-ups : voile noir 25 % sans flou, carte sombre à 12 px, titre centré, pied ANNULER (1/3) + VALIDER. Jamais de croix.",
+      "description": "Le patron des quatre pop-ups : voile noir 25 % sans flou, carte en verre léger à 12 px, titre centré, pied ANNULER (1/3) + VALIDER. Jamais de croix.",
       "html": "<div class=\"ds-veil\"><div class=\"ds-popup\"><h2 class=\"ds-popup-title\">DISTANCE MANQUANTE</h2><div class=\"ds-popup-foot\"><button class=\"ds-popup-secondary\">ANNULER</button><button class=\"ds-popup-primary\">RÉGLER LA DISTANCE</button></div></div></div>",
-      "css": ".ds-veil{display:flex;align-items:center;justify-content:center;padding:32px;background:var(--color-bg)}.ds-veil{background:linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,.25)),var(--gradient-bg)}.ds-popup{display:flex;flex-direction:column;gap:24px;width:100%;max-width:560px;padding:24px;background:color-mix(in srgb,var(--color-bg) 95%,transparent);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-modal);box-shadow:0 32px 80px rgba(0,0,0,.65)}.ds-popup-title{margin:0;text-align:center;color:#fff;font-family:system-ui,sans-serif;font-size:var(--text-label);font-weight:900;letter-spacing:.1em;text-transform:uppercase}.ds-popup-foot{display:flex;gap:16px}.ds-popup-secondary,.ds-popup-primary{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;border-radius:var(--radius-key);padding:0 16px}.ds-popup-secondary{width:33%;background:var(--gradient-neutral)}.ds-popup-primary{flex:1;background:var(--gradient-blue)}.ds-popup-primary:active{filter:brightness(.9)}.ds-popup-secondary:active{filter:brightness(1.25)}"
+      "css": ".ds-veil{display:flex;align-items:center;justify-content:center;padding:32px;background:var(--color-bg)}.ds-veil{background:linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,.25)),var(--color-bg-raised)}.ds-popup{display:flex;flex-direction:column;gap:24px;width:100%;max-width:560px;padding:24px;background:color-mix(in srgb,var(--color-bg-raised) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--color-border);border-radius:var(--radius-popup);box-shadow:var(--shadow-popup)}.ds-popup-title{margin:0;text-align:center;color:#fff;font-family:Saira,system-ui,sans-serif;font-size:var(--text-label);font-weight:900;letter-spacing:.1em;text-transform:uppercase}.ds-popup-foot{display:flex;gap:16px}.ds-popup-secondary,.ds-popup-primary{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:Saira,system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;border-radius:var(--radius-tappable);padding:0 16px}.ds-popup-secondary{width:33%;background:var(--gradient-neutral)}.ds-popup-primary{flex:1;background:var(--gradient-blue)}.ds-popup-primary:active{filter:brightness(.9)}.ds-popup-secondary:active{filter:brightness(1.25)}"
     },
     {
       "name": "Bandeau de récap",
       "kind": "custom",
       "refersTo": "summary-banner",
-      "description": "Bande claire échancrée en biais autour du VS : NOM | distance de chaque côté, en noir bleuté sur blanc cassé. Coupe en biais signature.",
+      "description": "Bande claire échancrée en biais autour du VS : NOM | distance de chaque côté, en marine sombre sur blanc cassé. Coupe en biais signature.",
       "html": "<header class=\"ds-banner\"><div class=\"ds-banner-side ds-banner-side--left\"><span class=\"ds-banner-name\">MICHEL</span><span class=\"ds-banner-sep\"></span><span class=\"ds-banner-num\">40</span></div><div class=\"ds-banner-vs\"><span class=\"ds-banner-mode\">LIBRE</span><span class=\"ds-banner-vs-word\">VS</span></div><div class=\"ds-banner-side ds-banner-side--right\"><span class=\"ds-banner-num\">40</span><span class=\"ds-banner-sep\"></span><span class=\"ds-banner-name\">DIDIER</span></div></header>",
-      "css": ".ds-banner{display:flex;align-items:stretch;background:var(--color-bg);border-bottom:1px solid var(--color-border);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif}.ds-banner-side{display:flex;flex:1;min-width:0;align-items:center;gap:24px;padding:24px 32px;background:var(--color-banner);color:var(--color-bg);font-size:var(--text-title);font-weight:900}.ds-banner-side--left{padding-right:80px;clip-path:polygon(0 0,100% 0,calc(100% - 32px) 100%,0 100%)}.ds-banner-side--right{justify-content:flex-end;padding-left:80px;clip-path:polygon(0 0,100% 0,100% 100%,32px 100%)}.ds-banner-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ds-banner-sep{width:1px;height:48px;background:rgba(13,17,23,.3);flex-shrink:0}.ds-banner-num{font-variant-numeric:tabular-nums;flex-shrink:0}.ds-banner-vs{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 32px;line-height:1}.ds-banner-mode{color:rgba(255,255,255,.5);font-size:var(--text-stat);letter-spacing:var(--tracking-stat)}.ds-banner-vs-word{color:rgba(255,255,255,.6);font-size:var(--text-hero);font-weight:900;font-style:italic}"
+      "css": ".ds-banner{display:flex;align-items:stretch;background:var(--color-bg);border-bottom:1px solid var(--color-border);font-family:Saira,system-ui,Avenir,Helvetica,Arial,sans-serif}.ds-banner-side{display:flex;flex:1;min-width:0;align-items:center;gap:24px;padding:24px 32px;background:var(--color-banner);color:var(--color-bg);font-size:var(--text-title);font-weight:900}.ds-banner-side--left{padding-right:80px;clip-path:polygon(0 0,100% 0,calc(100% - 32px) 100%,0 100%)}.ds-banner-side--right{justify-content:flex-end;padding-left:80px;clip-path:polygon(0 0,100% 0,100% 100%,32px 100%)}.ds-banner-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ds-banner-sep{width:1px;height:48px;background:color-mix(in srgb,var(--color-bg) 30%,transparent);flex-shrink:0}.ds-banner-num{font-variant-numeric:tabular-nums;flex-shrink:0}.ds-banner-vs{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 32px;line-height:1}.ds-banner-mode{color:rgba(255,255,255,.5);font-size:var(--text-stat);letter-spacing:var(--tracking-stat)}.ds-banner-vs-word{color:rgba(255,255,255,.6);font-size:var(--text-hero);font-weight:900;font-style:italic}"
     }
   ],
   "narrative": {
     "northStar": "Le Tableau sous les projecteurs",
-    "overview": "**Creative North Star: \"Le Tableau sous les projecteurs\"**\n\n1Score est un **tableau d'affichage de compétition**, pas une application. Sa structure vient des scoreboards coréens de club (Cueuny, Billiboard) : une grille dense collée aux bords, des bandeaux, des chiffres tabulaires énormes, des tuiles jointives séparées d'un filet, une coupe en biais qui casse la symétrie. Sa hiérarchie vient de la lumière : dans une salle noire, **les deux cartes joueur sont les seuls aplats clairs**, comme une table sous les projecteurs. Tout le reste, barre latérale, colonne centrale, fond, recule dans l'anthracite et le noir pour que le score se lise à deux mètres.\n\nL'énergie est celle d'une retransmission esport, assumée sur tous les écrans : bleu saturé du drap sur les tuiles et les CTA, rouge profond pour ce qui engage (démarrer) et pour la marque, ruban rouge de victoire au récap, `VS` en italique gras. Elle ne cède jamais sur deux choses : la lisibilité en salle sombre, et le calme de la correction (l'erreur est réversible, jamais punie). Le système est plat par défaut ; seuls les objets qu'on tape ont du corps : les touches s'enfoncent, les CTA en dégradé s'assombrissent sous le doigt.\n\n**Arbitrages ouverts**, hérités de l'Epic 10 et confiés à la passe design system (Nathan, 2026-09-15 : « j'attends de voir ce que ça peut donner ») : trois rayons coexistent sur des objets tapables (0, 8 et 12 px) ; les deux rouges `--color-brand-red` et `--color-victory-ribbon` valent la même couleur ; le bleu `--color-accent` (#1E88E5) ne sert plus qu'à l'anneau de focus ; l'échelle typographique plafonne dès la tablette alors que la cible est 1920×1080 ; le fond gris→noir « pourrait être plus engageant ».",
+    "overview": "**Creative North Star: \"Le Tableau sous les projecteurs\"**\n\n1Score est un **tableau d'affichage de compétition**, pas une application. Sa structure vient des scoreboards coréens de club (Cueuny, Billiboard) : une grille dense collée aux bords, des bandeaux, des chiffres tabulaires énormes, des tuiles jointives séparées d'un filet, une coupe en biais qui casse la symétrie. Sa hiérarchie vient de la lumière : dans une salle noire, **les deux cartes joueur sont les seuls aplats clairs**, comme une table sous les projecteurs. Tout le reste, barre latérale, colonne centrale, fond, recule dans deux niveaux de marine sombre pour que le score se lise à deux mètres — un noir pur ne laissait plus de marche aux pop-ups ni à la barre (Story 11.2), le modèle Cueuny en donne deux.\n\nL'énergie est celle d'une retransmission esport, assumée sur tous les écrans : bleu roi sur les tuiles et les CTA, rouge saturé pour ce qui engage (démarrer), rouge profond pour la marque, ruban rouge de victoire au récap, `VS` en italique gras. Elle ne cède jamais sur deux choses : la lisibilité en salle sombre, et le calme de la correction (l'erreur est réversible, jamais punie). Le système est plat par défaut ; seuls les objets qu'on tape ont du corps : les touches s'enfoncent, les CTA en dégradé s'assombrissent sous le doigt.",
     "keyCharacteristics": [
       "Salle noire, cartes claires : le contraste clair/sombre porte toute la hiérarchie.",
-      "Angles vifs et surfaces jointives, filets blancs à 18 % comme seul séparateur.",
-      "Un seul bleu (drap → bleu clair), un seul rouge profond, un jaune franc sans bleu résiduel.",
+      "Conteneurs à angles vifs et surfaces jointives, filets blancs à 22 % comme seul séparateur ; 8 px sur tout ce qui se tape.",
+      "Un seul bleu (bleu roi), un rouge de marque et un rouge de CTA, un jaune franc sans bleu résiduel ; deux niveaux de marine et rien d'autre en fond.",
       "Chiffres tabulaires en graisse 900, majuscules partout, aucune minuscule hors accroche.",
       "Coupe en biais (`clip-path`) comme signature : en-tête de la barre latérale, bandeau du récap.",
       "Rien ne bouge au repos ; le mouvement n'existe que comme retour d'appui ou porteur d'information.",
       "Pictos Lucide inline, trait 2 px, jamais remplis, jamais en police d'icônes."
     ],
     "rules": [
-      {
-        "name": "La Règle de la bille",
-        "body": "Gauche = blanche, droite = jaune, encre noire sur les deux, fixées au côté de la table. Le tour actif se signale par le liseré rouge vif, jamais par la teinte du bloc. Le récap et le paramétrage conservent les côtés du scoreboard.",
-        "section": "colors"
-      },
-      {
-        "name": "La Règle du bleu unique",
-        "body": "Un seul dégradé bleu pour toutes les tuiles disponibles et tout CTA qui demande du bleu : les modes sont des pairs, on ne les hiérarchise pas par la nuance. Le bleu drap n'est jamais posé seul sur un bouton. *(En vigueur ; Nathan veut voir des alternatives à la passe.)*",
-        "section": "colors"
-      },
-      {
-        "name": "La Règle du rouge qui engage",
-        "body": "Le rouge est réservé à la marque, à l'action qui engage la partie (`DÉMARRER`), à la valeur de série en cours et à la victoire. Un réglage qu'on peut retoucher est bleu ; un retour (`ANNULER`) est neutre. Jamais de rouge sur un refus.",
-        "section": "colors"
-      },
-      {
-        "name": "La Règle du voile clair",
-        "body": "Une pop-up pose un voile noir à 25 % et rien d'autre : jamais de flou, parce que la carte qu'on remplit doit rester lisible sous la pop-up.",
-        "section": "colors"
-      },
-      {
-        "name": "La Règle des chiffres nus",
-        "body": "Distance et restant s'écrivent sans libellé sur la carte joueur ; `MOY` et `SÉRIE` gardent le leur, sinon trois nombres nus se confondent. Un nom peut se tronquer (deux lignes puis ellipse) ; **un nombre rogné deviendrait faux, il ne se tronque jamais**.",
-        "section": "typography"
-      },
-      {
-        "name": "La Règle de la moyenne",
-        "body": "La moyenne s'affiche à trois décimales (convention fédérale), en tabulaire, partout.",
-        "section": "typography"
-      },
-      {
-        "name": "La Règle du relief tapable",
-        "body": "Un conteneur est plat et cerné ; seul un objet qu'on tape a du corps. Une ombre sur une carte joueur, une tuile ou une colonne est une faute.",
-        "section": "elevation"
-      },
-      {
-        "name": "La Règle de l'inactif",
-        "body": "Ce qui n'est pas disponible s'atténue (`disabled` à 30 %, `BIENTÔT` à 45 % du fond) **et** porte un badge : l'information ne repose jamais sur la couleur seule. Cette atténuation ne se « corrige » pas au contraste (WCAG §1.4.3).",
-        "section": "elevation"
-      }
+      "**La Règle de la bille.** Gauche = blanche, droite = jaune, encre noire sur les deux, fixées au côté de la table. Le tour actif se signale par le liseré rouge vif, jamais par la teinte du bloc. Le récap et le paramétrage conservent les côtés du scoreboard.",
+      "**La Règle du bleu unique.** Un seul dégradé bleu pour toutes les tuiles disponibles et tout CTA qui demande du bleu : les modes sont des pairs, on ne les hiérarchise pas par la nuance. Le bleu roi n'est jamais posé seul sur un bouton. *(En vigueur ; Nathan veut voir des alternatives à la passe.)*",
+      "**La Règle du rouge qui engage.** Le rouge est réservé à la marque, à la valeur de série en cours et à la victoire — **un seul token**, `--color-brand-red`, pour ces trois rôles — et à l'action qui engage la partie, `DÉMARRER`, qui a son propre dégradé rouge saturé (Story 11.2). Un réglage qu'on peut retoucher est bleu, une action de jeu (`PASSER LE TOUR`, `+1`) aussi ; un retour (`ANNULER`) est neutre. Jamais de rouge sur un refus. Le rouge vif reste à part : tour actif, champ visé, anneau de focus.",
+      "**La Règle du voile clair.** Une pop-up pose un voile noir à 25 % et rien d'autre : jamais de flou sur le voile, parce que la carte qu'on remplit doit rester lisible sous la pop-up. Le verre léger de la carte de pop-up (Story 11.2) ne floute que ce qui passe **sous la carte**, jamais l'écran.",
+      "**La Règle des deux niveaux.** Tout fond sombre est marine sombre (niveau 0) ou marine clair (niveau 1), rien d'autre : pas de troisième gris, pas de dégradé de fond, pas de noir pur. Ce qui est posé sur un niveau se détache par un voile blanc, un filet ou une ombre nommée, jamais par une teinte nouvelle.",
+      "**La Règle des chiffres nus.** Distance et restant s'écrivent sans libellé sur la carte joueur ; `MOY` et `SÉRIE` gardent le leur, sinon trois nombres nus se confondent. Un nom peut se tronquer (deux lignes puis ellipse) ; **un nombre rogné deviendrait faux, il ne se tronque jamais**.",
+      "**La Règle de la moyenne.** La moyenne s'affiche à trois décimales (convention fédérale), en tabulaire, partout.",
+      "**La Règle du relief tapable.** Un conteneur est plat et cerné ; seul un objet qu'on tape a du corps (relief, filet de lumière, rayon de 8 px). Une ombre sur une carte joueur, une tuile ou une colonne est une faute ; les deux ombres portées du produit vont à ce qui flotte (pop-up) et à la barre latérale.",
+      "**La Règle de l'inactif.** Ce qui n'est pas disponible s'atténue (`disabled` à 30 %, `BIENTÔT` à 45 % du fond) **et** porte un badge : l'information ne repose jamais sur la couleur seule. Cette atténuation ne se « corrige » pas au contraste (WCAG §1.4.3)."
     ],
     "dos": [
       "poser toute nouvelle commande sur l'un des quatre gabarits de CTA existants (accent, neutre, réglage, barre basse) plutôt qu'en créer un cinquième ; la passe a pour critère qu'un écran de plus n'ajoute ni composant de base ni token.",
       "écrire chaque libellé en majuscules, chaque nombre en `tabular-nums`, chaque texte sur carte joueur en encre noire.",
       "tenir 90 × 90 px sur toute commande de jeu, et mesurer le contraste sur la surface réelle (bandeau, boîte de champ), pas sur la carte nue.",
       "ranger une pop-up de saisie du côté opposé à la carte qu'elle remplit, carte entièrement visible et nette.",
-      "reprendre la coupe en biais et le filet à 18 % comme vocabulaire de tout nouvel écran ; angles vifs sur les conteneurs, en attendant l'arbitrage des rayons.",
+      "reprendre la coupe en biais, les deux niveaux de marine et le filet à 22 % comme vocabulaire de tout nouvel écran ; angles vifs sur les conteneurs, 8 px sur tout ce qui se tape, 12 px sur une carte de pop-up.",
       "ajouter toute animation d'ornement à la garde `prefers-reduced-motion` de `main.css`, nommément ; une animation porteuse d'information (chrono, rebours) n'y entre pas.",
       "consigner tout écart au détecteur avec sa raison, en citant `deferred-work.md`."
     ],
     "donts": [
       "mettre une croix de fermeture, ni un champ natif, ni le clavier système : le retour est un gros CTA `ANNULER`, la saisie passe par les claviers dessinés. *(Interdit durable, Nathan 2026-09-15.)*",
       "signaler le tour, la disponibilité ou un champ visé par la couleur seule : liseré, badge, atténuation.",
-      "flouter un voile, ni assombrir au-delà de 25 % : ce qu'il y a dessous doit rester lisible.",
-      "utiliser la rampe `score-*` hors d'une carte joueur, ni un rouge sur un refus, ni le bleu drap seul sur un bouton.",
-      "écrire une taille de texte ou un interlettrage hors de l'échelle dans un gabarit (`text-[…]`, `tracking-[…]`, `text-3xl`, `tracking-widest`…) : le rôle s'ajoute dans `DESIGN.md`, puis dans `main.css` ; ne pas nommer un rôle comme un utilitaire Tailwind (`text-start` est `text-align: start`).",
+      "flouter un voile, ni assombrir au-delà de 25 % : ce qu'il y a dessous doit rester lisible. Le verre d'une carte de pop-up ne floute que sous la carte.",
+      "utiliser la rampe `score-*` hors d'une carte joueur, ni un rouge sur un refus, ni le bleu roi seul sur un bouton.",
+      "écrire une taille de texte ou un interlettrage hors de l'échelle dans un gabarit — ni valeur arbitraire (`text-[…]`, `tracking-[…]`), ni utilitaire standard de Tailwind (`text-3xl`, `tracking-widest`) : le rôle s'ajoute ici, puis dans `main.css`. Ne pas nommer un rôle comme un utilitaire de Tailwind (`start`, `center`…) : `text-start` est `text-align: start`, les deux règles seraient émises. *(Verrouillé par un test de source depuis la 11.1.)*",
       "construire une classe Tailwind à la volée, ni placer un commentaire HTML à la racine d'un gabarit, ni ajouter d'`overflow-hidden` sur la colonne centrale ou ses ancêtres (l'anneau du chrono serait rogné sans erreur).",
       "charger une police, une icône ou une image depuis le réseau : tout est inline ou dans `public/`.",
-      "fusionner `--color-brand-red` et `--color-victory-ribbon`, ni changer `--color-shot-clock-face`, sans le faire dans ce document d'abord : c'est ici que la palette s'arbitre, plus story par story."
+      "écrire une ombre ou un rayon en valeur arbitraire (`shadow-[…]`, `rounded-[…]`) dans un gabarit ou dans `keyClasses.ts`, ni déclarer un token `--color-*`, `--gradient-*`, `--radius-*` ou `--shadow-*` sans consommateur ou sans son entrée ici : c'est ici que la palette s'arbitre, plus story par story. *(Verrouillé par `tokens.test.ts` depuis la 11.2.)*",
+      "ajouter un second rouge, un troisième niveau de fond ou un bleu d'accent : un rôle nouveau se discute dans ce document, au rendu, avant tout token."
     ]
   }
 }

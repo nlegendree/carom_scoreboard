@@ -50,22 +50,54 @@ describe('main.css — garde prefers-reduced-motion', () => {
   })
 })
 
-describe('main.css — contraste (Story 10.7)', () => {
-  // Le ruban a été assombri pour que le texte BLANC qu'il porte tienne 4,95:1 (il était à
-  // 4,17:1 en #E63946, sous le seuil 4,5:1 du texte courant). La valeur est verrouillée
-  // ici : la reprendre en arrière rouvrirait la dette close par la 10.7.
-  it('darkens the victory ribbon to a AA-compliant red', () => {
-    expect(source).toContain('--color-victory-ribbon: #D0343F;')
-    expect(source).toContain('--color-on-victory-ribbon: #FFFFFF;')
+describe('main.css — palette arbitrée (Story 11.2)', () => {
+  // Un seul rouge profond (décision de Nathan au rendu, 2026-09-16) : le ruban de victoire lit
+  // `--color-brand-red`, à #D0343F depuis la passe contraste de la 10.7 (blanc 4,95:1). Le
+  // second token de même valeur est supprimé ; un rouge nouveau repasse par DESIGN.md.
+  it('keeps one deep red only, AA-compliant under white', () => {
+    expect(source).toContain('--color-brand-red: #D0343F;')
+    expect(source).not.toMatch(/^\s*--color-victory-ribbon:/m)
+    expect(source).not.toMatch(/^\s*--color-on-victory-ribbon:/m)
   })
 
-  // ⚠️ `--color-victory-ribbon` et `--color-brand-red` valent désormais la MÊME couleur,
-  // et restent DEUX tokens : deux rôles qui peuvent rediverger, et Nathan a demandé un
-  // design system des couleurs plus tard, hors Epic 10. Ni fusion, ni `var()` de l'un
-  // dans l'autre.
-  it('keeps the two reds as two independent declarations', () => {
-    expect(source).toContain('--color-brand-red: #D0343F;')
-    expect(source).not.toContain('--color-victory-ribbon: var(--color-brand-red)')
-    expect(source).not.toContain('--color-brand-red: var(--color-victory-ribbon)')
+  // Modèle Cueuny : deux niveaux de marine et rien d'autre en fond — ni dégradé, ni noir pur,
+  // ni token à part pour la barre latérale ou le disque du chrono (ils SONT le niveau 0).
+  it('paints two levels of navy and nothing else behind the screens', () => {
+    expect(source).toContain('--color-bg: #1E2438;')
+    expect(source).toContain('--color-bg-raised: #272E49;')
+    for (const gone of ['--gradient-bg', '--gradient-panel', '--color-sidebar', '--color-shot-clock-face']) {
+      expect(source).not.toMatch(new RegExp(`^\\s*${gone}:`, 'm'))
+    }
+  })
+
+  // Bleu roi sur tous les CTA bleus et les tuiles, rouge saturé sur DÉMARRER (Nathan, passe
+  // de fin de la 11.2, six candidats chacun). Le bleu drap #0573BB de l'Epic 10 et son token
+  // `--color-cloth` sont partis avec lui.
+  it('paints the CTAs in royal blue and DÉMARRER in a saturated red of its own', () => {
+    expect(source).toContain('--gradient-blue: linear-gradient(160deg, #3B82F6 0%, #1D4ED8 100%);')
+    expect(source).toContain('--gradient-red: linear-gradient(160deg, #F04553 0%, #C41F2C 100%);')
+    expect(source).not.toMatch(/^\s*--color-cloth:/m)
+  })
+
+  // Saira, auto-hébergée (FR45, NFR13) : deux @font-face variables (latin, latin-ext), la
+  // pile en token `--font-sans` que `:root` lit, et TOUTE `url(` du fichier sous `./fonts/`
+  // (ni `http(s):`, ni `//` relatif au protocole, ni `@import url(…)`).
+  it('self-hosts Saira as the product typeface, with no network resource', () => {
+    expect(source.match(/@font-face \{[^}]*font-family: 'Saira'/g)).toHaveLength(2)
+    expect(source).toContain("src: url('./fonts/Saira-latin.woff2') format('woff2');")
+    expect(source).toContain("src: url('./fonts/Saira-latin-ext.woff2') format('woff2');")
+    expect(source).toContain("--font-sans: 'Saira', system-ui, Avenir, Helvetica, Arial, sans-serif;")
+    expect(source).toMatch(/^:root \{\n  font-family: var\(--font-sans\);/m)
+    const urls = [...source.matchAll(/url\(\s*['"]?([^'")]+)/g)].map((m) => m[1] ?? '')
+    expect(urls.length).toBeGreaterThan(0)
+    expect(urls.filter((u) => !u.startsWith('./fonts/'))).toEqual([])
+    expect(source).not.toMatch(/@import\s+url\(/)
+  })
+
+  // Le bleu accent est retiré : l'anneau de focus est le rouge vif, déjà le signal « visé »
+  // du produit (tour actif, champ ciblé).
+  it('focuses in the vivid red, the accent blue being gone', () => {
+    expect(source).toMatch(/button:focus-visible \{\s*outline: 4px solid var\(--color-turn-active\);/)
+    expect(source).not.toMatch(/^\s*--color-accent:/m)
   })
 })
