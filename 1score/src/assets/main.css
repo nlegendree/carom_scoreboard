@@ -229,27 +229,12 @@
      garde son rôle de rouge de marque (bandeau en biais, série, ruban de victoire). */
   --gradient-red: linear-gradient(160deg, #F04553 0%, #C41F2C 100%);
 
-  /* Recentrage des pop-ups de saisie du paramétrage (revue de rendu 10.3, 2026-09-12) :
-     la pop-up ne se colle pas au bord, elle se CENTRE dans la zone laissée libre par la
-     carte qu'on remplit. Ces deux insets reproduisent la géométrie de l'étape `players`
-     — barre latérale (`--size-sidebar`, 15 unités), padding de la zone principale (`p-4`), colonne
-     centrale à 1/4 et deux cartes se partageant le reste, gouttières de 4 unités — en
-     unités de `--spacing`, jamais en pixels : la grille est fluide.
-     ⚠️ À faire bouger AVEC cette mise en page : c'est le seul endroit où elle est
-     dupliquée, et une pop-up mal recentrée est la première chose qui se verra. */
-  --setup-popup-inset-left: calc(var(--size-sidebar) + var(--spacing) * 4 + (100vw - var(--size-sidebar) - var(--spacing) * 8) * 0.375);
-  --setup-popup-inset-right: calc((100vw - var(--size-sidebar) - var(--spacing) * 8) * 0.375 + var(--spacing) * 4);
-
-  /* Recentrage de la pop-up de saisie du SCOREBOARD (Story 10.4). Même principe que les
-     `--setup-popup-inset-*` ci-dessus, GÉOMÉTRIE DIFFÉRENTE : le scoreboard n'a pas de
-     barre latérale, ses trois colonnes valent 2/5 · 1/5 · 2/5 de la largeur d'écran et les
-     cartes sont à fleur de bord. L'inset réserve donc la carte visée (40vw) plus une
-     gouttière de 4 unités, pour que la pop-up ne la TOUCHE jamais (AC9).
-     ⚠️ À faire bouger AVEC la mise en page du scoreboard : c'est le seul endroit où elle
-     est dupliquée, et une pop-up qui mord sur la carte active est le défaut que la
-     décision 2 de Nathan cherche justement à éviter. */
-  --game-popup-inset-left: calc(100vw * 0.4 + var(--spacing) * 4);
-  --game-popup-inset-right: calc(100vw * 0.4 + var(--spacing) * 4);
+  /* Les quatre `--*-popup-inset-*` ont quitté ce fichier à la Story 11.3 : ce n'étaient pas
+     des tokens mais des POSITIONS — le produit d'intentions (`--size-sidebar`, `--spacing`)
+     par la mise en page d'un écran. Chaque écran déclare désormais la sienne, à côté du
+     markup qu'elle mesure (`HomeScreen` › SETUP_POPUP_RESERVE, `GameView` ›
+     GAME_POPUP_RESERVE), et `PopupCard` la reçoit en `reserve`. Un token décrit une
+     intention, jamais une position (`integration-bmad-impeccable.md` §6). */
 
   /* Touches des claviers intégrés (revue de rendu 10.3, réf. Cueuny) : plaques sombres au
      rayon tapable, relief donné par un filet clair en haut et une ombre portée en bas
@@ -324,11 +309,14 @@ button,
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* `min-width: 320px` (héritage du gabarit Vite) retiré à la Story 11.3 : le plancher réel du
+   produit est l'iPad mini en PAYSAGE, 1133 px — le portrait et le téléphone sont hors
+   périmètre (décision de Nathan, 2026-09-11). Un plancher quatre fois sous le format le plus
+   étroit ne protégeait rien et laissait croire à un support qui n'existe pas. */
 html,
 body,
 #app {
   margin: 0;
-  min-width: 320px;
   height: 100%;
 }
 

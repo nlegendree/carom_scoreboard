@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import AlphaKeyboard from './AlphaKeyboard.vue'
+import CtaButton from './CtaButton.vue'
+import PopupCard from './PopupCard.vue'
 import { useHaptics } from '../composables/useHaptics'
 import type { TableSide } from '../types/game'
 
@@ -24,7 +26,7 @@ import type { TableSide } from '../types/game'
 // racine perdrait `classes()` comme son `data-testid`.
 const MAX_NAME_LENGTH = 20
 
-const props = defineProps<{ value: string; align: TableSide }>()
+const props = defineProps<{ value: string; align: TableSide; reserve: string }>()
 
 const emit = defineEmits<{ update: [value: string]; validate: []; cancel: [] }>()
 
@@ -35,12 +37,10 @@ const { tap, reject } = useHaptics()
 const rejectKey = ref(0)
 
 // La pop-up ne se colle pas au bord : elle se CENTRE dans la zone que la carte visée
-// laisse libre (revue de rendu du 2026-09-12). L'inset réserve la bande occupée par cette
-// carte, `justify-center` fait le reste.
-const ALIGN_CLASSES: Record<TableSide, string> = {
-  left: 'pl-4 pr-[var(--setup-popup-inset-right)]',
-  right: 'pl-[var(--setup-popup-inset-left)] pr-4',
-}
+// laisse libre (revue de rendu du 2026-09-12). L'hôte transmet la bande à RÉSERVER du côté
+// opposé (`reserve`) — il est le seul à connaître la géométrie de son écran. Story 11.3 :
+// elle vivait avant en token `--*-popup-inset-*`, c'est-à-dire une position dans le
+// namespace des intentions.
 
 function onInput(char: string): void {
   // Pas d'espace en tête ni d'espaces consécutifs : ils ne se verraient pas, mangeraient
@@ -65,44 +65,19 @@ function onBackspace(): void {
 function onClear(): void {
   emit('update', '')
 }
-
-// Geste COMPLET sur le voile (appui ET relâchement) : voir le commentaire détaillé de
-// `NumericPadDock`, même mécanique et mêmes raisons.
-let backdropPointerId: number | null = null
-
-function armBackdropClose(event: PointerEvent): void {
-  backdropPointerId = event.pointerId
-}
-
-function disarmBackdropClose(): void {
-  backdropPointerId = null
-}
-
-function closeFromBackdrop(event: PointerEvent): void {
-  if (backdropPointerId === null || backdropPointerId !== event.pointerId) return
-  backdropPointerId = null
-  emit('cancel')
-}
 </script>
 
 <template>
-  <div
-    data-testid="alpha-keyboard-sheet"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Saisie du nom"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 py-4"
-    :class="ALIGN_CLASSES[align]"
-    @pointerdown="armBackdropClose"
-    @pointerup="closeFromBackdrop"
-    @pointercancel="disarmBackdropClose"
+  <PopupCard
+    testid="alpha-keyboard-sheet"
+    cardTestid="sheet-card"
+    label="Saisie du nom"
+    width="alpha"
+    gap="sm"
+    :align="align"
+    :reserve="reserve"
+    @backdrop-close="emit('cancel')"
   >
-    <div
-      data-testid="sheet-card"
-      class="flex max-h-full w-full max-w-(--size-popup-alpha) flex-col gap-2 rounded-popup border border-border bg-bg-raised/88 p-3 shadow-popup backdrop-blur-sm"
-      @pointerdown.stop
-      @pointerup.stop
-    >
       <div
         :key="rejectKey"
         data-testid="sheet-reject"
@@ -112,22 +87,23 @@ function closeFromBackdrop(event: PointerEvent): void {
         <AlphaKeyboard @input="onInput" @backspace="onBackspace" @clear="onClear" />
       </div>
 
-      <footer class="flex shrink-0 gap-2">
-        <button
+      <template #footer>
+        <CtaButton
           data-testid="sheet-close"
-          class="min-h-[var(--size-touch-target)] w-1/3 rounded-tappable bg-(image:--gradient-neutral) text-label font-black text-white touch-manipulation select-none active:brightness-90"
-          @pointerdown="emit('cancel')"
+          variant="neutral"
+          class="w-1/3"
+          @press="emit('cancel')"
         >
           ANNULER
-        </button>
-        <button
+        </CtaButton>
+        <CtaButton
           data-testid="sheet-confirm"
-          class="min-h-[var(--size-touch-target)] flex-1 rounded-tappable bg-(image:--gradient-blue) text-label font-black text-white touch-manipulation select-none active:brightness-90"
-          @pointerdown="emit('validate')"
+          variant="accent"
+          class="flex-1"
+          @press="emit('validate')"
         >
           VALIDER
-        </button>
-      </footer>
-    </div>
-  </div>
+        </CtaButton>
+      </template>
+  </PopupCard>
 </template>

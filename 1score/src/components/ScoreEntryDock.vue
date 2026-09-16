@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import NumericPad from './NumericPad.vue'
+import CtaButton from './CtaButton.vue'
+import PopupCard from './PopupCard.vue'
 import { useHaptics } from '../composables/useHaptics'
 import { MAX_SCORE_DIGITS } from '../stores/useGameStore'
 import type { TableSide } from '../types/game'
@@ -28,6 +30,7 @@ import type { TableSide } from '../types/game'
 const props = defineProps<{
   currentInput: string
   align: TableSide
+  reserve: string
 }>()
 
 // Emits IDENTIQUES à `ScoreEntryModal` : `GameView` ne change pas de branchement.
@@ -48,13 +51,10 @@ const AUTO_VALIDATE_DELAY_MS = 3000
 const { tap, reject } = useHaptics()
 
 // La pop-up ne se colle pas au bord : elle se CENTRE dans la zone que la carte visée
-// laisse libre. L'inset réserve la bande occupée par cette carte, `justify-center` fait le
-// reste. ⚠️ Tokens PROPRES AU SCOREBOARD (colonnes 2/5 · 1/5 · 2/5, sans barre latérale) :
-// `--setup-popup-inset-*` encode la géométrie de l'étape `players`, qui n'a rien à voir.
-const ALIGN_CLASSES: Record<TableSide, string> = {
-  left: 'pl-4 pr-[var(--game-popup-inset-right)]',
-  right: 'pl-[var(--game-popup-inset-left)] pr-4',
-}
+// laisse libre (revue de rendu du 2026-09-12). L'hôte transmet la bande à RÉSERVER du côté
+// opposé (`reserve`) — il est le seul à connaître la géométrie de son écran. Story 11.3 :
+// elle vivait avant en token `--*-popup-inset-*`, c'est-à-dire une position dans le
+// namespace des intentions.
 
 const hasInput = computed(() => props.currentInput !== '')
 
@@ -117,48 +117,19 @@ function onValidate(): void {
   if (!hasInput.value) return
   emit('validate')
 }
-
-// Un « tap en dehors » est un geste COMPLET sur le voile : appui ET relâchement du MÊME
-// pointeur. Se contenter du relâchement refermait la pop-up dès l'ouverture — le
-// `pointerup` du geste qui a pressé le CTA retombe sur le voile qui vient d'apparaître
-// sous le doigt. Le `pointerId` est mémorisé (et non un simple booléen) pour qu'une paume
-// posée sur le voile n'arme pas la fermeture au profit d'un autre doigt, et `pointercancel`
-// désarme. Seule exception assumée à `@pointerdown` seul (AR8).
-let backdropPointerId: number | null = null
-
-function armBackdropClose(event: PointerEvent): void {
-  backdropPointerId = event.pointerId
-}
-
-function disarmBackdropClose(): void {
-  backdropPointerId = null
-}
-
-function closeFromBackdrop(event: PointerEvent): void {
-  if (backdropPointerId === null || backdropPointerId !== event.pointerId) return
-  backdropPointerId = null
-  emit('cancel')
-}
 </script>
 
 <template>
-  <div
-    data-testid="score-entry-dock"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Saisie du score"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 py-4"
-    :class="ALIGN_CLASSES[align]"
-    @pointerdown="armBackdropClose"
-    @pointerup="closeFromBackdrop"
-    @pointercancel="disarmBackdropClose"
+  <PopupCard
+    testid="score-entry-dock"
+    cardTestid="score-entry-card"
+    label="Saisie du score"
+    width="pad"
+    gap="sm"
+    :align="align"
+    :reserve="reserve"
+    @backdrop-close="emit('cancel')"
   >
-    <div
-      data-testid="score-entry-card"
-      class="flex max-h-full w-full max-w-(--size-popup-pad) flex-col gap-2 rounded-popup border border-border bg-bg-raised/88 p-3 shadow-popup backdrop-blur-sm"
-      @pointerdown.stop
-      @pointerup.stop
-    >
       <div
         :key="rejectKey"
         data-testid="entry-reject"
@@ -174,18 +145,20 @@ function closeFromBackdrop(event: PointerEvent): void {
         />
       </div>
 
-      <footer class="flex shrink-0 gap-2">
-        <button
+      <template #footer>
+        <CtaButton
           data-testid="entry-cancel-button"
-          class="min-h-[var(--size-touch-target)] w-1/3 rounded-tappable bg-(image:--gradient-neutral) text-label font-black text-white touch-manipulation select-none active:brightness-90"
-          @pointerdown="emit('cancel')"
+          variant="neutral"
+          class="w-1/3"
+          @press="emit('cancel')"
         >
           ANNULER
-        </button>
-        <button
+        </CtaButton>
+        <CtaButton
           data-testid="entry-confirm-button"
-          class="relative min-h-[var(--size-touch-target)] flex-1 overflow-hidden rounded-tappable bg-(image:--gradient-blue) text-label font-black text-white touch-manipulation select-none active:brightness-90"
-          @pointerdown="onValidate"
+          variant="accent"
+          class="relative flex-1 overflow-hidden"
+          @press="onValidate"
         >
           VALIDER
 
@@ -204,8 +177,7 @@ function closeFromBackdrop(event: PointerEvent): void {
             class="absolute inset-x-0 bottom-0 h-2 origin-left bg-white animate-input-countdown"
             :style="{ animationDuration: `${AUTO_VALIDATE_DELAY_MS}ms` }"
           />
-        </button>
-      </footer>
-    </div>
-  </div>
+        </CtaButton>
+      </template>
+  </PopupCard>
 </template>

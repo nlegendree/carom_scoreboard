@@ -37,7 +37,7 @@ function press(): void {
   <button
     type="button"
     :disabled="disabled || state === 'soon'"
-    class="flex min-h-[var(--size-touch-target)] min-w-[var(--size-touch-target)] flex-col items-center justify-center gap-1 border border-border bg-surface px-1 text-center text-white rounded-tappable touch-manipulation select-none active:bg-white/15 disabled:opacity-30"
+    class="flex min-h-(--size-touch-target) min-w-(--size-touch-target) flex-col items-center justify-center gap-1 border border-border bg-surface px-1 text-center text-white rounded-tappable active:bg-white/15 disabled:opacity-30"
     @pointerdown="press"
   >
     <PictoIcon :name="picto" class="size-4" />

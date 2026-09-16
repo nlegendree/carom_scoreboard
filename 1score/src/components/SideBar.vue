@@ -73,7 +73,7 @@ function press(item: SideBarItem): void {
         type="button"
         :data-testid="`sidebar-item-${item.id}`"
         :disabled="item.state === 'soon'"
-        class="flex min-h-[var(--size-touch-target)] w-full flex-col items-center justify-center gap-0.5 px-0.5 text-center text-white touch-manipulation select-none"
+        class="flex min-h-(--size-touch-target) w-full flex-col items-center justify-center gap-0.5 px-0.5 text-center text-white"
         @pointerdown="press(item)"
       >
         <PictoIcon

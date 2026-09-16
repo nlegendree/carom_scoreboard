@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { BALL_LABELS, BALL_PICTOS } from './ballAssets'
 import type { PlayerColor, TableSide } from '../types/game'
 
 // Carte de paramétrage d'un joueur (Story 10.3, UX-DR38). Bloc plein à la couleur de la
@@ -36,16 +37,6 @@ const CARD_CLASSES: Record<PlayerColor, string> = {
   white: 'bg-player-white text-on-player-white',
   yellow: 'bg-player-yellow text-on-player-yellow',
 }
-// Pictos fournis par Nathan (2026-09-12), servis depuis `public/` : aucune ressource
-// réseau, l'app doit tourner hors ligne (FR45, NFR13).
-const BALL_PICTOS: Record<PlayerColor, string> = {
-  white: '/bille_blanche.png',
-  yellow: '/bille_jaune.png',
-}
-const BALL_LABELS: Record<PlayerColor, string> = {
-  white: 'BILLE BLANCHE',
-  yellow: 'BILLE JAUNE',
-}
 
 // Une box claire, teintée par transparence de la carte qui la porte : elle reste lisible
 // sur le blanc comme sur le jaune, sans deux jeux de couleurs à maintenir.
@@ -53,7 +44,7 @@ const BALL_LABELS: Record<PlayerColor, string> = {
 // disponible (`flex-1`) entre un plancher confortable et un plafond raisonnable, pour que
 // la carte ne soit pas un grand vide avec deux petites boîtes au milieu.
 const FIELD_CLASSES =
-  'flex min-h-(--size-field-min) max-h-(--size-field-max) w-full flex-1 flex-col items-center justify-center gap-2 rounded-tappable border-2 bg-black/8 px-3 py-3 text-center shadow-light-edge-field touch-manipulation select-none'
+  'flex min-h-(--size-field-min) max-h-(--size-field-max) w-full flex-1 flex-col items-center justify-center gap-2 rounded-tappable border-2 bg-black/8 px-3 py-3 text-center shadow-light-edge-field'
 
 // Le champ visé se signale par une PRÉSENCE (liseré), pas par une teinte de fond seule :
 // même signal non chromatique que l'indicateur de tour (UX-DR22). Conservé tel quel à la

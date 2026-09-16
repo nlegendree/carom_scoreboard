@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import ShotClock from './ShotClock.vue'
 import PictoIcon from './PictoIcon.vue'
+import CtaButton from './CtaButton.vue'
 import { SHOT_CLOCK_SECONDS } from '../composables/useTimer'
 import type { TableSide } from '../types/game'
 
@@ -140,15 +141,16 @@ function passTurn(): void {
          ⚠️ SANS contour (1re passe de rendu, Nathan) : un filet clair dessinait un cadre
          dans un cadre au milieu de la colonne. Le dégradé se détache seul du fond de la
          colonne. Rayon tapable comme tout ce qui se tape (Story 11.2). -->
-    <button
+    <CtaButton
       v-if="!entryOpen"
       data-testid="pass-turn-button"
+      variant="pass"
       :disabled="passTurnDisabled"
-      class="mt-auto flex min-h-[var(--size-touch-target)] w-full shrink-0 flex-col items-center justify-center gap-1 rounded-tappable bg-(image:--gradient-blue) px-2 text-center text-stat font-black leading-tight text-white touch-manipulation select-none active:brightness-90 disabled:opacity-30"
-      @pointerdown="passTurn"
+      class="mt-auto shrink-0"
+      @press="passTurn"
     >
       <PictoIcon name="pass-turn" class="size-4 shrink-0" />
       <span>PASSER LE TOUR</span>
-    </button>
+    </CtaButton>
   </div>
 </template>

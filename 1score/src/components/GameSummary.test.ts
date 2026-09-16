@@ -223,6 +223,10 @@ function ribbonCells(wrapper: Wrapper, side: PlayerId) {
       expect(band.classes()).toContain('bg-banner')
       expect(band.classes()).toContain('text-bg')
       expect(band.classes().some((c) => c.startsWith('[clip-path:polygon('))).toBe(true)
+      // Story 11.3 : le biais est en unités de grille, jamais en pixels figés — à 32 px il
+      // s'aplatissait sur le grand écran, où `--spacing` vaut 13 px et non 8.
+      expect(band.classes().some((c) => c.includes('var(--spacing)'))).toBe(true)
+      expect(band.classes().some((c) => /\[clip-path:.*\d+px/.test(c))).toBe(false)
     }
   })
 

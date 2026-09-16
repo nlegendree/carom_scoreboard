@@ -21,8 +21,9 @@ const templates = import.meta.glob<string>('../**/*.vue', {
   import: 'default',
   eager: true,
 })
-// `KEY_CLASSES` est la seule chaîne de classes hors gabarit : elle compte comme un gabarit.
-const shared = import.meta.glob<string>('../components/keyClasses.ts', {
+// `keyClasses.ts` et `ballAssets.ts` sont les seules chaînes de classes hors gabarit : elles
+// comptent comme des gabarits.
+const shared = import.meta.glob<string>('../components/{keyClasses,ballAssets}.ts', {
   query: '?raw',
   import: 'default',
   eager: true,
@@ -110,9 +111,10 @@ describe('main.css — aucun token sans consommateur (Story 11.2)', () => {
 describe('gabarits — aucune ombre ni rayon hors DESIGN.md (Story 11.2)', () => {
   const names = Object.keys(files)
 
-  it('covers every template of src/ and the shared key classes', () => {
+  it('covers every template of src/ and the shared class modules', () => {
     expect(names.length).toBeGreaterThanOrEqual(20)
     expect(names.some((f) => f.endsWith('keyClasses.ts'))).toBe(true)
+    expect(names.some((f) => f.endsWith('ballAssets.ts'))).toBe(true)
   })
 
   // Ni `shadow-[…]` ni `rounded-[…]` : une ombre ou un rayon qui manque s'ajoute dans
@@ -140,5 +142,87 @@ describe('gabarits — aucune ombre ni rayon hors DESIGN.md (Story 11.2)', () =>
     const shadows = [...text.matchAll(/(?<![\w-])(?:inset-shadow|drop-shadow|shadow)(?:-[a-z0-9-]+)?(?![\w-])/g)]
       .map((m) => m[0])
     expect(shadows.filter((s) => !shadowAllowed.has(s))).toEqual([])
+  })
+})
+
+// ————————————————————————————————————————————————————————————————————————————————————————
+// Story 11.3 — les règles de SOURCE de la bibliothèque de base. Elles vivent ici, avec les
+// autres règles de source du design system, et non dans le test d'un composant : chacune
+// porte sur l'ABSENCE d'une chose dans TOUS les gabarits, ce qu'aucun test de composant ne
+// peut voir. happy-dom ne calcule aucun CSS : c'est la source qui est verrouillée.
+// ————————————————————————————————————————————————————————————————————————————————————————
+
+// Les chaînes littérales d'un fichier : `class="…"` comme `const X = '…'`. C'est la bonne
+// granularité pour la règle d'AC2 — ce qui est interdit, c'est qu'UNE MÊME chaîne porte à la
+// fois la hauteur d'une cible et un dégradé, pas que le fichier contienne les deux ailleurs.
+const literals = (text: string): string[] =>
+  [...text.matchAll(/(["'])((?:(?!\1)[\s\S])*)\1/g)].map((m) => m[2] ?? '')
+
+const TOUCH_HEIGHT = /min-h-(?:\[var\(--size-|\(--size-)/
+const GRADIENT = /bg-\(image:--gradient-/
+
+describe('gabarits — un seul gabarit de CTA (Story 11.3, AC2)', () => {
+  const names = Object.keys(files).filter((f) => !f.endsWith('CtaButton.vue'))
+
+  it('finds CtaButton.vue among the scanned templates', () => {
+    expect(Object.keys(files).some((f) => f.endsWith('CtaButton.vue'))).toBe(true)
+  })
+
+  // Une chaîne qui porte une hauteur de cible ET un dégradé EST un CTA : elle n'a plus le
+  // droit d'exister ailleurs que dans la table de variantes de `CtaButton`.
+  it.each(names)('%s copies no CTA class chain', (file) => {
+    const offenders = literals(stripComments(files[file] ?? '')).filter(
+      (s) => TOUCH_HEIGHT.test(s) && GRADIENT.test(s),
+    )
+    expect(offenders).toEqual([])
+  })
+
+  // Report de la revue de la 11.1 : la 11.1 a introduit la forme courte `min-h-(--size-…)`,
+  // des usages antérieurs écrivaient encore `min-h-[var(--size-…)]`. Même CSS, deux
+  // graphies — le balayage se fait ici, en une fois, et cette règle empêche le retour. Elle
+  // couvre TOUTE lecture de token de taille (`min-w-` autant que `min-h-`) : la 11.3 a
+  // trouvé les deux formes, il n'y a pas de raison d'en laisser survivre une.
+  it.each(Object.keys(files))('%s writes size tokens in the short form only', (file) => {
+    expect(stripComments(files[file] ?? '')).not.toMatch(/-\[var\(--size-/)
+  })
+})
+
+describe('gabarits — insets rapatriés dans l\'hôte (Story 11.3, AC4)', () => {
+  // « Un token décrit une INTENTION, jamais une POSITION » (integration-bmad-impeccable.md
+  // §6). Ces quatre-là recopiaient la mise en page d'un écran : ils vivent désormais dans
+  // l'écran qui les décrit, à côté du markup qu'ils mesurent.
+  it('declares no popup inset token in main.css', () => {
+    expect(css).not.toMatch(/--setup-popup-inset-/)
+    expect(css).not.toMatch(/--game-popup-inset-/)
+  })
+
+  it.each(Object.keys(files))('%s names no popup inset token', (file) => {
+    const text = stripComments(files[file] ?? '')
+    expect(text).not.toMatch(/--setup-popup-inset-/)
+    expect(text).not.toMatch(/--game-popup-inset-/)
+  })
+})
+
+describe('gabarits — aucune redondance de classe (Story 11.3, AC6)', () => {
+  // `main.css` pose déjà `button, [role="button"] { touch-action: manipulation; user-select:
+  // none }` : le répéter sur un `<button>` ne fait rien. UNE occurrence reste, et doit
+  // rester — la racine `<div>` de `PlayerPanel`, qui n'est ni l'un ni l'autre depuis la 10.4
+  // (sans elle, un appui long sur le score sélectionne le texte : `PlayerPanel.test.ts`).
+  it.each(Object.keys(files).filter((f) => !f.endsWith('PlayerPanel.vue')))(
+    '%s repeats no touch-manipulation on a button',
+    (file) => {
+      expect(stripComments(files[file] ?? '')).not.toMatch(/touch-manipulation/)
+    },
+  )
+
+  it('keeps the one occurrence that is not a button', () => {
+    const panel = Object.entries(files).find(([f]) => f.endsWith('PlayerPanel.vue'))?.[1] ?? ''
+    expect(stripComments(panel)).toMatch(/touch-manipulation/)
+  })
+
+  // Héritage du gabarit Vite, sans objet en paysage ≥ 1133 (le portrait et le téléphone
+  // sont hors périmètre produit, décision de Nathan du 2026-09-11).
+  it('drops the 320px floor inherited from the Vite template', () => {
+    expect(css).not.toMatch(/min-width:\s*320px/)
   })
 })

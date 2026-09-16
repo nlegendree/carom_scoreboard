@@ -94,7 +94,7 @@ describe('PromptModal', () => {
     const wrapper = mountPrompt({ secondaryLabel: 'NON' })
 
     for (const testid of ['prompt-primary', 'prompt-secondary']) {
-      expect(find(wrapper, testid).classes()).toContain('min-h-[var(--size-touch-target)]')
+      expect(find(wrapper, testid).classes()).toContain('min-h-(--size-touch-target)')
     }
   })
 
@@ -145,7 +145,7 @@ describe('PromptModal', () => {
       // Blanc sur le bleu, jamais le noir de `--color-on-accent` (Nathan, 2026-09-12).
       expect(action.classes()).toContain('text-white')
       expect(action.classes()).not.toContain('text-on-accent')
-      expect(action.classes()).toContain('min-h-[var(--size-touch-target)]')
+      expect(action.classes()).toContain('min-h-(--size-touch-target)')
     }
     expect(find(wrapper, 'prompt-secondary').classes()).toContain(
       'bg-(image:--gradient-neutral)',

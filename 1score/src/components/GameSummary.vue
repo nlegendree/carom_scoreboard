@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { BALL_PICTOS, ballOf } from './ballAssets'
 import {
   GAME_MODE_LABELS,
   type GameMode,
@@ -46,17 +47,11 @@ const SIDES = computed<readonly PlayerId[]>(() =>
 const leftSide = computed<PlayerId>(() => SIDES.value[0]!)
 const rightSide = computed<PlayerId>(() => SIDES.value[1]!)
 
-// Pictos de bille fournis par Nathan (Story 10.3), servis depuis `public/` : aucune
-// ressource réseau, l'app doit tourner hors ligne (FR45, NFR13). Table LITTÉRALE, comme
-// partout — et non des aplats colorés, qui ne se lisaient pas sur le ruban rouge
-// (décision 3 de Nathan, 2026-09-14).
 // ⚠️ Une seule pastille par joueur, dans la ligne `RÉSULTAT` : celle du bandeau a été
 // retirée à la 1re passe de rendu (Nathan) — la bille y était dite deux fois, et le nom
 // avait besoin de la place pour grossir.
-const BALL_PICTOS: Record<PlayerId, string> = {
-  player1: '/bille_blanche.png',
-  player2: '/bille_jaune.png',
-}
+// Le picto vient de `ballAssets` depuis la Story 11.3, traduit du `PlayerId` de l'écran vers
+// la `PlayerColor` de la table : le récap ne redéclare plus les deux chemins.
 
 // Colonne du vainqueur : ruban rouge (décision du 2026-09-10, fidèle au rose/rouge
 // Billiboard, UX-DR5). L'autre reste neutre sur fond sombre. Égalité : les deux en neutre.
@@ -121,14 +116,20 @@ const players = computed<Record<PlayerId, Player>>(() => ({
          carte validé par Nathan à la 1re passe de rendu de la 10.4.
          ⚠️ Le rembourrage intérieur des deux bandes est ASYMÉTRIQUE (`pr-10` / `pl-10`) :
          du côté de l'échancrure, le texte doit rester en deçà du biais, sans quoi la
-         distance passerait sous la coupe. -->
+         distance passerait sous la coupe.
+         ⚠️ Le biais est en UNITÉS DE GRILLE (4 unités), pas en pixels fixes (Story 11.3,
+         report de la revue de la 11.1) : à 32 px figés il valait 4 unités sur tablette mais
+         2,5 à 1920, où la coupe s'aplatissait — la signature du design system s'y perdait.
+         `--spacing` étant fluide (8 px sur tablette, 13 px à 1920), le biais garde désormais
+         la même PENTE RELATIVE à tous les formats. C'est la seule différence de rendu voulue
+         de la Story 11.3, et elle ne se voit qu'à 1920. -->
     <header
       data-testid="summary-banner"
       class="flex shrink-0 items-stretch border-b border-border"
     >
       <div
         :data-testid="`summary-${leftSide}`"
-        class="flex min-w-0 flex-1 items-center gap-3 bg-banner py-3 pl-4 pr-10 text-title font-black text-bg [clip-path:polygon(0_0,100%_0,calc(100%-32px)_100%,0_100%)]"
+        class="flex min-w-0 flex-1 items-center gap-3 bg-banner py-3 pl-4 pr-10 text-title font-black text-bg [clip-path:polygon(0_0,100%_0,calc(100%_-_var(--spacing)_*_4)_100%,0_100%)]"
       >
         <span data-testid="summary-name" class="min-w-0 truncate">
           {{ players[leftSide].name }}
@@ -148,7 +149,7 @@ const players = computed<Record<PlayerId, Player>>(() => ({
 
       <div
         :data-testid="`summary-${rightSide}`"
-        class="flex min-w-0 flex-1 items-center justify-end gap-3 bg-banner py-3 pl-10 pr-4 text-title font-black text-bg [clip-path:polygon(0_0,100%_0,100%_100%,32px_100%)]"
+        class="flex min-w-0 flex-1 items-center justify-end gap-3 bg-banner py-3 pl-10 pr-4 text-title font-black text-bg [clip-path:polygon(0_0,100%_0,100%_100%,calc(var(--spacing)_*_4)_100%)]"
       >
         <span data-testid="summary-distance" class="shrink-0 tabular-nums">
           {{ players[rightSide].targetScore }}
@@ -189,7 +190,7 @@ const players = computed<Record<PlayerId, Player>>(() => ({
             <div class="flex flex-col items-center gap-1">
               <span class="flex items-center gap-2">
                 <img
-                  :src="BALL_PICTOS[side]"
+                  :src="BALL_PICTOS[ballOf(side)]"
                   alt=""
                   aria-hidden="true"
                   class="size-5 shrink-0 object-contain"

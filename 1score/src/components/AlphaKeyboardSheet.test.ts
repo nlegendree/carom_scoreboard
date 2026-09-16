@@ -15,8 +15,13 @@ function press(wrapper: ReturnType<typeof mount>, testid: string) {
   return wrapper.find(`[data-testid="${testid}"]`).trigger('pointerdown')
 }
 
+// La bande que l'hôte demande de réserver (Story 11.3) : une valeur d'écran quelconque
+// suffit ici — ce que les cas vérifient, c'est qu'elle atterrit du BON CÔTÉ, pas ce qu'elle
+// vaut. Sa vraie valeur est déclarée par l'écran, à côté de la mise en page qu'elle mesure.
+const RESERVE = 'calc(100vw * 0.4)'
+
 function sheet(props: { value: string; align?: 'left' | 'right' }) {
-  return mount(AlphaKeyboardSheet, { props: { align: 'right', ...props } })
+  return mount(AlphaKeyboardSheet, { props: { align: 'right', reserve: RESERVE, ...props } })
 }
 
 describe('AlphaKeyboardSheet', () => {
@@ -163,13 +168,19 @@ describe('AlphaKeyboardSheet', () => {
   // le nom — la carte qu'on remplit reste visible en face, c'est elle qui l'affiche.
   // Elle ne se colle pas au bord : elle se centre dans la zone que la carte visée laisse
   // libre, l'inset réservant la bande occupée par cette carte.
+  // Story 11.3 : la bande à réserver n'est plus un token, c'est `HomeScreen` qui la transmet
+  // (`reserve`) et `PopupCard` qui la pose en style en ligne — une position n'a pas sa place
+  // dans le namespace des intentions. MÊME INTENTION, nouvelle cible : ce qui compte reste
+  // l'ASYMÉTRIE — le côté visé est réservé, le côté libre retombe à la gouttière.
   it('centres itself in the space left free by the targeted card', () => {
     const right = sheet({ value: '', align: 'right' })
     const left = sheet({ value: '', align: 'left' })
 
     expect(right.classes()).toContain('justify-center')
-    expect(right.classes()).toContain('pl-[var(--setup-popup-inset-left)]')
-    expect(left.classes()).toContain('pr-[var(--setup-popup-inset-right)]')
+    expect(right.attributes('style')).toContain(`padding-inline-start: ${RESERVE}`)
+    expect(right.attributes('style')).not.toContain(`padding-inline-end: ${RESERVE}`)
+    expect(left.attributes('style')).toContain(`padding-inline-end: ${RESERVE}`)
+    expect(left.attributes('style')).not.toContain(`padding-inline-start: ${RESERVE}`)
   })
 
   it('carries no value readout of its own', () => {
@@ -205,9 +216,13 @@ describe('AlphaKeyboardSheet', () => {
     expect(wrapper.emitted('cancel')).toBeUndefined()
   })
 
-  it('binds pointerdown only, never click', () => {
-    expect(source).toContain('@pointerdown')
+  // AR8. Story 11.3 : l'hôte n'écoute plus lui-même le pointeur — `CtaButton` remonte
+  // `@pointerdown` en `press`, `PopupCard` porte le geste complet du voile, et chacun a son
+  // test. Ce qui reste vérifiable ICI, et qui compte, c'est qu'aucun `@click` ne se glisse
+  // dans l'hôte : il réintroduirait le délai de 300 ms sur iPad, et rien ne le verrait.
+  it('binds no click of its own', () => {
     expect(source).not.toContain('@click')
+    expect(source).toContain('@press')
   })
 
   // AC1 (Story 10.7) : le clavier s'annonce comme un dialogue, nommé par un `aria-label`

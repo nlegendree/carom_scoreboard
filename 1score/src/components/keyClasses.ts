@@ -10,4 +10,4 @@
 // il se voit beaucoup mieux qu'un simple changement de fond. Les deux ombres sont des tokens
 // de `main.css` (DESIGN.md › Elevation), jamais des valeurs écrites ici.
 export const KEY_CLASSES =
-  'flex items-center justify-center rounded-tappable bg-key shadow-key-relief transition duration-75 touch-manipulation select-none active:translate-y-px active:bg-key-active active:shadow-key-relief-active disabled:opacity-30'
+  'flex items-center justify-center rounded-tappable bg-key shadow-key-relief transition duration-75 active:translate-y-px active:bg-key-active active:shadow-key-relief-active disabled:opacity-30'

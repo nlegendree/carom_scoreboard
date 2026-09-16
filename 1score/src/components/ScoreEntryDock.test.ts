@@ -7,8 +7,13 @@ import ScoreEntryDock from './ScoreEntryDock.vue'
 import { MAX_SCORE_DIGITS } from '../stores/useGameStore'
 import type { TableSide } from '../types/game'
 
+// La bande que l'hôte demande de réserver (Story 11.3) : une valeur d'écran quelconque
+// suffit ici — ce que les cas vérifient, c'est qu'elle atterrit du BON CÔTÉ, pas ce qu'elle
+// vaut. Sa vraie valeur est déclarée par l'écran, à côté de la mise en page qu'elle mesure.
+const RESERVE = 'calc(100vw * 0.4)'
+
 function mountDock(currentInput = '', align: TableSide = 'left') {
-  return mount(ScoreEntryDock, { props: { currentInput, align } })
+  return mount(ScoreEntryDock, { props: { currentInput, align, reserve: RESERVE } })
 }
 
 // Cas migrés de `ScoreEntryModal.test.ts` (Story 1.5), supprimé avec sa pop-up centrée par
@@ -291,14 +296,18 @@ describe('ScoreEntryDock', () => {
 
   // La pop-up se pose du côté OPPOSÉ à la carte du joueur qui a la main : cette carte
   // reste entièrement visible et nette, et la valeur s'y écrit à vue.
+  // Story 11.3 : la bande à réserver n'est plus un token, c'est `GameView` qui la transmet
+  // (`reserve`) et `PopupCard` qui la pose en style en ligne — une position n'a pas sa place
+  // dans le namespace des intentions. MÊME INTENTION, nouvelle cible : ce qui compte reste
+  // l'ASYMÉTRIE — le côté visé est réservé, le côté libre retombe à la gouttière.
   it('centres itself in the zone left free by the targeted card', () => {
     const left = mountDock('', 'left').find('[data-testid="score-entry-dock"]')
     const right = mountDock('', 'right').find('[data-testid="score-entry-dock"]')
 
-    expect(left.classes()).toContain('pr-[var(--game-popup-inset-right)]')
-    expect(right.classes()).toContain('pl-[var(--game-popup-inset-left)]')
-    expect(left.classes()).not.toContain('pl-[var(--game-popup-inset-left)]')
-    expect(right.classes()).not.toContain('pr-[var(--game-popup-inset-right)]')
+    expect(left.attributes('style')).toContain(`padding-inline-end: ${RESERVE}`)
+    expect(right.attributes('style')).toContain(`padding-inline-start: ${RESERVE}`)
+    expect(left.attributes('style')).not.toContain(`padding-inline-start: ${RESERVE}`)
+    expect(right.attributes('style')).not.toContain(`padding-inline-end: ${RESERVE}`)
   })
 
   // ⚠️ Voile SANS FLOU : la carte visée doit rester lisible pendant la frappe, puisque la

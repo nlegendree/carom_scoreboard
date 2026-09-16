@@ -15,7 +15,12 @@
 //                             (Tab jusqu'à une tuile de l'accueil, puis jusqu'à VALIDER de la pop-up
 //                             de décision) — la souris et le `pointerdown` ne déclenchent pas
 //                             `:focus-visible`, seul le clavier le fait.
-const { chromium } = require('/Users/nathanlegendre/.nvm/versions/node/v24.13.0/lib/node_modules/@executeautomation/playwright-mcp-server/node_modules/playwright')
+// Playwright n'est PAS une dépendance du projet (harnais hors build) : il est emprunté à une
+// installation existante de la machine. `PLAYWRIGHT_MODULE` permet de désigner laquelle — la
+// version doit correspondre au build de Chromium présent dans ~/Library/Caches/ms-playwright.
+const PLAYWRIGHT_MODULE = process.env.PLAYWRIGHT_MODULE
+  || '/Users/nathanlegendre/.nvm/versions/node/v24.13.0/lib/node_modules/@executeautomation/playwright-mcp-server/node_modules/playwright'
+const { chromium } = require(PLAYWRIGHT_MODULE)
 const path = require('path')
 const fs = require('fs')
 

@@ -372,6 +372,12 @@ describe('PlayerPanel — carte inerte', () => {
   // CLAUDE.md §2 : le CSS global `touch-action: manipulation` cible `button, [role=button]`.
   // Le rôle retiré, les classes Tailwind doivent tenir seules — sinon un appui long sur le
   // score sélectionne le texte.
+  // ⚠️ Ce cas est le SEUL qui protège encore ces deux classes. La Story 11.3 a balayé les
+  // dix-sept autres occurrences du produit, toutes posées sur un `<button>` que la règle
+  // globale couvrait déjà ; celle-ci reste parce que cette racine est un `<div>` sans
+  // `role="button"`, et qu'aucun test ne verrait sa disparition — happy-dom ne calcule
+  // aucun CSS. `tokens.test.ts` verrouille l'autre bout de la règle : plus aucune occurrence
+  // ailleurs, et celle-ci toujours là.
   it('keeps the tactile CSS in classes now that the role is gone', () => {
     const classes = mountPanel(makePlayer()).classes()
 

@@ -100,6 +100,19 @@ const entryAlign = computed<TableSide>(() =>
   activePlayer.value === leftId.value ? 'right' : 'left',
 )
 
+// GÉOMÉTRIE DU SCOREBOARD — la bande qu'une pop-up de saisie doit RÉSERVER pour ne pas
+// couvrir la carte du joueur actif. Elle vivait en tokens `--game-popup-inset-*` jusqu'à la
+// Story 11.3 : c'était une POSITION dans le namespace des intentions
+// (`integration-bmad-impeccable.md` §6). Sa place est ici, à côté de la mise en page qu'elle
+// mesure.
+//
+// Lecture : le scoreboard n'a PAS de barre latérale, ses trois colonnes valent 2/5 · 1/5 ·
+// 2/5 à fleur de bord. L'inset réserve donc la carte visée (40vw) plus une gouttière de
+// 4 unités, pour que la pop-up ne la TOUCHE jamais. Symétrique, à la différence du
+// paramétrage : les deux cartes sont à égale distance des bords.
+// ⚠️ `--spacing` reste un token et reste lu : c'est l'unité de grille, une intention.
+const GAME_POPUP_RESERVE = 'calc(100vw * 0.4 + var(--spacing) * 4)'
+
 // Valeur en cours de frappe, portée par la carte du joueur qui a la main et par elle seule
 // (AC3a) ; `null` partout ailleurs, y compris sur la carte d'en face.
 function entryValueOf(playerId: PlayerId): string | null {
@@ -398,6 +411,7 @@ const SUMMARY_SIDEBAR_EXIT: SideBarItem = {
         v-if="entryOpen"
         :currentInput="currentInput[activePlayer]"
         :align="entryAlign"
+        :reserve="GAME_POPUP_RESERVE"
         @digit="gameStore.appendScoreDigit(activePlayer, $event)"
         @clear="gameStore.clearScoreInput(activePlayer)"
         @backspace="gameStore.backspaceScoreInput(activePlayer)"

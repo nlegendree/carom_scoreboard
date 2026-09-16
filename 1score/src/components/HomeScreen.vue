@@ -5,6 +5,7 @@ import AlphaKeyboardSheet from './AlphaKeyboardSheet.vue'
 import ModeTile from './ModeTile.vue'
 import NumericPadDock from './NumericPadDock.vue'
 import PictoIcon from './PictoIcon.vue'
+import CtaButton from './CtaButton.vue'
 import PlayerSetupCard from './PlayerSetupCard.vue'
 import PromptModal from './PromptModal.vue'
 import SideBar from './SideBar.vue'
@@ -76,9 +77,25 @@ const JDS_TILE_LAYOUT = [
 // Les deux réglages sont EMPILÉS et pleine largeur depuis la revue de rendu du 2026-09-12
 // (Nathan teste sur un 14") : chacun tient son libellé sur une ligne, picto EN LIGNE devant
 // comme la référence coréenne — ce que la disposition côte à côte, à 73 px par bouton,
-// rendait impossible.
-const SETUP_CTA_CLASSES =
-  'flex min-h-[var(--size-touch-target)] w-full min-w-0 items-center justify-center gap-2 rounded-tappable bg-(image:--gradient-blue) px-2 text-center text-label font-bold text-white touch-manipulation select-none active:brightness-90'
+// rendait impossible. La chaîne de classes est la variante `setup` de `CtaButton` depuis la
+// Story 11.3 : elle ne vit plus ici.
+
+// GÉOMÉTRIE DE L'ÉTAPE `players` — la bande qu'une pop-up de saisie doit RÉSERVER pour ne
+// pas couvrir la carte qu'on remplit. Elle vivait en tokens `--setup-popup-inset-*` jusqu'à
+// la Story 11.3 : c'était une POSITION dans le namespace des intentions
+// (`integration-bmad-impeccable.md` §6). Sa place est ici, à côté du markup à trois colonnes
+// qu'elle mesure — si cette mise en page bouge, ces deux valeurs se voient dans le même
+// fichier, et non trois dossiers plus loin.
+//
+// Lecture : barre latérale (`--size-sidebar`) + padding de `<main>` (`p-4`, 4 unités) + deux
+// cartes qui se partagent les 3/4 restants (0,375 du reste chacune) + gouttière de 4 unités.
+// ⚠️ L'ASYMÉTRIE est réelle — la barre latérale n'est que d'un côté : deux valeurs, pas une.
+// `--size-sidebar` et `--spacing` restent des tokens et restent lus : ce sont des intentions
+// (largeur de la barre, unité de grille). Ce qui part, c'est leur PRODUIT par une mise en page.
+const SETUP_POPUP_RESERVE: Record<TableSide, string> = {
+  left: 'calc(var(--size-sidebar) + var(--spacing) * 4 + (100vw - var(--size-sidebar) - var(--spacing) * 8) * 0.375)',
+  right: 'calc((100vw - var(--size-sidebar) - var(--spacing) * 8) * 0.375 + var(--spacing) * 4)',
+}
 
 // Les trois cadres du catalogue, dans l'ordre d'affichage de la pop-up.
 const CADRE_MODES = ['cadre-47-2', 'cadre-47-1', 'cadre-71-2'] as const satisfies readonly GameMode[]
@@ -152,6 +169,12 @@ const entryPopupSide = computed<TableSide>(() => {
   const cardSide = leftBall.value === current.ball ? 'left' : 'right'
   return cardSide === 'left' ? 'right' : 'left'
 })
+
+// La bande que la pop-up doit réserver : celle de la carte visée, donc le côté OPPOSÉ à
+// celui où la pop-up se pose.
+const entryPopupReserve = computed(
+  () => SETUP_POPUP_RESERVE[entryPopupSide.value === 'left' ? 'right' : 'left'],
+)
 
 function distanceOf(ball: PlayerColor): number {
   return Number(players.value[ball].distance || 0)
@@ -490,36 +513,36 @@ function fixDistance(): void {
             <!-- Les trois commandes forment un BLOC, calé en bas de la colonne (modèle
                  Cueuny) : deux réglages bleus côte à côte, puis l'action qui engage. -->
             <div class="mt-auto flex shrink-0 flex-col gap-2">
-              <button
+              <CtaButton
                 data-testid="change-ball-button"
-                :class="SETUP_CTA_CLASSES"
-                @pointerdown="changeBall"
+                variant="setup"
+                @press="changeBall"
               >
                 <PictoIcon name="refresh" class="size-3 shrink-0" />
                 <span>CHANGER DE BILLE</span>
-              </button>
-              <button
+              </CtaButton>
+              <CtaButton
                 data-testid="change-side-button"
-                :class="SETUP_CTA_CLASSES"
-                @pointerdown="changeSide"
+                variant="setup"
+                @press="changeSide"
               >
                 <PictoIcon name="arrow-right-left" class="size-3 shrink-0" />
                 <span>CHANGER DE CÔTÉ</span>
-              </button>
+              </CtaButton>
 
               <!-- `confirm-button` conservé malgré le déménagement en colonne centrale :
                    `GameView.test.ts` le lit pour traverser l'accueil.
                    Le chevron est à GAUCHE du mot, NU et large : sa plaque translucide,
                    essayée d'abord, se lisait comme un bouton dans le bouton (revue de rendu
                    du 2026-09-12). -->
-              <button
+              <CtaButton
                 data-testid="confirm-button"
-                class="flex min-h-(--size-start-button) w-full items-center justify-center gap-2 rounded-tappable bg-(image:--gradient-red) px-2 text-start-button font-black tracking-label text-white shadow-light-edge-start touch-manipulation select-none active:brightness-90"
-                @pointerdown="confirm"
+                variant="start"
+                @press="confirm"
               >
                 <PictoIcon name="chevron-right" class="size-5 shrink-0" />
                 <span>DÉMARRER</span>
-              </button>
+              </CtaButton>
             </div>
           </section>
 
@@ -547,6 +570,7 @@ function fixDistance(): void {
         :key="entry.ball"
         :value="draft"
         :align="entryPopupSide"
+        :reserve="entryPopupReserve"
         @update="draft = $event"
         @validate="applyEntry"
         @cancel="abandonEntry"
@@ -557,6 +581,7 @@ function fixDistance(): void {
         :key="entry.ball"
         :value="draft"
         :align="entryPopupSide"
+        :reserve="entryPopupReserve"
         @update="draft = $event"
         @validate="applyEntry"
         @cancel="abandonEntry"

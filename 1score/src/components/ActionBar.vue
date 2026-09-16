@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import IconAction from './IconAction.vue'
+import CtaButton from './CtaButton.vue'
 import type { PlayerId, TableSide } from '../types/game'
 import type { ItemState, PictoName } from '../types/ui'
 
@@ -117,14 +118,14 @@ const pictoActions = computed<BarAction[]>(() => [
       <!-- Le CTA occupe TOUTE la largeur de la colonne du joueur assis, comme la barre
            pleine largeur du Billiboard (`상대선수 득점 +1`). -->
       <div class="flex w-2/5 px-2">
-        <button
+        <CtaButton
           :data-testid="ctaTestId"
           :data-side="ctaOwner"
-          class="flex w-full min-h-[var(--size-touch-target)] items-center justify-center bg-(image:--gradient-blue) px-4 text-label font-black tracking-label text-white rounded-tappable touch-manipulation select-none active:brightness-90"
-          @pointerdown="emit('cta')"
+          variant="bar"
+          @press="emit('cta')"
         >
           {{ ctaLabel }}
-        </button>
+        </CtaButton>
       </div>
 
       <!-- Espaceur calé sur la colonne centrale : la barre reproduit la grille de la zone

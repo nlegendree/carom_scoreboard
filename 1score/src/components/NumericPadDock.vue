@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import NumericPad from './NumericPad.vue'
+import CtaButton from './CtaButton.vue'
+import PopupCard from './PopupCard.vue'
 import { useHaptics } from '../composables/useHaptics'
 import { MAX_TARGET_SCORE } from '../stores/useGameStore'
 import type { TableSide } from '../types/game'
@@ -24,7 +26,7 @@ import type { TableSide } from '../types/game'
 //
 // ⚠️ Aucun commentaire HTML à la racine du gabarit : il en ferait un fragment, et la
 // racine perdrait `classes()` comme son `data-testid` (piège payé en 10.1 sur `ModeTile`).
-const props = defineProps<{ value: string; align: TableSide }>()
+const props = defineProps<{ value: string; align: TableSide; reserve: string }>()
 
 const emit = defineEmits<{ update: [value: string]; validate: []; cancel: [] }>()
 
@@ -34,12 +36,10 @@ const { tap, reject } = useHaptics()
 const MAX_DIGITS = String(MAX_TARGET_SCORE).length
 
 // La pop-up ne se colle pas au bord : elle se CENTRE dans la zone que la carte visée
-// laisse libre (revue de rendu du 2026-09-12). L'inset réserve la bande occupée par cette
-// carte, `justify-center` fait le reste.
-const ALIGN_CLASSES: Record<TableSide, string> = {
-  left: 'pl-4 pr-[var(--setup-popup-inset-right)]',
-  right: 'pl-[var(--setup-popup-inset-left)] pr-4',
-}
+// laisse libre (revue de rendu du 2026-09-12). L'hôte transmet la bande à RÉSERVER du côté
+// opposé (`reserve`) — il est le seul à connaître la géométrie de son écran. Story 11.3 :
+// elle vivait avant en token `--*-popup-inset-*`, c'est-à-dire une position dans le
+// namespace des intentions.
 
 // Une distance ouverte sur une valeur déjà réglée attend d'être remplacée : la première
 // frappe repart de zéro (convention calculatrice). Sans ça, un réglage à 3 chiffres serait
@@ -86,48 +86,19 @@ function onBackspace(): void {
   pristine.value = false
   emit('update', props.value.slice(0, -1))
 }
-
-// Un « tap en dehors » est un geste COMPLET sur le voile : appui ET relâchement.
-// Se contenter du relâchement referme la pop-up dès son ouverture — le `pointerup` du
-// geste qui a pressé le champ retombe sur le voile qui vient d'apparaître sous le doigt.
-// `pointerId` mémorisé (pas un booléen, pour qu'une paume posée sur le voile n'arme pas la
-// fermeture au profit d'un autre doigt) et `pointercancel` qui désarme. Seule exception
-// assumée à `@pointerdown` seul (AR8), pour la même raison qu'en 1.5 et 1.4.
-let backdropPointerId: number | null = null
-
-function armBackdropClose(event: PointerEvent): void {
-  backdropPointerId = event.pointerId
-}
-
-function disarmBackdropClose(): void {
-  backdropPointerId = null
-}
-
-function closeFromBackdrop(event: PointerEvent): void {
-  if (backdropPointerId === null || backdropPointerId !== event.pointerId) return
-  backdropPointerId = null
-  emit('cancel')
-}
 </script>
 
 <template>
-  <div
-    data-testid="numeric-pad-dock"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Réglage de la distance"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 py-4"
-    :class="ALIGN_CLASSES[align]"
-    @pointerdown="armBackdropClose"
-    @pointerup="closeFromBackdrop"
-    @pointercancel="disarmBackdropClose"
+  <PopupCard
+    testid="numeric-pad-dock"
+    cardTestid="dock-card"
+    label="Réglage de la distance"
+    width="pad"
+    gap="sm"
+    :align="align"
+    :reserve="reserve"
+    @backdrop-close="emit('cancel')"
   >
-    <div
-      data-testid="dock-card"
-      class="flex max-h-full w-full max-w-(--size-popup-pad) flex-col gap-2 rounded-popup border border-border bg-bg-raised/88 p-3 shadow-popup backdrop-blur-sm"
-      @pointerdown.stop
-      @pointerup.stop
-    >
       <div
         :key="rejectKey"
         data-testid="dock-reject"
@@ -143,22 +114,23 @@ function closeFromBackdrop(event: PointerEvent): void {
         />
       </div>
 
-      <footer class="flex shrink-0 gap-2">
-        <button
+      <template #footer>
+        <CtaButton
           data-testid="dock-close"
-          class="min-h-[var(--size-touch-target)] w-1/3 rounded-tappable bg-(image:--gradient-neutral) text-label font-black text-white touch-manipulation select-none active:brightness-90"
-          @pointerdown="emit('cancel')"
+          variant="neutral"
+          class="w-1/3"
+          @press="emit('cancel')"
         >
           ANNULER
-        </button>
-        <button
+        </CtaButton>
+        <CtaButton
           data-testid="dock-confirm"
-          class="min-h-[var(--size-touch-target)] flex-1 rounded-tappable bg-(image:--gradient-blue) text-label font-black text-white touch-manipulation select-none active:brightness-90"
-          @pointerdown="emit('validate')"
+          variant="accent"
+          class="flex-1"
+          @press="emit('validate')"
         >
           VALIDER
-        </button>
-      </footer>
-    </div>
-  </div>
+        </CtaButton>
+      </template>
+  </PopupCard>
 </template>

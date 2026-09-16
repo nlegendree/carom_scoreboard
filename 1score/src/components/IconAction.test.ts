@@ -62,11 +62,13 @@ describe('IconAction', () => {
   it('declares the touch target gabarit', () => {
     const classes = mountAction().classes().join(' ')
 
-    expect(classes).toContain('min-h-[var(--size-touch-target)]')
-    expect(classes).toContain('min-w-[var(--size-touch-target)]')
+    expect(classes).toContain('min-h-(--size-touch-target)')
+    expect(classes).toContain('min-w-(--size-touch-target)')
     expect(classes).toContain('bg-surface')
     expect(classes).toContain('border-border')
     expect(classes).toContain('rounded-tappable')
-    expect(classes).toContain('touch-manipulation')
+    // ⚠️ Plus de `touch-manipulation` ici depuis la Story 11.3 : la règle globale de
+    // `main.css` (`button, [role="button"] { touch-action: manipulation; user-select: none }`)
+    // couvre déjà tout `<button>`, et cette racine EN EST un. Le répéter ne faisait rien.
   })
 })

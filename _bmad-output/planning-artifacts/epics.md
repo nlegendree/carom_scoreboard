@@ -2073,6 +2073,21 @@ So that l'écran se construit sans créer un composant de strate 3 ni ajouter un
 **Then** `touch-manipulation select-none` n'est plus répété sur les boutons (la règle globale de `main.css` suffit), `min-width: 320px` est retiré, et `CLAUDE.md` §8 est réécrit : pas de breakpoint d'écran, container queries sur les cartes
 **And** `npm test` et `npm run build` verts, `src/stores/` intact, passe navigateur aux trois formats sans écart visuel
 
+> **Livraison (dev-story, 2026-09-16) — 1013 tests verts (29 fichiers, +169), build vert, `src/stores/` intact.** Les trois briques sont `src/composables/useBackdropClose.ts`, `src/components/CtaButton.vue` et `src/components/PopupCard.vue` ; les constantes de bille sont dans `src/components/ballAssets.ts`. **Preuve du refactor** : ligne de base de 36 captures (12 écrans × 3 formats) prise avant la première ligne de code, harnais rejoué à l'arrivée sur serveur de dev neuf — **32 identiques au pixel**. Les 4 restantes sont expliquées et aucune n'est un bug : le biais du bandeau de récap à 1920 (différence voulue, AC6), le même bandeau à 1180 (20 pixels d'anti-aliasing, `--spacing` y vaut 8,0004 px et non 8), un pixel isolé sur la pop-up de pavé à 1920, et la pop-up de saisie à 1920 dont l'écart est du **bruit d'exécution** — deux captures du même code à la suite diffèrent de la même ampleur et dans la même zone (phases du flash de frappe et de la barre de rebours). `impeccable detect` : zéro constat sur `src` et aux trois formats. Placement des pop-ups vérifié au navigateur : 387,875 px au paramétrage et 485,2 px au scoreboard, exactement les valeurs des anciens tokens.
+>
+> **Trois écarts au texte de l'AC ci-dessus, tous assumés et consignés :**
+> 1. **Six variantes de CTA et non cinq** — `PASSER LE TOUR` est une famille à part dans `DESIGN.md` › Components › Buttons (picto au-dessus du libellé, rôle `stat`, état inactif) ; l'absorber dans `accent` aurait demandé trois dérogations dans un composant fait pour en supprimer.
+> 2. **`ALIGN_CLASSES` disparaît au lieu de rejoindre un module partagé** — il n'existait que pour lire les quatre insets ; `PopupCard` le remplace par `align` + `reserve`. `BALL_PICTOS`, `BALL_LABELS` et `BALL_CLASSES` vivent bien dans un module commun (`ballAssets.ts`), clés par `PlayerColor`, `GameSummary` traduisant son `PlayerId` à l'appel.
+> 3. **Les quatre pop-ups consomment `useBackdropClose` À TRAVERS `PopupCard`**, qui en est l'unique consommateur direct — un mécanisme partagé par un composant partagé plutôt que quatre appels recopiés.
+>
+> **Seul changement visuel volontaire** : le retour d'appui du CTA neutre unifié sur `brightness(1.25)` (les trois hôtes de saisie portaient `brightness(0.9)`, la pop-up de décision `1.25` — le même objet ne peut pas réagir de deux façons). État enfoncé seulement, vérifié au doigt.
+>
+> **Deux décisions de Nathan prises au rendu (2026-09-16) :**
+> - **Découpe Billiboard : REPORTÉE.** Deux propositions rendues aux trois formats par surcharges CSS ; les deux coupent net le débordement du disque du chrono (`--game-clock-bleed`), qui est sa signature. Le corriger demande de recalculer la géométrie couplée du chrono contre la gouttière, donc du markup — hors périmètre d'un refactor. `DESIGN.md` › Shapes reste inchangé, l'entrée part en story de mise en page dédiée (`deferred-work.md`).
+> - **Touches alpha : exception UX-DR8 CONFIRMÉE.** Re-mesurées à 47 / 50 / 82 px pour un plancher de 57. Des quatre leviers chiffrés, seul le passage à 8 colonnes atteint le plancher et il défigure l'AZERTY. Écart consigné, pas corrigé.
+>
+> **Reports en plus** (`deferred-work.md`) : chemin Playwright du harnais surchargeable mais dépendance toujours empruntée ; la CSS d'un serveur de dev de longue vie garde des utilitaires morts, toute vérification de CSS est à refaire après redémarrage.
+
 ### Story 11.4: Garde-fou outillé — scans aux trois formats, contraste calculé, écarts documentés, ré-audit
 
 As a développeur qui livre une story visuelle,

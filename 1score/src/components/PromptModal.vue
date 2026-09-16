@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed, useId } from 'vue'
+import CtaButton from './CtaButton.vue'
+import PopupCard from './PopupCard.vue'
+import { BALL_CLASSES } from './ballAssets'
 import type { PlayerColor } from '../types/game'
 import type { PromptAction } from '../types/ui'
 
@@ -70,64 +73,20 @@ const emit = defineEmits<{ primary: []; secondary: []; select: [id: string] }>()
 // coexistent, et les collisions d'`id` cassent silencieusement `aria-labelledby`.
 const titleId = useId()
 
-// Classes écrites en toutes lettres pour le scanner JIT de Tailwind v4.
-const BALL_CLASSES: Record<PlayerColor, string> = {
-  white: 'bg-player-white',
-  yellow: 'bg-player-yellow',
-}
-
-// Un seul gabarit de bouton pour les trois familles du pied (choix, secondaire, principal) :
-// c'est ce qui fait que toutes les pop-ups du produit se ressemblent. Rayon pris au token
-// `--radius-tappable` (Story 11.2 : 8 px sur tout objet tapable) plutôt qu'à l'échelle de
-// Tailwind — à côté des claviers en relief, des CTA parfaitement rectangulaires juraient
-// (revue du 2026-09-12) ; c'est la même famille d'objets tapables, elle porte le même arrondi.
-// Chaque CTA porte SON dégradé, jamais un dégradé étalé sur la rangée. L'accent est LE
-// bleu du produit, celui des tuiles de mode (décision de Nathan, 2026-09-12).
-const BUTTON_CLASSES =
-  'w-full min-h-[var(--size-touch-target)] rounded-tappable text-label font-black touch-manipulation select-none'
-const ACCENT_CLASSES = `${BUTTON_CLASSES} bg-(image:--gradient-blue) text-white active:brightness-90`
-const NEUTRAL_CLASSES = `${BUTTON_CLASSES} bg-(image:--gradient-neutral) text-white active:brightness-125`
-
-// Tap en dehors, pop-ups à retour seulement. `pointerId` mémorisé et non un booléen, pour
-// qu'une paume posée sur le voile n'arme pas la fermeture au profit d'un autre doigt ;
-// `pointercancel` désarme (même mécanique que `PlayerSetupModal`, revue du 2026-09-09).
-let backdropPointerId: number | null = null
-
-function armBackdropClose(event: PointerEvent): void {
-  if (!closesOnBackdrop.value) return
-  backdropPointerId = event.pointerId
-}
-
-function disarmBackdropClose(): void {
-  backdropPointerId = null
-}
-
-function closeFromBackdrop(event: PointerEvent): void {
-  if (backdropPointerId === null || backdropPointerId !== event.pointerId) return
-  backdropPointerId = null
-  emit('secondary')
-}
 </script>
 
 <template>
-  <div
-    data-testid="prompt-modal"
-    role="dialog"
-    aria-modal="true"
-    :aria-labelledby="titleId"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/25 p-4"
-    @pointerdown="armBackdropClose"
-    @pointerup="closeFromBackdrop"
-    @pointercancel="disarmBackdropClose"
+  <PopupCard
+    testid="prompt-modal"
+    cardTestid="prompt-card"
+    :labelledBy="titleId"
+    width="decision"
+    gap="md"
+    contain
+    footerLayout="column"
+    :closeOnBackdrop="closesOnBackdrop"
+    @backdrop-close="emit('secondary')"
   >
-    <!-- Carte resserrée (revue de Nathan, 2026-09-12) : la pop-up ne doit pas manger
-         l'écran. En variante liste, le titre se centre au-dessus du rang de choix. -->
-    <div
-      data-testid="prompt-card"
-      class="relative flex max-h-full w-full max-w-(--size-popup-decision) flex-col gap-3 overflow-hidden rounded-popup border border-border bg-bg-raised/88 p-3 shadow-popup backdrop-blur-sm"
-      @pointerdown.stop
-      @pointerup.stop
-    >
       <!-- Titre TOUJOURS centré (revue du 2026-09-12) : la carte est resserrée, un titre
            collé à gauche y flottait. -->
       <header data-testid="prompt-header" class="flex shrink-0 items-center justify-center gap-4">
@@ -157,7 +116,7 @@ function closeFromBackdrop(event: PointerEvent): void {
            (ordre inversé le 2026-09-12 : l'action proposée se lit avant son refus) ; avec
            `actions`, `ANNULER` tombe SOUS les choix, où il serait sinon coincé entre le
            titre et la liste. Cibles ≥ 90 px. -->
-      <footer class="flex shrink-0 flex-col gap-2">
+      <template #footer>
         <!-- Les choix sur UNE ligne, en colonnes égales quel qu'en soit leur nombre : pas
              de `grid-cols-n` construit à la volée, que le scanner de Tailwind ne verrait
              pas. Tous portent le MÊME accent — aucun n'est le choix par défaut. -->
@@ -166,35 +125,35 @@ function closeFromBackdrop(event: PointerEvent): void {
           data-testid="prompt-actions"
           class="grid grid-flow-col auto-cols-fr gap-2"
         >
-          <button
+          <CtaButton
             v-for="action in actions"
             :key="action.id"
             :data-testid="`prompt-action-${action.id}`"
-            :class="ACCENT_CLASSES"
-            @pointerdown="emit('select', action.id)"
+            variant="accent"
+            @press="emit('select', action.id)"
           >
             {{ action.label }}
-          </button>
+          </CtaButton>
         </div>
 
-        <button
+        <CtaButton
           v-if="!actions?.length && primaryLabel"
           data-testid="prompt-primary"
-          :class="ACCENT_CLASSES"
-          @pointerdown="emit('primary')"
+          variant="accent"
+          @press="emit('primary')"
         >
           {{ primaryLabel }}
-        </button>
+        </CtaButton>
 
-        <button
+        <CtaButton
           v-if="secondaryLabel"
           data-testid="prompt-secondary"
-          :class="NEUTRAL_CLASSES"
-          @pointerdown="emit('secondary')"
+          variant="neutral"
+          class="w-full"
+          @press="emit('secondary')"
         >
           {{ secondaryLabel }}
-        </button>
-      </footer>
-    </div>
-  </div>
+        </CtaButton>
+      </template>
+  </PopupCard>
 </template>

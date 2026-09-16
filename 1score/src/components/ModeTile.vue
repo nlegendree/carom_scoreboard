@@ -46,7 +46,7 @@ function select(): void {
   <button
     type="button"
     :disabled="soon"
-    class="relative isolate flex min-h-(--size-tile-min) flex-col justify-between p-2 text-left text-white touch-manipulation select-none"
+    class="relative isolate flex min-h-(--size-tile-min) flex-col justify-between p-2 text-left text-white"
     :class="soon ? '' : 'hover:brightness-110 active:brightness-125'"
     @pointerdown="select"
   >
