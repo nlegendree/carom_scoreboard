@@ -111,17 +111,18 @@ describe('CenterPanel', () => {
     expect(classes).not.toContain('overflow-hidden')
   })
 
-  // ⚠️ Le débordement se calcule sur la CONTENT BOX : la colonne portant `p-2` (16 px),
-  // `-mx-2` + `calc(100% + 32px)` ne reconstitue que sa border-box et l'anneau n'en sort
-  // PAS d'un pixel (défaut mesuré à la passe navigateur de la 10.4). Il faut le double.
+  // ⚠️ Le débordement se calcule sur la CONTENT BOX : la colonne portant `p-2` (2 unités),
+  // `-mx-2` + `calc(100% + 4 unités)` ne reconstitue que sa border-box et l'anneau n'en
+  // sort PAS d'un pixel (défaut mesuré à la passe navigateur de la 10.4). Il faut le double.
+  // En UNITÉS DE GRILLE (`--spacing`), jamais en pixels : la grille est fluide (Story 11.1).
   // Aucun CSS n'étant calculé en test, seule la classe peut être verrouillée ici.
   it('derives its bleed from the shared token, never from a recopied value', () => {
     const bleed = mount(CenterPanel, {
       props: { ...baseProps, secondsRemaining: 40 },
     }).find('[data-testid="shot-clock-bleed"]')
 
-    expect(bleed.classes()).toContain('w-[calc(100%_+_2_*_(var(--game-clock-bleed)_+_16px))]')
-    expect(bleed.classes()).toContain('mx-[calc(-1_*_(var(--game-clock-bleed)_+_16px))]')
+    expect(bleed.classes()).toContain('w-[calc(100%_+_2_*_(var(--game-clock-bleed)_+_var(--spacing)_*_2))]')
+    expect(bleed.classes()).toContain('mx-[calc(-1_*_(var(--game-clock-bleed)_+_var(--spacing)_*_2))]')
     // ⚠️ `z-20` : le débordement doit MASQUER le liseré de tour des cartes (`z-10`), dont
     // le demi-anneau prend le relais. Les deux z-index sont explicites de part et d'autre.
     expect(bleed.classes()).toContain('z-20')

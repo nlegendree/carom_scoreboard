@@ -137,8 +137,9 @@ describe('ShotClock', () => {
     expect(ring.classes()).not.toContain('w-full')
     expect(ring.classes()).toContain('[container-type:size]')
     // Le chiffre se dimensionne sur le DISQUE (`cqmin`), pas sur la zone : il a suivi l'arc
-    // quand celui-ci est rentré (44 → 40 cqmin), le disque intérieur ayant rétréci.
-    expect(wrapper.find('[data-testid="shot-clock-value"]').classes()).toContain('text-[40cqmin]')
+    // quand celui-ci est rentré (44 → 40 cqmin), le disque intérieur ayant rétréci. La
+    // valeur vit dans le token `--text-clock` (DESIGN.md, Story 11.1), plus dans le gabarit.
+    expect(wrapper.find('[data-testid="shot-clock-value"]').classes()).toContain('text-clock')
   })
 })
 
@@ -147,6 +148,9 @@ describe('ShotClock', () => {
 describe('ShotClock — prolongement du liseré de tour', () => {
   const turnRing = (wrapper: ReturnType<typeof mount>) =>
     wrapper.find('[data-testid="shot-clock-turn-ring"]')
+  // Le cercle rouge lui-même : enfant de la couche clippée (Story 11.1, 5e passe de rendu).
+  const turnCircle = (wrapper: ReturnType<typeof mount>) =>
+    wrapper.find('[data-testid="shot-clock-turn-circle"]')
 
   function mountClock(turnRingSide: 'left' | 'right' | null = null) {
     return mount(ShotClock, { props: { secondsRemaining: 40, totalSeconds: 40, turnRingSide } })
@@ -155,11 +159,12 @@ describe('ShotClock — prolongement du liseré de tour', () => {
   // Le disque déborde sur les cartes et coupe leur liseré : ce demi-anneau, collé à son
   // bord, en prend le relais et le contourne au lieu de le laisser interrompu.
   it('draws a half ring on the side of the card that has the turn', () => {
-    const left = turnRing(mountClock('left'))
+    const leftClock = mountClock('left')
+    const left = turnRing(leftClock)
     const right = turnRing(mountClock('right'))
 
-    expect(left.classes()).toContain('border-turn-active')
-    expect(left.classes()).toContain('rounded-full')
+    expect(turnCircle(leftClock).classes()).toContain('border-turn-active')
+    expect(turnCircle(leftClock).classes()).toContain('rounded-full')
     // ⚠️ La bande qui DÉPASSE (`--game-clock-bleed`), pas la moitié du disque : sinon
     // l'arc s'arrête au centre du disque, en pleine colonne, et ne raccorde pas au liseré.
     expect(left.classes()).toContain('[clip-path:inset(0_calc(100%_-_var(--game-clock-bleed))_0_0)]')
@@ -168,7 +173,27 @@ describe('ShotClock — prolongement du liseré de tour', () => {
 
   // Même épaisseur que le `ring-8` de la carte : le raccord doit être invisible.
   it('matches the thickness of the card ring it continues', () => {
-    expect(turnRing(mountClock('left')).classes()).toContain('border-8')
+    expect(turnCircle(mountClock('left')).classes()).toContain('border-8')
+  })
+
+  // ⚠️ Le clip porte sur une COUCHE qui couvre la ZONE (`inset-0` de la racine), pas sur le
+  // disque : la zone déborde de la colonne d'exactement `--game-clock-bleed`, le disque pas
+  // forcément — quand la hauteur gouverne sa taille (1920×1080), il est plus étroit que la
+  // zone, et un clip mesuré depuis son bord laissait un croissant rouge flotter dans la
+  // colonne (bug relevé par Nathan, Story 11.1). Le cercle a la taille EXACTE du disque.
+  it('clips the half ring at the zone edge, not at the disc edge', () => {
+    const wrapper = mountClock('left')
+    const layer = turnRing(wrapper)
+
+    expect(layer.element.parentElement).toBe(wrapper.find('[data-testid="shot-clock"]').element)
+    expect(layer.classes()).toEqual(expect.arrayContaining(['absolute', 'inset-0']))
+    expect(wrapper.find('[data-testid="shot-clock"]').classes()).toContain('relative')
+    expect(turnCircle(wrapper).classes()).toContain('w-[min(100cqw,100cqh)]')
+    expect(wrapper.find('[data-testid="shot-clock-ring"]').classes()).toContain('w-[min(100cqw,100cqh)]')
+    // Sans `aspect-square`, un cercle vide n'a pour hauteur que ses deux bordures : le
+    // demi-anneau disparaîtrait sans qu'aucun autre cas ne rougisse.
+    expect(turnCircle(wrapper).classes()).toContain('aspect-square')
+    expect(wrapper.find('[data-testid="shot-clock-ring"]').classes()).toContain('aspect-square')
   })
 
   // Sans côté — hors partie, ou avant qu'un tour soit attribué — rien n'est dessiné.

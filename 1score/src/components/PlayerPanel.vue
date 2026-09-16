@@ -82,18 +82,20 @@ const INNER_GUTTER_CLASSES: Record<TableSide, string> = {
 // y suffire : le panneau fait 40 % de la largeur d'écran, et ce qui tient à un chiffre
 // déborde à trois. La taille est donc choisie selon le nombre de caractères affichés.
 // Deux bornes dans chaque valeur : `vw` protège de la largeur du panneau, `vh` de sa
-// hauteur, et le plafond en pixels évite un chiffre démesuré sur un signage 22".
-// Clés littérales, jamais construites par template : le scanner JIT ne verrait rien.
+// hauteur, et le plafond en pixels (520, Story 11.1) ne borne que le signage au-delà de
+// 1080 px de haut — à 1920×1080 c'est `40vh` (432 px) qui gouverne.
+// Clés littérales, jamais construites par template : le scanner JIT ne verrait rien. Les
+// valeurs sont les tokens `--text-score-*` de `main.css` (DESIGN.md › Typography).
 // ⚠️ Bornes `vh` redescendues de 46 à 40 par la Story 10.4 : le bandeau (22 %) et la ligne
 // MOY · SÉRIE reprennent ~10 % de la hauteur de la carte, et à 1133×744 le chiffre
 // touchait le pied. Les bornes `vw` n'ont pas bougé, la largeur non plus.
 const SCORE_SIZE_CLASSES: Record<number, string> = {
-  1: 'text-[min(42vw,40vh,320px)]',
-  2: 'text-[min(24vw,40vh,320px)]',
-  3: 'text-[min(16vw,40vh,320px)]',
-  4: 'text-[min(12vw,40vh,320px)]',
+  1: 'text-score-1',
+  2: 'text-score-2',
+  3: 'text-score-3',
+  4: 'text-score-4',
 }
-const SCORE_SIZE_FALLBACK = 'text-[min(9vw,40vh,320px)]'
+const SCORE_SIZE_FALLBACK = 'text-score-more'
 
 const colorClasses = computed(() => PLAYER_COLOR_CLASSES[props.player.color])
 const bandClasses = computed(() => BAND_COLOR_CLASSES[props.player.color])
@@ -107,7 +109,7 @@ const scoreSizeClass = computed(
 // Les deux blocs joueur portent un texte noir : un filigrane sombre convient donc au
 // blanc comme au jaune, sans dupliquer le style par couleur.
 const ADJUST_BUTTON_CLASSES =
-  'flex min-h-[var(--size-touch-target)] min-w-[var(--size-touch-target)] items-center justify-center rounded-cta bg-black/8 text-3xl font-black leading-none opacity-60 touch-manipulation select-none active:bg-black/16 active:opacity-100'
+  'flex min-h-[var(--size-touch-target)] min-w-[var(--size-touch-target)] items-center justify-center rounded-cta bg-black/8 text-adjust font-black leading-none opacity-60 touch-manipulation select-none active:bg-black/16 active:opacity-100'
 
 // Convention des fédérations de billard : moyenne générale à 3 décimales.
 const displayedAverage = computed(() => props.average.toFixed(3))
@@ -283,7 +285,7 @@ function adjust(delta: number): void {
         v-if="seriesSlot"
         :key="seriesSlot.text"
         :data-testid="SLOT_TESTIDS[seriesSlot.kind]"
-        class="relative text-[clamp(24px,10cqw,64px)] leading-none font-black tabular-nums whitespace-nowrap text-brand-red"
+        class="relative text-series leading-none font-black tabular-nums whitespace-nowrap text-brand-red"
         >{{ seriesSlot.text }}
         <!-- Voile SOMBRE et non blanc : la carte est un aplat clair à encre noire, un
              flash blanc y serait invisible (le voile clair de la pop-up centrée jouait sur

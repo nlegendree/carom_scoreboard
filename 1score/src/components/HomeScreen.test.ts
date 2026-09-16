@@ -506,7 +506,7 @@ describe('HomeScreen', () => {
 
     const title = wrapper.find('[data-testid="setup-header"] [data-testid="setup-mode-label"]')
     expect(title.text()).toBe('CADRE 47/2')
-    expect(title.classes()).toContain('text-tile-title')
+    expect(title.classes()).toContain('text-title')
     expect(wrapper.find('[data-testid="change-ball-button"]').text()).toContain('CHANGER DE BILLE')
     expect(wrapper.find('[data-testid="change-side-button"]').text()).toContain('CHANGER DE CÔTÉ')
     expect(wrapper.find('[data-testid="confirm-button"]').text()).toBe('DÉMARRER')

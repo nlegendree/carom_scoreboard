@@ -71,8 +71,8 @@ describe('GameSummary', () => {
     expect(name.classes()).toContain('truncate')
     expect(name.classes()).toContain('min-w-0')
     expect(banner(wrapper, 'player1').classes()).toContain('min-w-0')
-    // 1re passe de rendu : le couple monte de `text-label` à `text-tile-title`.
-    expect(banner(wrapper, 'player1').classes()).toContain('text-tile-title')
+    // 1re passe de rendu : le couple monte de `text-label` à `text-title` (ex `tile-title`).
+    expect(banner(wrapper, 'player1').classes()).toContain('text-title')
     expect(distance.classes()).toContain('shrink-0')
     expect(distance.text()).toBe('100')
   })

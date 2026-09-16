@@ -72,6 +72,9 @@ describe('SideBar', () => {
     expect(button.findComponent(PictoIcon).classes()).toContain('opacity-45')
     expect(button.find('[data-testid="sidebar-label"]').classes()).toContain('opacity-45')
     expect(button.find('[data-testid="soon-badge"]').classes()).not.toContain('opacity-45')
+    // Story 11.1 : le badge porte le rôle `picto` de DESIGN.md (jamais sous 11 px), plus
+    // un `text-[10px]` écrit dans le gabarit.
+    expect(button.find('[data-testid="soon-badge"]').classes()).toContain('text-picto')
     expect(action).not.toHaveBeenCalled()
   })
 

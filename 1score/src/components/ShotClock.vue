@@ -42,6 +42,11 @@ const TURN_RING_CLIP_CLASSES: Record<TableSide, string> = {
   right: '[clip-path:inset(0_0_0_calc(100%_-_var(--game-clock-bleed)))]',
 }
 
+// Taille du disque : le plus petit des deux côtés de la zone (jamais plus large que la
+// colonne élargie, jamais plus haut que la place restante). Partagée avec le demi-anneau de
+// tour, qui doit avoir EXACTEMENT le même rayon pour raccorder au liseré.
+const DISC_SIZE_CLASSES = 'aspect-square w-[min(100cqw,100cqh)]'
+
 // 1re passe de rendu de la 10.4 (Nathan, réf. `cueuny_scoreboard.png`) : l'arc est RENTRÉ
 // dans le disque, qui lui fait une marge sombre tout autour. Collé au bord (rayon 42 sur un
 // disque de 50), il se lisait comme un liseré ; à 36, le médaillon se détache des cartes sur
@@ -85,30 +90,17 @@ const color = computed(() => {
 <template>
   <div
     data-testid="shot-clock"
-    class="flex min-h-0 w-full flex-1 flex-col items-center justify-center [container-type:size]"
+    class="relative flex min-h-0 w-full flex-1 flex-col items-center justify-center [container-type:size]"
   >
     <div class="flex min-h-0 w-full items-center justify-center">
       <div
         data-testid="shot-clock-ring"
-        class="relative flex aspect-square w-[min(100cqw,100cqh)] items-center justify-center rounded-full bg-shot-clock-face [container-type:size]"
+        class="relative flex items-center justify-center rounded-full bg-shot-clock-face [container-type:size]"
+        :class="DISC_SIZE_CLASSES"
         role="timer"
         aria-live="off"
         :aria-label="`Chrono de tir : ${secondsRemaining} secondes restantes`"
       >
-        <!-- Prolongement du liseré de tour AUTOUR du disque : même épaisseur (8 px) et même
-             couleur que le `ring-8` de la carte, dont il reprend le tracé là où le disque
-             l'interrompt. `inset-0` + `border-8` le dessine sur les 8 px extérieurs du
-             disque — donc au rayon exact de celui-ci, ce qui aligne le raccord —, et
-             `clip-path` n'en garde que la bande qui dépasse dans la carte active. Un anneau
-             complet se lirait comme une alerte du chrono, pas comme un signal de tour. -->
-        <span
-          v-if="turnRingSide"
-          data-testid="shot-clock-turn-ring"
-          aria-hidden="true"
-          class="pointer-events-none absolute inset-0 rounded-full border-8 border-turn-active"
-          :class="TURN_RING_CLIP_CLASSES[turnRingSide]"
-        />
-
         <!-- `-rotate-90` fait partir le tracé de midi : l'anneau se vide en tournant. -->
         <svg viewBox="0 0 100 100" class="absolute inset-0 h-full w-full -rotate-90">
           <circle
@@ -133,17 +125,45 @@ const color = computed(() => {
             :style="{ strokeDasharray: CIRCUMFERENCE, strokeDashoffset: dashoffset, stroke: color }"
           />
         </svg>
-        <!-- Le disque est lui-même un conteneur de taille : `40cqmin` = 40 % de SON diamètre
+        <!-- Le disque est lui-même un conteneur de taille : `text-clock` (40cqmin) = 40 % de SON diamètre
              (pas de celui de la zone), pour que deux chiffres tabulaires tiennent dans le
              disque intérieur — 62 % du diamètre depuis que l'arc est rentré à `RADIUS 36`,
              contre 76 % avant : le chiffre descend d'autant. -->
         <span
           data-testid="shot-clock-value"
-          class="relative text-[40cqmin] leading-none font-black tabular-nums transition-colors duration-1000 ease-linear"
+          class="relative text-clock leading-none font-black tabular-nums transition-colors duration-1000 ease-linear"
           :style="{ color }"
           >{{ secondsRemaining }}</span
         >
       </div>
     </div>
+
+    <!-- Prolongement du liseré de tour AUTOUR du disque : même épaisseur (8 px) et même
+         couleur que le `ring-8` de la carte, dont il reprend le tracé là où le disque
+         l'interrompt. Un cercle de la taille EXACTE du disque (`DISC_SIZE_CLASSES`), centré
+         comme lui, dont `border-8` dessine les 8 px extérieurs — donc au rayon du disque, ce
+         qui aligne le raccord. Un anneau complet se lirait comme une alerte du chrono, pas
+         comme un signal de tour : `clip-path` n'en garde que la bande qui dépasse dans la
+         carte active.
+         ⚠️ Le clip est posé sur cette COUCHE, qui couvre toute la zone (`inset-0` de la
+         racine), et non sur le disque : la zone déborde de la colonne d'exactement
+         `--game-clock-bleed`, le disque pas forcément. Quand la HAUTEUR gouverne sa taille
+         (1920×1080 depuis la grille fluide de la 11.1 : 427 px de disque pour 462 de zone),
+         il est plus étroit que la zone et ne mord la carte que de 21 px ; un clip mesuré
+         depuis le bord du disque laissait alors 18 px de croissant rouge flotter dans la
+         colonne, décroché du liseré (bug relevé par Nathan sur la 4e passe de rendu). -->
+    <span
+      v-if="turnRingSide"
+      data-testid="shot-clock-turn-ring"
+      aria-hidden="true"
+      class="pointer-events-none absolute inset-0 flex items-center justify-center"
+      :class="TURN_RING_CLIP_CLASSES[turnRingSide]"
+    >
+      <span
+        data-testid="shot-clock-turn-circle"
+        :class="DISC_SIZE_CLASSES"
+        class="rounded-full border-8 border-turn-active"
+      />
+    </span>
   </div>
 </template>

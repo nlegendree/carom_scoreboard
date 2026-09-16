@@ -39,14 +39,15 @@ const SIGN_ROW = [
 
 // Les touches se partagent la hauteur laissée par l'hôte (`auto-rows-fr`) : elles
 // grandissent sur un grand écran et se resserrent au format le plus petit, sans jamais
-// pousser VALIDER hors du bandeau. Plancher relevé à 57 px (Story 10.3) : six rangées à
-// 57 px et `gap-1` font 382 px, ce que le bandeau de `AlphaKeyboardSheet` absorbe en
-// laissant les deux cartes entières au-dessus.
-const KEY_SIZE = 'h-full min-h-[57px] text-[clamp(16px,2vw,26px)] font-semibold text-white'
+// pousser VALIDER hors du bandeau. Plancher `--size-key-alpha` (57 px sur tablette, relevé
+// par la Story 10.3, fluide depuis la 11.1) : six rangées et cinq `gap-1` font
+// `--size-alpha-min` (382 px sur tablette), ce que le bandeau de `AlphaKeyboardSheet`
+// absorbe en laissant les deux cartes entières au-dessus.
+const KEY_SIZE = 'h-full min-h-(--size-key-alpha) text-key-alpha font-semibold text-white'
 </script>
 
 <template>
-  <div class="grid h-full min-h-[382px] auto-rows-fr grid-cols-10 gap-1">
+  <div class="grid h-full min-h-(--size-alpha-min) auto-rows-fr grid-cols-10 gap-1">
     <template v-for="(row, rowIndex) in ROWS" :key="rowIndex">
       <button
         v-for="char in row"
@@ -85,7 +86,7 @@ const KEY_SIZE = 'h-full min-h-[57px] text-[clamp(16px,2vw,26px)] font-semibold 
       data-testid="key-space"
       :disabled="disabled"
       :class="[KEY_CLASSES, KEY_SIZE]"
-      class="col-span-7 tracking-[0.3em] text-white/55"
+      class="col-span-7 tracking-stat text-white/55"
       @pointerdown="emit('input', ' ')"
     >
       ESPACE
@@ -95,7 +96,7 @@ const KEY_SIZE = 'h-full min-h-[57px] text-[clamp(16px,2vw,26px)] font-semibold 
       data-testid="key-reset"
       :disabled="disabled"
       :class="[KEY_CLASSES, KEY_SIZE]"
-      class="col-span-3 tracking-[0.15em] text-white/55"
+      class="col-span-3 tracking-title text-white/55"
       @pointerdown="emit('clear')"
     >
       RESET

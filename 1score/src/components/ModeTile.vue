@@ -46,7 +46,7 @@ function select(): void {
   <button
     type="button"
     :disabled="soon"
-    class="relative isolate flex min-h-[180px] flex-col justify-between p-2 text-left text-white touch-manipulation select-none"
+    class="relative isolate flex min-h-(--size-tile-min) flex-col justify-between p-2 text-left text-white touch-manipulation select-none"
     :class="soon ? '' : 'hover:brightness-110 active:brightness-125'"
     @pointerdown="select"
   >
@@ -58,7 +58,7 @@ function select(): void {
     />
 
     <span class="flex flex-col gap-1">
-      <span data-testid="tile-title" class="text-tile-title font-black uppercase leading-none">
+      <span data-testid="tile-title" class="text-title font-black uppercase leading-none">
         {{ title }}
       </span>
       <!-- Blanc PLEIN depuis la passe contraste de la 10.7 : `text-white/80` ne donnait

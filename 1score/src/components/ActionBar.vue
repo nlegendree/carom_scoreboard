@@ -120,7 +120,7 @@ const pictoActions = computed<BarAction[]>(() => [
         <button
           :data-testid="ctaTestId"
           :data-side="ctaOwner"
-          class="flex w-full min-h-[var(--size-touch-target)] items-center justify-center bg-(image:--gradient-blue) px-4 text-label font-black tracking-[0.1em] text-white rounded-cta touch-manipulation select-none active:brightness-90"
+          class="flex w-full min-h-[var(--size-touch-target)] items-center justify-center bg-(image:--gradient-blue) px-4 text-label font-black tracking-label text-white rounded-cta touch-manipulation select-none active:brightness-90"
           @pointerdown="emit('cta')"
         >
           {{ ctaLabel }}
@@ -131,8 +131,9 @@ const pictoActions = computed<BarAction[]>(() => [
            de jeu, elle ne la compense plus. -->
       <div class="w-1/5 shrink-0" />
 
-      <!-- ⚠️ 12 px (UX-DR52) et non `gap-3`, qui vaudrait 24 px : `--spacing` est à 8 px. -->
-      <div class="flex w-2/5 items-center gap-[12px] px-2" :class="PICTO_ROW_CLASSES[ctaSide]">
+      <!-- ⚠️ 1,5 unité = 12 px sur tablette (UX-DR52) et non `gap-3`, qui vaudrait 24 px :
+           `--spacing` est à 8 px sur tablette, fluide jusqu'à 13 px à 1920 (Story 11.1). -->
+      <div class="flex w-2/5 items-center gap-1.5 px-2" :class="PICTO_ROW_CLASSES[ctaSide]">
         <IconAction
           v-for="action in pictoActions"
           :key="action.testid"

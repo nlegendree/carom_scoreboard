@@ -99,7 +99,7 @@ function closeFromBackdrop(event: PointerEvent): void {
   >
     <div
       data-testid="sheet-card"
-      class="flex max-h-full w-full max-w-3xl flex-col gap-2 rounded-modal border border-border bg-bg/95 p-3 shadow-[0_32px_80px_rgba(0,0,0,0.65)]"
+      class="flex max-h-full w-full max-w-(--size-popup-alpha) flex-col gap-2 rounded-modal border border-border bg-bg/95 p-3 shadow-[0_32px_80px_rgba(0,0,0,0.65)]"
       @pointerdown.stop
       @pointerup.stop
     >

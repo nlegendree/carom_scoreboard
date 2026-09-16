@@ -128,7 +128,7 @@ const players = computed<Record<PlayerId, Player>>(() => ({
     >
       <div
         :data-testid="`summary-${leftSide}`"
-        class="flex min-w-0 flex-1 items-center gap-3 bg-banner py-3 pl-4 pr-10 text-tile-title font-black text-bg [clip-path:polygon(0_0,100%_0,calc(100%-32px)_100%,0_100%)]"
+        class="flex min-w-0 flex-1 items-center gap-3 bg-banner py-3 pl-4 pr-10 text-title font-black text-bg [clip-path:polygon(0_0,100%_0,calc(100%-32px)_100%,0_100%)]"
       >
         <span data-testid="summary-name" class="min-w-0 truncate">
           {{ players[leftSide].name }}
@@ -140,7 +140,7 @@ const players = computed<Record<PlayerId, Player>>(() => ({
       </div>
 
       <div class="flex shrink-0 flex-col items-center justify-center px-4 leading-none">
-        <span data-testid="summary-mode" class="text-stat tracking-[0.3em] text-white/50">
+        <span data-testid="summary-mode" class="text-stat tracking-stat text-white/50">
           {{ modeLabel }}
         </span>
         <span class="text-hero font-black italic text-white/60">VS</span>
@@ -148,7 +148,7 @@ const players = computed<Record<PlayerId, Player>>(() => ({
 
       <div
         :data-testid="`summary-${rightSide}`"
-        class="flex min-w-0 flex-1 items-center justify-end gap-3 bg-banner py-3 pl-10 pr-4 text-tile-title font-black text-bg [clip-path:polygon(0_0,100%_0,100%_100%,32px_100%)]"
+        class="flex min-w-0 flex-1 items-center justify-end gap-3 bg-banner py-3 pl-10 pr-4 text-title font-black text-bg [clip-path:polygon(0_0,100%_0,100%_100%,32px_100%)]"
       >
         <span data-testid="summary-distance" class="shrink-0 tabular-nums">
           {{ players[rightSide].targetScore }}
@@ -171,7 +171,7 @@ const players = computed<Record<PlayerId, Player>>(() => ({
       <template v-for="(side, index) in SIDES" :key="side">
         <div
           v-if="index === 1"
-          class="flex w-1/5 shrink-0 flex-col gap-1 text-center text-stat font-bold tracking-[0.2em]"
+          class="flex w-1/5 shrink-0 flex-col gap-1 text-center text-stat font-bold tracking-stat"
         >
           <span :class="[CELL_CLASSES, LABEL_CELL_CLASSES]">RÉSULTAT</span>
           <span :class="[CELL_CLASSES, LABEL_CELL_CLASSES]">POINTS</span>
@@ -194,14 +194,14 @@ const players = computed<Record<PlayerId, Player>>(() => ({
                   aria-hidden="true"
                   class="size-5 shrink-0 object-contain"
                 />
-                <span data-testid="summary-result" class="text-label font-black tracking-[0.1em]">
+                <span data-testid="summary-result" class="text-label font-black tracking-label">
                   {{ resultOf(side) }}
                 </span>
               </span>
               <span
                 v-if="records[side]"
                 data-testid="summary-record"
-                class="bg-black/20 px-3 text-stat font-bold tracking-[0.2em]"
+                class="bg-black/20 px-3 text-stat font-bold tracking-stat"
               >
                 ★ RECORD
               </span>

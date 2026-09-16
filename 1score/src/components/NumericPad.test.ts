@@ -64,13 +64,14 @@ describe('NumericPad', () => {
 
     for (const testid of [...DIGITS.map((d) => `digit-${d}`), 'clear-button', 'backspace-button']) {
       const key = wrapper.find(`[data-testid="${testid}"]`)
-      // Les touches remplissent l'espace offert par leur parent, avec un plancher de 60px
-      // sur les deux axes — l'exception UX-DR8 des claviers intégrés, et non les 90px de
+      // Les touches remplissent l'espace offert par leur parent, avec un plancher
+      // `--size-key-numeric` (60 px sur tablette, suit la grille fluide — Story 11.1) sur
+      // les deux axes — l'exception UX-DR8 des claviers intégrés, et non
       // `--size-touch-target`. Vérifié à la passe visuelle de la Story 1.5 : un plancher
       // de 90px en largeur exige 302px pour trois colonnes, et rognait la 3e colonne dans
       // un panneau joueur en portrait 768x1024.
-      expect(key.classes()).toContain('min-w-[60px]')
-      expect(key.classes()).toContain('min-h-[60px]')
+      expect(key.classes()).toContain('min-w-(--size-key-numeric)')
+      expect(key.classes()).toContain('min-h-(--size-key-numeric)')
       expect(key.classes()).toContain('h-full')
     }
   })

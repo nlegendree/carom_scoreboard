@@ -126,7 +126,7 @@ function closeFromBackdrop(event: PointerEvent): void {
          l'écran. En variante liste, le titre se centre au-dessus du rang de choix. -->
     <div
       data-testid="prompt-card"
-      class="relative flex max-h-full w-full max-w-xl flex-col gap-3 overflow-hidden rounded-modal border border-white/12 bg-bg/95 p-3 shadow-[0_32px_80px_rgba(0,0,0,0.65)]"
+      class="relative flex max-h-full w-full max-w-(--size-popup-decision) flex-col gap-3 overflow-hidden rounded-modal border border-white/12 bg-bg/95 p-3 shadow-[0_32px_80px_rgba(0,0,0,0.65)]"
       @pointerdown.stop
       @pointerup.stop
     >
@@ -143,7 +143,7 @@ function closeFromBackdrop(event: PointerEvent): void {
         <h2
           :id="titleId"
           data-testid="prompt-title"
-          class="text-label font-black tracking-[0.1em] text-white"
+          class="text-label font-black tracking-label text-white"
         >
           {{ title }}
         </h2>

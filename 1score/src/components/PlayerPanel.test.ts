@@ -169,7 +169,7 @@ describe('PlayerPanel — les quatre zones de la carte', () => {
       w
         .find('[data-testid="score"]')
         .classes()
-        .find((c) => c.startsWith('text-['))
+        .find((c) => c.startsWith('text-score-'))
 
     expect(sizeOf(oneDigit)).toBeDefined()
     expect(sizeOf(threeDigits)).toBeDefined()

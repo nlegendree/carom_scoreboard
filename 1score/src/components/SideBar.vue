@@ -32,7 +32,7 @@ function press(item: SideBarItem): void {
 <template>
   <aside
     data-testid="sidebar"
-    class="flex h-full w-15 shrink-0 flex-col gap-1.5 border-r border-border bg-sidebar pb-3"
+    class="flex h-full w-(--size-sidebar) shrink-0 flex-col gap-1.5 border-r border-border bg-sidebar pb-3"
   >
     <!-- En-tête : une marque, pas une commande (UX-DR29) — ni bouton, ni handler. Bandeau
          rouge coupé en biais puis pli translucide (modèle Cueuny, passe de rendu 10.1) : le
@@ -51,7 +51,7 @@ function press(item: SideBarItem): void {
         class="absolute inset-0 -z-10 bg-brand-red/35 [clip-path:polygon(0_72%,100%_92%,100%_100%,0_84%)]"
       />
       <img src="/logo.png" alt="1Score" class="size-6" />
-      <span class="text-picto font-black tracking-[0.04em] text-white">1Score</span>
+      <span class="text-picto font-black tracking-title text-white">1Score</span>
     </div>
 
     <div
@@ -62,7 +62,8 @@ function press(item: SideBarItem): void {
       :class="group.class"
     >
       <!-- Libellés sans interlettrage : ENTRAÎNEMENT dépassait de 3 px dès que `text-picto`
-           atteint son plafond de 12 px (iPad mini, iPad 11″). -->
+           vaut 12 px (iPad mini, iPad 11″) ; la grille fluide de la 11.1 fait grandir la colonne
+           avec le texte (15 unités), l'argument tient à tout format. -->
       <button
         v-for="item in group.entries"
         :key="item.id"
@@ -87,7 +88,7 @@ function press(item: SideBarItem): void {
         <span
           v-if="item.state === 'soon'"
           data-testid="soon-badge"
-          class="bg-white/15 px-1 text-[10px] font-bold"
+          class="bg-white/15 px-1 text-picto font-bold"
         >
           BIENTÔT
         </span>

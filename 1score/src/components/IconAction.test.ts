@@ -46,6 +46,8 @@ describe('IconAction', () => {
     expect(wrapper.emitted('press')).toBeUndefined()
     expect(wrapper.attributes('disabled')).toBeDefined()
     expect(wrapper.find('[data-testid="soon-badge"]').exists()).toBe(true)
+    // Story 11.1 : le badge porte le rôle `picto` (jamais sous 11 px), plus un `text-[10px]`.
+    expect(wrapper.find('[data-testid="soon-badge"]').classes()).toContain('text-picto')
   })
 
   it('has no badge and no disabled attribute in the normal state', () => {

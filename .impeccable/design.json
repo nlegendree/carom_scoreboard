@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-15T18:09:44+00:00",
+  "generatedAt": "2026-09-15T20:00:00+00:00",
   "title": "Design System: 1Score",
   "extensions": {
     "colorMeta": {
@@ -461,41 +461,91 @@
       }
     },
     "typographyMeta": {
-      "score": {
-        "displayName": "Score",
-        "purpose": "Le score du joueur, plus gros élément de l’écran ; taille choisie selon le nombre de chiffres (42/24/16/12 vw), plafonnée à 40vh et 320 px."
+      "score-1": {
+        "displayName": "Score (1 chiffre)",
+        "purpose": "Score du joueur à un chiffre : min(42vw, 40vh, 520px). Le plus gros élément de l’écran ; vw borne la largeur de la carte, vh sa hauteur, 520 px ne plafonne que le signage au-delà de 1080 px de haut."
+      },
+      "score-2": {
+        "displayName": "Score (2 chiffres)",
+        "purpose": "Score à deux chiffres : min(24vw, 40vh, 520px)."
+      },
+      "score-3": {
+        "displayName": "Score (3 chiffres)",
+        "purpose": "Score à trois chiffres : min(16vw, 40vh, 520px)."
+      },
+      "score-4": {
+        "displayName": "Score (4 chiffres)",
+        "purpose": "Score à quatre chiffres : min(12vw, 40vh, 520px)."
+      },
+      "score-more": {
+        "displayName": "Score (5 chiffres et plus)",
+        "purpose": "Repli au-delà de quatre chiffres : min(9vw, 40vh, 520px)."
       },
       "reprise": {
         "displayName": "Reprise",
-        "purpose": "Numéro de reprise de la colonne centrale (1/5 d’écran) ; le chrono suit en 40cqmin."
+        "purpose": "Numéro de reprise de la colonne centrale (1/5 d’écran) : clamp(72px, 7.5vw, 144px), plafond atteint à 1920."
+      },
+      "clock": {
+        "displayName": "Chrono",
+        "purpose": "Chiffre du chrono de tir, 40cqmin du disque : relatif au disque, pas à l’écran."
+      },
+      "series": {
+        "displayName": "Série en cours",
+        "purpose": "Valeur rouge au pied de la carte joueur : clamp(24px, 10cqw, 80px), relative à la largeur de la carte."
+      },
+      "adjust": {
+        "displayName": "Correction − / +",
+        "purpose": "Signes des boutons de correction du pied de carte : clamp(30px, 2.5vw, 48px), à 60 % d’opacité."
       },
       "hero": {
         "displayName": "Hero",
-        "purpose": "Accroche d’accueil, titre de sélection JDS, VS du récap."
+        "purpose": "Accroche d’accueil, titre de sélection JDS, VS du récap : clamp(48px, 4.75vw, 91px)."
       },
       "title": {
         "displayName": "Title",
-        "purpose": "Titre de tuile, nom du mode en bandeau, nom et distance du bandeau de récap."
+        "purpose": "Titre de tuile, nom du mode en bandeau de paramétrage (interlettré title), nom et distance du bandeau de récap : clamp(32px, 3.03vw, 58px)."
       },
       "label": {
         "displayName": "Label",
-        "purpose": "CTA de pop-up, nom/distance/restant de la carte joueur, valeurs du récap, titres de pop-up."
+        "purpose": "CTA de pop-up, CTA de réglage, CTA de barre basse, nom/distance/restant de la carte joueur, valeurs et RÉSULTAT du récap, titres et messages de pop-up, touches d’action : clamp(20px, 2vw, 38px). Plancher 20 px gras = seuil AA grand texte sur les dégradés."
       },
       "stat": {
         "displayName": "Stat",
-        "purpose": "MOY / SÉRIE, REP, libellés de récap et de champ, CTA de réglage, PASSER LE TOUR, badge BIENTÔT."
+        "purpose": "MOY / SÉRIE, REP, libellés de récap et de champ, placeholders, PASSER LE TOUR, badge BIENTÔT de tuile : clamp(14px, 1.2vw, 23px). Grand texte (seuil 3:1) seulement au-delà de 1555 px de large : sur tablette, 4,5:1 exigé sur dégradé."
       },
       "picto": {
         "displayName": "Picto",
-        "purpose": "Libellé sous picto (barre latérale, barre basse) ; sans interlettrage."
+        "purpose": "Libellé sous picto (barre latérale, barre basse), badge BIENTÔT des items, mot 1Score : clamp(12px, 1vw, 19px), sans interlettrage."
       },
       "key-numeric": {
         "displayName": "Touche numérique",
-        "purpose": "Chiffres du pavé, 3 colonnes."
+        "purpose": "Chiffres du pavé, 3 colonnes : clamp(30px, 3.4vw, 65px), tracking-tight."
       },
       "key-alpha": {
         "displayName": "Touche alpha",
-        "purpose": "Lettres du clavier AZERTY, 10 colonnes."
+        "purpose": "Lettres du clavier AZERTY, 10 colonnes : clamp(18px, 2vw, 38px)."
+      },
+      "field-value": {
+        "displayName": "Valeur de champ",
+        "purpose": "NOM / DISTANCE remplis sur la carte de paramétrage : clamp(24px, 2.61vw, 50px)."
+      },
+      "start-button": {
+        "displayName": "DÉMARRER",
+        "purpose": "Libellé du seul CTA rouge : clamp(20px, 1.62vw, 31px), interlettré label. Plancher 20 px gras = 3:1 sur le stop clair du dégradé rouge. Nommé start-button (comme --size-start-button) et non start : text-start est l’utilitaire text-align de Tailwind."
+      }
+    },
+    "trackingMeta": {
+      "title": {
+        "value": "0.15em",
+        "purpose": "Titre de paramétrage, placeholders NOM / DISTANCE, touches d’action AC / C / RESET, mot 1Score."
+      },
+      "label": {
+        "value": "0.1em",
+        "purpose": "Titres de pop-up, CTA de barre basse, RÉSULTAT du récap, DÉMARRER."
+      },
+      "stat": {
+        "value": "0.25em",
+        "purpose": "Libellés stat : mode du récap, BILLE BLANCHE, NOM / DISTANCE au-dessus d’une valeur, libellés du récap, ★ RECORD, ESPACE."
       }
     },
     "gradients": [
@@ -623,6 +673,14 @@
       {
         "name": "format-plancher",
         "value": "1133×744"
+      },
+      {
+        "name": "--spacing (grille fluide)",
+        "value": "clamp(8px, 0.678vw, 13px)"
+      },
+      {
+        "name": "--size-* (13 tailles de boîte dérivées de la grille, DESIGN.md › spacing)",
+        "value": "calc(var(--spacing) * n) : touch-target 11.25, sidebar 15, start-button 13.75, key-numeric 7.5, key-alpha 7.125, field-min 16.25, field-max 27.5, tile-min 22.5, popup-decision 72, popup-pad 64, popup-alpha 96 ; pad-min = key-numeric × 4 + 6 unités, alpha-min = key-alpha × 6 + 5 unités. Lues par le gabarit en w-(--size-…) / max-w-(--size-…) / min-h-(--size-…)."
       }
     ]
   },
@@ -649,7 +707,7 @@
       "refersTo": "button-start",
       "description": "Le seul CTA rouge : l’action qui engage la partie. Chevron nu à gauche, filet de lumière, 110 px, angles vifs.",
       "html": "<button class=\"ds-btn-start\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg><span>DÉMARRER</span></button>",
-      "css": ".ds-btn-start{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;gap:16px;min-height:110px;background:var(--gradient-red);border-radius:var(--radius-cta);padding:0 16px;font-size:clamp(16px,1.6vw,26px);letter-spacing:.05em;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}.ds-btn-start svg{width:40px;height:40px;flex-shrink:0}.ds-btn-start:active{filter:brightness(.9)}"
+      "css": ".ds-btn-start{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-start-button);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-start-button);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;gap:calc(var(--spacing) * 2);background:var(--gradient-red);border-radius:var(--radius-cta);padding:0 calc(var(--spacing) * 2);letter-spacing:var(--tracking-label);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}.ds-btn-start svg{width:40px;height:40px;flex-shrink:0}.ds-btn-start:active{filter:brightness(.9)}"
     },
     {
       "name": "CTA de réglage",
@@ -657,7 +715,7 @@
       "refersTo": "button-setup",
       "description": "Réglage retouchable du paramétrage (CHANGER DE BILLE, CHANGER DE CÔTÉ) : bleu, angles vifs, picto en ligne.",
       "html": "<button class=\"ds-btn-setup\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m16 3 4 4-4 4\"/><path d=\"M20 7H4\"/><path d=\"m8 21-4-4 4-4\"/><path d=\"M4 17h16\"/></svg><span>CHANGER DE CÔTÉ</span></button>",
-      "css": ".ds-btn-setup{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;gap:16px;background:var(--gradient-blue);border-radius:var(--radius-cta);padding:0 16px;font-size:var(--text-stat);font-weight:700}.ds-btn-setup svg{width:24px;height:24px;flex-shrink:0}.ds-btn-setup:active{filter:brightness(.9)}"
+      "css": ".ds-btn-setup{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--size-touch-target);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-label);font-weight:900;text-transform:uppercase;color:#fff;border:none;cursor:pointer;user-select:none;touch-action:manipulation;gap:16px;background:var(--gradient-blue);border-radius:var(--radius-cta);padding:0 16px;font-size:var(--text-label);font-weight:700}.ds-btn-setup svg{width:24px;height:24px;flex-shrink:0}.ds-btn-setup:active{filter:brightness(.9)}"
     },
     {
       "name": "Touche de clavier",
@@ -665,7 +723,7 @@
       "refersTo": "key",
       "description": "Plaque anthracite en relief qui s’enfonce à l’appui. Partagée par les pavés numérique et alphabétique.",
       "html": "<div class=\"ds-keys\"><button class=\"ds-key\">1</button><button class=\"ds-key\">2</button><button class=\"ds-key\">3</button></div>",
-      "css": ".ds-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:320px}.ds-key{display:flex;align-items:center;justify-content:center;min-height:60px;min-width:60px;background:var(--color-key);color:#fff;border:none;border-radius:var(--radius-key);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:clamp(30px,3.4vw,42px);font-weight:600;letter-spacing:-.025em;line-height:1;box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 2px 0 rgba(0,0,0,.45);transition:all 75ms;cursor:pointer;user-select:none}.ds-key:active{transform:translateY(1px);background:var(--color-key-active);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}.ds-key:disabled{opacity:.3}"
+      "css": ".ds-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(var(--spacing) * 2);max-width:320px}.ds-key{display:flex;align-items:center;justify-content:center;min-height:var(--size-key-numeric);min-width:var(--size-key-numeric);background:var(--color-key);color:#fff;border:none;border-radius:var(--radius-key);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-key-numeric);font-weight:600;letter-spacing:-.025em;line-height:1;box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 2px 0 rgba(0,0,0,.45);transition:all 75ms;cursor:pointer;user-select:none}.ds-key:active{transform:translateY(1px);background:var(--color-key-active);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}.ds-key:disabled{opacity:.3}"
     },
     {
       "name": "Picto d’action (barre basse)",
@@ -681,7 +739,7 @@
       "refersTo": "mode-tile",
       "description": "Tuile jointive d’accueil : titre 900 en haut à gauche, flèche nue en bas à droite, dégradé bleu unique ; BIENTÔT atténue le fond à 45 % et ajoute un badge.",
       "html": "<div class=\"ds-tiles\"><button class=\"ds-tile\"><span class=\"ds-tile-bg\"></span><span class=\"ds-tile-title\">3 BANDES</span><svg class=\"ds-tile-arrow\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></button><button class=\"ds-tile ds-tile--soon\" disabled><span class=\"ds-tile-bg ds-tile-bg--quilles\"></span><span class=\"ds-tile-title\">QUILLES</span><span class=\"ds-tile-badge\">BIENTÔT</span></button></div>",
-      "css": ".ds-tiles{display:grid;grid-template-columns:1fr 1fr;max-width:520px}.ds-tiles>.ds-tile+.ds-tile{border-left:1px solid var(--color-border)}.ds-tile{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:space-between;min-height:180px;padding:16px;background:none;border:none;text-align:left;color:#fff;cursor:pointer;user-select:none}.ds-tile-bg{position:absolute;inset:0;z-index:-1;background:var(--gradient-blue)}.ds-tile-bg--quilles{background:var(--gradient-tile-quilles)}.ds-tile--soon .ds-tile-bg{opacity:.45}.ds-tile-title{font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-tile-title);font-weight:900;text-transform:uppercase;line-height:1}.ds-tile-arrow{width:40px;height:40px;align-self:flex-end}.ds-tile-badge{align-self:flex-end;background:rgba(255,255,255,.15);padding:4px 12px;font-family:system-ui,sans-serif;font-size:var(--text-stat);font-weight:700}.ds-tile:not(.ds-tile--soon):hover{filter:brightness(1.1)}.ds-tile:not(.ds-tile--soon):active{filter:brightness(1.25)}"
+      "css": ".ds-tiles{display:grid;grid-template-columns:1fr 1fr;max-width:520px}.ds-tiles>.ds-tile+.ds-tile{border-left:1px solid var(--color-border)}.ds-tile{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:space-between;min-height:var(--size-tile-min);padding:calc(var(--spacing) * 2);background:none;border:none;text-align:left;color:#fff;cursor:pointer;user-select:none}.ds-tile-bg{position:absolute;inset:0;z-index:-1;background:var(--gradient-blue)}.ds-tile-bg--quilles{background:var(--gradient-tile-quilles)}.ds-tile--soon .ds-tile-bg{opacity:.45}.ds-tile-title{font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;font-size:var(--text-title);font-weight:900;text-transform:uppercase;line-height:1}.ds-tile-arrow{width:40px;height:40px;align-self:flex-end}.ds-tile-badge{align-self:flex-end;background:rgba(255,255,255,.15);padding:4px 12px;font-family:system-ui,sans-serif;font-size:var(--text-stat);font-weight:700}.ds-tile:not(.ds-tile--soon):hover{filter:brightness(1.1)}.ds-tile:not(.ds-tile--soon):active{filter:brightness(1.25)}"
     },
     {
       "name": "Barre latérale",
@@ -689,7 +747,7 @@
       "refersTo": "sidebar-item",
       "description": "Colonne de 120 px collée au bord : en-tête rouge coupé en biais, items picto + libellé, sortie isolée en bas. Contextuelle, nourrie par l’écran.",
       "html": "<aside class=\"ds-sidebar\"><div class=\"ds-sidebar-header\"><span class=\"ds-sidebar-cut\"></span><span class=\"ds-sidebar-fold\"></span><span class=\"ds-sidebar-logo\">1S</span><span class=\"ds-sidebar-brand\">1Score</span></div><button class=\"ds-sidebar-item\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M19 12H5\"/><path d=\"m12 19-7-7 7-7\"/></svg><span>RETOUR</span></button><button class=\"ds-sidebar-item ds-sidebar-item--exit\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/></svg><span>ANNULER</span></button></aside>",
-      "css": ".ds-sidebar{display:flex;flex-direction:column;gap:12px;width:120px;height:420px;padding-bottom:24px;background:var(--color-sidebar);border-right:1px solid var(--color-border)}.ds-sidebar-header{position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;gap:4px;height:120px;padding-top:16px;flex-shrink:0}.ds-sidebar-cut,.ds-sidebar-fold{position:absolute;inset:0;z-index:-1;background:var(--color-brand-red)}.ds-sidebar-cut{clip-path:polygon(0 0,100% 0,100% 92%,0 72%)}.ds-sidebar-fold{opacity:.35;clip-path:polygon(0 72%,100% 92%,100% 100%,0 84%)}.ds-sidebar-logo{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:#222;color:#fff;font-weight:900;font-family:system-ui,sans-serif}.ds-sidebar-brand{color:#fff;font-family:system-ui,sans-serif;font-size:var(--text-picto);font-weight:900;letter-spacing:.04em}.ds-sidebar-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:var(--size-touch-target);width:100%;padding:0 4px;background:none;border:none;color:#fff;font-family:system-ui,sans-serif;font-size:var(--text-picto);font-weight:700;text-transform:uppercase;line-height:1.25;text-align:center;cursor:pointer}.ds-sidebar-item svg{width:32px;height:32px}.ds-sidebar-item--exit{margin-top:auto}"
+      "css": ".ds-sidebar{display:flex;flex-direction:column;gap:calc(var(--spacing) * 1.5);width:var(--size-sidebar);height:420px;padding-bottom:24px;background:var(--color-sidebar);border-right:1px solid var(--color-border)}.ds-sidebar-header{position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;gap:4px;height:120px;padding-top:16px;flex-shrink:0}.ds-sidebar-cut,.ds-sidebar-fold{position:absolute;inset:0;z-index:-1;background:var(--color-brand-red)}.ds-sidebar-cut{clip-path:polygon(0 0,100% 0,100% 92%,0 72%)}.ds-sidebar-fold{opacity:.35;clip-path:polygon(0 72%,100% 92%,100% 100%,0 84%)}.ds-sidebar-logo{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:#222;color:#fff;font-weight:900;font-family:system-ui,sans-serif}.ds-sidebar-brand{color:#fff;font-family:system-ui,sans-serif;font-size:var(--text-picto);font-weight:900;letter-spacing:var(--tracking-title)}.ds-sidebar-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:var(--size-touch-target);width:100%;padding:0 4px;background:none;border:none;color:#fff;font-family:system-ui,sans-serif;font-size:var(--text-picto);font-weight:700;text-transform:uppercase;line-height:1.25;text-align:center;cursor:pointer}.ds-sidebar-item svg{width:32px;height:32px}.ds-sidebar-item--exit{margin-top:auto}"
     },
     {
       "name": "Carte joueur (blanche)",
@@ -697,7 +755,7 @@
       "refersTo": "player-card-white",
       "description": "Aplat plein à encre noire : bandeau NOM | DISTANCE puis RESTANT | MOY · SÉRIE, score géant, pied − / série / +. Liseré rouge vif quand le joueur a la main.",
       "html": "<div class=\"ds-player ds-player--active\"><div class=\"ds-player-band\"><div class=\"ds-player-row\"><span class=\"ds-player-name\">MICHEL</span><span class=\"ds-player-num\">40</span></div><div class=\"ds-player-row\"><span class=\"ds-player-num\">28</span><span class=\"ds-player-stats\"><span><b>MOY</b> 0.750</span><span><b>SÉRIE</b> 4</span></span></div></div><div class=\"ds-player-score\">12</div><div class=\"ds-player-foot\"><button class=\"ds-player-adjust\">−</button><span class=\"ds-player-series\">3</span><button class=\"ds-player-adjust\">+</button></div><span class=\"ds-player-ring\"></span></div>",
-      "css": ".ds-player{position:relative;display:flex;flex-direction:column;width:360px;height:300px;overflow:hidden;background:var(--color-player-white);color:var(--color-on-player-white);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;user-select:none}.ds-player-band{display:flex;flex-direction:column;gap:8px;padding:20px 24px;background:var(--color-panel-white-band)}.ds-player-row{display:flex;align-items:baseline;justify-content:space-between;gap:16px}.ds-player-name{font-size:var(--text-label);font-weight:900;text-transform:uppercase;line-height:1.25}.ds-player-num{font-size:var(--text-label);font-weight:900;font-variant-numeric:tabular-nums;line-height:1}.ds-player-stats{margin-left:auto;display:flex;gap:16px;font-size:var(--text-stat);font-weight:900;font-variant-numeric:tabular-nums}.ds-player-stats b{font-weight:700;opacity:.6;margin-right:4px}.ds-player-score{flex:1;display:flex;align-items:center;justify-content:center;font-size:min(42vw,40vh,120px);font-weight:900;line-height:1;font-variant-numeric:tabular-nums}.ds-player-foot{display:flex;align-items:center;justify-content:space-between;padding:0 16px 16px}.ds-player-adjust{display:flex;align-items:center;justify-content:center;min-width:var(--size-touch-target);min-height:var(--size-touch-target);background:rgba(0,0,0,.08);border:none;border-radius:var(--radius-cta);font-size:30px;font-weight:900;opacity:.6;cursor:pointer}.ds-player-adjust:active{background:rgba(0,0,0,.16);opacity:1}.ds-player-series{font-size:clamp(24px,10cqw,64px);font-weight:900;color:var(--color-brand-red);font-variant-numeric:tabular-nums;line-height:1}.ds-player-ring{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 8px var(--color-turn-active)}.ds-player:not(.ds-player--active) .ds-player-ring{display:none}"
+      "css": ".ds-player{position:relative;display:flex;flex-direction:column;width:360px;height:300px;overflow:hidden;background:var(--color-player-white);color:var(--color-on-player-white);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif;user-select:none}.ds-player-band{display:flex;flex-direction:column;gap:8px;padding:20px 24px;background:var(--color-panel-white-band)}.ds-player-row{display:flex;align-items:baseline;justify-content:space-between;gap:16px}.ds-player-name{font-size:var(--text-label);font-weight:900;text-transform:uppercase;line-height:1.25}.ds-player-num{font-size:var(--text-label);font-weight:900;font-variant-numeric:tabular-nums;line-height:1}.ds-player-stats{margin-left:auto;display:flex;gap:16px;font-size:var(--text-stat);font-weight:900;font-variant-numeric:tabular-nums}.ds-player-stats b{font-weight:700;opacity:.6;margin-right:4px}.ds-player-score{flex:1;display:flex;align-items:center;justify-content:center;font-size:var(--text-score-1);font-weight:900;line-height:1;font-variant-numeric:tabular-nums}.ds-player-foot{display:flex;align-items:center;justify-content:space-between;padding:0 16px 16px}.ds-player-adjust{display:flex;align-items:center;justify-content:center;min-width:var(--size-touch-target);min-height:var(--size-touch-target);background:rgba(0,0,0,.08);border:none;border-radius:var(--radius-cta);font-size:var(--text-adjust);font-weight:900;opacity:.6;cursor:pointer}.ds-player-adjust:active{background:rgba(0,0,0,.16);opacity:1}.ds-player-series{font-size:var(--text-series);font-weight:900;color:var(--color-brand-red);font-variant-numeric:tabular-nums;line-height:1}.ds-player-ring{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 8px var(--color-turn-active)}.ds-player:not(.ds-player--active) .ds-player-ring{display:none}"
     },
     {
       "name": "Carte de pop-up",
@@ -713,7 +771,7 @@
       "refersTo": "summary-banner",
       "description": "Bande claire échancrée en biais autour du VS : NOM | distance de chaque côté, en noir bleuté sur blanc cassé. Coupe en biais signature.",
       "html": "<header class=\"ds-banner\"><div class=\"ds-banner-side ds-banner-side--left\"><span class=\"ds-banner-name\">MICHEL</span><span class=\"ds-banner-sep\"></span><span class=\"ds-banner-num\">40</span></div><div class=\"ds-banner-vs\"><span class=\"ds-banner-mode\">LIBRE</span><span class=\"ds-banner-vs-word\">VS</span></div><div class=\"ds-banner-side ds-banner-side--right\"><span class=\"ds-banner-num\">40</span><span class=\"ds-banner-sep\"></span><span class=\"ds-banner-name\">DIDIER</span></div></header>",
-      "css": ".ds-banner{display:flex;align-items:stretch;background:var(--color-bg);border-bottom:1px solid var(--color-border);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif}.ds-banner-side{display:flex;flex:1;min-width:0;align-items:center;gap:24px;padding:24px 32px;background:var(--color-banner);color:var(--color-bg);font-size:var(--text-tile-title);font-weight:900}.ds-banner-side--left{padding-right:80px;clip-path:polygon(0 0,100% 0,calc(100% - 32px) 100%,0 100%)}.ds-banner-side--right{justify-content:flex-end;padding-left:80px;clip-path:polygon(0 0,100% 0,100% 100%,32px 100%)}.ds-banner-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ds-banner-sep{width:1px;height:48px;background:rgba(13,17,23,.3);flex-shrink:0}.ds-banner-num{font-variant-numeric:tabular-nums;flex-shrink:0}.ds-banner-vs{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 32px;line-height:1}.ds-banner-mode{color:rgba(255,255,255,.5);font-size:var(--text-stat);letter-spacing:.3em}.ds-banner-vs-word{color:rgba(255,255,255,.6);font-size:var(--text-hero);font-weight:900;font-style:italic}"
+      "css": ".ds-banner{display:flex;align-items:stretch;background:var(--color-bg);border-bottom:1px solid var(--color-border);font-family:system-ui,Avenir,Helvetica,Arial,sans-serif}.ds-banner-side{display:flex;flex:1;min-width:0;align-items:center;gap:24px;padding:24px 32px;background:var(--color-banner);color:var(--color-bg);font-size:var(--text-title);font-weight:900}.ds-banner-side--left{padding-right:80px;clip-path:polygon(0 0,100% 0,calc(100% - 32px) 100%,0 100%)}.ds-banner-side--right{justify-content:flex-end;padding-left:80px;clip-path:polygon(0 0,100% 0,100% 100%,32px 100%)}.ds-banner-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ds-banner-sep{width:1px;height:48px;background:rgba(13,17,23,.3);flex-shrink:0}.ds-banner-num{font-variant-numeric:tabular-nums;flex-shrink:0}.ds-banner-vs{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 32px;line-height:1}.ds-banner-mode{color:rgba(255,255,255,.5);font-size:var(--text-stat);letter-spacing:var(--tracking-stat)}.ds-banner-vs-word{color:rgba(255,255,255,.6);font-size:var(--text-hero);font-weight:900;font-style:italic}"
     }
   ],
   "narrative": {
@@ -783,7 +841,8 @@
       "mettre une croix de fermeture, ni un champ natif, ni le clavier système : le retour est un gros CTA `ANNULER`, la saisie passe par les claviers dessinés. *(Interdit durable, Nathan 2026-09-15.)*",
       "signaler le tour, la disponibilité ou un champ visé par la couleur seule : liseré, badge, atténuation.",
       "flouter un voile, ni assombrir au-delà de 25 % : ce qu'il y a dessous doit rester lisible.",
-      "utiliser `text-score` hors d'une carte joueur, ni un rouge sur un refus, ni le bleu drap seul sur un bouton.",
+      "utiliser la rampe `score-*` hors d'une carte joueur, ni un rouge sur un refus, ni le bleu drap seul sur un bouton.",
+      "écrire une taille de texte ou un interlettrage hors de l'échelle dans un gabarit (`text-[…]`, `tracking-[…]`, `text-3xl`, `tracking-widest`…) : le rôle s'ajoute dans `DESIGN.md`, puis dans `main.css` ; ne pas nommer un rôle comme un utilitaire Tailwind (`text-start` est `text-align: start`).",
       "construire une classe Tailwind à la volée, ni placer un commentaire HTML à la racine d'un gabarit, ni ajouter d'`overflow-hidden` sur la colonne centrale ou ses ancêtres (l'anneau du chrono serait rogné sans erreur).",
       "charger une police, une icône ou une image depuis le réseau : tout est inline ou dans `public/`.",
       "fusionner `--color-brand-red` et `--color-victory-ribbon`, ni changer `--color-shot-clock-face`, sans le faire dans ce document d'abord : c'est ici que la palette s'arbitre, plus story par story."

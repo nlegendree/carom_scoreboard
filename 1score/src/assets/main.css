@@ -50,25 +50,79 @@
   /* Fond sombre (valeur de première passe, susceptible d'être affinée) */
   --color-bg: #0D1117;
 
-  /* Échelle typographique fluide.
-     Clés `--text-*` : c'est le namespace que Tailwind v4 utilise pour générer les
-     utilitaires `text-<nom>` (`--font-size-*` ne génère rien). */
-  --text-score: clamp(120px, 15vw, 200px);
-  --text-label: clamp(16px, 2vw, 24px);
-  --text-stat: clamp(14px, 1.2vw, 18px);
-  /* Numéro de reprise : dimensionné pour la colonne centrale (w-1/5), où le plancher
-     de 120px de --text-score déborde dès deux chiffres sur tablette. */
-  --text-reprise: clamp(48px, 7.5vw, 120px);
-  /* Epic 10 (Story 10.1) : accroche d'accueil, titre de tuile de mode, libellé sous picto. */
-  --text-hero: clamp(40px, 5vw, 56px);
-  --text-tile-title: clamp(28px, 3vw, 36px);
-  --text-picto: clamp(11px, 1.1vw, 12px);
+  /* Échelle typographique (DESIGN.md › Typography, Story 11.1). Clés `--text-*` : c'est le
+     namespace que Tailwind v4 utilise pour générer les utilitaires `text-<nom>`
+     (`--font-size-*` ne génère rien). Les VALEURS vivent dans DESIGN.md, ce fichier les
+     applique : chaque `clamp()` a pour plancher le rendu validé à 1180×733 et atteint son
+     plafond à 1920 px de large, jamais avant 1280 (coefficient arrondi vers le haut, 3,03 vw
+     et non 3, pour que le plafond entier soit atteint AVANT 1920 et non quelques pixels
+     après). Aucun gabarit n'écrit une taille en valeur arbitraire — un rôle qui manque
+     s'ajoute dans DESIGN.md d'abord. */
 
-  /* Unité de base d'espacement */
-  --spacing: 8px;
+  /* Score de la carte joueur, par nombre de chiffres. Clés LITTÉRALES côté gabarit
+     (`text-score-1` … `text-score-more`), jamais construites : le scanner JIT ne verrait
+     rien. `vw` borne la largeur de la carte, `vh` sa hauteur, 520 px ne plafonne que le
+     signage au-delà de 1080 px de haut. */
+  --text-score-1: min(42vw, 40vh, 520px);
+  --text-score-2: min(24vw, 40vh, 520px);
+  --text-score-3: min(16vw, 40vh, 520px);
+  --text-score-4: min(12vw, 40vh, 520px);
+  --text-score-more: min(9vw, 40vh, 520px);
+  /* Numéro de reprise : dimensionné pour la colonne centrale (w-1/5). */
+  --text-reprise: clamp(72px, 7.5vw, 144px);
+  /* Chiffre du chrono : relatif au DISQUE (`cqmin`), pas à l'écran. */
+  --text-clock: 40cqmin;
+  /* Série en cours au pied de la carte : relative à la largeur de la CARTE (`cqw`). */
+  --text-series: clamp(24px, 10cqw, 80px);
+  /* Signes `−` / `+` de correction. */
+  --text-adjust: clamp(30px, 2.5vw, 48px);
+  --text-hero: clamp(48px, 4.75vw, 91px);
+  --text-title: clamp(32px, 3.03vw, 58px);
+  /* Plancher 20 px gras : seuil AA « grand texte » (3:1) du blanc sur le stop clair du
+     dégradé bleu (3,46:1), pour les CTA de réglage et de pop-up.
+     Ces trois plafonds ne tiennent à 1920 que parce que la grille (`--spacing`) est fluide :
+     à 8 px fixes, `CONFIGURATION` à 19 px débordait de la barre latérale et `ANNULER` à 38 px
+     de son tiers de pop-up (1re passe de rendu de la 11.1). */
+  --text-label: clamp(20px, 2vw, 38px);
+  --text-stat: clamp(14px, 1.2vw, 23px);
+  --text-picto: clamp(12px, 1vw, 19px);
+  --text-key-numeric: clamp(30px, 3.4vw, 65px);
+  --text-key-alpha: clamp(18px, 2vw, 38px);
+  --text-field-value: clamp(24px, 2.61vw, 50px);
+  /* Plancher 20 px gras : 3:1 sur le stop clair du dégradé rouge (3,78:1). Nommé
+     `start-button` (comme `--size-start-button`) et non `start` : `text-start` est déjà
+     l'utilitaire `text-align: start` de Tailwind, et les deux règles seraient émises. */
+  --text-start-button: clamp(20px, 1.62vw, 31px);
 
-  /* Taille minimale de zone tactile */
-  --size-touch-target: 90px;
+  /* Interlettrage : trois valeurs nommées, namespace `--tracking-*` → `tracking-<nom>`.
+     Seul `tracking-tight` (utilitaire standard, chiffres du pavé) s'y ajoute. */
+  --tracking-title: 0.15em;
+  --tracking-label: 0.1em;
+  --tracking-stat: 0.25em;
+
+  /* Unité de base d'espacement — FLUIDE depuis la Story 11.1 (décision de Nathan, 2026-09-15 :
+     « en 1920 toutes les proportions ne sont pas bonnes, tout est un peu trop petit »). 8 px
+     sur tablette (plancher, rendu validé à 1180), 13 px à 1920 (× 1,63, même facteur que
+     l'échelle typographique). Tout utilitaire numérique de Tailwind (`p-4`, `gap-2`, `w-15`,
+     `size-4`…) et toute taille dérivée ci-dessous suivent donc l'écran. */
+  --spacing: clamp(8px, 0.678vw, 13px);
+
+  /* Tailles de boîtes DÉRIVÉES de la grille (DESIGN.md › Layout › Rythme) : une seule
+     source, aucun pixel fixe dans un gabarit. Valeurs à 8 px → à 13 px. */
+  --size-touch-target: calc(var(--spacing) * 11.25);   /* 90 → 146 : toute commande de jeu */
+  --size-start-button: calc(var(--spacing) * 13.75);   /* 110 → 179 : hauteur de DÉMARRER */
+  --size-key-numeric: calc(var(--spacing) * 7.5);      /* 60 → 98 : touche du pavé (UX-DR8) */
+  --size-key-alpha: calc(var(--spacing) * 7.125);      /* 57 → 93 : touche du clavier alpha */
+  --size-field-min: calc(var(--spacing) * 16.25);      /* 130 → 211 : champ de paramétrage */
+  --size-field-max: calc(var(--spacing) * 27.5);       /* 220 → 358 */
+  --size-tile-min: calc(var(--spacing) * 22.5);        /* 180 → 293 : tuile de mode */
+  --size-sidebar: calc(var(--spacing) * 15);           /* 120 → 195 : barre latérale */
+  --size-popup-decision: calc(var(--spacing) * 72);    /* 576 → 936 : carte de PromptModal */
+  --size-popup-pad: calc(var(--spacing) * 64);         /* 512 → 832 : NumericPadDock, ScoreEntryDock */
+  --size-popup-alpha: calc(var(--spacing) * 96);       /* 768 → 1248 : AlphaKeyboardSheet */
+  /* Planchers des grilles de touches : N rangées au plancher de touche plus les N − 1 gaps. */
+  --size-pad-min: calc(var(--size-key-numeric) * 4 + var(--spacing) * 6);   /* 288 → 468 : 4 rangées, gap-2 */
+  --size-alpha-min: calc(var(--size-key-alpha) * 6 + var(--spacing) * 5);   /* 382 → 621 : 6 rangées, gap-1 */
 
   /* Breakpoints responsive (mobile-first) : md reste au défaut Tailwind (768px) */
   --breakpoint-lg: 1280px;
@@ -166,23 +220,24 @@
   /* Recentrage des pop-ups de saisie du paramétrage (revue de rendu 10.3, 2026-09-12) :
      la pop-up ne se colle pas au bord, elle se CENTRE dans la zone laissée libre par la
      carte qu'on remplit. Ces deux insets reproduisent la géométrie de l'étape `players`
-     — barre latérale (`w-15` = 120 px), padding de la zone principale (`p-4` = 32 px),
-     colonne centrale à 1/4 et deux cartes se partageant le reste, gouttières de 32 px.
+     — barre latérale (`--size-sidebar`, 15 unités), padding de la zone principale (`p-4`), colonne
+     centrale à 1/4 et deux cartes se partageant le reste, gouttières de 4 unités — en
+     unités de `--spacing`, jamais en pixels : la grille est fluide.
      ⚠️ À faire bouger AVEC cette mise en page : c'est le seul endroit où elle est
      dupliquée, et une pop-up mal recentrée est la première chose qui se verra. */
-  --setup-popup-inset-left: calc(152px + (100vw - 184px) * 0.375);
-  --setup-popup-inset-right: calc((100vw - 184px) * 0.375 + 32px);
+  --setup-popup-inset-left: calc(var(--size-sidebar) + var(--spacing) * 4 + (100vw - var(--size-sidebar) - var(--spacing) * 8) * 0.375);
+  --setup-popup-inset-right: calc((100vw - var(--size-sidebar) - var(--spacing) * 8) * 0.375 + var(--spacing) * 4);
 
   /* Recentrage de la pop-up de saisie du SCOREBOARD (Story 10.4). Même principe que les
      `--setup-popup-inset-*` ci-dessus, GÉOMÉTRIE DIFFÉRENTE : le scoreboard n'a pas de
      barre latérale, ses trois colonnes valent 2/5 · 1/5 · 2/5 de la largeur d'écran et les
      cartes sont à fleur de bord. L'inset réserve donc la carte visée (40vw) plus une
-     gouttière de 32 px, pour que la pop-up ne la TOUCHE jamais (AC9).
+     gouttière de 4 unités, pour que la pop-up ne la TOUCHE jamais (AC9).
      ⚠️ À faire bouger AVEC la mise en page du scoreboard : c'est le seul endroit où elle
      est dupliquée, et une pop-up qui mord sur la carte active est le défaut que la
      décision 2 de Nathan cherche justement à éviter. */
-  --game-popup-inset-left: calc(100vw * 0.4 + 32px);
-  --game-popup-inset-right: calc(100vw * 0.4 + 32px);
+  --game-popup-inset-left: calc(100vw * 0.4 + var(--spacing) * 4);
+  --game-popup-inset-right: calc(100vw * 0.4 + var(--spacing) * 4);
 
   /* Touches des claviers intégrés (revue de rendu 10.3, réf. Cueuny) : plaques sombres
      légèrement adoucies, relief donné par un filet clair en haut et une ombre portée en
@@ -209,7 +264,7 @@
      le prolongement du liseré de tour se clippe exactement sur cette bande — c'est la
      portion du disque qui dépasse dans la carte, et elle seule, qui doit être peinte en
      rouge. Les deux valeurs recopiées séparément se décalaient visiblement au raccord. */
-  --game-clock-bleed: 24px;
+  --game-clock-bleed: calc(var(--spacing) * 3);
 
   /* Disque du chrono de tir (2e passe de rendu de la 10.4, Nathan : « il faut que le chrono
      se fonde au maximum avec le background »). Le disque portait un `bg-black` littéral qui

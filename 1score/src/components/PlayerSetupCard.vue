@@ -53,7 +53,7 @@ const BALL_LABELS: Record<PlayerColor, string> = {
 // disponible (`flex-1`) entre un plancher confortable et un plafond raisonnable, pour que
 // la carte ne soit pas un grand vide avec deux petites boîtes au milieu.
 const FIELD_CLASSES =
-  'flex min-h-[130px] max-h-[220px] w-full flex-1 flex-col items-center justify-center gap-2 rounded-cta border-2 bg-black/8 px-3 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] touch-manipulation select-none'
+  'flex min-h-(--size-field-min) max-h-(--size-field-max) w-full flex-1 flex-col items-center justify-center gap-2 rounded-cta border-2 bg-black/8 px-3 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] touch-manipulation select-none'
 
 // Le champ visé se signale par une PRÉSENCE (liseré), pas par une teinte de fond seule :
 // même signal non chromatique que l'indicateur de tour (UX-DR22). Conservé tel quel à la
@@ -79,7 +79,7 @@ function fieldClasses(field: 'name' | 'distance', focused: 'name' | 'distance' |
       class="-mx-6 -mt-6 mb-1 flex shrink-0 items-center gap-3 border-b border-black/12 bg-black/6 px-6 py-4"
     >
       <img :src="BALL_PICTOS[ball]" alt="" aria-hidden="true" class="size-5 shrink-0 object-contain" />
-      <span class="text-stat font-black tracking-[0.25em] opacity-75">{{ BALL_LABELS[ball] }}</span>
+      <span class="text-stat font-black tracking-stat opacity-75">{{ BALL_LABELS[ball] }}</span>
     </header>
 
     <button
@@ -91,14 +91,15 @@ function fieldClasses(field: 'name' | 'distance', focused: 'name' | 'distance' |
            `NOM` seul, en gros, et ne fait pas croire à une valeur déjà saisie.
            ⚠️ `opacity-60` et non 55 depuis la passe contraste de la 10.7 : le placeholder
            est posé sur la BOX du champ (`bg-black/8`), pas sur la carte nue, et sur le
-           jaune il n'y tenait que 4,20:1 — `text-stat` n'est jamais « grand texte »
-           (14 → 18 px), donc le seuil est bien 4,5:1. À 60 % : 4,98:1 sur le jaune,
-           5,44:1 sur le blanc. Une seule classe pour les deux cartes. -->
-      <span v-if="name" class="text-stat font-bold tracking-[0.25em] opacity-65">NOM</span>
+           jaune il n'y tenait que 4,20:1 — `text-stat` (14 → 23 px) n'est « grand texte »
+           (≥ 18,66 px en graisse ≥ 700, seuil 3:1) qu'à partir de 1555 px de large, donc
+           sur tablette le seuil est bien 4,5:1. À 60 % : 4,98:1 sur le jaune, 5,44:1 sur
+           le blanc. Une seule classe pour les deux cartes. -->
+      <span v-if="name" class="text-stat font-bold tracking-stat opacity-65">NOM</span>
       <span
         data-testid="name-value"
         class="w-full truncate font-black uppercase"
-        :class="name ? 'text-[clamp(24px,2.6vw,40px)]' : 'text-stat tracking-[0.15em] opacity-60'"
+        :class="name ? 'text-field-value' : 'text-stat tracking-title opacity-60'"
         >{{ name || 'NOM' }}</span
       >
     </button>
@@ -108,11 +109,11 @@ function fieldClasses(field: 'name' | 'distance', focused: 'name' | 'distance' |
       :class="[FIELD_CLASSES, fieldClasses('distance', focusedField)]"
       @pointerdown="emit('focus', 'distance')"
     >
-      <span v-if="distance" class="text-stat font-bold tracking-[0.25em] opacity-65">DISTANCE</span>
+      <span v-if="distance" class="text-stat font-bold tracking-stat opacity-65">DISTANCE</span>
       <span
         data-testid="distance-value"
         class="w-full truncate font-black tabular-nums"
-        :class="distance ? 'text-[clamp(24px,2.6vw,40px)]' : 'text-stat tracking-[0.15em] opacity-60'"
+        :class="distance ? 'text-field-value' : 'text-stat tracking-title opacity-60'"
         >{{ distance || 'DISTANCE' }}</span
       >
     </button>

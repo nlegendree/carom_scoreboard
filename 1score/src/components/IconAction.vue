@@ -46,7 +46,7 @@ function press(): void {
     </span>
     <!-- Le badge REDOUBLE l'atténuation : grisé seul, un picto se lit comme « pas
          disponible maintenant » ; BIENTÔT dit « pas encore livré ». -->
-    <span v-if="state === 'soon'" data-testid="soon-badge" class="bg-white/15 px-1 text-[10px] font-bold">
+    <span v-if="state === 'soon'" data-testid="soon-badge" class="bg-white/15 px-1 text-picto font-bold">
       BIENTÔT
     </span>
   </button>

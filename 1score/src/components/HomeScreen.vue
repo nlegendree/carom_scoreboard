@@ -78,7 +78,7 @@ const JDS_TILE_LAYOUT = [
 // comme la référence coréenne — ce que la disposition côte à côte, à 73 px par bouton,
 // rendait impossible.
 const SETUP_CTA_CLASSES =
-  'flex min-h-[var(--size-touch-target)] w-full min-w-0 items-center justify-center gap-2 rounded-cta bg-(image:--gradient-blue) px-2 text-center text-stat font-bold text-white touch-manipulation select-none active:brightness-90'
+  'flex min-h-[var(--size-touch-target)] w-full min-w-0 items-center justify-center gap-2 rounded-cta bg-(image:--gradient-blue) px-2 text-center text-label font-bold text-white touch-manipulation select-none active:brightness-90'
 
 // Les trois cadres du catalogue, dans l'ordre d'affichage de la pop-up.
 const CADRE_MODES = ['cadre-47-2', 'cadre-47-1', 'cadre-71-2'] as const satisfies readonly GameMode[]
@@ -464,7 +464,7 @@ function fixDistance(): void {
         >
           <h1
             data-testid="setup-mode-label"
-            class="text-tile-title font-black tracking-[0.15em] text-white"
+            class="text-title font-black tracking-title text-white"
           >
             {{ modeLabel }}
           </h1>
@@ -514,7 +514,7 @@ function fixDistance(): void {
                    du 2026-09-12). -->
               <button
                 data-testid="confirm-button"
-                class="flex min-h-[110px] w-full items-center justify-center gap-2 rounded-cta bg-(image:--gradient-red) px-2 text-[clamp(16px,1.6vw,26px)] font-black tracking-[0.05em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] touch-manipulation select-none active:brightness-90"
+                class="flex min-h-(--size-start-button) w-full items-center justify-center gap-2 rounded-cta bg-(image:--gradient-red) px-2 text-start-button font-black tracking-label text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] touch-manipulation select-none active:brightness-90"
                 @pointerdown="confirm"
               >
                 <PictoIcon name="chevron-right" class="size-5 shrink-0" />

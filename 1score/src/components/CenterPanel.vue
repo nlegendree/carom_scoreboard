@@ -91,7 +91,7 @@ function passTurn(): void {
     <div class="flex w-full min-w-0 flex-col items-center" :class="repriseBlockClass">
       <span data-testid="reprise-label" class="text-stat text-white/60">REP</span>
       <!-- `text-reprise` est dimensionné pour la colonne (w-1/5) et non pour un panneau
-           joueur : `text-score` (plancher 120px) déborde dès 2 chiffres sur tablette. -->
+           joueur : la rampe `text-score-*` y déborderait dès 2 chiffres sur tablette. -->
       <span
         data-testid="reprise-number"
         class="w-full text-center text-reprise leading-none font-black tabular-nums text-white"
@@ -108,18 +108,19 @@ function passTurn(): void {
          restait visible en travers du disque (3e passe de rendu, Nathan). Le débordement est porté ICI, par
          la colonne, et non par `ShotClock`, qui reste dimensionné par son conteneur.
          ⚠️ Le calcul se fait sur la CONTENT BOX, padding déduit : la colonne porte `p-2`
-         (16 px), et une marge négative de 16 px ne ferait que reconstituer sa border-box —
+         (2 unités), et une marge négative de 2 unités ne ferait que reconstituer sa border-box —
          l'anneau remplirait la colonne sans en sortir d'un pixel (mesuré à la passe
-         navigateur). D'où `bleed + 16px` de chaque côté : les 16 px du padding, puis
-         `--game-clock-bleed` (24 px) de débordement réel dans chaque carte. Les cartes
-         réservent 32 px (`INNER_GUTTER_CLASSES`, `pr-4`/`pl-4`), de quoi l'absorber.
+         navigateur). D'où `bleed + 2 unités` de chaque côté : le padding `p-2`, puis
+         `--game-clock-bleed` (3 unités) de débordement réel dans chaque carte. Les cartes
+         réservent 4 unités (`INNER_GUTTER_CLASSES`, `pr-4`/`pl-4`), de quoi l'absorber.
+         Tout en unités de `--spacing` (8 px sur tablette, 13 à 1920) : la grille est fluide.
          ⚠️ Aucun `overflow-hidden` sur cette colonne ni sur ses ancêtres, sans quoi
          l'anneau serait rogné au bord sans le moindre message d'erreur. Les cartes
          réservent en contrepartie une gouttière intérieure (`INNER_GUTTER_CLASSES`). -->
     <div
       v-if="secondsRemaining !== null"
       data-testid="shot-clock-bleed"
-      class="relative z-20 flex min-h-0 flex-1 w-[calc(100%_+_2_*_(var(--game-clock-bleed)_+_16px))] mx-[calc(-1_*_(var(--game-clock-bleed)_+_16px))]"
+      class="relative z-20 flex min-h-0 flex-1 w-[calc(100%_+_2_*_(var(--game-clock-bleed)_+_var(--spacing)_*_2))] mx-[calc(-1_*_(var(--game-clock-bleed)_+_var(--spacing)_*_2))]"
     >
       <ShotClock
         :secondsRemaining="secondsRemaining"
