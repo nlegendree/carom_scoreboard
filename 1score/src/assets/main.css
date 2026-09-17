@@ -291,6 +291,14 @@
 button,
 [role="button"] {
   touch-action: manipulation;
+  /* ⚠️ Le préfixe n'est PAS redondant (revue du 2026-09-17). La Story 11.3 a retiré
+     `select-none` de 17 gabarits en s'appuyant sur cette règle ; or l'utilitaire Tailwind
+     émettait `-webkit-user-select` ET `user-select`, et WebKit n'a la forme non préfixée que
+     depuis Safari 17. Sans lui, la sélection de texte et la loupe iOS reviennent d'un coup sur
+     les touches, les tuiles de mode, les items de barre latérale et les pictos d'action.
+     Invisible aux garde-fous : happy-dom ne calcule aucun CSS et la comparaison pixel est au
+     repos. À croiser avec le contrôle WebKit ouvert dans `deferred-work.md`. */
+  -webkit-user-select: none;
   user-select: none;
 }
 

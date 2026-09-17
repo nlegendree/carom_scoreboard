@@ -32,7 +32,19 @@ export const BALL_CLASSES: Record<PlayerColor, string> = {
 
 // `player1` joue la bille BLANCHE, `player2` la jaune : la règle était déjà écrite en
 // commentaire dans `GameSummary`, elle est ici une fonction — un seul endroit où la lire, et
-// un seul à corriger si elle change.
+// un seul à corriger si elle change. C'est le modèle du store et non une supposition
+// d'affichage : `useGameStore` construit `player1` en `makePlayer('white')`, et
+// `CHANGER DE BILLE` ne déplace que `whiteSide`, le CÔTÉ où la carte est posée.
+//
+// ⚠️ Table indexée et non ternaire (revue du 2026-09-17) : un ternaire faisait retomber sur
+// `yellow` tout ce qui n'est pas `player1`, et une troisième valeur ajoutée à `PlayerId`
+// serait passée sans un mot du compilateur — dans un module de base que le critère de sortie
+// de l'epic invite tout écran neuf à consommer.
+const BALL_OF: Record<PlayerId, PlayerColor> = {
+  player1: 'white',
+  player2: 'yellow',
+}
+
 export function ballOf(player: PlayerId): PlayerColor {
-  return player === 'player1' ? 'white' : 'yellow'
+  return BALL_OF[player]
 }

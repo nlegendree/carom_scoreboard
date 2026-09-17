@@ -11,6 +11,12 @@
 //                             première capture. Un `:root { --radius-key: 0px }` injecté en fin de
 //                             <head> gagne sur le `@theme` de main.css (même spécificité, source
 //                             postérieure) : les utilitaires Tailwind lisent la variable en `var()`.
+//   ⚠️ Pour une comparaison AVANT/APRÈS, injecter `scripts/freeze-animations.css` : sans lui le
+//      harnais n'est PAS déterministe (la barre de rebours de l'auto-validation court sous la
+//      pop-up de saisie, et deux passes du même code divergent de ~0,7 % sur cet écran).
+//      `prefers-reduced-motion` ne suffit pas : la garde du produit conserve volontairement le
+//      chrono et la barre de rebours. Gel vérifié le 2026-09-17 : deux passes du même code,
+//      identiques au pixel sur les 12 écrans (revue de code de la 11.3).
 //   --focus                   ajoute deux captures avec l'anneau `:focus-visible` forcé au clavier
 //                             (Tab jusqu'à une tuile de l'accueil, puis jusqu'à VALIDER de la pop-up
 //                             de décision) — la souris et le `pointerdown` ne déclenchent pas

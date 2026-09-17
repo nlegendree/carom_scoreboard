@@ -33,10 +33,25 @@ const emit = defineEmits<{ press: [] }>()
 // La hauteur vient d'un token de taille, jamais d'un multiple de grille recopié (CLAUDE.md §7).
 // `touch-manipulation select-none` n'y figure PAS : la règle globale de `main.css` couvre
 // déjà tout `<button>` (AC6 de la 11.3).
+//
+// L'ÉTAT INACTIF est universel et vit hors de la table (revue du 2026-09-17, décision de
+// Nathan) : il ne portait que sur `pass`, si bien qu'un `variant="accent" :disabled` rendait
+// un bouton au dégradé intact, pleine encre, sans retour d'appui (`active:` ne s'applique pas
+// à un `disabled`) — un CTA mort impossible à distinguer d'un CTA vivant. L'écran
+// d'identification joueur de l'Epic 4 a justement un `VALIDER` à griser : le critère de
+// sortie de l'epic veut qu'il le fasse SANS RIEN CRÉER.
+const DISABLED_CLASSES = 'disabled:opacity-30'
+
 const VARIANT_CLASSES: Record<CtaVariant, string> = {
   // Pop-up de décision (principal, choix) et `VALIDER` des trois hôtes de saisie.
+  // ⚠️ AUCUNE largeur, comme `neutral` : ses trois appelants de saisie posent `flex-1` et ses
+  // deux emplacements de `PromptModal` sont étirés par leur conteneur (pied en `flex-col`,
+  // grille en `auto-cols-fr`). Le `w-full` que la 11.3 avait ajouté ici empilait deux
+  // utilitaires de largeur sur le même élément — l'ancien markup ne portait que `flex-1` —,
+  // et c'est l'ordre de la feuille générée qui aurait tranché hors d'un conteneur flex
+  // (revue du 2026-09-17).
   accent:
-    'w-full min-h-(--size-touch-target) rounded-tappable bg-(image:--gradient-blue) text-label font-black text-white active:brightness-90',
+    'min-h-(--size-touch-target) rounded-tappable bg-(image:--gradient-blue) text-label font-black text-white active:brightness-90',
   // Le RETOUR. Un seul retour d'appui, celui que `DESIGN.md` › Elevation nomme : il
   // s'ÉCLAIRCIT. `PromptModal` le portait déjà ; les trois hôtes de saisie l'assombrissaient
   // (`brightness-90`) — c'est le seul changement visuel volontaire de la Story 11.3, et il ne
@@ -52,8 +67,9 @@ const VARIANT_CLASSES: Record<CtaVariant, string> = {
     'flex min-h-(--size-start-button) w-full items-center justify-center gap-2 rounded-tappable bg-(image:--gradient-red) px-2 text-start-button font-black tracking-label text-white shadow-light-edge-start active:brightness-90',
   // CTA de la barre basse, pleine largeur de la colonne du joueur assis.
   bar: 'flex w-full min-h-(--size-touch-target) items-center justify-center rounded-tappable bg-(image:--gradient-blue) px-4 text-label font-black tracking-label text-white active:brightness-90',
-  // `PASSER LE TOUR` : picto AU-DESSUS du libellé, rôle `stat`, et un état inactif.
-  pass: 'flex min-h-(--size-touch-target) w-full flex-col items-center justify-center gap-1 rounded-tappable bg-(image:--gradient-blue) px-2 text-center text-stat font-black leading-tight text-white active:brightness-90 disabled:opacity-30',
+  // `PASSER LE TOUR` : picto AU-DESSUS du libellé, rôle `stat`. L'état inactif est désormais
+  // commun aux six (`DISABLED_CLASSES`), il ne figure plus ici.
+  pass: 'flex min-h-(--size-touch-target) w-full flex-col items-center justify-center gap-1 rounded-tappable bg-(image:--gradient-blue) px-2 text-center text-stat font-black leading-tight text-white active:brightness-90',
 }
 </script>
 
@@ -61,7 +77,7 @@ const VARIANT_CLASSES: Record<CtaVariant, string> = {
   <button
     type="button"
     :disabled="disabled"
-    :class="VARIANT_CLASSES[variant]"
+    :class="[VARIANT_CLASSES[variant], DISABLED_CLASSES]"
     @pointerdown="emit('press')"
   >
     <slot />

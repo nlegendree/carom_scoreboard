@@ -1,0 +1,12 @@
+/* Gel déterministe de toute animation, pour que la comparaison avant/après ne mesure que le
+   refactor. La garde `prefers-reduced-motion` du produit ne suffit PAS ici : elle CONSERVE
+   volontairement le chrono et la barre de rebours de l'auto-validation (décision de Nathan,
+   Story 10.7) — or c'est précisément la barre de rebours qui court sous la pop-up de saisie,
+   l'écran dont l'écart de 0,74 % est en cause.
+   Chaque animation est ramenée à sa dernière image et y reste : identique des deux côtés. */
+*, *::before, *::after {
+  animation-duration: 0.001ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition: none !important;
+}

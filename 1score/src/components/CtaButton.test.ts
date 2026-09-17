@@ -7,6 +7,10 @@ import type { CtaVariant } from './CtaButton.vue'
 // effet — comme `tokens.test.ts` et `typography.test.ts`. Le rendu se vérifie au navigateur
 // (et, pour cette story, par la comparaison de captures avant/après).
 
+// Les six variantes, en un seul endroit : une variante ajoutée à `CtaVariant` sans entrée ici
+// est refusée par le compilateur.
+const VARIANTS = ['accent', 'neutral', 'setup', 'start', 'bar', 'pass'] as const satisfies readonly CtaVariant[]
+
 const mountCta = (variant: CtaVariant, props: Record<string, unknown> = {}) =>
   mount(CtaButton, { props: { variant, ...props }, slots: { default: 'LIBELLÉ' } })
 
@@ -40,13 +44,21 @@ describe('CtaButton', () => {
     expect(wrapper.emitted('press')).toBeUndefined()
   })
 
+  // Revue du 2026-09-17, décision de Nathan : l'état inactif est UNIVERSEL. Il ne portait que
+  // sur `pass` — un `variant="accent" :disabled` rendait un bouton au dégradé intact, sans
+  // retour d'appui, impossible à distinguer d'un CTA vivant. L'écran d'identification joueur
+  // de l'Epic 4 doit pouvoir griser son `VALIDER` sans rien créer.
+  it.each(VARIANTS)('renders an inactive state for the %s variant', (variant) => {
+    expect(mountCta(variant, { disabled: true }).classes()).toContain('disabled:opacity-30')
+  })
+
   it('is not disabled by default', () => {
     expect(mountCta('accent').attributes('disabled')).toBeUndefined()
   })
 
   // AC6 : la règle globale de `main.css` (`button { touch-action: manipulation; user-select:
   // none }`) couvre tout `<button>` — le CTA n'a pas à la répéter.
-  it.each(['accent', 'neutral', 'setup', 'start', 'bar', 'pass'] as const)(
+  it.each(VARIANTS)(
     'never repeats touch-manipulation / select-none (%s)',
     (variant) => {
       const classes = mountCta(variant).classes()
@@ -58,7 +70,7 @@ describe('CtaButton', () => {
 
   // Chaque variante porte le rayon tapable et l'encre blanche : c'est ce qui fait qu'elles
   // se lisent comme une seule famille.
-  it.each(['accent', 'neutral', 'setup', 'start', 'bar', 'pass'] as const)(
+  it.each(VARIANTS)(
     'shares the tappable radius and white ink (%s)',
     (variant) => {
       const classes = mountCta(variant).classes()
@@ -75,9 +87,15 @@ describe('CtaButton', () => {
     expect(classes).toContain('bg-(image:--gradient-blue)')
     expect(classes).toContain('text-label')
     expect(classes).toContain('font-black')
-    expect(classes).toContain('w-full')
     expect(classes).toContain('min-h-(--size-touch-target)')
     expect(classes).toContain('active:brightness-90')
+  })
+
+  // Revue du 2026-09-17 : `accent` laisse sa largeur à l'appelant, comme `neutral`. La 11.3 y
+  // avait ajouté un `w-full` que l'ancien markup ne portait pas, empilé sur le `flex-1` de ses
+  // trois appelants de saisie — deux utilitaires de largeur sur le même élément.
+  it('leaves the width of the accent variant to its caller', () => {
+    expect(mountCta('accent').classes()).not.toContain('w-full')
   })
 
   // AC2 : le CTA neutre a UN SEUL retour d'appui, celui que `DESIGN.md` nomme. Il

@@ -26,8 +26,9 @@ import type { PromptAction } from '../types/ui'
 // — « PARTIE TERMINÉE » par série, ou l'offre d'égalisatrice dont le secondaire est
 // `FIN DE PARTIE` — garde son voile inerte : taper à côté d'une décision sans « annuler »
 // ne veut rien dire (AC18, Décision 12).
-// La fermeture exige un geste COMPLET sur le voile (`armBackdropClose`, repris de
-// `PlayerSetupModal`) : appui ET relâchement du même pointeur. C'est ce qui rend la règle
+// La fermeture exige un geste COMPLET sur le voile : appui ET relâchement du même pointeur.
+// Le mécanisme ne vit plus ici — il est dans `useBackdropClose`, que `PopupCard` consomme
+// pour les quatre pop-ups (Story 11.3). C'est ce qui rend la règle
 // sûre pour les pop-ups qui montent SOUS LE DOIGT (au `pointerdown` de `VALIDER` ou de `+`) —
 // le `pointerup` de ce geste retombe sur le voile sans y avoir appuyé, et ne ferme rien.
 // Purement présentationnel : aucun accès au store, la vue appelle les actions.

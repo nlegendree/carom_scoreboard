@@ -155,8 +155,16 @@ describe('gabarits — aucune ombre ni rayon hors DESIGN.md (Story 11.2)', () =>
 // Les chaînes littérales d'un fichier : `class="…"` comme `const X = '…'`. C'est la bonne
 // granularité pour la règle d'AC2 — ce qui est interdit, c'est qu'UNE MÊME chaîne porte à la
 // fois la hauteur d'une cible et un dégradé, pas que le fichier contienne les deux ailleurs.
+//
+// ⚠️ Les BACKTICKS comptent (revue du 2026-09-17). La règle ne reconnaissait que `'…'` et
+// `"…"` — or la forme que cette story remplace était justement un littéral gabarit :
+// `const ACCENT_CLASSES = \`${BUTTON_CLASSES} bg-(image:--gradient-blue) …\`` dans
+// `PromptModal`. Une chaîne de CTA recopiée demain dans un template literal, l'idiome attesté
+// du dépôt, serait passée sous le radar et la règle serait restée verte.
+// Les séquences échappées sont consommées par la paire `\\.` pour qu'un `\\'` ne referme pas
+// le littéral et n'avale pas la suite du fichier dans un faux « littéral » unique.
 const literals = (text: string): string[] =>
-  [...text.matchAll(/(["'])((?:(?!\1)[\s\S])*)\1/g)].map((m) => m[2] ?? '')
+  [...text.matchAll(/(["'`])((?:\\.|(?!\1)[\s\S])*)\1/g)].map((m) => m[2] ?? '')
 
 const TOUCH_HEIGHT = /min-h-(?:\[var\(--size-|\(--size-)/
 const GRADIENT = /bg-\(image:--gradient-/
@@ -208,16 +216,24 @@ describe('gabarits — aucune redondance de classe (Story 11.3, AC6)', () => {
   // none }` : le répéter sur un `<button>` ne fait rien. UNE occurrence reste, et doit
   // rester — la racine `<div>` de `PlayerPanel`, qui n'est ni l'un ni l'autre depuis la 10.4
   // (sans elle, un appui long sur le score sélectionne le texte : `PlayerPanel.test.ts`).
+  //
+  // ⚠️ Le grain est l'OCCURRENCE, pas le fichier (revue du 2026-09-17). `PlayerPanel.vue`
+  // était exclu du balayage ENTIER, alors qu'il porte aussi `ADJUST_BUTTON_CLASSES`, un
+  // `<button>` dont cette story vient de retirer les deux classes : les y reposer demain ne
+  // déclenchait aucun test. Et `toMatch` se contentait d'AU MOINS une occurrence, jamais
+  // d'exactement une.
+  const occurrences = (text: string) => (stripComments(text).match(/touch-manipulation/g) ?? []).length
+
   it.each(Object.keys(files).filter((f) => !f.endsWith('PlayerPanel.vue')))(
     '%s repeats no touch-manipulation on a button',
     (file) => {
-      expect(stripComments(files[file] ?? '')).not.toMatch(/touch-manipulation/)
+      expect(occurrences(files[file] ?? '')).toBe(0)
     },
   )
 
-  it('keeps the one occurrence that is not a button', () => {
+  it('keeps exactly one occurrence in PlayerPanel, the one that is not a button', () => {
     const panel = Object.entries(files).find(([f]) => f.endsWith('PlayerPanel.vue'))?.[1] ?? ''
-    expect(stripComments(panel)).toMatch(/touch-manipulation/)
+    expect(occurrences(panel)).toBe(1)
   })
 
   // Héritage du gabarit Vite, sans objet en paysage ≥ 1133 (le portrait et le téléphone

@@ -613,6 +613,32 @@ describe('HomeScreen', () => {
     expect(wrapper.findComponent(AlphaKeyboardSheet).props('align')).toBe('right')
   })
 
+  // Revue du 2026-09-17 : le CÔTÉ était asserté, la BANDE ne l'était jamais. Le chemin passe
+  // par deux inversions successives — `align` = opposé de la carte visée, puis `reserve` =
+  // opposé d'`align` —, et les deux valeurs de `SETUP_POPUP_RESERVE` sont ASYMÉTRIQUES : seule
+  // celle de gauche contient `--size-sidebar`, la barre latérale n'étant que d'un côté.
+  // Inverser l'un des deux ternaires laissait toute la suite verte, et la pop-up mordait sur
+  // la carte qu'on remplit. Les deux cas sont donc asserts sur la valeur, pas sur le côté.
+  it('reserves the band of the targeted card, sidebar included only on the left', async () => {
+    const wrapper = mount(HomeScreen)
+
+    await goToPlayersStep(wrapper)
+    // Le jaune est à droite : la pop-up se range à gauche et réserve la bande de DROITE,
+    // celle qui ne porte pas la barre latérale.
+    await focusField(wrapper, 'yellow', 'distance')
+    const rightBand = wrapper.findComponent(NumericPadDock).props('reserve') as string
+    expect(rightBand).not.toContain('--size-sidebar) +')
+
+    await press(wrapper, ['dock-close'])
+    // Le blanc est à gauche : la pop-up se range à droite et réserve la bande de GAUCHE,
+    // barre latérale comprise.
+    await focusField(wrapper, 'white', 'name')
+    const leftBand = wrapper.findComponent(AlphaKeyboardSheet).props('reserve') as string
+    expect(leftBand).toContain('calc(var(--size-sidebar) +')
+
+    expect(leftBand).not.toBe(rightBand)
+  })
+
   // Et elle suit la carte quand les billes changent de côté.
   it('follows the targeted card once the balls have swapped sides', async () => {
     const wrapper = mount(HomeScreen)
