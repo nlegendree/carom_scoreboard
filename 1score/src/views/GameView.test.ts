@@ -40,6 +40,42 @@ describe('GameView', () => {
     expect(wrapper.findAllComponents({ name: 'PlayerPanel' })).toHaveLength(2)
   })
 
+  // Story 11.5 (AC2) : la gouttière entre les trois colonnes est UNE SEULE VALEUR, et c'est
+  // ici qu'elle produit l'écart réel. Les deux autres lectures (`CenterPanel` pour la zone du
+  // chrono, `PlayerPanel` pour la gouttière intérieure) n'ont de sens qu'en regard de
+  // celle-ci : trois recopies se décaleraient au pixel, exactement comme les deux valeurs de
+  // débordement avant qu'elles ne deviennent `--game-clock-bleed`. happy-dom ne calcule aucun
+  // CSS : seule la classe peut être verrouillée.
+  it('spaces its three columns from the shared gutter token, never from a recopied value', async () => {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 100, player2: 80 }, 'left')
+    await wrapper.vm.$nextTick()
+
+    const columns = wrapper.find('[data-testid="game-columns"]')
+    expect(columns.exists()).toBe(true)
+    expect(columns.classes()).toContain('gap-(--game-column-gutter)')
+  })
+
+  // Story 11.5 (AC3), découpe arbitrée par Nathan au rendu le 2026-09-18 : la partie du haut
+  // est UN GRAND BLOC qui contient les trois colonnes — c'est la demande exacte (« les blocs
+  // michel, rep et j-pierre doivent aussi être dans un grand bloc en commun »). Rayon de ZONE
+  // (16 px) dehors, rayon de BLOC (12 px) sur ce qu'il contient : c'est l'écart entre les deux
+  // qui fait lire l'emboîtement. ⚠️ Aucun `overflow-hidden` ici ni sur aucun ancêtre du
+  // chrono : l'anneau serait rogné sans le moindre message d'erreur (AC2).
+  it('wraps its three columns in one rounded zone, and never clips it', async () => {
+    const wrapper = mount(GameView)
+    const store = useGameStore()
+    store.startGame('libre', 'MICHEL', 'ANDRE', { player1: 100, player2: 80 }, 'left')
+    await wrapper.vm.$nextTick()
+
+    const columns = wrapper.find('[data-testid="game-columns"]')
+    expect(columns.classes()).toEqual(
+      expect.arrayContaining(['rounded-zone', 'bg-surface', 'border', 'border-border', 'm-1', 'p-1']),
+    )
+    expect(columns.classes()).not.toContain('overflow-hidden')
+  })
+
   // --- Story 10.3 : la bille blanche ouvre, où qu'elle soit assise (AR24) ---
 
   it('seats the players on the side chosen at setup', async () => {

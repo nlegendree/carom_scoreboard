@@ -109,15 +109,26 @@ const pictoActions = computed<BarAction[]>(() => [
 </script>
 
 <template>
-  <nav data-testid="action-bar" class="flex shrink-0 items-center bg-bg py-2">
+  <nav data-testid="action-bar" class="flex shrink-0 items-center bg-bg p-1">
+    <!-- ⚠️ Ce commentaire est DANS le `<nav>`, jamais avant lui : à la racine d'un gabarit il
+         en ferait un fragment, et la racine perdrait `classes()`, `attributes()` et son
+         `data-testid` (`CLAUDE.md` §12 — payé quatre fois dans l'Epic 10, une cinquième ici).
+         Story 11.5 (AC3) : la barre est la SŒUR du grand bloc des colonnes — même rayon de
+         zone, même voile, même filet, même marge d'une unité au pourtour (Nathan, au rendu,
+         2026-09-18). Et elle ne porte plus SA PROPRE grille : elle reprend celle des
+         colonnes, terme à terme, pour que les boutons tombent exactement sous les cartes
+         (« qu'ils prennent tout l'espace sous les cards blanche et jaune »). Vérifié à la
+         mesure : 0,0 px d'écart à 1920, 1180 et 1133, à gauche comme à droite. -->
     <div
       data-testid="action-bar-row"
-      class="flex flex-1 items-center"
+      class="flex flex-1 items-center gap-(--game-column-gutter) rounded-zone border border-border bg-surface p-1"
       :class="ROW_CLASSES[ctaSide]"
     >
       <!-- Le CTA occupe TOUTE la largeur de la colonne du joueur assis, comme la barre
-           pleine largeur du Billiboard (`상대선수 득점 +1`). -->
-      <div class="flex w-2/5 px-2">
+           pleine largeur du Billiboard (`상대선수 득점 +1`). ⚠️ `flex-1`, plus `w-2/5` :
+           la gouttière rétrécit les cartes, et une largeur recopiée ne pouvait plus les
+           suivre (Story 11.5). Le groupe s'étire exactement comme la carte au-dessus. -->
+      <div class="flex flex-1">
         <CtaButton
           :data-testid="ctaTestId"
           :data-side="ctaOwner"
@@ -129,15 +140,17 @@ const pictoActions = computed<BarAction[]>(() => [
       </div>
 
       <!-- Espaceur calé sur la colonne centrale : la barre reproduit la grille de la zone
-           de jeu, elle ne la compense plus. -->
+           de jeu, elle ne la compense plus. Il garde son `w-1/5` parce que la colonne
+           centrale garde le sien — c'est la seule des trois qui soit à largeur fixe. -->
       <div class="w-1/5 shrink-0" />
 
       <!-- ⚠️ 1,5 unité = 12 px sur tablette (UX-DR52) et non `gap-3`, qui vaudrait 24 px :
            `--spacing` est à 8 px sur tablette, fluide jusqu'à 13 px à 1920 (Story 11.1). -->
-      <div class="flex w-2/5 items-center gap-1.5 px-2" :class="PICTO_ROW_CLASSES[ctaSide]">
+      <div class="flex flex-1 items-center gap-1.5" :class="PICTO_ROW_CLASSES[ctaSide]">
         <IconAction
           v-for="action in pictoActions"
           :key="action.testid"
+          class="flex-1"
           :data-testid="action.testid"
           :data-side="pictoOwner"
           :picto="action.picto"

@@ -95,14 +95,19 @@ describe('CenterPanel', () => {
   // ⚠️ SANS contour, contrairement à la lettre de l'AC (3e passe de rendu, Nathan) : le
   // filet clair s'interrompait derrière le disque du chrono qui déborde, et le raccord du
   // liseré de tour y laissait voir un trait gris. Ne pas le remettre sans revoir ce raccord.
-  it('is a bare, borderless column on the page ground', () => {
+  // ⚠️ Story 11.5 : « aucun fond DU TOUT » n'est plus tenable et n'est plus ce qu'on veut
+  // dire. La colonne vit désormais DANS un bloc voilé (`GameView` › `game-columns`) : sans
+  // fond, elle hériterait visuellement du voile et le creux arbitré par Nathan disparaîtrait.
+  // L'intention est inchangée — la colonne EST LA BASE —, c'est le moyen qui change : elle la
+  // déclare (`bg-bg`) au lieu de la laisser transparaître. Le filet, lui, reste interdit.
+  it('is a bare, borderless column that declares the base as its ground', () => {
     const classes = mount(CenterPanel, { props: baseProps }).classes()
 
     expect(classes).not.toContain('bg-surface')
     expect(classes).not.toContain('border-border')
     expect(classes).not.toContain('border')
-    // Aucun fond du tout, pas seulement « pas le voile » : la colonne EST la base.
-    expect(classes.filter((c) => c.startsWith('bg-'))).toEqual([])
+    // La base, et RIEN d'autre : un seul fond, et c'est celui de la page.
+    expect(classes.filter((c) => c.startsWith('bg-'))).toEqual(['bg-bg'])
   })
 
   // AC16 : l'anneau du chrono déborde sur les cartes voisines — la colonne doit donc
@@ -114,20 +119,24 @@ describe('CenterPanel', () => {
     expect(classes).not.toContain('overflow-hidden')
   })
 
-  // ⚠️ Le débordement se calcule sur la CONTENT BOX : la colonne portant `p-2` (2 unités),
-  // `-mx-2` + `calc(100% + 4 unités)` ne reconstitue que sa border-box et l'anneau n'en
-  // sort PAS d'un pixel (défaut mesuré à la passe navigateur de la 10.4). Il faut le double.
-  // En UNITÉS DE GRILLE (`--spacing`), jamais en pixels : la grille est fluide (Story 11.1).
-  // Aucun CSS n'étant calculé en test, seule la classe peut être verrouillée ici.
-  it('derives its bleed from the shared token, never from a recopied value', () => {
+  // ⚠️ Story 11.5 (Nathan, au rendu, 2026-09-18) : la zone ne DÉBORDE plus sur les cartes,
+  // elle ANNULE le retrait de la colonne pour que l'anneau aille d'un bord à l'autre — « le
+  // chrono le plus gros possible dans le container, tu peux retirer la padding autour de
+  // l'anneau ». Le calcul reste sur la CONTENT BOX : `100%` vaut la colonne moins ses deux
+  // `p-2`, d'où les 4 unités rendues et le `-mx-2` qui les recale. En unités de grille, jamais
+  // en pixels (la grille est fluide). Aucun CSS n'étant calculé en test, seule la classe peut
+  // être verrouillée ici — c'est la passe navigateur qui prouve que le disque est d'aplomb.
+  it('gives the clock the full width of its column, padding cancelled', () => {
     const bleed = mount(CenterPanel, {
       props: { ...baseProps, secondsRemaining: 40 },
     }).find('[data-testid="shot-clock-bleed"]')
 
-    expect(bleed.classes()).toContain('w-[calc(100%_+_2_*_(var(--game-clock-bleed)_+_var(--spacing)_*_2))]')
-    expect(bleed.classes()).toContain('mx-[calc(-1_*_(var(--game-clock-bleed)_+_var(--spacing)_*_2))]')
-    // ⚠️ `z-20` : le débordement doit MASQUER le liseré de tour des cartes (`z-10`), dont
-    // le demi-anneau prend le relais. Les deux z-index sont explicites de part et d'autre.
+    expect(bleed.classes()).toContain('w-[calc(100%_+_var(--spacing)_*_4)]')
+    expect(bleed.classes()).toContain('-mx-2')
+    // Le débordement est RETIRÉ : plus aucune classe ne lit le token disparu.
+    expect(bleed.classes().join(' ')).not.toContain('--game-clock-bleed')
+    // ⚠️ `z-20` conservé : il n'y a plus de liseré à masquer, mais l'ordre de peinture reste
+    // explicite de part et d'autre (`PlayerPanel` › `ring-8` est à `z-10`).
     expect(bleed.classes()).toContain('z-20')
   })
 

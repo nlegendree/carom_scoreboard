@@ -92,6 +92,41 @@ describe('ActionBar', () => {
     expect(pictoIds(left)).toEqual(pictoIds(right))
   })
 
+  // Story 11.5 (AC3), demande de Nathan au rendu (2026-09-18) : « que les boutons aient les
+  // mêmes marges que les blocs du dessus et qu'ils prennent tout l'espace sous les cards
+  // blanche et jaune ». La barre cesse donc d'avoir SA PROPRE grille : elle reprend celle des
+  // colonnes, terme à terme — groupes latéraux en `flex-1` comme les cartes, espaceur central
+  // à `w-1/5` comme la colonne centrale, même gouttière, même retrait. Trois recopies de
+  // largeur (`w-2/5` + `px-2`) ne pouvaient PAS coïncider avec des colonnes que la gouttière
+  // rétrécit : mesuré à 0,0 px d'écart aux trois formats une fois la grille partagée.
+  // happy-dom ne calcule aucun CSS — seule la classe peut être verrouillée ici.
+  it('reproduces the column grid instead of carrying its own', () => {
+    const bar = mountBar()
+    const row = bar.find('[data-testid="action-bar-row"]')
+    const groups = row.findAll(':scope > div')
+
+    expect(row.classes()).toEqual(
+      expect.arrayContaining(['gap-(--game-column-gutter)', 'rounded-zone', 'bg-surface', 'border', 'border-border']),
+    )
+    // Les deux groupes latéraux s'étirent comme les cartes ; aucune largeur recopiée.
+    for (const g of [groups[0]!, groups[2]!]) {
+      expect(g.classes()).toContain('flex-1')
+      expect(g.classes()).not.toContain('w-2/5')
+    }
+    // L'espaceur central garde le cinquième de la colonne centrale.
+    expect(groups[1]!.classes()).toContain('w-1/5')
+  })
+
+  // Même demande, deuxième moitié : « qu'ils prennent tout l'espace sous les cards ». Les
+  // quatre pictos s'étirent au lieu de rester calés sur leur cible tactile minimale.
+  it('stretches the four pictos across the width of their card', () => {
+    const bar = mountBar()
+
+    for (const id of ['exit-button', 'settings-button', 'restart-button', 'undo-button']) {
+      expect(bar.find(`[data-testid="${id}"]`).classes()).toContain('flex-1')
+    }
+  })
+
   // AC12 : du bord EXTÉRIEUR vers l'intérieur — QUITTER, PARAMÈTRES, RECOMMENCER, ANNULER.
   // L'ordre du DOM est toujours celui-là, extérieur → intérieur ; c'est la direction de la
   // rangée du groupe qui le pose à droite ou à gauche de l'écran.

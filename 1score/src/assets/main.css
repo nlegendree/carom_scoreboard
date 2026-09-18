@@ -191,11 +191,17 @@
   --color-banner: #F2F0EA;
 
   /* Rayons, nommés par FAMILLE d'objets (DESIGN.md › Shapes, Story 11.2, Nathan) : 8 px sur
-     tout ce qui se tape, 12 px sur la carte de pop-up, rien sur les conteneurs (aucun token :
-     un conteneur n'a pas de `rounded-*`). Remplacent `--radius-cta` / `--radius-key` /
-     `--radius-modal` / `--radius-container`. */
+     tout ce qui se tape, 12 px sur la carte de pop-up. Remplacent `--radius-cta` /
+     `--radius-key` / `--radius-modal` / `--radius-container`.
+     ⚠️ « Rien sur les conteneurs » a une EXCEPTION depuis la Story 11.5, datée et motivée dans
+     `DESIGN.md` › Shapes : le SCOREBOARD est en blocs arrondis (Nathan, au rendu, 2026-09-18,
+     après quatre passes de comparaison). Deux niveaux de forme, donc deux rayons de plus —
+     et l'exception ne vaut QUE pour cet écran : tuiles, barre latérale, récap et bandeaux
+     restent à angles vifs. */
   --radius-tappable: 8px;
+  --radius-block: 12px;
   --radius-popup: 12px;
+  --radius-zone: 16px;
 
   /* Rouge de marque (palette bleus / marine / rouge) : bandeau en biais de l'en-tête de la
      barre latérale, série en cours, ruban de victoire du récap. Blanc dessus 4,95:1. UN SEUL
@@ -247,13 +253,17 @@
      par la Story 11.2 : la colonne du paramétrage n'a plus ni fond ni cadre (Nathan, au
      rendu), les trois commandes flottent sur le niveau 1. */
 
-  /* Débordement de l'anneau du chrono sur CHAQUE carte voisine (Story 10.4, AC16).
-     ⚠️ Une seule définition pour DEUX usages qui doivent coïncider au pixel : la colonne
-     centrale s'élargit d'autant (plus son propre padding) pour laisser sortir le disque, et
-     le prolongement du liseré de tour se clippe exactement sur cette bande — c'est la
-     portion du disque qui dépasse dans la carte, et elle seule, qui doit être peinte en
-     rouge. Les deux valeurs recopiées séparément se décalaient visiblement au raccord. */
-  --game-clock-bleed: calc(var(--spacing) * 3);
+  /* ⚠️ `--game-clock-bleed` est RETIRÉ par la Story 11.5 (Nathan, au rendu, 2026-09-18).
+     Le disque du chrono ne déborde plus sur les cartes : c'était la signature de colonnes
+     SOUDÉES, et le scoreboard est passé en blocs séparés. Dès lors la gouttière s'arrêtait
+     contre le disque au lieu d'en faire le tour, et le blanc de la carte, le liseré rouge et
+     la bande grise finissaient tous les trois sur une diagonale. Quatre passes de rendu ont
+     cherché un raccord propre avant l'abandon. Le demi-anneau de `ShotClock` disparaît avec
+     lui, et le `ring-8` de la carte active redevient un contour continu.
+     Voir `DESIGN.md` › Layout ; une autre manière de relier le chrono aux cartes reste à
+     trouver (`deferred-work.md`). */
+
+  --game-column-gutter: calc(var(--spacing) * 1);
 
   /* Disque du chrono de tir : `--color-shot-clock-face` est retiré (Story 11.2). La colonne
      centrale du scoreboard est désormais la base NUE (`--color-bg`, sans voile), et le disque

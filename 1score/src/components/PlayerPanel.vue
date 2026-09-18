@@ -73,6 +73,12 @@ const BAND_COLOR_CLASSES: Record<PlayerColor, string> = {
 // ligne de statistiques ne passent dessous. Le FOND, lui, reste pleine largeur.
 // Élargie de 24 à 32 px à la 2e passe de rendu : l'anneau ayant grossi, il déborde de
 // 24 px de chaque côté au lieu de 15.
+// ⚠️ Story 11.5 (AC2) : elle NE SUIT PAS `--game-column-gutter`, et c'est une décision
+// écrite. Ce qu'il faut absorber est le débordement DANS la carte, soit `--game-clock-bleed`
+// seul (3 unités) : la part `gouttière` de l'élargissement de la zone tombe HORS de la
+// carte, dans le vide entre les colonnes, et la carte n'a rien à lui réserver. Réserver
+// `bleed + gouttière` creuserait un blanc que rien ne viendrait occuper. La contrainte
+// reste donc `4 unités ≥ 3 unités`, indépendamment de la découpe.
 const INNER_GUTTER_CLASSES: Record<TableSide, string> = {
   left: 'pr-4',
   right: 'pl-4',
@@ -180,7 +186,7 @@ function adjust(delta: number): void {
 
 <template>
   <div
-    class="@container relative flex h-full min-w-0 flex-1 flex-col overflow-hidden touch-manipulation select-none"
+    class="@container relative flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-block touch-manipulation select-none"
     :class="colorClasses"
   >
     <!-- 1. BANDEAU, au modèle Billiboard (1re passe de rendu, Nathan) :

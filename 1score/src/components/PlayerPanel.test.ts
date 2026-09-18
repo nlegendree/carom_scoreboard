@@ -187,6 +187,29 @@ describe('PlayerPanel — les quatre zones de la carte', () => {
     expect(left.find('[data-testid="score-zone"]').classes()).toContain('pr-4')
     expect(right.find('[data-testid="score-zone"]').classes()).toContain('pl-4')
   })
+
+  // Story 11.5 (AC2) : cette gouttière intérieure NE SUIT PAS `--game-column-gutter`, et
+  // c'est une décision écrite. Ce qu'elle absorbe est le débordement DANS la carte
+  // (`--game-clock-bleed` seul) ; la part `gouttière` de l'élargissement de la zone tombe
+  // HORS de la carte. La faire grandir avec la découpe creuserait un blanc que rien ne
+  // viendrait occuper. Sans ce cas, la prochaine découpe « corrigerait » la carte.
+  // Story 11.5 (AC3) : la carte est un BLOC dans le grand bloc — rayon de bloc (12 px),
+  // plus petit que le rayon de zone (16 px) qui l'entoure. C'est l'écart entre les deux qui
+  // fait lire l'emboîtement ; les égaliser l'aplatirait. Exception à « conteneurs à angles
+  // vifs » datée dans `DESIGN.md` › Shapes, et limitée au scoreboard.
+  it('carries the block radius of the zone it sits in', () => {
+    const card = mount(PlayerPanel, { props: { player: makePlayer(), active: false, side: 'left' } })
+
+    expect(card.classes()).toContain('rounded-block')
+  })
+
+  it('sizes that gutter on the clock bleed alone, never on the column gutter', () => {
+    const left = mount(PlayerPanel, { props: { player: makePlayer(), active: false, side: 'left' } })
+
+    for (const c of left.find('[data-testid="score-zone"]').classes()) {
+      expect(c).not.toContain('--game-column-gutter')
+    }
+  })
 })
 
 // --- Story 10.4, AC2 : RESTANT permanent, tous modes ---

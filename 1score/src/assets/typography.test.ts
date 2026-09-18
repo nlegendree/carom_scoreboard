@@ -44,10 +44,14 @@ const TRACKING_ROLES = roleNames(frontmatter, 'tracking')
 // Les deux raisons :
 //   — `base` et les pas `xs`…`2xl` sont les utilitaires numériques de Tailwind, pas des
 //     tailles de boîte nommées : ils ne produisent aucun `--size-*` ;
-//   — `clock-bleed` est porté par `--game-clock-bleed` (géométrie couplée, `CLAUDE.md` §10),
-//     pas par le namespace `--size-*`.
+//   — `column-gutter` est porté par `--game-column-gutter` (géométrie couplée du scoreboard,
+//     `CLAUDE.md` §10), pas par le namespace `--size-*` : ce n'est pas une taille de boîte
+//     qu'un gabarit lit en `w-(--size-…)`, mais une distance que DEUX fichiers doivent lire
+//     identique. ⚠️ `clock-bleed` a rejoint cette liste en 11.5 puis en est sorti le jour
+//     même : le débordement du chrono est ABANDONNÉ (Nathan, au rendu), le token est retiré
+//     de `DESIGN.md` comme de `main.css`, et le garder ici exigerait de le ressusciter.
 const SPACING_STEPS = ['base', 'xs', 'sm', 'md', 'lg', 'xl', '2xl']
-const SPACING_EXCLUDED = [...SPACING_STEPS, 'clock-bleed']
+const SPACING_EXCLUDED = [...SPACING_STEPS, 'column-gutter']
 const SIZE_ROLES = roleNames(frontmatter, 'spacing').filter(
   (role) => !SPACING_EXCLUDED.includes(role),
 )

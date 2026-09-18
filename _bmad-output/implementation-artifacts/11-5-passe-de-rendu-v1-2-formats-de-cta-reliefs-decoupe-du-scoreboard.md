@@ -100,21 +100,21 @@ so that l'Epic 11 se close sur un design **fini** et non sur un design system pr
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Ligne de base pixel et outillée** (AC1)
-  - [ ] Arbre propre, code applicatif inchangé depuis `123cf19` ; `npm test` (**1107 / 32 fichiers**) et `npm run build` verts, notés dans Dev Agent Record
-  - [ ] **Redémarrer `npm run dev`** (serveur neuf — voir Pièges), puis 36 captures avec `--override scripts/freeze-animations.css`, archivées hors dépôt ; noter le dossier dans Dev Agent Record
-  - [ ] `npm run design:check` + `npm run design:check:file`, **codes de sortie** notés
-- [ ] **Task 2 — Découpler la géométrie du chrono** (AC2) — *la première, et rien ne commence avant qu'elle soit verte*
-  - [ ] Écrire dans Dev Agent Record **les trois lectures actuelles** de `--game-clock-bleed` et ce que chacune suppose (voir Dev Notes › La géométrie couplée, terme à terme)
-  - [ ] Introduire la gouttière comme **une seule valeur** (arbitrage d'AC3 pris ici, et écrit) ; recomposer la largeur/marge de `CenterPanel`, le `clip-path` de `ShotClock`, la gouttière intérieure de `PlayerPanel`
-  - [ ] **Vérifier au navigateur**, trois formats, mode 3 Bandes (`?scene=12-scoreboard-3bandes`) : disque non tronqué, demi-anneau raccordé au liseré, aucun croissant flottant. **Les tests unitaires ne voient rien de tout ça** (happy-dom ne calcule aucun CSS)
-  - [ ] Cas limite explicite : **hauteur gouvernante** à 1920×1080 — le disque est plus étroit que sa zone
-  - [ ] **Preuve à rendu constant** : rejouer les captures `07`, `09`, `12` aux trois formats et les comparer à celles de la Task 1 — **identiques au pixel**, sinon corriger avant d'aller plus loin
-- [ ] **Task 3 — Découpe du scoreboard : propositions, arbitrage, livraison** (AC3)
-  - [ ] 🔴 **Comparaison au rendu AVANT tout code** : au plus deux propositions par surcharges CSS, aux trois formats, **en 3 Bandes et en JDS** ; **arbitrage obtenu et noté** dans Dev Agent Record
-  - [ ] Décision appliquée : `DESIGN.md` › Shapes / Layout **d'abord** (avec l'exception de rayon sur conteneur, datée, si elle est prise), `main.css` et le markup ensuite
-  - [ ] Barre basse traitée dans le même mouvement (découpée ou non — décision écrite)
-  - [ ] Scènes `07`, `09`, `12` re-regardées : elles montrent encore ce que leur nom annonce
+- [x] **Task 1 — Ligne de base pixel et outillée** (AC1)
+  - [x] Arbre propre, code applicatif inchangé depuis `123cf19` ; `npm test` (**1107 / 32 fichiers**) et `npm run build` verts, notés dans Dev Agent Record
+  - [x] **Redémarrer `npm run dev`** (serveur neuf — voir Pièges), puis 36 captures avec `--override scripts/freeze-animations.css`, archivées hors dépôt ; noter le dossier dans Dev Agent Record
+  - [x] `npm run design:check` + `npm run design:check:file`, **codes de sortie** notés
+- [x] **Task 2 — Découpler la géométrie du chrono** (AC2) — *la première, et rien ne commence avant qu'elle soit verte*
+  - [x] Écrire dans Dev Agent Record **les trois lectures actuelles** de `--game-clock-bleed` et ce que chacune suppose (voir Dev Notes › La géométrie couplée, terme à terme)
+  - [x] Introduire la gouttière comme **une seule valeur** (arbitrage d'AC3 pris ici, et écrit) ; recomposer la largeur/marge de `CenterPanel`, le `clip-path` de `ShotClock`, la gouttière intérieure de `PlayerPanel`
+  - [x] **Vérifier au navigateur**, trois formats, mode 3 Bandes (`?scene=12-scoreboard-3bandes`) : disque non tronqué, demi-anneau raccordé au liseré, aucun croissant flottant. **Les tests unitaires ne voient rien de tout ça** (happy-dom ne calcule aucun CSS)
+  - [x] Cas limite explicite : **hauteur gouvernante** à 1920×1080 — le disque est plus étroit que sa zone
+  - [x] **Preuve à rendu constant** : rejouer les captures `07`, `09`, `12` aux trois formats et les comparer à celles de la Task 1 — **identiques au pixel**, sinon corriger avant d'aller plus loin
+- [x] **Task 3 — Découpe du scoreboard : propositions, arbitrage, livraison** (AC3)
+  - [x] 🔴 **Comparaison au rendu AVANT tout code** : au plus deux propositions par surcharges CSS, aux trois formats, **en 3 Bandes et en JDS** ; **arbitrage obtenu et noté** dans Dev Agent Record
+  - [x] Décision appliquée : `DESIGN.md` › Shapes / Layout **d'abord** (avec l'exception de rayon sur conteneur, datée, si elle est prise), `main.css` et le markup ensuite
+  - [x] Barre basse traitée dans le même mouvement (découpée ou non — décision écrite)
+  - [x] Scènes `07`, `09`, `12` re-regardées : elles montrent encore ce que leur nom annonce
 - [ ] **Task 4 — Formats de CTA** (AC4)
   - [ ] 🔴 **Comparaison au rendu AVANT tout code** : au plus deux propositions, côte à côte, aux trois formats, sur les écrans où chaque variante vit ; soumises à Nathan, **arbitrage obtenu et noté** dans Dev Agent Record
   - [ ] `DESIGN.md` › Components › Buttons **d'abord**, puis `VARIANT_CLASSES` / `main.css` ; **zéro valeur visuelle** dans `CtaButton.vue`
@@ -274,13 +274,118 @@ Quel que soit le choix : **une seule valeur, lue par tous**, jamais recopiée. C
 
 ### Agent Model Used
 
+Claude Opus 5 (`claude-opus-5`), workflow `bmad-dev-story`, 2026-09-18.
+
 ### Debug Log References
+
+**Task 1 — ligne de base (2026-09-18).**
+- Code applicatif **inchangé depuis `123cf19`** : `git diff --stat 123cf19..HEAD -- 1score DESIGN.md .impeccable` ne rend que `render-static.cjs`, et **en commentaires seuls** (le chemin Playwright documenté par `eee8029`).
+- `npm test` : **1107 tests / 32 fichiers, verts** — exactement les attendus de l'AC1. `npm run build` : vert.
+- Serveur de dev **redémarré** (`pkill -f vite` puis `npm run dev`) → `http://localhost:5173/`. ⚠️ Le harnais pointe par défaut sur **5174** (`render-static.cjs:79`) : le premier lancement a échoué sur `ERR_CONNECTION_REFUSED`. `--url http://localhost:5173/` le corrige — à ajouter aux Pièges.
+- **36 captures** (12 écrans × 3 formats) avec `--override scripts/freeze-animations.css`, hors dépôt :
+  `…/scratchpad/baseline-11.5/` (+ `audit.json`).
+- `npm run design:check` → **code de sortie `0`** (propre). `npm run design:check:file` → **code de sortie `0`** (propre).
+
+**Task 2 — les trois lectures de `--game-clock-bleed`, telles qu'elles étaient.**
+
+| Lecture | Où | Ce qu'elle écrit | Ce qu'elle suppose |
+|---|---|---|---|
+| 1 | `CenterPanel.vue:127` | `w-[calc(100% + 2*(bleed + spacing*2))]` / `mx-[calc(-1*(bleed + spacing*2))]` | que `spacing*2` compense **exactement** le `p-2` de la colonne (calcul sur la content box), et qu'au-delà il reste `bleed` de débordement réel **dans la carte** — vrai **uniquement si les colonnes se touchent** |
+| 2 | `ShotClock.vue:42-43` | `clip-path: inset(0 calc(100% - bleed) 0 0)` et son symétrique | que la première bande `bleed` de la **zone**, mesurée depuis son bord, est celle qui se pose sur la carte |
+| 3 | `PlayerPanel.vue:76-78` | `pr-4` / `pl-4` (4 unités) | que 4 unités absorbent les 3 unités de débordement ; le **fond** reste pleine largeur, seul le contenu recule |
+
+**Ce que le découplage a changé, et ce qu'il n'a délibérément pas changé.** Une seule des trois lectures était réellement couplée à l'écart entre colonnes :
+- **`CenterPanel` : corrigé.** Un troisième terme, `--game-column-gutter`, entre dans la demi-largeur : la zone doit **traverser** la gouttière **avant** de déborder dans la carte. Sans lui, toute gouttière rognait le débordement d'autant — c'est l'unique raison pour laquelle la découpe avait été écartée en 11.3.
+- **`ShotClock` : inchangé, et c'est un RÉSULTAT.** ⚠️ **La fiche de la story pariait l'inverse** (Dev Notes › La géométrie couplée : « ne s'écrit plus `inset(0 calc(100% - bleed) 0 0)` mais quelque chose comme `inset(0 calc(100% - g - bleed) 0 g)` »). La dérivation, faite en coordonnées de zone et vérifiée au navigateur, dit le contraire : la zone commence à `bleed` du bord de carte **quelle que soit** la gouttière, donc `[0, bleed]` est **sur la carte**, `[bleed, bleed + g]` **est** la gouttière, et le reste est la colonne. Décaler le clip de `g` aurait peint du rouge **en pleine colonne**, décroché du liseré. La formule de la fiche aurait introduit le bug qu'elle cherchait à éviter.
+- **`PlayerPanel` : inchangé, et c'est une décision écrite.** Sa gouttière intérieure absorbe le débordement **dans la carte** (`bleed` seul) ; la part `g` tombe **hors** de la carte. Réserver `bleed + g` creuserait un blanc que rien n'occuperait. La contrainte reste `4 unités ≥ 3 unités`, indépendante de la découpe.
+
+Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotClock.test.ts`, `PlayerPanel.test.ts`) : sans elles, la prochaine découpe « réparerait » ce qui n'est pas cassé.
+
+**Arbitrage pris (AC3) : token, pas constante d'écran.** `--game-column-gutter`, frontmatter `spacing` › `column-gutter` de `DESIGN.md`, puis `main.css` (`@theme static`). Raison : **trois lectures dans trois fichiers qui doivent coïncider au pixel** — l'argument même qui a fait de `--game-clock-bleed` un token (`CLAUDE.md` §10) — et une gouttière est un **rythme de mise en page**, pas une position d'écran (ce qui distinguait les quatre faux tokens d'inset rapatriés en 11.3). Conséquence de miroir : `typography.test.ts` réclamait un `--size-column-gutter` ; l'entrée rejoint `clock-bleed` dans `SPACING_EXCLUDED`, avec sa raison écrite.
+
+**Preuve à rendu constant (AC2).** Serveur de dev redémarré, 36 captures rejouées, comparaison octet à octet :
+- passe « après » vs ligne de base : **35 / 36 identiques**, une divergence — `05-popup-pave-numerique-1920x1080`.
+- **Cette divergence n'est pas une régression** : une **troisième** passe, sur le **même** code, diverge de la deuxième sur ce **seul** fichier, et se retrouve **identique à la ligne de base sur les 36**. Mesure du diff : **1 pixel**, delta maximal **5/255**, en (326, 735).
+- Conclusion : `freeze-animations.css` ne rend pas cet écran **strictement** déterministe à 1920 (la fiche l'annonçait pour la barre de rebours) ; le bruit résiduel est d'**un pixel**. Les 12 écrans du scoreboard (`07`, `09`, `12`) sont **identiques au pixel aux trois formats**. À noter dans les Pièges pour la comparaison finale de la Task 7 : un écart d'un pixel sur cet écran est du bruit, pas une décision.
+
+**Vérification au navigateur (AC2), 3 Bandes, `?scene=12-scoreboard-3bandes`, trois formats.** Mesure des `getBoundingClientRect()` (jamais `scrollWidth`, aveugle sous `overflow-hidden`), gouttière injectée par surcharge, **sans toucher au code applicatif** :
+
+| Gouttière | 1920×1080 — zone dans carte / **disque dans carte** | 1180×733 | 1133×744 |
+|---|---|---|---|
+| 0 px (livré) | 39 / **21,5** | 24 / **24** | 24 / **24** |
+| 8 px | 39 / **13,5** | 24 / **24** | 24 / **24** |
+| 13 px (1 unité à 1920) | 39 / **8,5** | 24 / **24** | 24 / **24** |
+| 16 px | 39 / **5,5** | 24 / **24** | 24 / **24** |
+| 21 px | 39 / **0,5** | 24 / **24** | 24 / **24** |
+| 26 px | 39 / **−4,5 (DÉCOLLÉ)** | 24 / **21,6** | 24 / **24** |
+
+- **Le découplage est prouvé** : la **zone** déborde de `bleed` exactement (39 à 1920, 24 sur tablette) **pour toute gouttière** — elle la traverse. C'est ce qui rend la découpe proposable.
+- **Cas limite de la hauteur gouvernante, confirmé au chiffre près** : à 1920 le disque fait **427 px pour 462 de zone**, il ne mord la carte que de **21,5 px**, et **une gouttière les consomme un pour un**. Aux deux formats tablette, c'est la **largeur** qui gouverne : le disque grandit **avec** la zone et garde ses 24 px, jusqu'à ce que la hauteur reprenne la main (~24 px de gouttière à 1180).
+- **⚠️ PLAFOND MESURÉ, à porter à l'arbitrage de la Task 3 : au-delà de ~21 px à 1920, le disque se décolle des cartes** — le débordement du chrono n'existe plus. En unités de grille fluide : **1 unité passe** (13 px à 1920, 8,5 px de morsure restante), **2 unités ne passent pas** (26 px, décollé). La proposition **B1 de la 11.3 (« gouttière d'une unité partout »)** tombe donc **juste sous** le plafond — elle était géométriquement possible, c'est le couplage, non la valeur, qui la faisait échouer.
+- **Aucun ancêtre rogneur** : la sonde remonte du chrono à `<body>` en lisant `overflow-x/y` calculé — aucun `overflow-hidden` sur la colonne centrale ni sur ses ancêtres, à toutes les gouttières mesurées.
+- Raccord du demi-anneau vérifié **à l'œil** sur gros plans aux trois formats (g = 0 et g = 13 px) : le liseré `ring-8` contourne le disque sans rupture, la bande rouge se pose **sur la carte**, aucun croissant ne flotte, aucun pixel rouge dans la gouttière.
+
+**Task 3 — la découpe, en sept passes de rendu.** Toutes produites **par surcharges CSS**, aucun fichier applicatif touché avant l'arbitrage. Ce que Nathan a écarté, et **pourquoi** — c'est le chemin qui fait la décision, pas seulement le point d'arrivée :
+
+| Passe | Proposition | Verdict de Nathan |
+|---|---|---|
+| 1 | **A** cartes détachées (marge + rayon) · **B** bloc soudé détaché | écartées : « les éléments du bas doivent être compris dans une espèce de **barre** un peu arrondie, l'élément central aussi et globalement toute la partie du haut aussi. Un peu comme `billiboard_scoreboard` » |
+| 2 | **C** quatre blocs (carte / centre / carte + barre) · **D** deux grandes formes | « c'est ça, par contre les blocs michel, rep et j-pierre doivent aussi être dans un **grand bloc en commun** » |
+| 3 | **E** centre en creux · **F** centre en relief, dans un grand bloc | « j'aime beaucoup celui-là… réduire les marges pour que les **boutons aient les mêmes marges que les blocs du dessus** et qu'ils prennent tout l'espace sous les cards » |
+| 4 | **E2 / F2**, barre alignée sur la grille des colonnes | **E retenu** — centre en creux |
+| 5 | **G / H**, réparation du chrono décollé à 1920 | « le but c'est que le chrono soit **le plus visible possible**… réduire un peu la largeur de la ligne verte mais garder la même marge… refaire propre la **bordure** et le **liseré rouge en contour** » |
+| 6 | **I** chrono dans son bloc · **J** chrono débordant · puis **b** cadre fermé, **c** anneau complet, **d** rouge contournant | « il faut que le rouge **et le bord du cadre** contournent l'anneau, là c'est cut un peu » |
+| 7 | **K** anneaux concentriques · **L** colonne bombée (croquis de Nathan) | ⚠️ **K rejeté sèchement** : « c'est n'importe quoi ce contour, la ligne grise fait tout le tour, pourquoi ? » — j'avais dessiné des anneaux **concentriques au disque** au lieu de suivre le **contour de la colonne**. Puis, sur L : **abandon** — « on va abandonner l'effet de débordement, ça me paraît trop complexe à faire… contente-toi de mettre le chrono le plus gros possible dans le container, tu peux retirer la padding autour de l'anneau » |
+
+**Ce qui est livré (arbitrage de Nathan, 2026-09-18).**
+- **Deux niveaux de forme.** Un **grand bloc** (`rounded-zone`, 16 px, surface voilée, filet) contient les trois colonnes ; dedans, **trois blocs** (`rounded-block`, 12 px) séparés d'**une unité** de gouttière. La **barre basse** est la sœur du grand bloc : même rayon, même voile, même filet. Tout est décollé des bords de l'écran d'une unité.
+- **Le centre en creux** : le grand bloc est voilé, la colonne centrale garde la base marine sombre **nue** (`bg-bg` explicite — sans lui elle hériterait du voile et le creux disparaîtrait). La proposition inverse a été rendue côte à côte et écartée.
+- **La barre basse ne porte plus sa propre grille**, elle reprend celle des colonnes : groupes latéraux en `flex-1` comme les cartes, espaceur central à `w-1/5` comme la colonne centrale, même gouttière, même retrait, pictos étirés. **Mesuré : 0,0 px d'écart** à 1920, 1180 et 1133, à gauche comme à droite. Trois largeurs recopiées (`w-2/5` + `px-2`) ne pouvaient **pas** coïncider avec des colonnes que la gouttière rétrécit.
+- **L'exception à « conteneurs à angles vifs »** est écrite, datée et **bornée au scoreboard** dans `DESIGN.md` › Shapes, **avant** la première ligne de code. Tuiles, barre latérale, récap et bandeaux restent à angles vifs.
+- **⚠️ Le débordement du chrono est ABANDONNÉ** — décision qui **renverse l'AC16 de la Story 10.4**. Conséquences appliquées : `--game-clock-bleed` retiré de `DESIGN.md` et de `main.css`, demi-anneau de `ShotClock` supprimé, prop `turnRingSide` supprimée, prop `turnSide` de `CenterPanel` et son `computed` dans `GameView` supprimés (la colonne redevient entièrement générique), et le `ring-8` de la carte active **redevient un contour continu, sans raccord à faire**.
+- **Le chrono remplit son bloc** : la zone annule le retrait de la colonne (`w-[calc(100% + 4 unités)] -mx-2`). **Mesuré : le disque fait exactement la largeur de la colonne aux trois formats** — 373 px à 1920, 229 à 1180, 220 à 1133. C'est le maximum possible dans le conteneur.
+
+**⚠️ Ce que j'ai failli ajouter pour rien, et que la mesure a écarté.** J'avais resserré la colonne centrale (`gap-3` → `gap-1`) pour rendre de la hauteur au disque. Sans débordement, c'est la **largeur** qui gouverne aux trois formats : `gap-1` et `gap-3` donnent **exactement la même taille** (vérifié au navigateur). Le resserrement était donc un changement de rendu **non demandé et sans effet** — il est annulé, et la raison est écrite dans le gabarit pour que personne ne le refasse.
+
+**⚠️ Le piège de `CLAUDE.md` §12, payé une cinquième fois.** J'ai posé un commentaire HTML **à la racine** du gabarit d'`ActionBar` : le composant est devenu un fragment et la racine a perdu son `data-testid`. Un seul cas est tombé (`keeps the action-bar testid the view and its tests rely on`) — celui qui existe précisément pour ça. Commentaire rentré **dans** le `<nav>`.
+
+**Task 3 — vérifications.**
+- `npm test` : **1115 tests / 32 fichiers, verts** (1107 à la ligne de base ; +8 nets, le solde de cas ajoutés et de cas retirés avec le demi-anneau). `npm run build` vert. `git diff --stat -- 1score/src/stores` **vide**.
+- `npm run design:check` → **code de sortie `0`**, `npm run design:check:file` → **`0`**, sur serveur de dev neuf.
+- **36 captures d'après comparées à la ligne de base : 16 écrans ont bougé**, et chacun est une décision — les quatre écrans de scoreboard (`07`, `09`, `12`) et les **deux pop-ups qui se posent dessus** (`08`, `10`, dont le fond est le scoreboard). Le 17e, `05-popup-pave-numerique-1920x1080`, est le **bruit d'un pixel** déjà caractérisé à la Task 2 (delta 5/255 en (326, 735), identique d'une passe à l'autre sur le même code).
+
+**Reports ouverts par la Task 3** (à porter dans `deferred-work.md`) :
+- **Relier le chrono aux cartes autrement.** Le débordement est abandonné, pas remplacé : « je vais réfléchir à une autre manière de faire ». Sept passes de rendu et leurs mesures sont consignées ci-dessus pour ne pas les refaire à l'aveugle.
+- **La gouttière intérieure des cartes** (`INNER_GUTTER_CLASSES`, `pr-4` / `pl-4`) n'avait qu'une raison : absorber le débordement. Cette raison a disparu. Elle est **conservée en l'état** — la retirer déplacerait le score sur les deux cartes, ce qui est une décision de rendu que Nathan n'a pas prise.
 
 ### Completion Notes List
 
+- **Task 1 — ligne de base.** 1107 tests / 32 fichiers, build vert, 36 captures de référence, `design:check` et `design:check:file` à **0**. Ligne de base intacte : la story part d'un arbre où le code applicatif n'a pas bougé depuis `123cf19`.
+- **Task 2 — géométrie du chrono découplée (AC2).** Gouttière introduite comme **une seule valeur** (`--game-column-gutter`, token de frontmatter), lue par `GameView` (l'écart réel) et `CenterPanel` (la zone qui la traverse) ; `ShotClock` et `PlayerPanel` ne la lisent **pas**, par décision dérivée, vérifiée et verrouillée par un test chacun. **Rendu constant prouvé** : 36 captures identiques au pixel à la ligne de base (au bruit d'un pixel près sur un écran non déterministe, caractérisé). Plafond de gouttière **mesuré** aux trois formats — c'est l'entrée chiffrée de l'arbitrage de la Task 3.
+- **Task 3 — découpe arbitrée et livrée (AC3).** Sept passes de comparaison au rendu, toutes par surcharges CSS ; le tableau du Debug Log garde ce que chacune a écarté et pourquoi. Livré : deux niveaux de forme (grand bloc 16 px / trois blocs 12 px), centre en creux, barre basse alignée sur la grille des colonnes à **0,0 px**, exception à `Shapes` datée et bornée au scoreboard. **Le débordement du chrono est abandonné** (renverse l'AC16 de la 10.4) : token, demi-anneau et deux props morts retirés, le liseré de la carte active redevient un contour continu, et le disque remplit exactement la colonne aux trois formats.
+
 ### File List
 
+- `DESIGN.md` — frontmatter `spacing` › `column-gutter` ; Layout : les trois lectures, l'arbitrage token/constante, le plafond mesuré
+- `1score/src/assets/main.css` — `--game-column-gutter` (`@theme static`), à côté de `--game-clock-bleed`
+- `1score/src/views/GameView.vue` — `data-testid="game-columns"`, `gap-(--game-column-gutter)` sur la rangée des trois colonnes
+- `1score/src/views/GameView.test.ts` — la gouttière vient du token partagé
+- `1score/src/components/CenterPanel.vue` — troisième terme dans la largeur/marge de la zone du chrono
+- `1score/src/components/CenterPanel.test.ts` — attendu mis à jour
+- `1score/src/components/ShotClock.vue` — dérivation écrite : le clip ne lit pas la gouttière
+- `1score/src/components/ShotClock.test.ts` — cas verrouillant cette non-lecture
+- `1score/src/components/PlayerPanel.vue` — la gouttière intérieure ne suit pas la gouttière entre colonnes
+- `1score/src/components/PlayerPanel.test.ts` — cas verrouillant cette non-lecture
+- `1score/src/assets/typography.test.ts` — `column-gutter` rejoint `clock-bleed` dans `SPACING_EXCLUDED`
+- `1score/src/components/ActionBar.vue` — la barre reprend la grille des colonnes (groupes en `flex-1`, gouttière et retrait partagés, pictos étirés), rayon de zone, voile et filet
+- `1score/src/components/ActionBar.test.ts` — deux cas : la grille reprise, les pictos étirés
+- `1score/src/components/ShotClock.vue` — demi-anneau et prop `turnRingSide` retirés (débordement abandonné)
+- `1score/src/components/ShotClock.test.ts` — les cinq cas du demi-anneau remplacés par trois garde-fous (rien de rouge, rien du tour, plus aucune lecture du token retiré)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — clé en `in-progress`
+
 ## Change Log
+
+- **2026-09-18 — Découpe arbitrée en sept passes de rendu, et débordement du chrono ABANDONNÉ.** Le scoreboard passe en blocs arrondis (exception datée à `DESIGN.md` › Shapes, bornée à cet écran) : un grand bloc voilé de rayon 16 contenant trois blocs de rayon 12, centre en creux, barre basse alignée sur la grille des colonnes à 0,0 px. ⚠️ **L'AC16 de la Story 10.4 est renversée** : le disque du chrono ne déborde plus sur les cartes. Le débordement était la signature de colonnes soudées ; en blocs séparés, la gouttière s'arrêtait contre le disque au lieu d'en faire le tour et tout ce qu'il croisait finissait sur une diagonale. Quatre passes ont cherché un raccord propre avant l'abandon (Nathan : « trop complexe à faire »). `--game-clock-bleed`, le demi-anneau et deux props deviennent morts et sont retirés ; le liseré de la carte active redevient un contour continu ; le disque remplit exactement sa colonne.
 
 - **2026-09-18 — Comparaison au rendu érigée en RÈGLE BLOQUANTE (Nathan, à la relecture de la fiche) :** « avant chaque implémentation je veux une comparaison visuelle comme ce qu'on a fait pour le travail des couleurs ». La méthode des passes de rendu n'était portée que par le texte des AC 3/4/5 ; elle devient un **préalable explicite** — au plus deux propositions côte à côte aux trois formats, produites sans toucher au code applicatif, arbitrage de Nathan obtenu **et noté** avant la première ligne. Une exception nommée, et elle est technique : la **Task 2 (découplage du chrono)** ne décide rien et passe donc à **rendu constant**, prouvé au pixel contre la ligne de base — tout écart y est une régression, pas une proposition.
 - **2026-09-18 — Fiche créée (bmad-create-story).** Cinquième et dernière story de l'Epic 11, née de la décision de Nathan du 2026-09-17 (`deferred-work.md`, commit `e38e315`) : elle ne figurait pas au plan d'origine `11.0 → 11.4`. Story de **RENDU** — formats de CTA, reliefs et découpe du scoreboard rassemblés, parce que « ce sont des décisions de rendu, pas du refactor ». **Trois décisions de Nathan à la création** : (1) story numérotée **11.5**, avec sa section ajoutée à `epics.md` et sa clé à `sprint-status.yaml` ; (2) **aucune référence visuelle — intention seule**, pas même les `billiboard_scoreboard*` qui ont fondé le report : les propositions sortent de surcharges CSS aux trois formats et Nathan tranche au rendu ; (3) **tout en une story**, la découpe comprise, avec la **géométrie couplée du chrono traitée en premier** — c'est elle qui a fait écarter les deux propositions de la 11.3, et aucune gouttière n'est crédible avant qu'elle soit découplée. **Combinaison inédite annoncée** : un rayon sur un conteneur contredirait « conteneurs à angles vifs » (`DESIGN.md` › Shapes, décision de Nathan du 10.1) — si l'exception est prise, elle s'écrit datée dans `DESIGN.md` avant le code. **Deux arbitrages de la 11.2 explicitement rouverts** : l'ombre de barre basse (écartée : « pas hyper bien intégrée ») et le verre des pop-ups. Piège structurant de la story, inverse de celui de la 11.3 : des pixels **doivent** bouger, et le risque est qu'un écart **non décidé** se cache parmi les écarts voulus — d'où les 36 captures d'avant et leur comparaison de fin. Ligne de base : commit `123cf19`, **1107 tests / 32 fichiers**, build vert, 36 scans propres, ré-audit 19/20. ⚠️ **L'epic se clôt sur cette story** : c'est elle qui rejoue l'audit en dernier.

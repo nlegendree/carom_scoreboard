@@ -125,10 +125,6 @@ function entryValueOf(playerId: PlayerId): string | null {
 // ne rend plus la main. Le voile de fin, lui, reste inerte de son côté (AC18 de la 1.10).
 const endPromptOpen = computed(() => endPrompt.value !== null)
 
-// Côté d'ÉCRAN de la carte qui a le tour. Dérivé de `leftId`, comme tout le reste : le
-// chrono s'en sert pour prolonger le liseré de cette carte autour de son disque.
-const turnSide = computed<TableSide>(() => (activePlayer.value === leftId.value ? 'left' : 'right'))
-
 // ⚠️ Tap fantôme (revue de code du 2026-09-09) : quand la pop-up se referme d'elle-même
 // à l'auto-validation, le tour a basculé et un doigt qui arrive juste après sur
 // l'emplacement d'une touche atterrit sur le panneau adverse, qui enregistrerait une
@@ -361,7 +357,25 @@ const SUMMARY_SIDEBAR_EXIT: SideBarItem = {
     </template>
 
     <template v-else-if="status === 'playing'">
-      <div class="flex min-h-0 flex-1">
+      <!-- Story 11.5 (AC2/AC3) : la gouttière entre les trois colonnes est UNE SEULE VALEUR
+           (`--game-column-gutter`), et c'est ici qu'elle produit l'écart réel. `CenterPanel`
+           la relit pour que la zone du chrono la TRAVERSE ; `PlayerPanel` ne la lit pas (la
+           part qui tombe dans la gouttière tombe hors de la carte).
+           LE GRAND BLOC (Nathan, au rendu, 2026-09-18, quatre passes de comparaison) : la
+           partie du haut est une FORME, pas trois colonnes à fleur de bord — « les blocs
+           michel, rep et j-pierre doivent aussi être dans un grand bloc en commun ». Rayon de
+           ZONE dehors, rayon de BLOC sur ce qu'il contient : c'est l'écart entre les deux qui
+           fait lire l'emboîtement. Exception à « conteneurs à angles vifs », datée et motivée
+           dans `DESIGN.md` › Shapes — elle ne vaut QUE pour le scoreboard.
+           La marge (`m-1`) et le retrait intérieur (`p-1`) s'écrivent en utilitaires de
+           grille, PAS en token : une seule lecture chacune, rien à faire coïncider. Seule la
+           gouttière est un token, parce qu'elle a trois lectures (`DESIGN.md` › Layout).
+           ⚠️ AUCUN `overflow-hidden` ici : le rayon est porté par les blocs eux-mêmes, et un
+           `overflow-hidden` sur cette rangée rognerait l'anneau du chrono SANS ERREUR. -->
+      <div
+        data-testid="game-columns"
+        class="m-1 mb-0 flex min-h-0 flex-1 gap-(--game-column-gutter) rounded-zone border border-border bg-surface p-1"
+      >
         <!-- Story 10.4 (AC4) : les cartes ne sont PLUS TAPABLES. Le passage de main est
              passé au CTA `PASSER LE TOUR` de la colonne centrale, seul geste possible —
              plus rien de destructif ne se déclenche au contact d'une carte.
@@ -382,7 +396,6 @@ const SUMMARY_SIDEBAR_EXIT: SideBarItem = {
           :secondsRemaining="shotClockSeconds"
           :passTurnDisabled="endPromptOpen"
           :entryOpen="entryOpen"
-          :turnSide="turnSide"
           @pass-turn="passTurn"
         />
         <PlayerPanel

@@ -4,7 +4,6 @@ import ShotClock from './ShotClock.vue'
 import PictoIcon from './PictoIcon.vue'
 import CtaButton from './CtaButton.vue'
 import { SHOT_CLOCK_SECONDS } from '../composables/useTimer'
-import type { TableSide } from '../types/game'
 
 // Colonne centrale du scoreboard, réduite à l'essentiel par la Story 10.4 (AC5) : le
 // compteur de reprises, le chrono (3 Bandes seulement) et `PASSER LE TOUR`. Le mode de jeu
@@ -38,12 +37,12 @@ const props = withDefaults(
     // Pop-up de saisie ouverte : le CTA est MASQUÉ — il se retrouverait sous le voile,
     // et le doigt qui vient de fermer la pop-up tomberait dessus (AC8).
     entryOpen?: boolean
-    // Côté d'écran de la carte qui a le tour, relayé tel quel au chrono : son disque
-    // déborde sur les cartes et coupe leur liseré, il en porte donc le prolongement.
-    // La colonne ne s'en sert pour rien d'autre — elle reste générique.
-    turnSide?: TableSide | null
+    // ⚠️ `turnSide` est RETIRÉ par la Story 11.5 : il ne servait qu'à relayer au chrono le
+    // côté de la carte qui a le tour, pour qu'il porte le prolongement du liseré. Sans
+    // débordement, il n'y a plus de liseré à prolonger — la colonne n'a plus à savoir qui
+    // joue, et redevient entièrement générique.
   }>(),
-  { passTurnDisabled: false, entryOpen: false, turnSide: null },
+  { passTurnDisabled: false, entryOpen: false },
 )
 
 // `PASSER LE TOUR` (Story 10.4) remplace le tap sur la carte adverse comme seul geste de
@@ -90,7 +89,7 @@ function passTurn(): void {
 
 <template>
   <div
-    class="relative flex w-1/5 min-w-0 shrink-0 flex-col items-center gap-3 overflow-visible p-2"
+    class="relative flex w-1/5 min-w-0 shrink-0 flex-col items-center gap-3 overflow-visible rounded-block bg-bg p-2"
   >
     <div class="flex w-full min-w-0 flex-col items-center" :class="repriseBlockClass">
       <span data-testid="reprise-label" class="text-stat text-white/60">REP</span>
@@ -104,33 +103,33 @@ function passTurn(): void {
     </div>
 
     <!-- Story 2.1 : anneau du chrono de tir, uniquement en 3 Bandes (UX-DR4).
-         Story 10.4 (AC16) : il DÉBORDE franchement sur les deux cartes (modèle Cueuny),
-         au-dessus d'elles ET de leur liseré de tour, qu'il MASQUE (`z-20` contre le `z-10`
-         du liseré) — c'est le demi-anneau rouge de `ShotClock` qui en prend le relais
-         autour du disque. Les deux z-index sont EXPLICITES de part et d'autre : s'en
-         remettre au contexte d'empilement de `@container` ne suffisait pas, le liseré droit
-         restait visible en travers du disque (3e passe de rendu, Nathan). Le débordement est porté ICI, par
-         la colonne, et non par `ShotClock`, qui reste dimensionné par son conteneur.
-         ⚠️ Le calcul se fait sur la CONTENT BOX, padding déduit : la colonne porte `p-2`
-         (2 unités), et une marge négative de 2 unités ne ferait que reconstituer sa border-box —
-         l'anneau remplirait la colonne sans en sortir d'un pixel (mesuré à la passe
-         navigateur). D'où `bleed + 2 unités` de chaque côté : le padding `p-2`, puis
-         `--game-clock-bleed` (3 unités) de débordement réel dans chaque carte. Les cartes
-         réservent 4 unités (`INNER_GUTTER_CLASSES`, `pr-4`/`pl-4`), de quoi l'absorber.
-         Tout en unités de `--spacing` (8 px sur tablette, 13 à 1920) : la grille est fluide.
-         ⚠️ Aucun `overflow-hidden` sur cette colonne ni sur ses ancêtres, sans quoi
-         l'anneau serait rogné au bord sans le moindre message d'erreur. Les cartes
-         réservent en contrepartie une gouttière intérieure (`INNER_GUTTER_CLASSES`). -->
+         ⚠️ Story 11.5 (Nathan, au rendu, 2026-09-18) : le disque NE DÉBORDE PLUS sur les
+         cartes — l'AC16 de la 10.4 est renversée. Le débordement était la signature de
+         colonnes SOUDÉES ; depuis que le scoreboard est en blocs séparés, la gouttière
+         s'arrêtait contre le disque au lieu d'en faire le tour, et le blanc de la carte, le
+         liseré rouge et la bande grise finissaient tous les trois sur une diagonale. Quatre
+         passes de rendu ont cherché un raccord propre avant l'abandon.
+         Ce qu'il en reste ici : la zone ne s'élargit plus d'un débordement, mais elle ANNULE
+         le retrait de la colonne (`p-2`) pour que l'anneau aille d'un bord à l'autre —
+         « contente-toi de mettre le chrono le plus gros possible dans le container, tu peux
+         retirer la padding autour de l'anneau ». Le calcul reste sur la CONTENT BOX : `100%`
+         vaut la colonne moins ses deux `p-2`, d'où les 4 unités rendues.
+         ⚠️ `z-20` conservé : il n'y a plus de liseré à masquer, mais l'ordre de peinture
+         reste explicite de part et d'autre (`PlayerPanel` › `ring-8` est à `z-10`), et s'en
+         remettre au contexte d'empilement de `@container` n'avait pas suffi en 10.4.
+         ⚠️ Aucun `overflow-hidden` sur cette colonne ni sur ses ancêtres.
+         ⚠️ Le `gap-3` de la colonne est CONSERVÉ, et c'est mesuré, pas subi : sans
+         débordement, c'est la LARGEUR de la colonne qui gouverne la taille du disque aux
+         trois formats (373 px à 1920, 229 à 1180, 220 à 1133 — exactement la colonne). Rendre
+         de la hauteur en resserrant les trois éléments ne grossit donc plus le disque d'un
+         seul pixel : vérifié au navigateur, `gap-1` et `gap-3` donnent la même taille. Ne pas
+         resserrer en croyant agrandir le chrono. -->
     <div
       v-if="secondsRemaining !== null"
       data-testid="shot-clock-bleed"
-      class="relative z-20 flex min-h-0 flex-1 w-[calc(100%_+_2_*_(var(--game-clock-bleed)_+_var(--spacing)_*_2))] mx-[calc(-1_*_(var(--game-clock-bleed)_+_var(--spacing)_*_2))]"
+      class="relative z-20 flex min-h-0 w-[calc(100%_+_var(--spacing)_*_4)] flex-1 -mx-2"
     >
-      <ShotClock
-        :secondsRemaining="secondsRemaining"
-        :totalSeconds="SHOT_CLOCK_SECONDS"
-        :turnRingSide="turnSide"
-      />
+      <ShotClock :secondsRemaining="secondsRemaining" :totalSeconds="SHOT_CLOCK_SECONDS" />
     </div>
 
     <!-- AC5 : CTA pleine largeur de colonne, ≥ 90 px de haut. Il n'engage rien

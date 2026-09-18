@@ -144,69 +144,35 @@ describe('ShotClock', () => {
   })
 })
 
-// --- Story 10.4, 3e passe de rendu : le liseré de tour contourne le disque ---
+// --- Story 11.5 : le liseré de tour n'est plus l'affaire du chrono ---
 
-describe('ShotClock — prolongement du liseré de tour', () => {
-  const turnRing = (wrapper: ReturnType<typeof mount>) =>
-    wrapper.find('[data-testid="shot-clock-turn-ring"]')
-  // Le cercle rouge lui-même : enfant de la couche clippée (Story 11.1, 5e passe de rendu).
-  const turnCircle = (wrapper: ReturnType<typeof mount>) =>
-    wrapper.find('[data-testid="shot-clock-turn-circle"]')
+describe('ShotClock — plus de prolongement de liseré', () => {
+  // ⚠️ Nathan, au rendu (2026-09-18) : « on va abandonner l'effet de débordement ». Le disque
+  // ne mord plus les cartes, donc il ne coupe plus leur liseré, donc il n'a plus rien à en
+  // prolonger. Les cinq cas qui décrivaient le demi-anneau (clip sur la bande débordante,
+  // épaisseur accordée au `ring-8`, clip mesuré depuis la ZONE et non depuis le disque,
+  // absence hors partie, jamais d'anneau complet) tombent avec lui — ils vérifiaient une
+  // géométrie qui n'existe plus, et les garder verts aurait demandé de garder le code mort.
+  // Ce qui les remplace est un GARDE-FOU : le chrono ne doit plus rien peindre de rouge, et
+  // ne doit plus rien savoir du tour. Sans ce cas, un demi-anneau pourrait revenir en silence
+  // à la prochaine passe de rendu, avec le raccord impossible qui l'accompagnait.
+  const clock = () => mount(ShotClock, { props: { secondsRemaining: 40, totalSeconds: 40 } })
 
-  function mountClock(turnRingSide: 'left' | 'right' | null = null) {
-    return mount(ShotClock, { props: { secondsRemaining: 40, totalSeconds: 40, turnRingSide } })
-  }
+  it('paints no turn ring at all', () => {
+    const wrapper = clock()
 
-  // Le disque déborde sur les cartes et coupe leur liseré : ce demi-anneau, collé à son
-  // bord, en prend le relais et le contourne au lieu de le laisser interrompu.
-  it('draws a half ring on the side of the card that has the turn', () => {
-    const leftClock = mountClock('left')
-    const left = turnRing(leftClock)
-    const right = turnRing(mountClock('right'))
-
-    expect(turnCircle(leftClock).classes()).toContain('border-turn-active')
-    expect(turnCircle(leftClock).classes()).toContain('rounded-full')
-    // ⚠️ La bande qui DÉPASSE (`--game-clock-bleed`), pas la moitié du disque : sinon
-    // l'arc s'arrête au centre du disque, en pleine colonne, et ne raccorde pas au liseré.
-    expect(left.classes()).toContain('[clip-path:inset(0_calc(100%_-_var(--game-clock-bleed))_0_0)]')
-    expect(right.classes()).toContain('[clip-path:inset(0_0_0_calc(100%_-_var(--game-clock-bleed)))]')
+    expect(wrapper.find('[data-testid="shot-clock-turn-ring"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="shot-clock-turn-circle"]').exists()).toBe(false)
   })
 
-  // Même épaisseur que le `ring-8` de la carte : le raccord doit être invisible.
-  it('matches the thickness of the card ring it continues', () => {
-    expect(turnCircle(mountClock('left')).classes()).toContain('border-8')
+  // Le chrono ne connaît plus le côté qui joue : `turnSide` a disparu de `GameView` jusqu'ici.
+  // Un composant qui ignore le tour ne peut pas se remettre à le dessiner par accident.
+  it('knows nothing about whose turn it is', () => {
+    expect(Object.keys(clock().props())).toEqual(['secondsRemaining', 'totalSeconds'])
   })
 
-  // ⚠️ Le clip porte sur une COUCHE qui couvre la ZONE (`inset-0` de la racine), pas sur le
-  // disque : la zone déborde de la colonne d'exactement `--game-clock-bleed`, le disque pas
-  // forcément — quand la hauteur gouverne sa taille (1920×1080), il est plus étroit que la
-  // zone, et un clip mesuré depuis son bord laissait un croissant rouge flotter dans la
-  // colonne (bug relevé par Nathan, Story 11.1). Le cercle a la taille EXACTE du disque.
-  it('clips the half ring at the zone edge, not at the disc edge', () => {
-    const wrapper = mountClock('left')
-    const layer = turnRing(wrapper)
-
-    expect(layer.element.parentElement).toBe(wrapper.find('[data-testid="shot-clock"]').element)
-    expect(layer.classes()).toEqual(expect.arrayContaining(['absolute', 'inset-0']))
-    expect(wrapper.find('[data-testid="shot-clock"]').classes()).toContain('relative')
-    expect(turnCircle(wrapper).classes()).toContain('w-[min(100cqw,100cqh)]')
-    expect(wrapper.find('[data-testid="shot-clock-ring"]').classes()).toContain('w-[min(100cqw,100cqh)]')
-    // Sans `aspect-square`, un cercle vide n'a pour hauteur que ses deux bordures : le
-    // demi-anneau disparaîtrait sans qu'aucun autre cas ne rougisse.
-    expect(turnCircle(wrapper).classes()).toContain('aspect-square')
-    expect(wrapper.find('[data-testid="shot-clock-ring"]').classes()).toContain('aspect-square')
-  })
-
-  // Sans côté — hors partie, ou avant qu'un tour soit attribué — rien n'est dessiné.
-  it('draws nothing without a side', () => {
-    expect(turnRing(mountClock(null)).exists()).toBe(false)
-  })
-
-  // ⚠️ Un anneau COMPLET se lirait comme une alerte du chrono, pas comme un signal de tour :
-  // la moitié tournée vers la carte inactive ne doit jamais être peinte.
-  it('never paints a full ring', () => {
-    for (const side of ['left', 'right'] as const) {
-      expect(turnRing(mountClock(side)).classes().join(' ')).toContain('clip-path')
-    }
+  // ⚠️ Le débordement lui-même : plus aucune classe du chrono ne lit le token retiré.
+  it('reads no clock bleed token anywhere', () => {
+    expect(clock().html()).not.toContain('--game-clock-bleed')
   })
 })
