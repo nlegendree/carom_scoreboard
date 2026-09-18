@@ -197,12 +197,6 @@ Quel que soit le choix : **une seule valeur, lue par tous**, jamais recopiée. C
 
 ### Pièges
 
-- **⚠️ Le chemin Playwright par défaut du harnais NE RÉSOUT PAS sur cette machine.** `render-static.cjs:37-38` pointe vers `/Users/nathanlegendre/.nvm/…`, et le dossier personnel est `/Users/nathan` — le premier lancement échoue. **Vérifié le 2026-09-18**, l'installation qui marche est :
-  ```sh
-  PLAYWRIGHT_MODULE=/Users/nathan/.npm/_npx/787f53666b8d4740/node_modules/playwright \
-    node scripts/render-static.cjs <outDir> --override scripts/freeze-animations.css
-  ```
-  Playwright **1.58.0** ↔ **chromium-1208** dans `~/Library/Caches/ms-playwright` : c'est exactement le couple documenté dans `deferred-work.md`. ⚠️ C'est un **cache `npx`**, il peut être purgé : si le chemin disparaît, le relancer sans la variable donne le message qui dit quoi faire (durci en 11.4).
 - **⚠️ Le chemin Playwright par défaut du harnais NE RÉSOUT PAS sur cette machine.** `render-static.cjs:37-38` pointe vers `/Users/nathanlegendre/.nvm/…` ; le dossier personnel est `/Users/nathan`. **Le premier lancement échoue**, avec le message qui dit quoi faire (durci en 11.4). L'installation qui marche, vérifiée le 2026-09-18 :
   ```sh
   PLAYWRIGHT_MODULE=/Users/nathan/.npm/_npx/787f53666b8d4740/node_modules/playwright \
