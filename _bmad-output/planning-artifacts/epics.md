@@ -8,7 +8,7 @@ revisions:
     stepsCompleted: ['step-01-validate-prerequisites', 'step-02-design-epics', 'step-03-create-stories', 'step-04-final-validation']
     completed_at: '2026-09-11'
   - date: '2026-09-15'
-    scope: 'Epic 11 — Passe design system (unité et réutilisation), intercalée avant l''Epic 4 : stories 11.0-11.4, DESIGN.md en spec, design-system-audit-2026-09-15.md en ligne de base'
+    scope: 'Epic 11 — Passe design system (unité et réutilisation), intercalée avant l''Epic 4 : stories 11.0-11.5 (11.5 ajoutée le 2026-09-18), DESIGN.md en spec, design-system-audit-2026-09-15.md en ligne de base'
     stepsCompleted: ['step-02-design-epics', 'step-03-create-stories']
     completed_at: '2026-09-15'
 inputDocuments:
@@ -1946,11 +1946,11 @@ So that l'interface premium est aussi propre sous le capot qu'à l'écran (NFR10
 
 ## Epic 11: Passe design system — unité et réutilisation (V1.2)
 
-*Section ajoutée le 2026-09-15 (rétrospective Epic 10, décisions 5 et 6 ; `integration-bmad-impeccable.md` §13). S'exécute **juste après l'Epic 10, avant l'Epic 4**, dans l'ordre **11.0 → 11.1 → 11.2 → 11.3 → 11.4**. Spec : `DESIGN.md` (source unique du visuel, extrait du code livré) et `PRODUCT.md` ; ligne de base chiffrée : `design-system-audit-2026-09-15.md` (14/20) et les scans `.impeccable/baseline/`. Le jeu (règles, stores, persistance) est hors périmètre : `src/stores/` reste intact sur toute l'epic, et `useGameStore.test.ts` sans retouche en est la preuve.*
+*Section ajoutée le 2026-09-15 (rétrospective Epic 10, décisions 5 et 6 ; `integration-bmad-impeccable.md` §13). S'exécute **juste après l'Epic 10, avant l'Epic 4**, dans l'ordre **11.0 → 11.1 → 11.2 → 11.3 → 11.4 → 11.5** (la 11.5, passe de rendu V1.2, a été ajoutée le 2026-09-18 : elle ne figurait pas au plan d'origine, et c'est elle qui clôt l'epic). Spec : `DESIGN.md` (source unique du visuel, extrait du code livré) et `PRODUCT.md` ; ligne de base chiffrée : `design-system-audit-2026-09-15.md` (14/20) et les scans `.impeccable/baseline/`. Le jeu (règles, stores, persistance) est hors périmètre : `src/stores/` reste intact sur toute l'epic, et `useGameStore.test.ts` sans retouche en est la preuve.*
 
 > **Critère de sortie, dans les mots de Nathan (2026-09-15) :** *« la création d'un vrai design system : réutilisation de composants, identicité des composants (CTA identiques, mêmes arrondis), il faut qu'il y ait une unité, mêmes couleurs, etc. Tout ce qui fait une belle interface de jeu agréable à jouer. »* Mesure : **la première story de l'Epic 4 (identification joueur, seul écran neuf à venir) se construit sans créer un composant de base ni ajouter un token.** Son contrat d'écran passera par `/impeccable shape`.
 >
-> **Méthode, valable pour les quatre stories de code (`integration-bmad-impeccable.md` §5) :** `DESIGN.md` se modifie **avant** `main.css` ; tout changement visible passe par un **gabarit statique validé par Nathan avant câblage** (rendu figé aux trois formats 1920×1080 / 1180×733 / petit iPad) ; `npx impeccable detect` aux trois formats et passe navigateur manuelle avant `review` ; `/impeccable polish` en clôture. Chaque story cite, à sa création, la nature de sa référence visuelle (aucune, capture, photo = intention seule) et signale toute combinaison inédite.
+> **Méthode, valable pour les cinq stories de code (`integration-bmad-impeccable.md` §5) :** `DESIGN.md` se modifie **avant** `main.css` ; tout changement visible passe par un **gabarit statique validé par Nathan avant câblage** (rendu figé aux trois formats 1920×1080 / 1180×733 / petit iPad) ; `npx impeccable detect` aux trois formats et passe navigateur manuelle avant `review` ; `/impeccable polish` en clôture. Chaque story cite, à sa création, la nature de sa référence visuelle (aucune, capture, photo = intention seule) et signale toute combinaison inédite.
 
 Un club qui reçoit la tablette voit une interface **une** : un seul gabarit de CTA, un seul rayon par famille d'objets, une palette arbitrée, une échelle typographique conçue pour l'écran de référence — et l'équipe ajoute un écran sans rouvrir le système.
 
@@ -2136,3 +2136,57 @@ So that le design system se maintient mécaniquement, sans repasser par une tabl
 > ⚠️ **Le détecteur ne voit PAS le contraste des libellés de CTA** — démontré par mutation : les deux P1 de l'audit réintroduits ne ressortent pas, parce que la règle `low-contrast` ne résout le fond que sur l'élément qui porte le texte et que `CtaButton` met le dégradé sur le `<button>`. Le contraste des six CTA est donc tenu par `CtaButton.contrast.test.ts`, depuis la source, vérifié par mutation. La passe navigateur reste obligatoire.
 >
 > ⚠️ **L'epic ne se clôt PAS sur cette story** : la passe de rendu V1.2 suit, et c'est elle qui rejouera l'audit en dernier.
+
+### Story 11.5: Passe de rendu V1.2 — formats de CTA, reliefs, découpe du scoreboard
+
+As a joueur de club devant la tablette, et comme Nathan qui regarde l'écran,
+I want que la dernière passe de rendu de la V1.2 arbitre au rendu les formats de CTA, les reliefs et la découpe du scoreboard,
+So that l'Epic 11 se close sur un design **fini** et non sur un design system propre mais inachevé.
+
+*Section ajoutée le 2026-09-18 (décision de Nathan du 2026-09-17, `deferred-work.md` › dev-story 11.3, commit `e38e315`). **Elle ne figurait pas au plan d'origine** de l'epic (11.0 → 11.4) : les quatre premières stories ont produit la matière puis l'instrument, celle-ci **dessine**. Story de **RENDU** — Nathan tranche sur des images, pas sur du texte.*
+
+*Justification : les changements de formats de CTA et de reliefs sont « du même ordre que la découpe du scoreboard déjà reportée par la 11.3 — des décisions de RENDU, pas du refactor, et elles se rassemblent » (Nathan, 2026-09-17). Ce que les stories précédentes ont rendu bon marché : un format de variante de CTA se change en **un seul endroit** (`VARIANT_CLASSES` de `CtaButton.vue`), un relief ou un rayon en **deux** et dans l'ordre imposé (`DESIGN.md` puis `main.css`), et les douze scènes `?scene=` permettent de mesurer chaque proposition aux trois formats sans rejouer un parcours à la main.*
+
+**Exigences :** `DESIGN.md` › Shapes / Elevation / Components / Layout, `deferred-work.md` (entrées « Passe de rendu V1.2 », « Découpe Billiboard », « cartes joueur arrondies »), `CLAUDE.md` §7 / §9 / §10.
+
+**Acceptance Criteria:** les neuf AC détaillées sont dans la fiche `11-5-passe-de-rendu-v1-2-formats-de-cta-reliefs-decoupe-du-scoreboard.md`. En résumé :
+
+**Given** un arbre propre (code applicatif inchangé depuis `123cf19`)
+**When** la story démarre
+**Then** une ligne de base de **36 captures** (12 écrans × 3 formats, animations gelées, serveur de dev neuf) est prise **avant la première ligne de code** — non pour prouver l'immobilité comme en 11.3, mais pour **isoler ce qui bouge sans avoir été décidé**
+
+**Given** `--game-clock-bleed`, lu par `CenterPanel`, `ShotClock` et `PlayerPanel`
+**When** une gouttière apparaît entre les trois colonnes
+**Then** la **géométrie couplée du chrono est découplée EN PREMIER** et vérifiée au navigateur aux trois formats en 3 Bandes : le disque déborde toujours dans chaque carte, le demi-anneau de tour raccorde au liseré `ring-8`, aucun `overflow-hidden` n'apparaît sur la colonne ni ses ancêtres. C'est elle qui a fait écarter les deux propositions de la 11.3 ; aucune gouttière n'est crédible avant
+
+**Given** le report de la 11.2 (cartes arrondies, marge noire, barre basse mieux découpée) et les deux propositions écartées de la 11.3
+**When** la géométrie est découplée
+**Then** au plus deux propositions sont rendues côte à côte aux trois formats, en 3 Bandes **et** en JDS, et Nathan tranche au rendu ; la gouttière est **une seule valeur lue par tous** (token d'intention ou constante d'écran — arbitrage pris explicitement) ; si un **rayon sur conteneur** est retenu, `DESIGN.md` › Shapes reçoit l'exception **datée** avant le code
+**And** si Nathan écarte à nouveau les deux propositions, l'entrée est close comme **écartée définitivement**, pas re-reportée une troisième fois
+
+**Given** `VARIANT_CLASSES` (six variantes) et le frontmatter `shadows` de `DESIGN.md`
+**When** les formats de CTA et les reliefs sont revus
+**Then** les propositions passent par **surcharges CSS** aux trois formats, puis `DESIGN.md` **d'abord** et le code ensuite ; **aucune valeur visuelle** n'entre dans `CtaButton.vue` ; les trois contraintes déjà payées sont préservées (pas de largeur sur `accent`/`neutral`, un seul retour d'appui pour le neutre, `DISABLED_CLASSES` commun aux six)
+**And** deux arbitrages de la 11.2 sont **explicitement rouverts et re-tranchés** : l'ombre de barre basse (écartée : « pas hyper bien intégrée ») et le verre des pop-ups
+
+**Given** que le détecteur est **aveugle au contraste des libellés de CTA** (établi par mutation en 11.4)
+**When** un dégradé, une taille ou une graisse de CTA change
+**Then** `CtaButton.contrast.test.ts` est mis à jour et vert — c'est lui seul qui tient ce contraste depuis la source ; toute valeur écrite dans `DESIGN.md` est **mesurée sur la surface réelle**, jamais estimée
+
+**Given** les douze scènes et les huit ignores scopés
+**When** la story se termine
+**Then** les douze scènes montrent encore ce que leur nom annonce (le semis vit dans `HomeScreen` / `GameView` / `main.ts`, et `scenes.test.ts` ne verrouille que les identifiants) ; `design:check` et `design:check:file` sont propres ou chaque constat étiqueté ; `npm test` et `npm run build` verts ; `src/stores/` intact
+**And** les 36 captures d'après sont comparées à celles du début : **tout écart doit être une décision**
+
+**Given** le 14/20 de la ligne de base et le 19/20 de la 11.4
+**When** la story se termine
+**Then** `/impeccable audit` est **rejoué une dernière fois** et consigné en regard des deux précédents ; `DESIGN.md` est **relu, jamais écrasé** ; l'entrée « passe de rendu V1.2 » de `deferred-work.md` est **close** ; la liste de contrôle du critère de sortie est mise à jour pour l'Epic 4
+**And** ✅ **l'epic se clôt sur cette story.**
+
+> 🔴 **Règle bloquante (Nathan, 2026-09-18) : « avant chaque implémentation je veux une comparaison visuelle comme ce qu'on a fait pour le travail des couleurs ».** Chaque décision d'apparence est rendue en **au plus deux propositions côte à côte aux trois formats**, produites **sans toucher au code applicatif**, et tranchée sur les images avant la première ligne. Seule exception, technique : le **découplage du chrono**, qui ne décide rien et passe à **rendu constant** — ses captures doivent être identiques au pixel à la ligne de base.
+>
+> **Trois décisions de Nathan à la création (2026-09-18)** : (1) story numérotée **11.5**, avec sa section ici et sa clé dans `sprint-status.yaml` ; (2) **aucune référence visuelle — intention seule**, pas même les `billiboard_scoreboard*` qui ont fondé le report : les propositions sortent de surcharges CSS et Nathan tranche au rendu ; (3) **tout en une story**, découpe comprise, géométrie du chrono **en premier**.
+>
+> **Combinaison inédite annoncée** (méthode de l'epic) : un rayon sur un conteneur contredirait « conteneurs à angles vifs » — règle datée de la 10.1 (« l'app doit se lire comme un outil tactile, pas comme une app mobile »). Exception à écrire dans `DESIGN.md` avant le code, ou règle intacte.
+>
+> ⚠️ **Piège structurant, inverse de celui de la 11.3** : là-bas un pixel qui bougeait était un bug ; ici des pixels **doivent** bouger, et le risque est qu'un écart **non décidé** se cache parmi les écarts voulus.
