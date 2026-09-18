@@ -40,18 +40,64 @@ DATE=$(date +%Y-%m-%d)
 SCENES="01-accueil 02-jds 03-parametrage-vide 04-popup-clavier-alpha 05-popup-pave-numerique 06-parametrage-rempli 07-scoreboard-jds 08-popup-saisie-serie 09-scoreboard-jds-en-partie 10-popup-decision 11-recap 12-scoreboard-3bandes"
 VIEWPORTS="1920x1080 1180x733 1133x744"
 
+# Liste CANONIQUE, figée avant l'analyse des arguments : `--scene` écrase `SCENES`, et c'est
+# contre celle-ci qu'on valide ce qu'on nous demande de scanner.
+KNOWN_SCENES="$SCENES"
+
 MODE=${1:-url}
 [ $# -gt 0 ] && shift
 
 BASE_URL="http://localhost:5173/"
+
+# Une option EN DERNIER ARGUMENT n'a pas de valeur : sous `set -u`, `$2` faisait avorter le
+# script sur « unbound variable », sans aucun des trois messages finaux et avec un code de
+# sortie hors convention (1 sous bash, 2 — « des constats » ! — sous dash). C'est le plantage
+# que l'AC8 vient de fermer dans `render-static.cjs` ; il renaissait ici (revue du 2026-09-18).
+need_value() {
+  [ "$2" -ge 2 ] || {
+    echo "design-check: $1 attend une valeur, et n'en a pas reçu." >&2
+    exit 1
+  }
+}
+
 while [ $# -gt 0 ]; do
   case "$1" in
-    --url) BASE_URL=$2; shift 2 ;;
-    --scene) SCENES=$2; shift 2 ;;
-    --viewport) VIEWPORTS=$2; shift 2 ;;
+    --url) need_value --url $#; BASE_URL=$2; shift 2 ;;
+    --scene) need_value --scene $#; SCENES=$2; shift 2 ;;
+    --viewport) need_value --viewport $#; VIEWPORTS=$2; shift 2 ;;
     *) echo "design-check: argument inconnu « $1 »" >&2; exit 1 ;;
   esac
 done
+
+# ⚠️ ZÉRO MESURE NE DOIT PAS SE LIRE « PROPRE ». Une liste vide (`--scene ""`) ne faisait
+# tourner aucune boucle et rendait `scans: 0, findings: 0, exitCode: 0` — et une scène mal
+# orthographiée (`07-scoreboard-JDS`, `07-scoreboard-jd`) faisait rendre `null` à `readScene()`,
+# donc scanner L'ACCUEIL douze fois en croyant mesurer le scoreboard. C'est le placebo décrit
+# en tête de `src/dev/scenes.ts`, déplacé d'un cran vers la ligne de commande (revue du 2026-09-18).
+if [ "$MODE" = url ]; then
+  [ -n "$(printf '%s' "$SCENES" | tr -d ' ')" ] || {
+    echo "design-check: aucune scène à scanner — une liste vide ne se lit pas « propre »." >&2
+    exit 1
+  }
+  [ -n "$(printf '%s' "$VIEWPORTS" | tr -d ' ')" ] || {
+    echo "design-check: aucun format à scanner — une liste vide ne se lit pas « propre »." >&2
+    exit 1
+  }
+  for scene in $SCENES; do
+    case " $KNOWN_SCENES " in
+      *" $scene "*) ;;
+      *) echo "design-check: scène inconnue « $scene » — elle scannerait l'accueil et rendrait « propre »." >&2
+         echo "  scènes connues : $KNOWN_SCENES" >&2
+         exit 1 ;;
+    esac
+  done
+  # Une `--url` portant déjà une query donnait `…/?dev=1/?scene=07-…` : Vite sert l'index,
+  # `readScene()` rend `null`, l'accueil est scanné. On refuse plutôt que de mesurer à côté.
+  case "$BASE_URL" in
+    *\?*) echo "design-check: --url ne doit pas porter de query (le script ajoute « ?scene= »)." >&2
+          exit 1 ;;
+  esac
+fi
 
 [ -x "$IMPECCABLE" ] || {
   echo "design-check: lanceur introuvable ($IMPECCABLE) depuis $(pwd)" >&2
@@ -75,7 +121,20 @@ trap cleanup EXIT INT TERM
 
 status=0
 # 1 (échec) l'emporte sur 2 (constats), qui l'emporte sur 0.
-note() { case "$1:$status" in 1:*) status=1 ;; 2:0) status=2 ;; esac; }
+# ⚠️ TOUT code hors {0,2} est un ÉCHEC, pas seulement `1`. La première version ne retenait que
+# le `1` littéral : un binaire tué (137), un Chromium en segfault (139), un `bad CPU type`
+# (126) ou un `command not found` (127) affichaient « ÉCHEC DE SCAN » dans le corps et
+# ressortaient `exit 0` — le placebo exact que l'AC1 existe pour empêcher (revue du 2026-09-18).
+note() {
+  case "$1" in
+    0) ;;
+    2) [ "$status" = 0 ] && status=2 ;;
+    *) status=1 ;;
+  esac
+}
+# Un scan a-t-il échoué ? Sert au journal comme à `write_run_file` : la frontière « échec »
+# est définie ICI, une seule fois, pour que les deux ne puissent pas diverger.
+failed() { [ "$1" != 0 ] && [ "$1" != 2 ]; }
 
 # Résumé lisible d'une mesure — une ligne par constat, fichier et ligne compris. Le détecteur
 # n'imprime rien sur stderr en mode `--json` : c'est la seule trace lisible, et elle vient du
@@ -120,12 +179,18 @@ scan() {
 write_run_file() {
   node -e '
     const fs = require("node:fs")
-    const [ledger, out, date, mode, base, exitCode] = process.argv.slice(1)
+    const [ledger, out, date, mode, base, exitCode, scenes, viewports] = process.argv.slice(1)
     const scans = fs.readFileSync(ledger, "utf8").split("\n").filter(Boolean).map((line) => {
       const [target, viewport, code, file] = line.split("\t")
       const entry = { target, exit: Number(code) }
       if (viewport) entry.viewport = viewport
-      if (Number(code) === 1) entry.error = fs.readFileSync(file, "utf8").trim()
+      // Même frontière que `failed()` côté shell : TOUT code hors {0,2} porte un message
+      // d’erreur, jamais un tableau de constats. Tester `=== 1` faisait tenter un JSON.parse
+      // sur le texte de stderr pour un code 127/139 : node mourait, aucune archive n’était
+      // écrite, et le script annonçait quand même « archivé » (revue du 2026-09-18).
+      // ⚠️ Apostrophe TYPOGRAPHIQUE obligatoire ici : ce bloc vit dans un `node -e '…'`,
+      // et une apostrophe droite y fermerait la chaîne du shell.
+      if (Number(code) !== 0 && Number(code) !== 2) entry.error = fs.readFileSync(file, "utf8").trim()
       else entry.findings = JSON.parse(fs.readFileSync(file, "utf8"))
       return entry
     })
@@ -133,11 +198,16 @@ write_run_file() {
       date, mode, detector: "impeccable 4.0.0 (lanceur du dépôt)",
       ...(mode === "url" ? { baseUrl: base } : {}),
       exitCode: Number(exitCode),
+      // PORTÉE du lancement. Sans elle, un `--scene`/`--viewport` restreint écrase le
+      // récapitulatif complet du même jour et devient indistinguable d’un scan complet qui
+      // aurait planté après la première mesure (revue du 2026-09-18). Un lancement partiel
+      // se dénonce désormais tout seul.
+      ...(mode === "url" ? { scenes: scenes.split(" ").filter(Boolean), viewports: viewports.split(" ").filter(Boolean) } : {}),
       scans: scans.length,
       findings: scans.reduce((n, s) => n + (s.findings?.length ?? 0), 0),
       results: scans,
     }, null, 1) + "\n")
-  ' "$LEDGER" "$RUN_FILE" "$DATE" "$MODE" "$BASE_URL" "$status"
+  ' "$LEDGER" "$RUN_FILE" "$DATE" "$MODE" "$BASE_URL" "$status" "$SCENES" "$VIEWPORTS"
 }
 
 case "$MODE" in
@@ -161,12 +231,20 @@ case "$MODE" in
     ;;
 esac
 
-write_run_file
+# ⚠️ L'archivage peut échouer (JSON tronqué, disque plein) : un récapitulatif absent ne doit
+# pas passer pour écrit, et surtout pas laisser croire que la passe s'est bien terminée.
+if write_run_file; then
+  archived=$RUN_FILE
+else
+  archived=""
+  status=1
+  echo "design-check: l'archivage a ÉCHOUÉ — aucun récapitulatif écrit" >&2
+fi
 
 case $status in
   0) echo "→ aucun constat (exit 0)" ;;
   2) echo "→ des constats sont sortis (exit 2)" ;;
   1) echo "→ au moins un scan a ÉCHOUÉ (exit 1) — rien n'est mesuré, ne pas lire « propre »" ;;
 esac
-echo "  archivé : $RUN_FILE"
+[ -n "$archived" ] && echo "  archivé : $archived"
 exit $status

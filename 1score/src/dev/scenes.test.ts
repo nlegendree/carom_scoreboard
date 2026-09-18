@@ -19,41 +19,55 @@ import mainSource from '../main.ts?raw'
 import homeSource from '../components/HomeScreen.vue?raw'
 import gameSource from '../views/GameView.vue?raw'
 
-// Les douze noms de capture du harnais (`scripts/render-static.cjs:113-180`), recopiés ici
-// À LA MAIN et volontairement : c'est le seul endroit qui vérifie que le vocabulaire des
-// scènes, celui des scans et celui des captures n'ont pas divergé. Un renommage d'un côté
-// doit rougir, pas se propager.
+// Les douze noms de capture, LUS dans le harnais lui-même. ⚠️ Ils étaient recopiés ici à la
+// main, sous un commentaire qui affirmait vérifier que le vocabulaire n'avait pas divergé :
+// il ne vérifiait que deux des trois sources. `render-static.cjs` n'était lu par aucun test,
+// et renommer `shot(page, f, '11-recap')` en `'11-recapitulatif'` ne faisait rien rougir
+// (revue du 2026-09-18). Les trois vocabulaires — scènes, scans, captures — sont désormais
+// confrontés à leur source, aucun n'est recopié.
+const readScript = (glob: Record<string, string>): string => String(Object.values(glob)[0])
+
+// Retire commentaires de ligne, commentaires de bloc et commentaires HTML, en gardant la
+// LONGUEUR du texte (chaque caractère retiré devient une espace) pour que les index restent
+// ceux de la source. Sans ça, un commentaire qui cite la garde se fait passer pour la garde.
+const stripComments = (source: string): string =>
+  source
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => ' '.repeat(m.length))
+    .replace(/<!--[\s\S]*?-->/g, (m) => ' '.repeat(m.length))
+    .replace(/\/\/[^\n]*/g, (m) => ' '.repeat(m.length))
+
 const HARNESS_NAMES = [
-  '01-accueil',
-  '02-jds',
-  '03-parametrage-vide',
-  '04-popup-clavier-alpha',
-  '05-popup-pave-numerique',
-  '06-parametrage-rempli',
-  '07-scoreboard-jds',
-  '08-popup-saisie-serie',
-  '09-scoreboard-jds-en-partie',
-  '10-popup-decision',
-  '11-recap',
-  '12-scoreboard-3bandes',
-]
+  ...readScript(
+    // `scripts/` est hors `src/` : le glob le rapatrie sans chemin relatif fragile.
+    import.meta.glob<string>('../../scripts/render-static.cjs', {
+      query: '?raw',
+      import: 'default',
+      eager: true,
+    }),
+  ).matchAll(/\bshot\(\s*page\s*,\s*\w+\s*,\s*'([^']+)'/g),
+].map((m) => m[1]!)
 
 describe('scènes de développement (?scene=)', () => {
   describe('vocabulaire', () => {
+    // Le harnais doit rendre douze noms : si la lecture cassait (renommage de `shot`,
+    // réécriture du parcours), `HARNESS_NAMES` serait vide et les deux contrôles suivants
+    // passeraient contre une liste vide. On le dit avant de s'en servir.
+    it('lit bien douze noms de capture dans le harnais', () => {
+      expect(HARNESS_NAMES).toHaveLength(12)
+    })
+
     it('reprend exactement les douze noms de capture du harnais', () => {
       expect([...SCENE_IDS]).toEqual(HARNESS_NAMES)
     })
 
     it('donne les mêmes identifiants au lanceur de scans', () => {
-      const script = String(
+      const script = readScript(
         // `scripts/` est hors `src/` : le glob le rapatrie sans chemin relatif fragile.
-        Object.values(
-          import.meta.glob<string>('../../scripts/design-check.sh', {
-            query: '?raw',
-            import: 'default',
-            eager: true,
-          }),
-        )[0],
+        import.meta.glob<string>('../../scripts/design-check.sh', {
+          query: '?raw',
+          import: 'default',
+          eager: true,
+        }),
       )
       const declared = /^SCENES="([^"]+)"$/m.exec(script)?.[1]?.split(' ') ?? []
       expect(declared).toEqual(HARNESS_NAMES)
@@ -99,15 +113,30 @@ describe('scènes de développement (?scene=)', () => {
       ['HomeScreen.vue', homeSource],
       ['GameView.vue', gameSource],
     ])('%s garde son appel aux scènes par import.meta.env.DEV', (_name, source) => {
-      const call = /(applyStoreScene|homeSceneState|gameSceneState|readScene)\s*\(/.exec(source)
+      // ⚠️ On cherche le `if (import.meta.env.DEV)` RÉEL, et dans une source DÉCOMMENTÉE.
+      // La première version cherchait la chaîne `import.meta.env.DEV` par `indexOf` : dans
+      // `main.ts` et `HomeScreen.vue`, sa première occurrence est le COMMENTAIRE qui explique
+      // la garde, deux lignes au-dessus de la garde elle-même. Supprimer le `if` en laissant
+      // le commentaire laissait donc le test VERT — vérifié par mutation — pendant que la
+      // table des douze scènes partait dans `dist/`. C'est le garde-fou le plus important de
+      // la story, et il ne gardait rien (revue du 2026-09-18).
+      const code = stripComments(source)
+      const call = /(applyStoreScene|homeSceneState|gameSceneState|readScene)\s*\(/.exec(code)
       expect(call, 'le fichier doit consommer les scènes').not.toBeNull()
-      const guard = source.indexOf('import.meta.env.DEV')
-      expect(guard, 'garde absente').toBeGreaterThanOrEqual(0)
-      expect(guard).toBeLessThan(call!.index)
+      const guard = code.indexOf('if (import.meta.env.DEV)')
+      expect(guard, 'garde `if (import.meta.env.DEV)` absente').toBeGreaterThanOrEqual(0)
+      expect(guard, 'la garde doit précéder le premier appel aux scènes').toBeLessThan(
+        call!.index,
+      )
     })
 
     it('scenes.ts ne porte pas la garde lui-même', () => {
-      expect(scenesSource).not.toMatch(/^(?!.*⚠️).*if\s*\(import\.meta\.env\.DEV/m)
+      // La garde appartient aux APPELANTS : posée ici, derrière un appel de fonction, elle
+      // laisserait la table des scènes dans le bundle (voir l'en-tête de `scenes.ts`).
+      // ⚠️ Sur la source DÉCOMMENTÉE : la version précédente s'appuyait sur un lookahead
+      // `(?!.*⚠️)` censé exempter les lignes de commentaire, mais aucune ligne du fichier ne
+      // le déclenchait — la garde était morte et n'aurait rien vu (revue du 2026-09-18).
+      expect(stripComments(scenesSource)).not.toMatch(/if\s*\(\s*import\.meta\.env\.DEV/)
     })
   })
 

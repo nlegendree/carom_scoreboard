@@ -82,7 +82,18 @@ const frontmatter = extractFrontmatter(design)
 function gradientStops(token: string): [number, number, number][] {
   const line = new RegExp(`^\\s*--gradient-${token}:\\s*([^;]+);`, 'm').exec(css)
   if (!line?.[1]) throw new Error(`--gradient-${token} absent de main.css`)
-  const stops = line[1].match(/#[0-9a-fA-F]{6}/g)
+  // ⚠️ `{6}` sans borne de fin acceptait un hexadécimal à 8 chiffres en jetant son alpha :
+  // `#3B82F6CC` se lisait `#3B82F6`, et le ratio se calculait contre un fond qui n'existe
+  // pas — le seul silence de cette fonction, alors qu'un `rgb()` ou un `color-mix()` lève
+  // (revue du 2026-09-18). On borne, et on refuse ce qu'on ne sait pas composer.
+  const alpha = line[1].match(/#[0-9a-fA-F]{8}\b/g)
+  if (alpha?.length) {
+    throw new Error(
+      `--gradient-${token} : arrêt avec canal alpha (${alpha.join(', ')}) — ` +
+        `le fond composé dépend de ce qu'il y a dessous, ce test ne sait pas le calculer`,
+    )
+  }
+  const stops = line[1].match(/#[0-9a-fA-F]{6}\b/g)
   if (!stops?.length) throw new Error(`--gradient-${token} : aucun arrêt hexadécimal lisible`)
   return stops.map(hex)
 }
@@ -118,6 +129,19 @@ interface MeasuredException {
   ratio: number
   where: string
   measuredOn: string
+  /**
+   * Les arrêts du dégradé TELS QU'ILS ÉTAIENT le jour de la mesure.
+   *
+   * ⚠️ Sans eux, l'exception est un cliquet à sens unique : la branche `if (exception)` ne
+   * lit pas `gradientStops()`, elle compare un littéral à un seuil. Éclaircir
+   * `--gradient-blue` dégradait le fond réel sous le libellé sans que rien ne rougisse, et
+   * le contrôle « exception devenue inutile » ne se déclenche que dans l'AUTRE sens — il
+   * exige `failsSomewhere`, qu'un dégradé plus clair rend encore plus vrai (revue du
+   * 2026-09-18). Une mesure au navigateur ne se recalcule pas depuis la source : ce qu'on
+   * peut vérifier, c'est que la surface mesurée n'a pas bougé. Si elle bouge, il faut
+   * remesurer — et le test le dit au lieu de couvrir.
+   */
+  measuredAgainst: string[]
   why: string
 }
 
@@ -128,6 +152,9 @@ const MEASURED_ON_SURFACE: Record<string, MeasuredException> = {
     ratio: 5.18,
     where: '72,2 % de la hauteur du bouton (et non en son milieu)',
     measuredOn: '2026-09-17',
+    // `--gradient-blue` au jour de la mesure. Changer un de ces deux arrêts invalide le
+    // 5,18:1 et doit faire REMESURER, pas passer en silence.
+    measuredAgainst: ['#3b82f6', '#1d4ed8'],
     why:
       "`PASSER LE TOUR` est en rôle `stat` (14 px sur tablette) : il n'est pas « grand texte » " +
       'et doit donc tenir 4,5:1, que le stop clair du dégradé bleu (#3B82F6, 3,68:1) ne tient ' +
@@ -151,12 +178,40 @@ function readVariants(): Variant[] {
   for (const entry of table[1].matchAll(/^ {2}([a-z]+):\s*\n?\s*'([^']+)'/gm)) {
     const [, name = '', classes = ''] = entry
     const gradient = /bg-\(image:--gradient-([a-z]+)\)/.exec(classes)?.[1]
+    // ⚠️ `/` ferme un `\b` en Tailwind : `text-white/90` matchait et son opacité disparaissait
+    // — à 80 % sur le bleu, le ratio réel tombe à ~2,5:1 quand ce test en calculait 3,68
+    // (revue du 2026-09-18). Une encre atténuée doit lever, comme une encre inconnue.
+    const faded = /\btext-white\/\d+/.exec(classes)
+    if (faded) {
+      throw new Error(
+        `variante « ${name} » : encre atténuée (${faded[0]}) — le fond composé dépend du ` +
+          `dégradé dessous, ce test ne sait pas le calculer`,
+      )
+    }
     const ink = /\btext-(white)\b/.exec(classes)?.[1]
     // Le rôle typographique est le `text-<x>` qui n'est ni une encre ni un utilitaire
     // d'alignement : on le reconnaît à sa présence dans le frontmatter de `DESIGN.md`.
-    const role = [...classes.matchAll(/\btext-([a-z][a-z0-9-]*)\b/g)]
+    // ⚠️ Un préfixe de variante Tailwind (`max-lg:`, `landscape:`) se termine par `:`, qui
+    // ouvre un `\b` : `max-lg:text-stat` serait lu comme un rôle ordinaire. Le test ne sait
+    // pas à quel format s'applique une variante — il refuse plutôt que de choisir le premier
+    // rôle venu, ce que faisait le `.find()` (revue du 2026-09-18).
+    const prefixed = /\b[a-z0-9-]+:text-([a-z][a-z0-9-]*)\b/.exec(classes)
+    if (prefixed && property(frontmatter, 'typography', prefixed[1]!, 'fontSize') !== undefined) {
+      throw new Error(
+        `variante « ${name} » : rôle typographique sous variante (${prefixed[0]}) — ` +
+          `ce test évalue une taille par format et ne sait pas laquelle s'applique`,
+      )
+    }
+    const roles = [...classes.matchAll(/(?<![a-z0-9:-])text-([a-z][a-z0-9-]*)\b/g)]
       .map((m) => m[1]!)
-      .find((candidate) => property(frontmatter, 'typography', candidate, 'fontSize') !== undefined)
+      .filter((candidate) => property(frontmatter, 'typography', candidate, 'fontSize') !== undefined)
+    if (roles.length > 1) {
+      throw new Error(
+        `variante « ${name} » : deux rôles typographiques (${roles.join(', ')}) — ` +
+          `lequel s'applique n'est pas lisible depuis la source`,
+      )
+    }
+    const role = roles[0]
     const weight = /\bfont-black\b/.test(classes) ? 900 : /\bfont-bold\b/.test(classes) ? 700 : 400
 
     if (!gradient || !ink || !role) continue
@@ -205,6 +260,25 @@ describe('CtaButton — contraste du libellé sur le fond réel (Story 11.4, AC4
     }
   })
 
+  // L'autre sens du cliquet : l'exception dispense de la règle sur la foi d'une mesure au
+  // navigateur, qui ne vaut que pour la surface mesurée ce jour-là. Si le dégradé bouge, le
+  // 5,18:1 ne dit plus rien du fond réel — et il faut remesurer, pas continuer à l'invoquer.
+  it('ne fait confiance à une mesure que si la surface mesurée n’a pas bougé', () => {
+    for (const [name, exception] of Object.entries(MEASURED_ON_SURFACE)) {
+      const variant = VARIANTS.find((v) => v.name === name)!
+      const now = gradientStops(variant.gradient).map(
+        (s) => `#${s.map((c) => c.toString(16).padStart(2, '0')).join('')}`,
+      )
+      expect(
+        now,
+        `exception « ${name} » : le dégradé --gradient-${variant.gradient} a changé depuis la ` +
+          `mesure du ${exception.measuredOn} (${exception.ratio}:1 à ${exception.where}). ` +
+          `Cette valeur ne décrit plus le fond réel : REMESURER au navigateur aux trois ` +
+          `formats, puis mettre à jour ratio et measuredAgainst.`,
+      ).toEqual(exception.measuredAgainst)
+    }
+  })
+
   // Le cœur : chaque variante, à chaque format, contre le pire arrêt de son dégradé —
   // sauf exception mesurée, qui est alors confrontée à SA mesure.
   for (const variant of VARIANTS) {
@@ -220,7 +294,19 @@ describe('CtaButton — contraste du libellé sur le fond réel (Story 11.4, AC4
 
       for (const { name, width } of VIEWPORTS) {
         it(`tient le seuil WCAG AA en ${name}`, () => {
-          const px = sizeAtWidth(size, width)!
+          // ⚠️ `sizeAtWidth(...)!` rendait `null` sur un `cqw`, un `min(…)`, un `rem` ou un
+          // `vh` — formes déjà présentes ailleurs dans le frontmatter. `threshold(null, w)`
+          // rendait alors 4,5 en silence, puis `px.toFixed(1)` dans le message d'échec jetait
+          // un `TypeError` qui ne nommait pas la cause (revue du 2026-09-18).
+          const resolved = sizeAtWidth(size, width)
+          if (resolved === null) {
+            throw new Error(
+              `variante « ${variant.name} » : la taille du rôle « ${variant.role} » ` +
+                `(${size}) ne se résout pas sur la largeur seule — ce contraste appartient ` +
+                `à la passe navigateur, pas à ce test`,
+            )
+          }
+          const px = resolved
           const need = threshold(px, variant.weight)
 
           if (exception) {

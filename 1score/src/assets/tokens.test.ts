@@ -17,6 +17,9 @@ import { extractFrontmatter, roleNames } from './designFrontmatter'
 // le recopient plus — miroir tenu DANS LES DEUX SENS pour de bon, comme `typography.test.ts`.
 // `none` et `full` sont exclus de `rounded` : ce sont les rayons de Tailwind (0 et 9999px),
 // pas des rôles du design system, et `main.css` n'a pas à les redéclarer.
+// ⚠️ Cette EXCLUSION-LÀ reste écrite à la main — « c'est un rayon Tailwind » n'est pas lisible
+// dans le frontmatter. Retirer `rounded: full` de `DESIGN.md` laissait 179 tests verts (revue
+// du 2026-09-18) ; le contrôle « chaque nom exclu existe encore », plus bas, referme le trou.
 const frontmatter = extractFrontmatter(design)
 const TAILWIND_RADII = ['none', 'full']
 const RADIUS_ROLES = roleNames(frontmatter, 'rounded').filter((r) => !TAILWIND_RADII.includes(r))
@@ -66,6 +69,16 @@ const COLOR_PREFIXES = ['bg', 'text', 'border', 'divide', 'ring', 'outline', 'fr
 describe('main.css — miroir DESIGN.md pour les rayons et les ombres (Story 11.2)', () => {
   // `css` (commentaires retirés) et non `source` : un token cité dans un commentaire ne
   // compte pas comme déclaré.
+  // Voir la note de `TAILWIND_RADII` : l'exclusion est manuelle, donc elle doit au moins
+  // rougir quand `DESIGN.md` perd l'entrée qu'elle prétend écarter.
+  it.each(TAILWIND_RADII)('keeps the excluded radius %s in DESIGN.md', (role) => {
+    expect(
+      roleNames(frontmatter, 'rounded'),
+      `« ${role} » est exclu de RADIUS_ROLES par ce test, mais DESIGN.md ne le déclare plus : ` +
+        `retirer l'exclusion, ou restaurer l'entrée`,
+    ).toContain(role)
+  })
+
   it.each(RADIUS_ROLES)('declares the --radius-%s token', (role) => {
     expect(css).toMatch(new RegExp(`^\\s*--radius-${role}:`, 'm'))
   })

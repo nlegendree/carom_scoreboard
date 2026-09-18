@@ -36,14 +36,20 @@ const VIEWPORT_CLAMPED_ROLES = TEXT_ROLES.filter(
 const TRACKING_ROLES = roleNames(frontmatter, 'tracking')
 
 // Tailles de boîte dérivées de la grille (frontmatter `spacing`). Deux exclusions, qui ont
-// chacune leur raison et qui se DÉRIVENT elles aussi :
+// chacune leur raison. ⚠️ Elles sont ÉCRITES À LA MAIN — contrairement à ce que cette note
+// affirmait, rien ne les dérive : « pas de `--size-*` » n'est pas lisible dans le
+// frontmatter. Retirer `spacing: md` de `DESIGN.md` laissait donc 238 tests verts (revue du
+// 2026-09-18). Le contrôle « chaque nom exclu existe encore » ci-dessous referme ce trou
+// sans prétendre dériver l'indérivable : si `DESIGN.md` perd une de ces entrées, on rougit.
+// Les deux raisons :
 //   — `base` et les pas `xs`…`2xl` sont les utilitaires numériques de Tailwind, pas des
 //     tailles de boîte nommées : ils ne produisent aucun `--size-*` ;
 //   — `clock-bleed` est porté par `--game-clock-bleed` (géométrie couplée, `CLAUDE.md` §10),
 //     pas par le namespace `--size-*`.
 const SPACING_STEPS = ['base', 'xs', 'sm', 'md', 'lg', 'xl', '2xl']
+const SPACING_EXCLUDED = [...SPACING_STEPS, 'clock-bleed']
 const SIZE_ROLES = roleNames(frontmatter, 'spacing').filter(
-  (role) => !SPACING_STEPS.includes(role) && role !== 'clock-bleed',
+  (role) => !SPACING_EXCLUDED.includes(role),
 )
 
 const declared = (namespace: string): string[] =>
@@ -66,6 +72,18 @@ describe('main.css — échelle typographique (Story 11.1)', () => {
 
   it.each(SIZE_ROLES)('declares the --size-%s token', (role) => {
     expect(source).toMatch(new RegExp(`^\\s*--size-${role}:`, 'm'))
+  })
+
+  // ⚠️ L'exclusion elle-même est écrite à la main : sans ce contrôle, retirer `spacing: md`
+  // de `DESIGN.md` ne rougissait nulle part (l'entrée ne produit aucun `--size-*`, donc le
+  // miroir ne la voit pas non plus). On exige que chaque nom exclu EXISTE ENCORE : le trou
+  // se referme sans prétendre dériver ce qui ne se dérive pas (revue du 2026-09-18).
+  it.each(SPACING_EXCLUDED)('keeps the excluded spacing entry %s in DESIGN.md', (role) => {
+    expect(
+      roleNames(frontmatter, 'spacing'),
+      `« ${role} » est exclu de SIZE_ROLES par ce test, mais DESIGN.md ne le déclare plus : ` +
+        `retirer l'exclusion, ou restaurer l'entrée`,
+    ).toContain(role)
   })
 
   // Le miroir dans l'autre sens : un token qui n'est pas dans DESIGN.md n'existe pas

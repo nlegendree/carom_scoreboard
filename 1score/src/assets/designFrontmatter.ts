@@ -31,7 +31,23 @@ export function extractFrontmatter(markdown: string): string {
 // Retire les guillemets d'une valeur scalaire. Le frontmatter en pose sur les chaînes qui
 // contiennent une virgule ou un `#` (`"clamp(20px, 2vw, 38px)"`, `"#FFFFFF"`) et pas sur
 // les nombres (`fontWeight: 900`) : les deux formes se lisent ici.
-const unquote = (value: string): string => value.replace(/^["'](.*)["']$/, '$1').trim()
+const unquote = (value: string, section: string, key: string): string => {
+  const quoted = /^"(.*)"$|^'(.*)'$/.exec(value.trim())
+  if (quoted) return (quoted[1] ?? quoted[2] ?? '').trim()
+  // ⚠️ Un commentaire de fin de ligne sur une valeur NON guillemetée était aspiré dans la
+  // valeur : `tappable: 8px # rayon` rendait `"8px # rayon"`, que `sizeAtWidth` refuse
+  // ensuite en rendant `null` — donc un rôle qui disparaît d'une liste, ou un seuil WCAG
+  // calculé sur une taille fantôme (revue du 2026-09-18). YAML coupe ici ; ce parseur ne
+  // sait pas le faire sans ambiguïté sur les couleurs (`#FFFFFF`), alors il le dit.
+  if (value.includes('#')) {
+    throw new Error(
+      `DESIGN.md : « ${section}.${key} » porte un « # » dans une valeur non guillemetée ` +
+        `(commentaire de fin de ligne ? couleur ?) — mettre la valeur entre guillemets : ` +
+        `${JSON.stringify(value)}`,
+    )
+  }
+  return value.trim()
+}
 
 /**
  * Lit une section de premier niveau (`colors`, `typography`, `tracking`, `rounded`,
@@ -45,13 +61,47 @@ export function readSection(frontmatter: string, section: string): FrontmatterSe
   const start = lines.findIndex((line) => line === `${section}:`)
   if (start === -1) throw new Error(`DESIGN.md : section « ${section} » absente du frontmatter`)
 
+  // Une section déclarée deux fois : seule la première était lue, la seconde disparaissait
+  // sans un mot (revue du 2026-09-18). Le miroir aurait alors comparé `main.css` à une
+  // version de `DESIGN.md` que personne ne voit en le lisant.
+  const again = lines.findIndex((line, i) => i > start && line === `${section}:`)
+  if (again !== -1) {
+    throw new Error(
+      `DESIGN.md : section « ${section} » déclarée deux fois (lignes ${start + 1} et ${again + 1})`,
+    )
+  }
+
   const out: FrontmatterSection = {}
   let current: string | null = null
 
+  // Une clé ne peut pas être écrasée en silence : la dernière gagnait, et le miroir se
+  // vérifiait contre une valeur invisible à la lecture (revue du 2026-09-18).
+  const set = (owner: string, key: string, value: string, seen: object): void => {
+    if (key in seen) {
+      throw new Error(`DESIGN.md : clé « ${key} » déclarée deux fois dans « ${owner} »`)
+    }
+    ;(seen as Record<string, string>)[key] = value
+  }
+
   for (const line of lines.slice(start + 1)) {
     if (line.trim() === '') continue
+    // ⚠️ Une TABULATION n'est pas une espace : `startsWith(' ')` était faux, la boucle
+    // sortait par `break` et le reste de la section disparaissait EN SILENCE — précisément
+    // ce que l'en-tête promet d'empêcher (revue du 2026-09-18). YAML interdit la tabulation
+    // en indentation : on la refuse en le disant.
+    if (line.startsWith('\t')) {
+      throw new Error(
+        `DESIGN.md : indentation par TABULATION dans la section « ${section} » ` +
+          `(YAML l'interdit, et elle tronquait la section en silence) : ${JSON.stringify(line)}`,
+      )
+    }
+    // Un commentaire en colonne 0 au milieu d'une section terminait la section par `break`,
+    // avec le même effet. Il est licite en YAML : on le saute, on ne s'arrête pas dessus.
+    if (/^#/.test(line)) continue
     // Une ligne non indentée termine la section : c'est la suivante.
     if (!line.startsWith(' ')) break
+    // Un commentaire indenté est licite lui aussi, et levait auparavant.
+    if (/^\s*#/.test(line)) continue
 
     const entry = /^ {2}([\w-]+):\s*(.*)$/.exec(line)
     if (entry) {
@@ -59,10 +109,11 @@ export function readSection(frontmatter: string, section: string): FrontmatterSe
       // `label:` sans valeur ouvre un objet ; `tappable: "8px"` est un scalaire.
       if (value === '') {
         current = key
+        set(section, key, '', out)
         out[key] = {}
       } else {
         current = null
-        out[key] = unquote(value)
+        set(section, key, unquote(value, section, key), out)
       }
       continue
     }
@@ -70,7 +121,7 @@ export function readSection(frontmatter: string, section: string): FrontmatterSe
     const property = /^ {4}([\w-]+):\s*(.*)$/.exec(line)
     if (property && current !== null) {
       const [, key = '', value = ''] = property
-      ;(out[current] as Record<string, string>)[key] = unquote(value)
+      set(`${section}.${current}`, key, unquote(value, section, key), out[current] as object)
       continue
     }
 
@@ -121,5 +172,9 @@ export function sizeAtWidth(size: string, viewportWidth: number): number | null 
   if (!clamp) return null
   const [, min = '0', vw = '0', max = '0'] = clamp
   const preferred = (Number(vw) / 100) * viewportWidth
-  return Math.min(Math.max(preferred, Number(min)), Number(max))
+  // Ordre de CSS Values 4 : `clamp(MIN, VAL, MAX)` ≡ `max(MIN, min(VAL, MAX))` — le MIN
+  // l'emporte quand les bornes sont inversées. La forme précédente, `min(max(VAL, MIN), MAX)`,
+  // rendait 20 là où le navigateur rend 38 sur `clamp(38px, 2vw, 20px)` : 18 px d'écart, de
+  // quoi faire basculer le seuil WCAG de 3:1 à 4,5:1 (revue du 2026-09-18).
+  return Math.max(Number(min), Math.min(preferred, Number(max)))
 }
