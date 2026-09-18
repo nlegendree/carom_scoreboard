@@ -1,0 +1,80 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "*scene=03-parametrage-vide*"
+        ],
+        "createdAt": "2026-09-17T20:53:51.310Z",
+        "reason": "ÉCART ASSUMÉ. Les boîtes NOM et DISTANCE de PlayerSetupCard sont des CHAMPS DE SAISIE, pas des cartes : boîte tapable (rounded-tappable, bordure, bg-black/8, shadow-light-edge-field) posée sur la carte joueur. Affordance voulue depuis la Story 10.3 (saisie en place, sans champ natif ni clavier système — interdit durable de DESIGN.md). Le détecteur est calibré web/SaaS et lit toute boîte arrondie remplie comme une carte. Voir DESIGN.md > Écarts assumés au détecteur (Story 11.4)."
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "*scene=04-popup-clavier-alpha*"
+        ],
+        "createdAt": "2026-09-17T20:53:51.328Z",
+        "reason": "ÉCART ASSUMÉ. Les boîtes NOM et DISTANCE de PlayerSetupCard sont des CHAMPS DE SAISIE, pas des cartes : boîte tapable (rounded-tappable, bordure, bg-black/8, shadow-light-edge-field) posée sur la carte joueur. Affordance voulue depuis la Story 10.3 (saisie en place, sans champ natif ni clavier système — interdit durable de DESIGN.md). Le détecteur est calibré web/SaaS et lit toute boîte arrondie remplie comme une carte. Voir DESIGN.md > Écarts assumés au détecteur (Story 11.4)."
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "*scene=05-popup-pave-numerique*"
+        ],
+        "createdAt": "2026-09-17T20:53:51.346Z",
+        "reason": "ÉCART ASSUMÉ. Les boîtes NOM et DISTANCE de PlayerSetupCard sont des CHAMPS DE SAISIE, pas des cartes : boîte tapable (rounded-tappable, bordure, bg-black/8, shadow-light-edge-field) posée sur la carte joueur. Affordance voulue depuis la Story 10.3 (saisie en place, sans champ natif ni clavier système — interdit durable de DESIGN.md). Le détecteur est calibré web/SaaS et lit toute boîte arrondie remplie comme une carte. Voir DESIGN.md > Écarts assumés au détecteur (Story 11.4)."
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "*scene=06-parametrage-rempli*"
+        ],
+        "createdAt": "2026-09-17T20:53:51.365Z",
+        "reason": "ÉCART ASSUMÉ. Les boîtes NOM et DISTANCE de PlayerSetupCard sont des CHAMPS DE SAISIE, pas des cartes : boîte tapable (rounded-tappable, bordure, bg-black/8, shadow-light-edge-field) posée sur la carte joueur. Affordance voulue depuis la Story 10.3 (saisie en place, sans champ natif ni clavier système — interdit durable de DESIGN.md). Le détecteur est calibré web/SaaS et lit toute boîte arrondie remplie comme une carte. Voir DESIGN.md > Écarts assumés au détecteur (Story 11.4)."
+      },
+      {
+        "rule": "text-occlusion",
+        "value": "*",
+        "files": [
+          "*scene=07-scoreboard-jds*"
+        ],
+        "createdAt": "2026-09-17T20:53:51.384Z",
+        "reason": "FAUX POSITIF PROUVÉ. Le libellé REP n'est recouvert par rien : recouvrement vertical mesuré 0,0 px (REP bas 386,1 / nombre haut 386,1 à 1920) et lisibilité vérifiée en capture. La règle reconstruit la boîte d'encre du nombre de reprise à partir des métriques de la police, plus haute que sa boîte d'élément à cause de leading-none, et la fait retomber sur REP. Prouvé par mutation : leading-none -> leading-normal ferme le constat sans rien changer au rendu perçu. Voir DESIGN.md > Écarts assumés au détecteur (Story 11.4)."
+      },
+      {
+        "rule": "text-occlusion",
+        "value": "*",
+        "files": [
+          "*scene=09-scoreboard-jds-en-partie*"
+        ],
+        "createdAt": "2026-09-17T20:53:51.408Z",
+        "reason": "FAUX POSITIF PROUVÉ. Le libellé REP n'est recouvert par rien : recouvrement vertical mesuré 0,0 px (REP bas 386,1 / nombre haut 386,1 à 1920) et lisibilité vérifiée en capture. La règle reconstruit la boîte d'encre du nombre de reprise à partir des métriques de la police, plus haute que sa boîte d'élément à cause de leading-none, et la fait retomber sur REP. Prouvé par mutation : leading-none -> leading-normal ferme le constat sans rien changer au rendu perçu. Voir DESIGN.md > Écarts assumés au détecteur (Story 11.4)."
+      },
+      {
+        "rule": "text-overflow",
+        "value": "*",
+        "files": [
+          "*scene=08-popup-saisie-serie*"
+        ],
+        "createdAt": "2026-09-17T20:53:51.429Z",
+        "reason": "FAUX POSITIF PROUVÉ. Le débordement mesuré est le VOILE DE FLASH DE FRAPPE, enfant absolu volontairement débordant (-inset-x-2 -inset-y-1, soit 2 unités de grille = 26 px à 1920 et 16 px sur tablette — exactement les chiffres du constat). Il est pointer-events-none, animé jusqu'à opacity 0, et la valeur de série garde 236 px de dégagement de chaque côté : rien n'est rogné ni percuté. Prouvé par mutation : -inset-x-2 -inset-y-1 -> inset-0 ferme le constat aux trois formats. Voir DESIGN.md > Écarts assumés au détecteur (Story 11.4)."
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "*scene=10-popup-decision*"
+        ],
+        "createdAt": "2026-09-17T20:53:51.448Z",
+        "reason": "FAUX POSITIF PROUVÉ. La règle ne sait pas résoudre la composition à travers un backdrop-filter et mesure ce qui se trouve SOUS la carte, invisible. Preuve par mutation : à opacité 100 % — où rien ne peut transparaître et où le blanc sur #272E49 vaut 13,35:1 — le constat SORT ENCORE (2,1 à 3,0:1) ; il ne se ferme qu'en retirant le flou, jamais en montant l'opacité (88/94/97/100 % tous signalés). La médiane rapportée par le détecteur lui-même, 13,2 à 13,8:1, est la vraie valeur. Portée à la seule scène 10 : low-contrast reste ACTIVE partout ailleurs, c'est la règle dont l'AC4 dépend. Voir DESIGN.md > Écarts assumés au détecteur (Story 11.4)."
+      }
+    ]
+  }
+}

@@ -3,18 +3,24 @@ import { describe, it, expect } from 'vitest'
 // types Node. `main.css?raw` ne rend le TEXTE que grâce à `test.css.include` dans
 // `vitest.config.ts` ; les `.vue?raw` et `keyClasses.ts?raw` passent sans réglage.
 import source from './main.css?raw'
+// `server.fs.allow: ['..']` dans `vitest.config.ts` rend cet import possible : `DESIGN.md`
+// vit à la RACINE DU DÉPÔT, hors de la racine Vite (Story 11.4, AC5).
+import design from '../../../DESIGN.md?raw'
+import { extractFrontmatter, roleNames } from './designFrontmatter'
 
 // Story 11.2 (AC3) : DESIGN.md nomme les rayons et les ombres, `main.css` les déclare, aucun
 // token de couleur, d'image, de rayon ou d'ombre n'est déclaré sans consommateur, et aucun
 // gabarit n'écrit une ombre ou un rayon en valeur arbitraire. happy-dom ne calcule aucun
 // CSS : ce fichier verrouille la SOURCE, jamais le rendu (le rendu se vérifie au navigateur).
 //
-// Les deux listes recopient le frontmatter de DESIGN.md (`rounded` hors `none` / `full`, qui
-// sont Tailwind, et `shadows`) : miroir tenu DANS LES DEUX SENS, comme `typography.test.ts`.
-const RADIUS_ROLES = ['tappable', 'popup']
-const SHADOW_ROLES = [
-  'key-relief', 'key-relief-active', 'light-edge-start', 'light-edge-field', 'popup', 'sidebar',
-]
+// Story 11.4 (AC5) : les deux listes sont DÉRIVÉES du frontmatter de `DESIGN.md`, elles ne
+// le recopient plus — miroir tenu DANS LES DEUX SENS pour de bon, comme `typography.test.ts`.
+// `none` et `full` sont exclus de `rounded` : ce sont les rayons de Tailwind (0 et 9999px),
+// pas des rôles du design system, et `main.css` n'a pas à les redéclarer.
+const frontmatter = extractFrontmatter(design)
+const TAILWIND_RADII = ['none', 'full']
+const RADIUS_ROLES = roleNames(frontmatter, 'rounded').filter((r) => !TAILWIND_RADII.includes(r))
+const SHADOW_ROLES = roleNames(frontmatter, 'shadows')
 
 const templates = import.meta.glob<string>('../**/*.vue', {
   query: '?raw',

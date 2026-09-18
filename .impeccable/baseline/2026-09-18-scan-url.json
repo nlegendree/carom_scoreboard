@@ -1,0 +1,227 @@
+{
+ "date": "2026-09-18",
+ "mode": "url",
+ "detector": "impeccable 4.0.0 (lanceur du dépôt)",
+ "baseUrl": "http://localhost:5173/",
+ "exitCode": 0,
+ "scans": 36,
+ "findings": 0,
+ "results": [
+  {
+   "target": "01-accueil",
+   "exit": 0,
+   "viewport": "1920x1080",
+   "findings": []
+  },
+  {
+   "target": "01-accueil",
+   "exit": 0,
+   "viewport": "1180x733",
+   "findings": []
+  },
+  {
+   "target": "01-accueil",
+   "exit": 0,
+   "viewport": "1133x744",
+   "findings": []
+  },
+  {
+   "target": "02-jds",
+   "exit": 0,
+   "viewport": "1920x1080",
+   "findings": []
+  },
+  {
+   "target": "02-jds",
+   "exit": 0,
+   "viewport": "1180x733",
+   "findings": []
+  },
+  {
+   "target": "02-jds",
+   "exit": 0,
+   "viewport": "1133x744",
+   "findings": []
+  },
+  {
+   "target": "03-parametrage-vide",
+   "exit": 0,
+   "viewport": "1920x1080",
+   "findings": []
+  },
+  {
+   "target": "03-parametrage-vide",
+   "exit": 0,
+   "viewport": "1180x733",
+   "findings": []
+  },
+  {
+   "target": "03-parametrage-vide",
+   "exit": 0,
+   "viewport": "1133x744",
+   "findings": []
+  },
+  {
+   "target": "04-popup-clavier-alpha",
+   "exit": 0,
+   "viewport": "1920x1080",
+   "findings": []
+  },
+  {
+   "target": "04-popup-clavier-alpha",
+   "exit": 0,
+   "viewport": "1180x733",
+   "findings": []
+  },
+  {
+   "target": "04-popup-clavier-alpha",
+   "exit": 0,
+   "viewport": "1133x744",
+   "findings": []
+  },
+  {
+   "target": "05-popup-pave-numerique",
+   "exit": 0,
+   "viewport": "1920x1080",
+   "findings": []
+  },
+  {
+   "target": "05-popup-pave-numerique",
+   "exit": 0,
+   "viewport": "1180x733",
+   "findings": []
+  },
+  {
+   "target": "05-popup-pave-numerique",
+   "exit": 0,
+   "viewport": "1133x744",
+   "findings": []
+  },
+  {
+   "target": "06-parametrage-rempli",
+   "exit": 0,
+   "viewport": "1920x1080",
+   "findings": []
+  },
+  {
+   "target": "06-parametrage-rempli",
+   "exit": 0,
+   "viewport": "1180x733",
+   "findings": []
+  },
+  {
+   "target": "06-parametrage-rempli",
+   "exit": 0,
+   "viewport": "1133x744",
+   "findings": []
+  },
+  {
+   "target": "07-scoreboard-jds",
+   "exit": 0,
+   "viewport": "1920x1080",
+   "findings": []
+  },
+  {
+   "target": "07-scoreboard-jds",
+   "exit": 0,
+   "viewport": "1180x733",
+   "findings": []
+  },
+  {
+   "target": "07-scoreboard-jds",
+   "exit": 0,
+   "viewport": "1133x744",
+   "findings": []
+  },
+  {
+   "target": "08-popup-saisie-serie",
+   "exit": 0,
+   "viewport": "1920x1080",
+   "findings": []
+  },
+  {
+   "target": "08-popup-saisie-serie",
+   "exit": 0,
+   "viewport": "1180x733",
+   "findings": []
+  },
+  {
+   "target": "08-popup-saisie-serie",
+   "exit": 0,
+   "viewport": "1133x744",
+   "findings": []
+  },
+  {
+   "target": "09-scoreboard-jds-en-partie",
+   "exit": 0,
+   "viewport": "1920x1080",
+   "findings": []
+  },
+  {
+   "target": "09-scoreboard-jds-en-partie",
+   "exit": 0,
+   "viewport": "1180x733",
+   "findings": []
+  },
+  {
+   "target": "09-scoreboard-jds-en-partie",
+   "exit": 0,
+   "viewport": "1133x744",
+   "findings": []
+  },
+  {
+   "target": "10-popup-decision",
+   "exit": 0,
+   "viewport": "1920x1080",
+   "findings": []
+  },
+  {
+   "target": "10-popup-decision",
+   "exit": 0,
+   "viewport": "1180x733",
+   "findings": []
+  },
+  {
+   "target": "10-popup-decision",
+   "exit": 0,
+   "viewport": "1133x744",
+   "findings": []
+  },
+  {
+   "target": "11-recap",
+   "exit": 0,
+   "viewport": "1920x1080",
+   "findings": []
+  },
+  {
+   "target": "11-recap",
+   "exit": 0,
+   "viewport": "1180x733",
+   "findings": []
+  },
+  {
+   "target": "11-recap",
+   "exit": 0,
+   "viewport": "1133x744",
+   "findings": []
+  },
+  {
+   "target": "12-scoreboard-3bandes",
+   "exit": 0,
+   "viewport": "1920x1080",
+   "findings": []
+  },
+  {
+   "target": "12-scoreboard-3bandes",
+   "exit": 0,
+   "viewport": "1180x733",
+   "findings": []
+  },
+  {
+   "target": "12-scoreboard-3bandes",
+   "exit": 0,
+   "viewport": "1133x744",
+   "findings": []
+  }
+ ]
+}

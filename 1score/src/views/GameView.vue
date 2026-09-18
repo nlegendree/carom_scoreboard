@@ -14,6 +14,7 @@ import GameSummary from '../components/GameSummary.vue'
 import SideBar from '../components/SideBar.vue'
 import type { PlayerId, TableSide } from '../types/game'
 import type { PromptAction, SideBarItem } from '../types/ui'
+import { readScene, gameSceneState } from '../dev/scenes'
 
 const gameStore = useGameStore()
 const {
@@ -217,6 +218,16 @@ function validateEntry(): void {
 // survivre à un rechargement. Le second picto de la colonne, RECOMMENCER (1.15), suit la
 // même règle : confirmation obligatoire, état local (`restartPromptOpen`, plus bas).
 const exitPromptOpen = ref(false)
+
+// Story 11.4 — semis de la part ÉCRAN d'une scène `?scene=`. `10-popup-decision` est la
+// seule concernée : le store ne connaît pas cette pop-up, et c'est voulu (une confirmation
+// n'est pas un état de partie). UNE SEULE FOIS, AU SETUP, garde au point d'appel — mêmes
+// raisons que dans `main.ts` et `HomeScreen` (`src/dev/scenes.ts`, en-tête).
+if (import.meta.env.DEV) {
+  const scene = readScene()
+  const seed = scene ? gameSceneState(scene) : null
+  if (seed?.exitPromptOpen !== undefined) exitPromptOpen.value = seed.exitPromptOpen
+}
 
 function leaveGame(): void {
   if (!canUndo.value) {

@@ -2120,3 +2120,17 @@ So that le design system se maintient mécaniquement, sans repasser par une tabl
 **When** l'epic est close
 **Then** `/impeccable audit` est rejoué et son score consigné à côté de la ligne de base ; `DESIGN.md` est régénéré (`/impeccable document`) et relu ; `deferred-work.md` reçoit les reports restants
 **And** le critère de sortie est vérifié sur la fiche de la première story de l'Epic 4 : zéro composant de base créé, zéro token ajouté — sinon la brique manquante est nommée
+
+> **✅ Livrée le 2026-09-17 (dev-story).** 1095 tests / 32 fichiers, build vert, `src/stores/` intact, 36 scans propres. Ré-audit : **19/20** contre 14/20 de ligne de base (a11y 3, perf 4, responsive 4, theming 4, intégrité 4). Détail dans la fiche `11-4-garde-fou-outille-scans-contraste-et-ecarts-documentes.md`.
+>
+> **Deux décisions de Nathan (2026-09-17)** : la 11.4 passe **avant** la passe de rendu V1.2 (le ré-audit mesure donc la passe design system, pas le design final ; la passe de rendu le rejouera en clôture) ; les écrans deviennent adressables par **`?scene=`** lu avant le premier rendu et absent du build (les captures HTML en `file://` et le rejeu de gestes sont écartés — `detect` ne sait pas attendre).
+>
+> **Quatre écarts au texte des AC ci-dessus, assumés et documentés** :
+> 1. **Lanceur du dépôt au lieu de `npx impeccable`** — `npx` téléchargerait la 4.1.0 alors que le dépôt embarque la 4.0.0 : deux lignes de base incomparables. Raison écrite dans `README.md` et dans l'en-tête de `scripts/design-check.sh`.
+> 2. **`--reason` n'existe que sur `ignores add-value`** (jamais sur `add-rule` / `add-file`) : les huit écarts sont donc encodés en `add-value` scopés par scène, **aucun `ignoreRules` nu**, et la section `DESIGN.md` › Écarts assumés au détecteur porte le détail mesuré.
+> 3. **Critère de sortie instruit en LISTE DE CONTRÔLE** et non vérifié : l'écran d'identification joueur de l'Epic 4 n'existe pas, sa fiche non plus. La liste est dans la fiche de la 11.4, à dérouler à la création de la première story de l'Epic 4.
+> 4. **`DESIGN.md` relu, pas régénéré** (`/impeccable document` en relecture) : le document porte des décisions datées de Nathan qu'aucune régénération ne doit effacer.
+>
+> ⚠️ **Le détecteur ne voit PAS le contraste des libellés de CTA** — démontré par mutation : les deux P1 de l'audit réintroduits ne ressortent pas, parce que la règle `low-contrast` ne résout le fond que sur l'élément qui porte le texte et que `CtaButton` met le dégradé sur le `<button>`. Le contraste des six CTA est donc tenu par `CtaButton.contrast.test.ts`, depuis la source, vérifié par mutation. La passe navigateur reste obligatoire.
+>
+> ⚠️ **L'epic ne se clôt PAS sur cette story** : la passe de rendu V1.2 suit, et c'est elle qui rejouera l'audit en dernier.

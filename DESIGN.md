@@ -320,7 +320,7 @@ Une palette resserrée bleus / marine / rouge, posée sur les deux seuls aplats 
 
 ### Primary
 - **Bleu roi** (#1D4ED8) : LE bleu du produit depuis la Story 11.2 (Nathan, au rendu, sur le marine Cueuny : « tous les CTA bleus comme ça ») ; il remplace le bleu drap #0573BB de l'Epic 10, médiane du drap Simonis, qui ne s'accordait plus au marine. Point d'arrivée du dégradé bleu ; jamais seul sur un bouton.
-- **Bleu roi clair** (#3B82F6) : point de départ du dégradé bleu (`--gradient-blue`, 160°, bleu roi clair → bleu roi). Tuiles de mode disponibles, CTA de réglage (`CHANGER DE BILLE`, `CHANGER DE CÔTÉ`), CTA de saisie de la barre basse, `PASSER LE TOUR`, `VALIDER` et tout CTA principal de pop-up. Blanc dessus : 3,68:1 sur le stop clair (texte ≥ 20 px gras), 4,95:1 au milieu du dégradé, là où se pose un libellé `stat`.
+- **Bleu roi clair** (#3B82F6) : point de départ du dégradé bleu (`--gradient-blue`, 160°, bleu roi clair → bleu roi). Tuiles de mode disponibles, CTA de réglage (`CHANGER DE BILLE`, `CHANGER DE CÔTÉ`), CTA de saisie de la barre basse, `PASSER LE TOUR`, `VALIDER` et tout CTA principal de pop-up. Blanc dessus : 3,68:1 sur le stop clair (tenable seulement par du « grand texte », soit ≥ 20 px gras), 5,18:1 à 72 % de la hauteur, là où le picto repousse le libellé `stat` de `PASSER LE TOUR` (mesuré le 2026-09-17, Story 11.4).
 - **Bleu moyen / Bleu sombre** (#0668AD → #033F6B) et **Bleu nuit / Bleu abysse** (#05508A → #022B4D) : les deux dégradés sombres des tuiles `BIENTÔT` (Quilles, Casin). Ils disent l'inactivité autant que le badge. Une tuile qui s'ouvre bascule sur le dégradé bleu.
 
 ### Secondary
@@ -460,7 +460,7 @@ Le relief est réservé à **ce qui se tape**, à **ce qui flotte** et à **la b
 **Six variantes, un seul gabarit** — `CtaButton.vue` depuis la Story 11.3 (contrat en fin de section). Un principe commun : un gros CTA à libellé en majuscules, cible ≥ 90 px, retour d'appui instantané, rayon tapable, encre blanche.
 - **CTA accent** (pop-ups) : dégradé bleu, blanc, `label` 900, rayon tapable (8 px), largeur donnée par l'appelant, `brightness(0.9)` à l'appui. `VALIDER` porte en bas une barre de rebours blanche de 16 px (`h-2`) qui se remplit en 3 s à chaque frappe (auto-validation).
 - **CTA neutre** (pop-ups) : dégradé ardoise opaque, blanc, sans contour. `ANNULER` prend un tiers de la largeur, `VALIDER` le reste. Il **s'éclaircit** à l'appui (`brightness(1.25)`) là où tous les autres s'assombrissent — c'est le seul retour d'appui du neutre depuis la Story 11.3 : les trois hôtes de saisie portaient `brightness(0.9)`, la pop-up de décision `1.25`, et le même objet ne peut pas réagir de deux façons.
-- **`PASSER LE TOUR`** : dégradé bleu (depuis la 11.2 : une action de jeu, pas un retour), rayon tapable, pleine largeur de colonne, picto au-dessus du libellé en `stat` — le libellé se pose au milieu du dégradé (4,95:1). ⚠️ **Famille à part, et c'est assumé** : l'AC d'`epics.md` en prévoyait cinq, `CtaButton` en porte six. Picto au-dessus (et non en ligne) et rôle `stat` (et non `label`) : l'absorber dans `accent` aurait demandé deux dérogations dans un composant fait pour en supprimer (écart tranché à la Story 11.3). L'état inactif, lui, n'est plus un motif de séparation — il est commun aux six depuis la revue du 2026-09-17.
+- **`PASSER LE TOUR`** : dégradé bleu (depuis la 11.2 : une action de jeu, pas un retour), rayon tapable, pleine largeur de colonne, picto au-dessus du libellé en `stat` — le picto le repousse à **72,2 % de la hauteur** du bouton, donc dans la partie sombre du dégradé à 160° : fond `#2a64e5`, **5,18:1** aux deux formats tablette et 5,25:1 à 1920 (mesuré au pixel le 2026-09-17, Story 11.4). ⚠️ La valeur « 4,95:1 au milieu du dégradé » annoncée jusque-là était une estimation, et le libellé n'est pas au milieu ; la mesure la remplace. C'est ce qui ferme le report de la revue de la 11.2 SANS monter le rôle en `label` : à 14 px/900 le seuil est 4,5:1, et 5,18:1 le tient — le stop clair (#3B82F6, 3,68:1) ne le tiendrait pas, mais le libellé ne s'y pose pas. Verrouillé par `CtaButton.contrast.test.ts`, exception à retrait automatique. ⚠️ **Famille à part, et c'est assumé** : l'AC d'`epics.md` en prévoyait cinq, `CtaButton` en porte six. Picto au-dessus (et non en ligne) et rôle `stat` (et non `label`) : l'absorber dans `accent` aurait demandé deux dérogations dans un composant fait pour en supprimer (écart tranché à la Story 11.3). L'état inactif, lui, n'est plus un motif de séparation — il est commun aux six depuis la revue du 2026-09-17.
 - **CTA de réglage** (paramétrage) : dégradé bleu, rayon tapable, picto 24 px en ligne devant le libellé en `label` 700 (monté de `stat` par la 11.1 : c'est la taille qui fait tenir le contraste AA), empilés pleine largeur.
 - **`DÉMARRER`** : dégradé rouge, rayon tapable, `start-button` (110 px sur tablette), chevron nu à gauche, libellé `start-button` interlettré `label`, filet de lumière `light-edge-start`. Le seul CTA rouge du produit.
 - **CTA de barre basse** (`+ POINTS ADVERSAIRE`, `+1 ADVERSAIRE`) : dégradé bleu, rayon tapable, `label` 900 interlettré `label`, largeur de la colonne du joueur assis.
@@ -524,6 +524,32 @@ Trois briques sans aucune connaissance du jeu : aucun `useGameStore`, aucune rè
 - *Contrat* : le geste doit être **complet** (appui **et** relâchement du **même** `pointerId`) ; le `pointerId` est mémorisé et jamais un booléen (une paume posée sur le voile ne doit pas armer la fermeture au profit d'un autre doigt) ; `pointercancel` désarme ; `onClose` est appelé **une fois**, le pointeur désarmé **avant** l'appel.
 - *Pourquoi le geste complet* : une pop-up qui monte **sous le doigt** au `pointerdown` de `VALIDER` ou de `+` reçoit le `pointerup` de ce geste sur un voile qu'elle n'a jamais armé — sans cette règle, elle se refermerait aussitôt ouverte.
 
+## Écarts assumés au détecteur
+
+Ce que le garde-fou outillé (`npm run design:check`, détecteur Impeccable 4.0.0) signale et que le produit **ne corrigera pas** — avec, pour chacun, ce qui a été mesuré. Chaque entrée a son pendant dans `.impeccable/config.json` (`detector.ignoreValues`, un `add-value` par scène, avec sa raison). **Aucun `ignoreRules` nu** : une règle entière ne tombe jamais, seule une paire règle × scène est levée. Relevé de la Story 11.4 (2026-09-17), sur les 36 scans des douze scènes aux trois formats.
+
+| Règle | Où | Nature | Ce qui a été mesuré |
+|---|---|---|---|
+| `nested-cards` | scènes 03 à 06 (paramétrage) | **Écart assumé** | Les boîtes `NOM` et `DISTANCE` de `PlayerSetupCard` sont des **champs de saisie**, pas des cartes : boîte tapable posée sur la carte joueur, affordance voulue depuis la Story 10.3 (saisie en place, sans champ natif — interdit durable). Le détecteur, calibré web/SaaS, lit toute boîte arrondie remplie comme une carte. |
+| `text-occlusion` | scènes 07 et 09 (`REP`) | **Faux positif prouvé** | Recouvrement réel **0,0 px** (`REP` bas 386,1 / nombre haut 386,1 à 1920) et lisibilité vérifiée en capture. La règle reconstruit la boîte d'encre du nombre depuis les métriques de la police, plus haute que sa boîte d'élément à cause de `leading-none`. Mutation : `leading-none` → `leading-normal` ferme le constat sans rien changer au rendu perçu. |
+| `text-overflow` | scène 08 (valeur de série) | **Faux positif prouvé** | Le débordement mesuré est le **voile de flash de frappe**, enfant absolu volontairement débordant (`-inset-x-2 -inset-y-1` = 2 unités de grille, soit 26 px à 1920 et 16 px sur tablette — exactement les chiffres du constat). Il est `pointer-events-none`, animé jusqu'à `opacity: 0`, et la valeur garde 236 px de dégagement de chaque côté. Mutation : `inset-0` ferme le constat aux trois formats. |
+| `low-contrast` | scène 10 (titre de pop-up) | **Faux positif prouvé** | La règle ne sait pas résoudre la composition à travers un `backdrop-filter` et mesure ce qui se trouve **sous** la carte, invisible. À opacité **100 %** — où rien ne peut transparaître et où le blanc sur `#272E49` vaut 13,35:1 — le constat sort encore (2,1 à 3,0:1) ; il ne se ferme qu'en retirant le flou, jamais en montant l'opacité (88 / 94 / 97 / 100 % tous signalés). La médiane rapportée par le détecteur lui-même, 13,2 à 13,8:1, est la vraie valeur. |
+
+### ⚠️ Ce que le détecteur ne verra JAMAIS : le contraste des libellés de CTA
+
+Établi par mutation le 2026-09-17 (Story 11.4), en réintroduisant les deux P1 de `design-system-audit-2026-09-15.md` : **le détecteur ne les ressort pas**. Quatre essais successifs sur la même page isolent la cause — ce n'est pas le dégradé :
+
+| Essai | Résultat |
+|---|---|
+| Dégradé d'origine, libellé 14 px/700 (3,68:1 réel) | rien |
+| Fond **plein** posé sur le `<button>`, même libellé | rien |
+| Fond plein posé sur le `<span>` qui **porte** le texte | **détecté**, 3,5:1 |
+| Dégradé posé sur le `<span>` qui **porte** le texte | **détecté**, 3,5:1 |
+
+La règle `low-contrast` ne résout le fond que sur l'élément qui porte le texte et **ne remonte pas aux ancêtres**. Or `CtaButton` met le dégradé sur le `<button>` et le libellé dans le `<slot />` : le détecteur voit un fond transparent et passe. Il est donc, par construction, **aveugle au libellé des six CTA du produit**.
+
+**Conséquence, et elle est structurante :** le contraste des CTA est calculé par `CtaButton.contrast.test.ts`, depuis la source — stops de dégradé lus dans `main.css`, tailles et graisses lues dans le frontmatter ci-dessus, seuil WCAG appliqué aux trois formats. Le test tient la règle **conservatrice** (le libellé doit tenir le seuil contre l'arrêt le plus clair, donc où qu'il se pose) ; une variante n'y déroge que sur une mesure au pixel écrite avec sa date, et l'exception se retire d'elle-même dès qu'elle n'est plus nécessaire. **La passe navigateur reste obligatoire** : ni le détecteur ni ce test ne voient une géométrie inventée.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -533,7 +559,7 @@ Trois briques sans aucune connaissance du jeu : aucun `useGameStore`, aucune rè
 - **Do** ranger une pop-up de saisie du côté opposé à la carte qu'elle remplit, carte entièrement visible et nette.
 - **Do** reprendre la coupe en biais, les deux niveaux de marine et le filet à 22 % comme vocabulaire de tout nouvel écran ; angles vifs sur les conteneurs, 8 px sur tout ce qui se tape, 12 px sur une carte de pop-up.
 - **Do** ajouter toute animation d'ornement à la garde `prefers-reduced-motion` de `main.css`, nommément ; une animation porteuse d'information (chrono, rebours) n'y entre pas.
-- **Do** consigner tout écart au détecteur avec sa raison, en citant `deferred-work.md`.
+- **Do** consigner tout écart au détecteur dans « Écarts assumés au détecteur » ci-dessus ET dans `.impeccable/config.json` avec sa raison (`ignores add-value --reason`), en disant ce qui a été MESURÉ ; jamais un `ignoreRules` nu, que le CLI ne sait de toute façon pas doter d'une raison.
 
 ### Don't:
 - **Don't** mettre une croix de fermeture, ni un champ natif, ni le clavier système : le retour est un gros CTA `ANNULER`, la saisie passe par les claviers dessinés. *(Interdit durable, Nathan 2026-09-15.)*

@@ -24,21 +24,79 @@
 // Playwright n'est PAS une dépendance du projet (harnais hors build) : il est emprunté à une
 // installation existante de la machine. `PLAYWRIGHT_MODULE` permet de désigner laquelle — la
 // version doit correspondre au build de Chromium présent dans ~/Library/Caches/ms-playwright.
+
+// Sortie en erreur LISIBLE. Ce harnais tourne à la main, souvent sur un poste qui ne l'a
+// jamais lancé : chaque plantage doit dire ce qui manque, pas une trace de pile (Story 11.4).
+function die(message) {
+  console.error(`\nrender-static : ${message}\n`)
+  process.exit(1)
+}
+// ⚠️ Le chemin par défaut est CELUI D'UN POSTE, et il n'a aucune raison d'exister ailleurs :
+// c'est pourquoi son absence doit DIRE QUOI FAIRE, et non jeter un `MODULE_NOT_FOUND` nu
+// (durcissement de la Story 11.4, report de la revue de la 11.2).
 const PLAYWRIGHT_MODULE = process.env.PLAYWRIGHT_MODULE
   || '/Users/nathanlegendre/.nvm/versions/node/v24.13.0/lib/node_modules/@executeautomation/playwright-mcp-server/node_modules/playwright'
-const { chromium } = require(PLAYWRIGHT_MODULE)
+let chromium
+try {
+  ;({ chromium } = require(PLAYWRIGHT_MODULE))
+} catch (e) {
+  if (e.code !== 'MODULE_NOT_FOUND') throw e
+  die(
+    `Playwright introuvable à :\n  ${PLAYWRIGHT_MODULE}\n\n` +
+    "Playwright n'est PAS une dépendance du projet (harnais hors build) : il est emprunté à une\n" +
+    "installation existante de la machine. Désigner laquelle par la variable d'environnement :\n" +
+    '  PLAYWRIGHT_MODULE=/chemin/vers/node_modules/playwright node scripts/render-static.cjs <outDir>\n\n' +
+    'Pistes pour la trouver :\n' +
+    "  find ~ -maxdepth 8 -type d -name playwright -not -path '*/carom_scoreboard/*' 2>/dev/null\n" +
+    '  ls ~/.npm/_npx/*/node_modules/playwright\n' +
+    'La version doit correspondre au build de Chromium présent dans ~/Library/Caches/ms-playwright.',
+  )
+}
 const path = require('path')
 const fs = require('fs')
 
 const argv = process.argv.slice(2)
-const opt = (name) => { const i = argv.indexOf(name); return i === -1 ? null : argv[i + 1] }
+// ⚠️ Une option EN DERNIER ARGUMENT n'a pas de valeur : `--url` seul rendait `undefined`, que
+// le `|| défaut` avalait — on croyait scanner une URL et on scannait l'autre. `--override` seul
+// rendait `undefined`, traité comme « pas de surcharge » : on croyait injecter du CSS et on
+// n'injectait rien, ce qui invalide silencieusement une comparaison AVANT/APRÈS. Les deux
+// disent maintenant ce qui manque (Story 11.4, report de la revue de la 11.2).
+const opt = (name) => {
+  const i = argv.indexOf(name)
+  if (i === -1) return null
+  const value = argv[i + 1]
+  if (value === undefined || value.startsWith('--')) die(`${name} attend une valeur, et n'en a pas reçu.`)
+  return value
+}
 const URL = opt('--url') || 'http://localhost:5174/'
 const overrideFile = opt('--override')
-const overrideCss = overrideFile ? fs.readFileSync(overrideFile, 'utf8') : null
+let overrideCss = null
+if (overrideFile) {
+  if (!fs.existsSync(overrideFile)) {
+    die(`fichier de surcharge introuvable : ${overrideFile}\n(chemin relatif au répertoire courant : ${process.cwd()})`)
+  }
+  overrideCss = fs.readFileSync(overrideFile, 'utf8')
+}
 const withFocus = argv.includes('--focus')
 const positional = argv.filter((a, i) => !a.startsWith('--') && !['--url', '--override'].includes(argv[i - 1]))
 const outDir = positional[0]
+// `outDir` est OBLIGATOIRE : sans lui, `fs.mkdirSync(undefined)` jetait un `ERR_INVALID_ARG_TYPE`
+// où il fallait lire « tu as oublié le dossier de sortie ».
+if (!outDir) {
+  die(
+    'dossier de sortie manquant.\n' +
+    'Usage : node scripts/render-static.cjs <outDir> [WxH ...] [--url <url>] [--override <fichier.css>] [--focus]',
+  )
+}
 const formats = (positional.slice(1).length ? positional.slice(1) : ['1920x1080', '1180x733', '1133x744'])
+// Un format sans `x` (« 1920 ») donnait une hauteur `NaN`, et Playwright ouvrait une fenêtre
+// de taille absurde sans rien dire : les captures sortaient fausses, pas absentes.
+for (const f of formats) {
+  const [w, h] = f.split('x').map(Number)
+  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
+    die(`format illisible : « ${f} » (attendu LARGEURxHAUTEUR, par exemple 1920x1080)`)
+  }
+}
 fs.mkdirSync(outDir, { recursive: true })
 
 const AUDIT = `(() => {
@@ -111,6 +169,13 @@ async function shot(page, tag, name, report) {
   report.push({ screen: name, ...audit })
 }
 
+// Dernier état écrit sur le disque, lisible depuis le `catch` de fin.
+const partial = {}
+function writeAudit(results) {
+  Object.assign(partial, results)
+  fs.writeFileSync(path.join(outDir, 'audit.json'), JSON.stringify(results, null, 1))
+}
+
 ;(async () => {
   const browser = await chromium.launch()
   const results = {}
@@ -179,8 +244,18 @@ async function shot(page, tag, name, report) {
     await shot(page, f, '12-scoreboard-3bandes', report)
     await ctx.close()
     results[f] = report
+    // ⚠️ ÉCRIT APRÈS CHAQUE FORMAT, et non à la toute fin : un plantage sur le troisième
+    // format emportait les mesures des deux premiers, et on relançait tout un parcours de
+    // douze écrans pour les retrouver (Story 11.4, report de la revue de la 11.2).
+    writeAudit(results)
   }
   await browser.close()
-  fs.writeFileSync(path.join(outDir, 'audit.json'), JSON.stringify(results, null, 1))
   console.log('done', Object.keys(results))
-})().catch(e => { console.error(e); process.exit(1) })
+})().catch(e => {
+  console.error(e)
+  // Même en cas d'échec, ce qui a été mesuré reste sur le disque.
+  if (Object.keys(partial).length) {
+    console.error(`\nrender-static : formats mesurés avant l'échec, conservés dans ${path.join(outDir, 'audit.json')} : ${Object.keys(partial).join(', ')}`)
+  }
+  process.exit(1)
+})

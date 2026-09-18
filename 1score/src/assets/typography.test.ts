@@ -3,39 +3,48 @@ import { describe, it, expect } from 'vitest'
 // types Node. ⚠️ `main.css?raw` ne rend le TEXTE que grâce à `test.css.include` dans
 // `vitest.config.ts` (piège réglé en 10.7) ; les `.vue?raw` passent sans réglage.
 import source from './main.css?raw'
+// `server.fs.allow: ['..']` dans `vitest.config.ts` rend cet import possible : `DESIGN.md`
+// vit à la RACINE DU DÉPÔT, hors de la racine Vite (Story 11.4, AC5).
+import design from '../../../DESIGN.md?raw'
+import { extractFrontmatter, roleNames, property, sizeAtWidth } from './designFrontmatter'
 
 // Story 11.1 (AC1, AC3) : `DESIGN.md` nomme les rôles, `main.css` les déclare, aucun
 // gabarit n'écrit une taille ni un interlettrage en valeur arbitraire. happy-dom ne calcule
 // aucun CSS : ce fichier verrouille la SOURCE, jamais le rendu — le rendu se vérifie au
 // navigateur (captures de la fiche).
 //
-// Les trois listes recopient le frontmatter de DESIGN.md (`typography`, `tracking`,
-// `spacing`) : c'est le miroir que ce test tient à jour, DANS LES DEUX SENS — un rôle de
-// DESIGN.md absent de `main.css` rougit, un token de `main.css` absent d'ici aussi.
+// Story 11.4 (AC5) : les trois listes sont DÉRIVÉES du frontmatter de `DESIGN.md`, elles ne
+// le recopient plus. Deux listes écrites par la même main ne faisaient pas un miroir :
+// renommer un rôle dans `DESIGN.md` sans toucher `main.css` restait vert. Le miroir tient
+// maintenant DANS LES DEUX SENS pour de bon — un rôle de `DESIGN.md` absent de `main.css`
+// rougit, un token de `main.css` absent de `DESIGN.md` aussi.
+const frontmatter = extractFrontmatter(design)
 
 // Un rôle par entrée du frontmatter `typography`.
-const TEXT_ROLES = [
-  'score-1', 'score-2', 'score-3', 'score-4', 'score-more',
-  'reprise', 'clock', 'series', 'adjust',
-  'hero', 'title', 'label', 'stat', 'picto',
-  'key-numeric', 'key-alpha', 'field-value', 'start-button',
-]
-// Parmi eux, ceux dont le `clamp()` se lit sur la largeur d'ÉCRAN (`vw`) — les autres sont
-// relatifs à leur conteneur (`cqw`, `cqmin`) ou bornés par `min()`.
-const VIEWPORT_CLAMPED_ROLES = [
-  'reprise', 'adjust', 'hero', 'title', 'label', 'stat', 'picto',
-  'key-numeric', 'key-alpha', 'field-value', 'start-button',
-]
-// Trois valeurs d'interlettrage, pas sept (frontmatter `tracking`).
-const TRACKING_ROLES = ['title', 'label', 'stat']
-// Tailles de boîte dérivées de la grille (frontmatter `spacing`, hors `base` et les pas
-// `xs`…`2xl` qui sont les utilitaires numériques de Tailwind, et hors `clock-bleed`, porté
-// par `--game-clock-bleed`).
-const SIZE_ROLES = [
-  'touch-target', 'sidebar', 'start-button', 'key-numeric', 'key-alpha',
-  'field-min', 'field-max', 'tile-min',
-  'popup-decision', 'popup-pad', 'popup-alpha', 'pad-min', 'alpha-min',
-]
+const TEXT_ROLES = roleNames(frontmatter, 'typography')
+
+// Parmi eux, ceux dont la taille se RÉSOUT sur la largeur d'écran : un `clamp(px, vw, px)`
+// et rien d'autre. L'exclusion SE DÉRIVE de la forme écrite dans `DESIGN.md` — un `cqw` /
+// `cqmin` dépend d'un conteneur, un `min(42vw, 40vh, 520px)` dépend aussi de la HAUTEUR :
+// ni l'un ni l'autre ne se vérifie depuis la source, et `sizeAtWidth` le dit en rendant
+// `null`. C'est le parseur qui tranche, pas une liste tenue à la main à côté.
+const VIEWPORT_CLAMPED_ROLES = TEXT_ROLES.filter(
+  (role) => sizeAtWidth(property(frontmatter, 'typography', role, 'fontSize') ?? '', 1920) !== null,
+)
+
+// Les valeurs d'interlettrage du frontmatter `tracking`.
+const TRACKING_ROLES = roleNames(frontmatter, 'tracking')
+
+// Tailles de boîte dérivées de la grille (frontmatter `spacing`). Deux exclusions, qui ont
+// chacune leur raison et qui se DÉRIVENT elles aussi :
+//   — `base` et les pas `xs`…`2xl` sont les utilitaires numériques de Tailwind, pas des
+//     tailles de boîte nommées : ils ne produisent aucun `--size-*` ;
+//   — `clock-bleed` est porté par `--game-clock-bleed` (géométrie couplée, `CLAUDE.md` §10),
+//     pas par le namespace `--size-*`.
+const SPACING_STEPS = ['base', 'xs', 'sm', 'md', 'lg', 'xl', '2xl']
+const SIZE_ROLES = roleNames(frontmatter, 'spacing').filter(
+  (role) => !SPACING_STEPS.includes(role) && role !== 'clock-bleed',
+)
 
 const declared = (namespace: string): string[] =>
   [...source.matchAll(new RegExp(`^\\s*--${namespace}-([a-z0-9-]+):`, 'gm'))].map((m) => m[1] ?? '')

@@ -21,6 +21,7 @@ import {
   type TableSide,
 } from '../types/game'
 import type { PromptAction, SideBarItem } from '../types/ui'
+import { readScene, homeSceneState } from '../dev/scenes'
 
 // Libellés d'attente, posés au démarrage seulement — la bille les nomme depuis la 10.3,
 // le côté n'a plus rien à voir là-dedans.
@@ -132,6 +133,28 @@ const cadrePromptOpen = ref(false)
 // pop-up d'erreur, les saisies des joueurs sans distance s'enchaînent d'elles-mêmes —
 // valider la distance du blanc ouvre directement celle du jaune s'il en manque encore.
 const fixingDistances = ref(false)
+
+// Story 11.4 — semis de la part ÉCRAN d'une scène `?scene=` (01 à 06), pour que le
+// garde-fou outillé mesure le paramétrage et ses deux pop-ups et non l'accueil.
+// UNE SEULE FOIS, AU SETUP : le détecteur scanne à la fin du chargement sans rien attendre,
+// et un semis dans un `watch` ou un `onMounted` asynchrone arriverait après la mesure.
+// La garde est ici, au point d'appel : `import.meta.env.DEV` est remplacé statiquement, le
+// bloc s'efface du build et l'import part avec lui (`src/dev/scenes.test.ts`).
+if (import.meta.env.DEV) {
+  const scene = readScene()
+  const seed = scene ? homeSceneState(scene) : null
+  if (seed) {
+    if (seed.step !== undefined) step.value = seed.step
+    if (seed.selectedCategory !== undefined) selectedCategory.value = seed.selectedCategory
+    if (seed.selectedMode !== undefined) selectedMode.value = seed.selectedMode
+    if (seed.players !== undefined) players.value = structuredClone(seed.players)
+    if (seed.whiteSide !== undefined) whiteSide.value = seed.whiteSide
+    if (seed.entry !== undefined) entry.value = seed.entry
+    if (seed.draft !== undefined) draft.value = seed.draft
+    if (seed.distanceError !== undefined) distanceError.value = seed.distanceError
+    if (seed.cadrePromptOpen !== undefined) cadrePromptOpen.value = seed.cadrePromptOpen
+  }
+}
 
 const categoryModes = computed(() => selectedCategory.value?.modes ?? [])
 
