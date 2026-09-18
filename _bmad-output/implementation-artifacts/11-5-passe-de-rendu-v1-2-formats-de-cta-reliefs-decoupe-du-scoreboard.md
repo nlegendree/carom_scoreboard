@@ -203,6 +203,12 @@ Quel que soit le choix : **une seule valeur, lue par tous**, jamais recopiée. C
     node scripts/render-static.cjs <outDir> --override scripts/freeze-animations.css
   ```
   Playwright **1.58.0** ↔ **chromium-1208** dans `~/Library/Caches/ms-playwright` : c'est exactement le couple documenté dans `deferred-work.md`. ⚠️ C'est un **cache `npx`**, il peut être purgé : si le chemin disparaît, le relancer sans la variable donne le message qui dit quoi faire (durci en 11.4).
+- **⚠️ Le chemin Playwright par défaut du harnais NE RÉSOUT PAS sur cette machine.** `render-static.cjs:37-38` pointe vers `/Users/nathanlegendre/.nvm/…` ; le dossier personnel est `/Users/nathan`. **Le premier lancement échoue**, avec le message qui dit quoi faire (durci en 11.4). L'installation qui marche, vérifiée le 2026-09-18 :
+  ```sh
+  PLAYWRIGHT_MODULE=/Users/nathan/.npm/_npx/787f53666b8d4740/node_modules/playwright \
+    node scripts/render-static.cjs <outDir> --override scripts/freeze-animations.css
+  ```
+  **Playwright 1.58.0 ↔ chromium-1208** (`~/Library/Caches/ms-playwright`) : exactement le couple documenté dans `deferred-work.md`. ⚠️ C'est un **cache `npx`**, donc purgeable sans préavis — si le chemin disparaît, relancer **sans** la variable pour obtenir le message d'aide, puis retrouver une installation par `find ~ -maxdepth 8 -type d -name playwright -not -path '*/carom_scoreboard/*'`. La version retrouvée doit correspondre au build de Chromium présent dans le cache.
 - **Un serveur de dev de longue vie ment sur la CSS.** Le cache Tailwind de Vite ne réélague pas ce qu'il a déjà généré : des utilitaires morts continuent d'être émis. **Redémarrer `npm run dev` avant toute capture ou tout scan qui compte** — la comparaison pixel de la 11.3 a dû être entièrement rejouée pour cette raison.
 - **Le harnais n'est déterministe qu'avec `freeze-animations.css`.** `prefers-reduced-motion` ne suffit pas : la garde du produit **conserve volontairement** le chrono et la barre de rebours.
 - **`npm run design:check` efface la partie sauvegardée du navigateur de travail** (`scenes.ts:229`, `discardSavedGame()` en tête de chaque scène — nécessaire, sinon `PARTIE EN COURS` recouvre les douze écrans). Ne pas lancer un scan au milieu d'une vérification manuelle en cours.

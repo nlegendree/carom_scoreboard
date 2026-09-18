@@ -24,6 +24,14 @@
 // Playwright n'est PAS une dépendance du projet (harnais hors build) : il est emprunté à une
 // installation existante de la machine. `PLAYWRIGHT_MODULE` permet de désigner laquelle — la
 // version doit correspondre au build de Chromium présent dans ~/Library/Caches/ms-playwright.
+// ⚠️ LE CHEMIN PAR DÉFAUT CI-DESSOUS NE RÉSOUT SUR AUCUNE MACHINE CONNUE, pas même celle de
+//    Nathan : il nomme `/Users/nathanlegendre`, dont le dossier personnel est `/Users/nathan`.
+//    Le premier lancement échoue donc TOUJOURS, sur le message d'aide ci-dessous. Valeur
+//    vérifiée le 2026-09-18 (Playwright 1.58.0, chromium-1208 présent dans le cache) :
+//      PLAYWRIGHT_MODULE=/Users/nathan/.npm/_npx/787f53666b8d4740/node_modules/playwright
+//    C'est un cache `npx` : il peut être purgé sans préavis, et la recherche est alors à refaire
+//    (voir les pistes du message d'erreur). Le défaut n'est pas corrigé ICI parce qu'un chemin de
+//    cache npx n'est pas plus stable que l'autre — le sujet reste ouvert dans `deferred-work.md`.
 
 // Sortie en erreur LISIBLE. Ce harnais tourne à la main, souvent sur un poste qui ne l'a
 // jamais lancé : chaque plantage doit dire ce qui manque, pas une trace de pile (Story 11.4).
