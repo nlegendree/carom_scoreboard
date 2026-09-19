@@ -395,6 +395,7 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
   - `3458484` — la pastille de `PromptModal` (« JOUEUR N A FINI ») affiche l'image de la bille (`BALL_PICTOS`) au lieu d'un aplat ; `BALL_CLASSES` retirée, sans autre consommateur.
   - `87c6776` — **relief des CTA, proposition « K1 »** : tranche teintée sous les six variantes et les pictos, enfoncement à l'appui ; barre de rebours de `VALIDER` `h-2` → `h-1` (« un peu plus discrète »). ⚠️ C'est du travail des **Tasks 4 et 5**, livré avant qu'elles soient ouvertes : l'arbitrage (« K1 ») est noté ici, mais **les propositions concurrentes de K1 n'ont pas été consignées** au moment du rendu. Les deux arbitrages rouverts de la 11.2 (ombre de barre basse, verre des pop-ups) restent à re-trancher en Task 5.
   - `607ba5a` — tuiles `BIENTÔT` grisées (fond désaturé, titre à 50 %) : « griser les éléments ».
+- **Jaune joueur, 2026-09-19** (Nathan, au rendu, « un jaune plus moderne », puis « plus peps ») : `#FFE000` → **`#FFF200`** (bandeau `#E6CA00` → `#E6DA00`, le jaune à 90 %), bleu toujours à zéro, teinte 52,7° → 57°. Quatre passes par surcharges CSS aux formats 1180 et 1920, sur le paramétrage et les deux scoreboards : chaud `#FFCF33` / beurre `#FFE566` (écartés : pas assez peps), citron `#FFEB00` / fluo `#F5FF00`, déclinaisons du citron (`#FFF200` retenu ; bandeau marqué `#D6C500` et version adoucie `#FFEE33` écartés), puis quatre versions plus claires (`#FFF533` à `#FFF880`, écartées : « on reste sur A1 pour l'instant »). ⚠️ Écart assumé à « au plus deux propositions » : Nathan a demandé les déclinaisons. Encre noire 17,95:1 sur la carte, 14,39:1 sur le bandeau ; placeholder de champ 4,96 → 5,18:1. `DESIGN.md` d'abord, `main.css` ensuite. `.impeccable/design.json` garde les `oklch` de l'ancien jaune : à régénérer en Task 7.
 - **Revue de code du 2026-09-19** (`01402db..HEAD`, trois relecteurs) : voir Tasks › Review Findings. Deux décisions de Nathan — gouttière intérieure des cartes **retirée**, CTA et pictos inactifs **plats** (`disabled:shadow-none`) —, et le rendu JDS de la découpe attesté (scènes `07` et `09` aux trois formats, comparées à `HEAD`).
 
 ### File List
@@ -431,6 +432,7 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
 
 ## Change Log
 
+- **2026-09-19 — Jaune joueur `#FFE000` → `#FFF200`** (Nathan, au rendu : « plus peps »), bandeau `#E6DA00`. Quatre passes de comparaison, consignées au Dev Agent Record.
 
 - **2026-09-19 — Revue de code (bmad-code-review, trois relecteurs sur `01402db..HEAD`).** 2 décisions de Nathan (gouttière intérieure des cartes retirée ; CTA et pictos inactifs plats), 11 correctifs, 2 reports, 7 constats écartés (relevant des Tasks 5 à 7 ouvertes, ou sans objet). Le plus grave : le harnais de rendu attendait `setup-header`, supprimé par `f1d4481` — plus aucune capture après `02-jds`. Fiche remise à jour des huit commits du jour.
 

@@ -3,10 +3,10 @@ name: 1Score
 description: Scoreboard tactile de billard carambole — un tableau d'affichage de compétition dont les cartes joueur sont seules en pleine lumière.
 colors:
   blanc-pur: "#FFFFFF"
-  jaune-franc: "#FFE000"
+  jaune-franc: "#FFF200"
   encre-noire: "#000000"
   blanc-bandeau: "#ECECEC"
-  jaune-bandeau: "#E6CA00"
+  jaune-bandeau: "#E6DA00"
   blanc-casse: "#F2F0EA"
   rouge-vif: "#FF2D46"
   rouge-alerte: "#FF3B30"
@@ -342,8 +342,8 @@ Une palette resserrée bleus / marine / rouge, posée sur les deux seuls aplats 
 - **Rouge alerte** (#FF3B30, hsl 3 100 % 59 %) : point d'arrivée du fondu du chrono de tir (vert 130° → jaune → orange → rouge). Ne sert qu'au chrono, qui le **calcule en HSL** dans `ShotClock` : aucun token `--color-alert` ne le porte (retiré en 11.2, il n'était lu nulle part) — exception connue au miroir couleurs ↔ tokens.
 
 ### Tertiary
-- **Jaune franc** (#FFE000) : carte du joueur de droite, bille jaune. Bleu à zéro, saturation pleine : c'est ce qui le rend franc plutôt que doré ou délavé (quatre essais en 10.4). Ne jamais y remettre de bleu « pour adoucir ». Encre noire dessus, très au-dessus d'AA.
-- **Jaune bandeau** (#E6CA00) : bandeau haut de la carte jaune (nom, distance, restant, stats). Encre noire 12,81:1.
+- **Jaune franc** (#FFF200, teinte 57°) : carte du joueur de droite, bille jaune. Bleu à zéro, saturation pleine : c'est ce qui le rend franc plutôt que doré ou délavé (quatre essais en 10.4). Ne jamais y remettre de bleu « pour adoucir ». Encre noire 17,95:1. ⚠️ **Remonté de #FFE000 le 2026-09-19** (Nathan, au rendu, Story 11.5 : « un jaune plus peps ») : même principe — bleu à zéro —, teinte poussée vers le citron (52,7° → 57°) et plus lumineux. Écartés au même rendu : les jaunes chauds (#FFCF33, retour au doré), beurre (#FFE566) et fluo (#F5FF00, reflet vert), et les versions plus claires de celui-ci (#FFF533 à #FFF880 : dès #FFF766, il pâlit à côté de la carte blanche).
+- **Jaune bandeau** (#E6DA00) : bandeau haut de la carte jaune (nom, distance, restant, stats), le jaune franc à 90 %. Encre noire 14,39:1.
 - **Blanc pur** (#FFFFFF) : carte du joueur de gauche, bille blanche ; et couleur de tout texte sur fond sombre.
 - **Blanc bandeau** (#ECECEC) : bandeau haut de la carte blanche.
 - **Blanc cassé** (#F2F0EA) : bande claire du bandeau du récap, seul aplat clair hors cartes joueur. Cassé et non pur pour ne pas éblouir en salle sombre ; texte en marine sombre.

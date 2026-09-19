@@ -39,8 +39,11 @@
      le désature, et la teinte montait à 54°. Celui-ci tient le milieu — teinte 52,7°, et
      surtout BLEU À ZÉRO, donc saturation pleine : c'est ce qui le rend franc plutôt que
      délavé. Ne pas y remettre de bleu « pour adoucir ». Encre noire dessus : contraste
-     très au-dessus d'AA. */
-  --color-player-yellow: #FFE000;
+     très au-dessus d'AA.
+     Story 11.5 (Nathan, au rendu, 2026-09-19, « un jaune plus peps ») : `#FFE000` → `#FFF200`,
+     même principe (bleu à zéro), teinte poussée vers le citron (52,7° → 57°), plus lumineux —
+     encre noire 17,95:1. Essais écartés : `DESIGN.md` › Colors. */
+  --color-player-yellow: #FFF200;
   --color-player-white: #FFFFFF;
 
   /* Texte garantissant un contraste WCAG AA (4.5:1 min) sur chaque bloc joueur */
@@ -279,7 +282,7 @@
 
   /* Bandeaux de carte joueur (Story 10.4). */
   --color-panel-white-band: #ECECEC;
-  --color-panel-yellow-band: #E6CA00;
+  --color-panel-yellow-band: #E6DA00;   /* jaune franc à 90 %, encre noire 14,39:1 */
 
   /* Marine clair, NIVEAU 1 (Story 11.2, modèle Cueuny) : fond des quatre écrans hors jeu
      (accueil, JDS, paramétrage, récap — à PLAT, `--gradient-bg` est retiré) et carte de
