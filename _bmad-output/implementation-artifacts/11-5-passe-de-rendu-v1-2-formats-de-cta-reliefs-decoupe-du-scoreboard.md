@@ -1,6 +1,6 @@
 # Story 11.5: Passe de rendu V1.2 — formats de CTA, reliefs, découpe du scoreboard
 
-Status: in-progress
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -133,13 +133,13 @@ so that l'Epic 11 se close sur un design **fini** et non sur un design system pr
   - [x] Snippets de `.impeccable/design.json` alignés sur ce que le code rend maintenant
   - [x] `npm test`, `npm run build` verts ; `git diff --stat -- 1score/src/stores` **vide**
   - [x] 36 captures d'**après**, comparées à celles de Task 1 : **tout écart doit être une décision**, ou c'est un défaut
-- [ ] **Task 8 — `useRejectFeedback`** (AC8) — *conditionnelle, reportable*
-  - [ ] Seulement si les trois hôtes de saisie ont déjà été ouverts par une décision de rendu ; sinon, laisser le report intact et le dire
-- [ ] **Task 9 — Clôture de l'epic** (AC9)
-  - [ ] `/impeccable audit` rejoué, score **en regard du 14/20 et du 19/20** ; `DESIGN.md` relu (pas écrasé) ; `/impeccable polish` sur les fichiers touchés
-  - [ ] `deferred-work.md` : reports de la story, entrée « passe de rendu V1.2 » **close**
-  - [ ] Liste de contrôle du critère de sortie mise à jour pour l'Epic 4
-  - [ ] `epics.md` › Epic 11 annotée de la Story 11.5 ; `sprint-status.yaml` → `review`
+- [x] **Task 8 — `useRejectFeedback`** (AC8) — *conditionnelle, reportable*
+  - [x] Seulement si les trois hôtes de saisie ont déjà été ouverts par une décision de rendu ; sinon, laisser le report intact et le dire
+- [x] **Task 9 — Clôture de l'epic** (AC9)
+  - [x] `/impeccable audit` rejoué, score **en regard du 14/20 et du 19/20** ; `DESIGN.md` relu (pas écrasé) ; `/impeccable polish` sur les fichiers touchés
+  - [x] `deferred-work.md` : reports de la story, entrée « passe de rendu V1.2 » **close**
+  - [x] Liste de contrôle du critère de sortie mise à jour pour l'Epic 4
+  - [x] `epics.md` › Epic 11 annotée de la Story 11.5 ; `sprint-status.yaml` → `review`
 
 ### Review Findings
 
@@ -410,6 +410,34 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
   - **`.impeccable/design.json` réaligné** (sidecar de `DESIGN.md`) : jaunes en OKLCH (`#FFF200` → `oklch(94.1% 0.200 105.7)`, `#E6DA00` → `oklch(87.0% 0.185 105.6)` — la conversion retrouve au dixième les valeurs de l'ancien jaune, elle est donc fiable) ; ombres en miroir du frontmatter (`light-edge-start` retirée, quatre `cta-relief-*` et `bottom-bar` ajoutées : 6 → 10) ; snippets des six CTA et du picto d'action (tranche, enfoncement de `--size-relief-depth`, inactif plat, interlettrage `label`, réglage au format de `PASSER LE TOUR`) et de la carte de pop-up (verre dense 95 % / 16 px, CTA en relief) ; règles nommées, do et don't recopiés de `DESIGN.md` (trois règles et un do avaient divergé). Deux « Do » de `DESIGN.md` périmés corrigés au passage (« quatre gabarits de CTA » → six variantes ; « angles vifs sur les conteneurs » → sauf la mise en page carte · colonne · carte).
   - **36 captures d'après comparées à la ligne de base de la Task 1.** ⚠️ Le dossier archivé à la Task 1 (`…/scratchpad/baseline-11.5/`) a disparu avec le scratchpad de sa session ; la ligne de base est **reconstituée à l'identique** en rendant `123cf19` (code applicatif inchangé depuis, attesté à la Task 1) dans un worktree, même harnais, même gel des animations, même binaire. Résultat : **JDS (02) identique** aux trois formats ; **accueil (01)** : seul le quart bas-droit bouge, les tuiles `BIENTÔT` grisées (`607ba5a`) ; **paramétrage (03–06), scoreboard (07–10, 12), récap (11)** : tous changés, et chacun par des décisions de la story (format du scoreboard « M »/« T1 »/« R1 », découpe et chrono, jaune `#FFF200`, formats de CTA « A », relief « K1 », ombre de barre « O2 », verre « V2 »). Aucun écran qu'aucune décision ne touchait n'a bougé ; le contenu des écrans changés a été relu à la Task 6 (planches aux trois formats, contrôle par rectangles à 0).
   - Serveur de dev **neuf** : `design:check` → **0**, `design:check:file` → **0**. `npm test` : **1139 tests / 32 fichiers**, verts. `npm run build` : vert. `git diff --stat 123cf19..HEAD -- 1score/src/stores` : **vide**.
+- **Task 8 — `useRejectFeedback` (AC8) : REPORTÉE, comme la condition le prévoit.** Aucune décision de rendu de la story n'a rouvert les trois hôtes de saisie (`NumericPadDock`, `AlphaKeyboardSheet`, `ScoreEntryDock`) : ils n'ont reçu que des changements communs (verre de `PopupCard`, formats de CTA). L'entrée de `deferred-work.md` reste ouverte, annotée.
+- **Task 9 — clôture de l'epic (AC9), 2026-09-19.**
+
+  **Ré-audit `/impeccable audit` — 19/20, contre 14/20 (ligne de base) et 19/20 (11.4).**
+
+  | # | Dimension | 09-15 | 11.4 | 11.5 | Ce qui a bougé, et pourquoi |
+  |---|---|---|---|---|---|
+  | 1 | Accessibilité | 3 | 3 | **3** | Tous les contrastes touchés **mesurés et nommés** (réglages 5,25:1 en `stat` tenus par la position, verre 11,47:1 au pire, jaunes ≥ 14:1) et le test de contraste **vérifié par mutation** ; `role="dialog"`/`aria-modal`/nom accessible intacts sur les quatre pop-ups. Plafond inchangé : **aucun CTA activable au clavier** (`@pointerdown` seul, WCAG 2.1.1 — arbitrage « borne sans clavier »). Un P3 nouveau : l'ordre DOM du paramétrage (titre après la carte gauche), reporté à la revue. |
+  | 2 | Performance | 4 | 4 | **4** | JS **identique** à la ligne de base (155,06 → 155,14 kB, gzip 54,84 → 54,74) ; CSS **+2 kB** (34,85 → 36,88, gzip +0,21 kB) — les reliefs, rayons et formats. Deux filtres ajoutés, tous deux bornés : flou 16 px sur la seule carte de pop-up **ouverte** (8 px avant), `grayscale` statique sur deux tuiles `BIENTÔT`. Aucune animation de propriété de mise en page, aucun `will-change`. P2 hérité : WebKit n'a jamais rendu l'UI (PRODUCT.md) — le flou 16 px est le premier coût à y mesurer. |
+  | 3 | Responsive (trois formats paysage) | 2 | 4 | **4** | **0 constat sur 36 écrans** au contrôle par rectangles (hors écran, rogné, hors de son bouton, tronqué, cible < 44 px), contrôle lui-même vérifié par mutation ; libellés des CTA étroits sur une ligne jusqu'à 1133 ; gouttière intérieure morte des cartes retirée. |
+  | 4 | Theming | 2 | 4 | **4** | Chaque valeur nouvelle **née dans `DESIGN.md`** puis `main.css` : `relief-depth` (qui remplace le `translate-y-[3px]` recopié), quatre `cta-relief-*`, `bottom-bar`, `column-gutter`, rayons `zone`/`block`. Garde-fous étendus : `translate-[xy]-[…]` interdit, valeur de `column-gutter` en miroir, tous deux vérifiés par mutation ; `design.json` réaligné (ombres 6 → 10, jaunes en OKLCH, snippets). |
+  | 5 | Intégrité d'implémentation | 3 | 4 | **4** | Détecteur à **0** (`design:check`, `design:check:file`) ; une règle de format explicite (« la largeur décide du format ») au lieu de six variantes sans loi commune ; `DESIGN.md` relu contre le code — ses paragraphes caducs (débordement du chrono, « deux rayons », récap à angles vifs, barre basse) réécrits et datés, **aucune régénération**. Seul point ouvert : le mécanisme de rejet recopié ×3 (Task 8). |
+  | | **Total** | **14/20** | **19/20** | **19/20** | **Excellent** — le score tient **alors que** la story a changé le rendu de dix écrans sur douze. |
+
+  **Verdict d'intégrité : PASS.** La passe de rendu n'a pas dégradé le système qu'elle dessinait : chaque décision de Nathan est entrée par `DESIGN.md`, chaque valeur par un token, et chaque garde-fou ajouté a été vérifié par mutation avant d'être cru.
+
+  **Constats restants (aucun P0/P1)** : P2 — vérification WebKit/iPad réel jamais faite (le flou 16 px et `-webkit-backdrop-filter` en tête) ; P2 — `useRejectFeedback` ×3 (Task 8) ; P3 — ordre DOM du titre au paramétrage ; P3 — `overflow-hidden` du récap qui rognerait sans signal (reportés à la revue).
+
+  **`/impeccable polish` sur les fichiers touchés — passe d'inspection, 0 correctif.** Méthode : relecture des planches des douze scènes aux trois formats (Task 6) et du code touché, triage « défaut local / token manquant / pattern / concept ». Aucun défaut local restant après la revue de code ; aucun token manquant (le seul, `relief-depth`, est né à la revue). Deux observations **de rendu**, proposées et non appliquées (toute décision d'apparence passe par Nathan au rendu, règle bloquante de la story) : à 1920, les libellés `stat` des réglages paraissent petits dans des boutons qui ont grandi avec la grille ; l'accueil et la sélection JDS restent à angles vifs à côté de trois écrans en blocs arrondis — c'est la règle écrite (Shapes), pas une dérive, mais le contraste entre les deux familles d'écrans est désormais visible.
+
+  **`DESIGN.md` relu, pas écrasé** : `/impeccable document` n'a pas été lancé en génération ; les corrections sont entrées une à une, datées (revue de code, Tasks 4 à 7).
+
+  **Liste de contrôle du critère de sortie — ce que la 11.5 ajoute** aux points instruits par la 11.3 et la 11.4 (fiche 11.4 › Liste de contrôle), à dérouler à la création de la première story de l'Epic 4 :
+  - **Le format d'un CTA se déduit de sa largeur** : large → `label` 900 interlettré ; colonne étroite → picto au-dessus, `stat` 900 sur une ligne. Un CTA de l'écran d'identification qui ne rentre dans aucun des deux est un **échec du critère**, pas une variante de plus.
+  - **Un `VALIDER` grisé est plat** (`disabled:shadow-none`, commun aux six) : rien à créer.
+  - **Choisir la famille de l'écran avant de le dessiner** : trois colonnes carte · colonne · carte → grand bloc `zone` + blocs `block` + gouttière `--game-column-gutter` ; sinon angles vifs. Une troisième famille serait un échec du critère.
+  - **Une pop-up nouvelle hérite du verre dense** via `PopupCard` : aucune opacité ni flou à poser.
+  - **Tout contraste écrit porte son point de mesure** ; un libellé en `stat` sur dégradé exige une exception mesurée dans `CtaButton.contrast.test.ts`, pas une estimation.
 - **Revue de code du 2026-09-19** (`01402db..HEAD`, trois relecteurs) : voir Tasks › Review Findings. Deux décisions de Nathan — gouttière intérieure des cartes **retirée**, CTA et pictos inactifs **plats** (`disabled:shadow-none`) —, et le rendu JDS de la découpe attesté (scènes `07` et `09` aux trois formats, comparées à `HEAD`).
 
 ### File List
@@ -444,10 +472,13 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
 - `1score/CLAUDE.md` — §10 : `--game-clock-bleed` retiré, lecteurs de `--game-column-gutter`
 - `.impeccable/design.json` — sidecar réaligné (Task 7)
 - `.impeccable/baseline/2026-09-19-scan-src.json`, `2026-09-19-scan-url.json` — scans du 2026-09-19 (antérieurs à `87c6776` et `607ba5a` : à rejouer en Task 7)
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` — clé en `in-progress`
-- `_bmad-output/implementation-artifacts/deferred-work.md` — reports de la revue et « relier le chrono aux cartes »
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — clé en `in-progress`, puis `review` (Task 9)
+- `_bmad-output/implementation-artifacts/deferred-work.md` — reports de la revue, « relier le chrono aux cartes », entrée « passe de rendu V1.2 » CLOSE, `useRejectFeedback` annoté (Task 9)
+- `_bmad-output/planning-artifacts/epics.md` — Story 11.5 annotée de sa livraison (Task 9)
 
 ## Change Log
+
+- **2026-09-19 — Task 8 reportée, Task 9 : clôture de l'Epic 11. Story en `review`.** Ré-audit **19/20** (14/20 à la ligne de base, 19/20 en 11.4) — le score tient après la refonte de rendu de dix écrans sur douze ; polish en inspection, 0 correctif, deux observations de rendu proposées ; `deferred-work.md` (« passe de rendu V1.2 » close), `epics.md` et `sprint-status.yaml` à jour ; liste de contrôle du critère de sortie complétée pour l'Epic 4.
 
 - **2026-09-19 — Task 7, clôture technique.** `design.json` réaligné sur `DESIGN.md` (jaunes, dix ombres, snippets des CTA et de la pop-up, règles) ; 36 captures comparées à la ligne de base reconstituée depuis `123cf19` — tout écart est une décision ; scans à 0, 1139 tests, build vert, stores intacts.
 

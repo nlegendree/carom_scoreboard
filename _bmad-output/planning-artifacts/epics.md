@@ -2139,6 +2139,8 @@ So that le design system se maintient mécaniquement, sans repasser par une tabl
 
 ### Story 11.5: Passe de rendu V1.2 — formats de CTA, reliefs, découpe du scoreboard
 
+> ✅ **Livrée le 2026-09-19 — en `review`.** Découpe du scoreboard en **blocs arrondis** (grand bloc `zone` 16 px, blocs `block` 12 px, gouttière d'une unité ; **débordement du chrono abandonné**, AC16 de la 10.4 renversée), étendue au paramétrage et au récap ; **formats de CTA** : « la largeur décide du format », les six interlettrés ; **reliefs** : tranche teintée « K1 », ombre de barre basse « O2 », verre dense des pop-ups « V2 » (les deux arbitrages de la 11.2 re-tranchés) ; jaune joueur `#FFF200`. Revue de code du jour : 13 correctifs. Ré-audit **19/20** (14/20 à la ligne de base). `useRejectFeedback` reporté (Task 8, conditionnelle). Fiche : `11-5-passe-de-rendu-v1-2-formats-de-cta-reliefs-decoupe-du-scoreboard.md`.
+
 As a joueur de club devant la tablette, et comme Nathan qui regarde l'écran,
 I want que la dernière passe de rendu de la V1.2 arbitre au rendu les formats de CTA, les reliefs et la découpe du scoreboard,
 So that l'Epic 11 se close sur un design **fini** et non sur un design system propre mais inachevé.
