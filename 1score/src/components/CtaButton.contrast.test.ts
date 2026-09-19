@@ -156,7 +156,7 @@ const MEASURED_ON_SURFACE: Record<string, MeasuredException> = {
     measuredAgainst: ['#3b82f6', '#1d4ed8'],
     why:
       'Story 11.5 (Task 4, Nathan, au rendu, « A ») : les réglages prennent le format de ' +
-      '`PASSER LE TOUR` — picto au-dessus, rôle `stat` (14 px sur tablette, donc 4,5:1 exigé, ' +
+      '`PASSER LE TOUR` — picto au-dessus, rôle `cta-narrow` (taille de `stat`, 14 px sur tablette, donc 4,5:1 exigé, ' +
       'que le stop clair #3B82F6 ne tient pas à 3,68:1). Même géométrie, même résultat : le ' +
       'picto repousse le libellé à 72,2 % de la hauteur, dans la partie sombre du dégradé à ' +
       '160°. La 11.1 les avait montés en `label` pour le contraste ; la mesure montre que la ' +
@@ -172,7 +172,7 @@ const MEASURED_ON_SURFACE: Record<string, MeasuredException> = {
     // 5,18:1 et doit faire REMESURER, pas passer en silence.
     measuredAgainst: ['#3b82f6', '#1d4ed8'],
     why:
-      "`PASSER LE TOUR` est en rôle `stat` (14 px sur tablette) : il n'est pas « grand texte » " +
+      "`PASSER LE TOUR` est en rôle `cta-narrow` (taille de `stat`, 14 px sur tablette) : il n'est pas « grand texte » " +
       'et doit donc tenir 4,5:1, que le stop clair du dégradé bleu (#3B82F6, 3,68:1) ne tient ' +
       'pas. Report de la revue de code de la 11.2, tranché ici par la MESURE : le picto se ' +
       'pose au-dessus du libellé, ce qui repousse le texte à 72,2 % de la hauteur, soit dans ' +

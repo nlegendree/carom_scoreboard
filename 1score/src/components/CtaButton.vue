@@ -6,7 +6,7 @@
 //
 // SIX variantes, et non cinq (écart assumé au texte de l'AC d'`epics.md`, consigné dans
 // `DESIGN.md` › Components › Buttons) : `PASSER LE TOUR` y est une famille à part — picto
-// AU-DESSUS du libellé, rôle typographique `stat`, état inactif —, et l'absorber dans
+// AU-DESSUS du libellé, rôle typographique `cta-narrow`, état inactif —, et l'absorber dans
 // `accent` aurait demandé trois dérogations dans un composant censé en supprimer.
 //
 // Ce qui reste à l'APPELANT, et pourquoi : la LARGEUR quand elle est contextuelle (`w-1/3`
@@ -63,7 +63,7 @@ const VARIANT_CLASSES: Record<CtaVariant, string> = {
   // Un CTA large porte `label` 900 interlettré `label` (le rôle le prévoit dans `DESIGN.md` —
   // `accent` et `neutral` l'oubliaient, et `VALIDER` se lisait plus serré que `+ POINTS
   // ADVERSAIRE`) ; un CTA de colonne étroite (`setup`, `pass`) porte le picto AU-DESSUS et le
-  // libellé en `stat` 900, sur une ligne. LES SIX sont interlettrés `label`, sans exception.
+  // libellé en `cta-narrow` (taille de `stat`, 900), sur une ligne. LES SIX sont interlettrés `label`, sans exception.
   accent:
     'min-h-(--size-touch-target) rounded-tappable bg-(image:--gradient-blue) text-label font-black tracking-label text-white shadow-cta-relief-blue active:brightness-90',
   // Le RETOUR. Un seul retour d'appui, celui que `DESIGN.md` › Elevation nomme : il
@@ -73,20 +73,23 @@ const VARIANT_CLASSES: Record<CtaVariant, string> = {
   neutral:
     'min-h-(--size-touch-target) rounded-tappable bg-(image:--gradient-neutral) text-label font-black tracking-label text-white shadow-cta-relief-neutral active:brightness-125',
   // Réglage du paramétrage : colonne étroite, donc le format de `PASSER LE TOUR` — picto
-  // AU-DESSUS, libellé `stat` 900 sur une ligne (Story 11.5, « A »). Il était picto en ligne et
+  // AU-DESSUS, libellé `cta-narrow` sur une ligne (Story 11.5, « A »). Il était picto en ligne et
   // `label` 700, et passait sur deux lignes. Contraste tenu par la POSITION du libellé, comme
   // `pass` : mesuré au navigateur, `CtaButton.contrast.test.ts` › MEASURED_ON_SURFACE.
+  // « Sur une ligne » est TENU (`whitespace-nowrap`, revue du 2026-09-19) : un libellé qui passerait
+  // sur deux lignes remonterait vers le stop clair (3,68:1) et invaliderait la mesure.
   setup:
-    'flex min-h-(--size-touch-target) w-full min-w-0 flex-col items-center justify-center gap-1 rounded-tappable bg-(image:--gradient-blue) px-2 text-center text-stat font-black leading-tight tracking-label text-white shadow-cta-relief-blue active:brightness-90',
+    'flex min-h-(--size-touch-target) w-full min-w-0 flex-col items-center justify-center gap-1 rounded-tappable bg-(image:--gradient-blue) px-2 text-center text-cta-narrow font-black leading-tight tracking-label whitespace-nowrap text-white shadow-cta-relief-blue active:brightness-90',
   // `DÉMARRER` : l'action qui engage la partie, seule à être ROUGE — son relief l'est aussi
   // (`cta-relief-red`, qui absorbe le filet clair qu'elle était seule à porter avant la 11.5). Sa hauteur est un token à elle (`--size-start-button`).
   start:
     'flex min-h-(--size-start-button) w-full items-center justify-center gap-2 rounded-tappable bg-(image:--gradient-red) px-2 text-start-button font-black tracking-label text-white shadow-cta-relief-red active:brightness-90',
   // CTA de la barre basse, pleine largeur de la colonne du joueur assis.
   bar: 'flex w-full min-h-(--size-touch-target) items-center justify-center rounded-tappable bg-(image:--gradient-blue) px-4 text-label font-black tracking-label text-white shadow-cta-relief-blue active:brightness-90',
-  // `PASSER LE TOUR` : picto AU-DESSUS du libellé, rôle `stat`. L'état inactif est désormais
+  // `PASSER LE TOUR` : picto AU-DESSUS du libellé, rôle `cta-narrow` (revue de la 11.5 : il était `stat`). L'état inactif est désormais
   // commun aux six (`DISABLED_CLASSES`), il ne figure plus ici.
-  pass: 'flex min-h-(--size-touch-target) w-full flex-col items-center justify-center gap-1 rounded-tappable bg-(image:--gradient-blue) px-2 text-center text-stat font-black leading-tight tracking-label text-white shadow-cta-relief-blue active:brightness-90',
+  // Une seule ligne tenue, comme `setup` : son exception de contraste en dépend aussi.
+  pass: 'flex min-h-(--size-touch-target) w-full flex-col items-center justify-center gap-1 rounded-tappable bg-(image:--gradient-blue) px-2 text-center text-cta-narrow font-black leading-tight tracking-label whitespace-nowrap text-white shadow-cta-relief-blue active:brightness-90',
 }
 </script>
 

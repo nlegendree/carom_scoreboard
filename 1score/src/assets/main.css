@@ -101,6 +101,10 @@
      de son tiers de pop-up (1re passe de rendu de la 11.1). */
   --text-label: clamp(20px, 2vw, 38px);
   --text-stat: clamp(14px, 1.2vw, 23px);
+  /* CTA de colonne étroite (`PASSER LE TOUR`, réglages du paramétrage) : la TAILLE de `stat`, la
+     graisse (900) et l'interlettrage (`label`) des CTA — revue de la 11.5, pour que le frontmatter
+     décrive ce qui est rendu. Taille recopiée et non `var(--text-stat)` : un rôle se lit seul. */
+  --text-cta-narrow: clamp(14px, 1.2vw, 23px);
   --text-picto: clamp(12px, 1vw, 19px);
   --text-key-numeric: clamp(30px, 3.4vw, 65px);
   --text-key-alpha: clamp(18px, 2vw, 38px);

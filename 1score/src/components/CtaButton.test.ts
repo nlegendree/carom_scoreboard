@@ -147,8 +147,11 @@ describe('CtaButton', () => {
     const classes = mountCta('setup').classes()
 
     expect(classes).toContain('bg-(image:--gradient-blue)')
-    expect(classes).toEqual(expect.arrayContaining(['flex-col', 'text-stat', 'font-black', 'leading-tight', 'gap-1', 'tracking-label']))
+    expect(classes).toEqual(expect.arrayContaining(['flex-col', 'text-cta-narrow', 'font-black', 'leading-tight', 'gap-1', 'tracking-label']))
     expect(classes).not.toContain('text-label')
+    expect(classes).not.toContain('font-bold')
+    // Une seule ligne, tenue : l'exception de contraste mesurée à 72,2 % de la hauteur en dépend.
+    expect(classes).toContain('whitespace-nowrap')
     expect(classes).toContain('min-h-(--size-touch-target)')
     expect(classes).toContain('active:brightness-90')
   })
@@ -190,8 +193,9 @@ describe('CtaButton', () => {
     const classes = mountCta('pass').classes()
 
     expect(classes).toContain('bg-(image:--gradient-blue)')
-    expect(classes).toContain('text-stat')
+    expect(classes).toContain('text-cta-narrow')
     expect(classes).toContain('flex-col')
+    expect(classes).toContain('whitespace-nowrap')
     expect(classes).toContain('disabled:opacity-30')
     expect(classes).toContain('min-h-(--size-touch-target)')
     expect(classes).toContain('active:brightness-90')

@@ -516,6 +516,11 @@ describe('HomeScreen', () => {
     )
     expect(wrapper.find('[data-testid="change-ball-button"]').text()).toContain('CHANGER DE BILLE')
     expect(wrapper.find('[data-testid="change-side-button"]').text()).toContain('CHANGER DE CÔTÉ')
+    // Story 11.5 (« A ») : picto `size-4` AU-DESSUS du libellé. Sa taille place le libellé à
+    // 72,2 % de la hauteur, là où l'exception de contraste a été mesurée (revue du 2026-09-19).
+    for (const id of ['change-ball-button', 'change-side-button']) {
+      expect(wrapper.find(`[data-testid="${id}"] svg`).classes()).toContain('size-4')
+    }
     expect(wrapper.find('[data-testid="confirm-button"]').text()).toBe('DÉMARRER')
   })
 
