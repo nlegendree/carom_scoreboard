@@ -124,10 +124,10 @@ so that l'Epic 11 se close sur un design **fini** et non sur un design system pr
   - [x] 🔴 **Comparaison au rendu AVANT tout code** : au plus deux propositions par relief, côte à côte, aux trois formats ; **arbitrage obtenu et noté**, puis frontmatter `shadows` de `DESIGN.md` **d'abord**, `main.css` ensuite
   - [x] Les deux arbitrages rouverts sont **re-tranchés et datés** : ombre de barre basse, verre des pop-ups
   - [x] Si la Règle du relief tapable est mise en défaut, elle est **réécrite**, pas contournée
-- [ ] **Task 6 — Contraste et passe navigateur** (AC6)
-  - [ ] `CtaButton.contrast.test.ts` remis à jour à chaque dégradé / taille / graisse qui bouge ; **vérifié par mutation** (casser une valeur doit rougir)
-  - [ ] Toute valeur de contraste écrite dans `DESIGN.md` est **mesurée**, avec le point de mesure nommé
-  - [ ] Passe navigateur manuelle, trois formats, **paysage seulement**, les douze scènes parcourues
+- [x] **Task 6 — Contraste et passe navigateur** (AC6)
+  - [x] `CtaButton.contrast.test.ts` remis à jour à chaque dégradé / taille / graisse qui bouge ; **vérifié par mutation** (casser une valeur doit rougir)
+  - [x] Toute valeur de contraste écrite dans `DESIGN.md` est **mesurée**, avec le point de mesure nommé
+  - [x] Passe navigateur manuelle, trois formats, **paysage seulement**, les douze scènes parcourues
 - [ ] **Task 7 — Scans, tests, build** (AC7)
   - [ ] Serveur de dev **neuf**, puis `design:check` + `design:check:file` ; **codes de sortie** lus, constats corrigés ou encodés avec raison mesurée
   - [ ] Snippets de `.impeccable/design.json` alignés sur ce que le code rend maintenant
@@ -402,6 +402,10 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
   - **Verre des pop-ups** — le verre léger (88 %, flou 8 px) laissait transparaître une teinte olive et le fantôme du score géant sous le pavé. « V1 » opaque, « V2 » verre dense 95 % + flou 16 px. **Nathan retient V2** — `bg-bg-raised/95 backdrop-blur-lg` dans `PopupCard` (utilitaires standard, aucun token nouveau). L'ignore `low-contrast` de la scène 10 (faux positif à travers `backdrop-filter`) reste valable : le flou demeure.
   - **Règle du relief tapable réécrite**, datée : elle faisait du « rayon de 8 px » la marque de ce qui se tape (les conteneurs sont désormais arrondis en `zone`/`block` sans avoir de corps) et comptait deux ombres portées (trois désormais : pop-up, barre latérale, barre basse).
   Contrôle : rendu du code identique à la proposition au bruit connu près. 1139 tests (+2), build vert, `design:check` et `design:check:file` à 0.
+- **Task 6 — contraste et passe navigateur (AC6), 2026-09-19.**
+  - **`CtaButton.contrast.test.ts` vérifié par MUTATION**, deux sens : (1) stop sombre de `--gradient-blue` éclairci (`#1D4ED8` → `#2D5EE8`) → rouge (« ne fait confiance à une mesure que si la surface mesurée n'a pas bougé » — les exceptions `setup` et `pass` exigent une remesure) ; (2) `setup` remonté en `label` → rouge (« ne garde aucune exception mesurée devenue inutile »). Les deux restaurés, suite verte.
+  - **Toute valeur de contraste touchée par la story porte son point de mesure** dans `DESIGN.md` : jaune franc 17,95:1 et jaune bandeau 14,39:1 (calculés sur l'aplat plein) ; libellés du récap 9,23:1 (calculé : blanc 75 % composé sur la base nue `#1E2438`, seul fond sous le texte — la valeur était écrite sans point) ; verre des pop-ups (V2) : 13,35:1 sur l'aplat plein, **11,47:1 au pire** à travers le verre (95 % de `#272E49` sur un aplat blanc pur dessous ; le verre léger à 88 % descendait à 9,16:1) ; réglages 5,25:1 et `PASSER LE TOUR` mesurés au pixel (Task 4). Les valeurs antérieures à la story (stops de dégradé, anneau de focus, ruban) sont des calculs sur hexadécimaux déjà nommés : non retouchées.
+  - **Passe navigateur, paysage seul, les douze scènes aux trois formats** (1133×744, 1180×733, 1920×1080 — Chromium headless par le harnais, Chrome ne pouvant ouvrir 1920 sur l'écran de 1440×900). Contrôle outillé par rectangles (`getBoundingClientRect`, jamais `scrollWidth` — `CLAUDE.md` §12) : texte hors écran, texte rogné par un ancêtre qui coupe, texte hors de son bouton, texte tronqué, cible de moins de 44 px → **0 constat sur 36 écrans**. ⚠️ Le contrôle est lui-même vérifié par mutation : une première version ne voyait PAS un libellé débordant d'un bouton qui ne rogne rien (60 px dans 229) ; la règle « hors de son bouton » a été ajoutée et le détecte, et une hauteur de `PASSER LE TOUR` forcée à 30 px sort en « cible basse ». Puis relecture des planches aux trois formats : rien d'anormal.
 - **Revue de code du 2026-09-19** (`01402db..HEAD`, trois relecteurs) : voir Tasks › Review Findings. Deux décisions de Nathan — gouttière intérieure des cartes **retirée**, CTA et pictos inactifs **plats** (`disabled:shadow-none`) —, et le rendu JDS de la découpe attesté (scènes `07` et `09` aux trois formats, comparées à `HEAD`).
 
 ### File List
@@ -439,6 +443,8 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
 - `_bmad-output/implementation-artifacts/deferred-work.md` — reports de la revue et « relier le chrono aux cartes »
 
 ## Change Log
+
+- **2026-09-19 — Task 6, contraste et passe navigateur.** Test de contraste vérifié par mutation dans les deux sens ; points de mesure écrits pour toute valeur touchée par la story (dont les libellés du récap et le verre des pop-ups, 11,47:1 au pire) ; passe des douze scènes aux trois formats, 0 constat, contrôle lui-même vérifié par mutation.
 
 - **2026-09-19 — Task 5, reliefs : les deux arbitrages de la 11.2 re-tranchés** (Nathan, au rendu). Barre basse : ombre projetée vers le haut (« O2 », token `bottom-bar`). Pop-ups : verre dense 95 % / flou 16 px (« V2 »), la teinte olive et le fantôme du score disparaissent. Règle du relief tapable réécrite.
 
