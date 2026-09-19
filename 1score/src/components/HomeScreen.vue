@@ -553,7 +553,7 @@ function fixDistance(): void {
                 variant="setup"
                 @press="changeBall"
               >
-                <PictoIcon name="refresh" class="size-3 shrink-0" />
+                <PictoIcon name="refresh" class="size-4 shrink-0" />
                 <span>CHANGER DE BILLE</span>
               </CtaButton>
               <CtaButton
@@ -561,7 +561,7 @@ function fixDistance(): void {
                 variant="setup"
                 @press="changeSide"
               >
-                <PictoIcon name="arrow-right-left" class="size-3 shrink-0" />
+                <PictoIcon name="arrow-right-left" class="size-4 shrink-0" />
                 <span>CHANGER DE CÔTÉ</span>
               </CtaButton>
 

@@ -146,6 +146,22 @@ interface MeasuredException {
 }
 
 const MEASURED_ON_SURFACE: Record<string, MeasuredException> = {
+  setup: {
+    // Fond échantillonné au pixel sous le libellé, `?scene=06-parametrage-rempli`, DPR 1,
+    // `CHANGER DE BILLE` et `CHANGER DE CÔTÉ`. Médian `#2963e4` : 5,25:1 aux trois formats
+    // (5,30:1 pour `CHANGER DE BILLE` à 1133). On retient le pire.
+    ratio: 5.25,
+    where: '72,2 % de la hauteur du bouton, sur une ligne (et non en son milieu)',
+    measuredOn: '2026-09-19',
+    measuredAgainst: ['#3b82f6', '#1d4ed8'],
+    why:
+      'Story 11.5 (Task 4, Nathan, au rendu, « A ») : les réglages prennent le format de ' +
+      '`PASSER LE TOUR` — picto au-dessus, rôle `stat` (14 px sur tablette, donc 4,5:1 exigé, ' +
+      'que le stop clair #3B82F6 ne tient pas à 3,68:1). Même géométrie, même résultat : le ' +
+      'picto repousse le libellé à 72,2 % de la hauteur, dans la partie sombre du dégradé à ' +
+      '160°. La 11.1 les avait montés en `label` pour le contraste ; la mesure montre que la ' +
+      'POSITION suffit.',
+  },
   pass: {
     // Fond échantillonné au pixel sous le libellé, `?scene=07-scoreboard-jds`, DPR 1.
     // Médian `#2a64e5` : 5,18:1 à 1133 et 1180, 5,25:1 à 1920. On retient le pire des trois.

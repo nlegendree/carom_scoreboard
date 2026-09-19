@@ -115,11 +115,11 @@ so that l'Epic 11 se close sur un design **fini** et non sur un design system pr
   - [x] Décision appliquée : `DESIGN.md` › Shapes / Layout **d'abord** (avec l'exception de rayon sur conteneur, datée, si elle est prise), `main.css` et le markup ensuite
   - [x] Barre basse traitée dans le même mouvement (découpée ou non — décision écrite)
   - [x] Scènes `07`, `09`, `12` re-regardées : elles montrent encore ce que leur nom annonce
-- [ ] **Task 4 — Formats de CTA** (AC4)
-  - [ ] 🔴 **Comparaison au rendu AVANT tout code** : au plus deux propositions, côte à côte, aux trois formats, sur les écrans où chaque variante vit ; soumises à Nathan, **arbitrage obtenu et noté** dans Dev Agent Record
-  - [ ] `DESIGN.md` › Components › Buttons **d'abord**, puis `VARIANT_CLASSES` / `main.css` ; **zéro valeur visuelle** dans `CtaButton.vue`
-  - [ ] Les trois contraintes préservées : pas de largeur sur `accent` / `neutral`, un seul retour d'appui pour le neutre, `DISABLED_CLASSES` commun aux six
-  - [ ] `CtaButton.test.ts` et `CtaButton.contrast.test.ts` mis à jour et verts
+- [x] **Task 4 — Formats de CTA** (AC4)
+  - [x] 🔴 **Comparaison au rendu AVANT tout code** : au plus deux propositions, côte à côte, aux trois formats, sur les écrans où chaque variante vit ; soumises à Nathan, **arbitrage obtenu et noté** dans Dev Agent Record
+  - [x] `DESIGN.md` › Components › Buttons **d'abord**, puis `VARIANT_CLASSES` / `main.css` ; **zéro valeur visuelle** dans `CtaButton.vue`
+  - [x] Les trois contraintes préservées : pas de largeur sur `accent` / `neutral`, un seul retour d'appui pour le neutre, `DISABLED_CLASSES` commun aux six
+  - [x] `CtaButton.test.ts` et `CtaButton.contrast.test.ts` mis à jour et verts
 - [ ] **Task 5 — Reliefs** (AC5)
   - [ ] 🔴 **Comparaison au rendu AVANT tout code** : au plus deux propositions par relief, côte à côte, aux trois formats ; **arbitrage obtenu et noté**, puis frontmatter `shadows` de `DESIGN.md` **d'abord**, `main.css` ensuite
   - [ ] Les deux arbitrages rouverts sont **re-tranchés et datés** : ombre de barre basse, verre des pop-ups
@@ -396,6 +396,7 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
   - `87c6776` — **relief des CTA, proposition « K1 »** : tranche teintée sous les six variantes et les pictos, enfoncement à l'appui ; barre de rebours de `VALIDER` `h-2` → `h-1` (« un peu plus discrète »). ⚠️ C'est du travail des **Tasks 4 et 5**, livré avant qu'elles soient ouvertes : l'arbitrage (« K1 ») est noté ici, mais **les propositions concurrentes de K1 n'ont pas été consignées** au moment du rendu. Les deux arbitrages rouverts de la 11.2 (ombre de barre basse, verre des pop-ups) restent à re-trancher en Task 5.
   - `607ba5a` — tuiles `BIENTÔT` grisées (fond désaturé, titre à 50 %) : « griser les éléments ».
 - **Jaune joueur, 2026-09-19** (Nathan, au rendu, « un jaune plus moderne », puis « plus peps ») : `#FFE000` → **`#FFF200`** (bandeau `#E6CA00` → `#E6DA00`, le jaune à 90 %), bleu toujours à zéro, teinte 52,7° → 57°. Quatre passes par surcharges CSS aux formats 1180 et 1920, sur le paramétrage et les deux scoreboards : chaud `#FFCF33` / beurre `#FFE566` (écartés : pas assez peps), citron `#FFEB00` / fluo `#F5FF00`, déclinaisons du citron (`#FFF200` retenu ; bandeau marqué `#D6C500` et version adoucie `#FFEE33` écartés), puis quatre versions plus claires (`#FFF533` à `#FFF880`, écartées : « on reste sur A1 pour l'instant »). ⚠️ Écart assumé à « au plus deux propositions » : Nathan a demandé les déclinaisons. Encre noire 17,95:1 sur la carte, 14,39:1 sur le bandeau ; placeholder de champ 4,96 → 5,18:1. `DESIGN.md` d'abord, `main.css` ensuite. `.impeccable/design.json` garde les `oklch` de l'ancien jaune : à régénérer en Task 7.
+- **Task 4 — formats de CTA (AC4), 2026-09-19.** Constat de départ, au rendu : aucune règle commune — `accent` et `neutral` non interlettrés alors que le rôle `label` le prévoit (`VALIDER` plus serré que `+ POINTS ADVERSAIRE`), et deux colonnes de même largeur qui plaçaient leur picto différemment (`CHANGER DE BILLE` en ligne sur deux lignes, `PASSER LE TOUR` au-dessus). **Deux propositions** par surcharges CSS, aux trois formats, sur les scènes où vivent les six variantes (06, 04/05/08/10, 07/09/12) : « A » — la largeur décide du format (large : `label` 900 interlettré ; étroit : picto au-dessus, `stat` 900 sur une ligne) — et « B » — A plus les réglages en tonal (fond bleu translucide, filet, sans relief), `DÉMARRER` seul CTA plein du paramétrage. **Nathan retient A.** Au rendu de contrôle, les réglages de la proposition étaient interlettrés (la surcharge les attrapait par `text-label`) : le code s'y aligne, puis Nathan étend l'interlettrage à `PASSER LE TOUR` (« interlettre ») — **les six sont interlettrés `label`, sans exception**. Contraste des réglages en `stat` (4,5:1 exigé, le stop clair donne 3,68:1) tenu par la POSITION du libellé, comme `pass` : mesuré au pixel, `#2963e4` sous le libellé à 72,2 % de la hauteur, **5,25:1** au pire des trois formats — exception mesurée ajoutée à `CtaButton.contrast.test.ts`. `PASSER LE TOUR` remesuré interlettré par la même méthode : 5,25:1 au pire (la valeur inscrite, 5,18:1 du 2026-09-17, reste la plus prudente). Contrôle : rendu du code identique à la proposition au bruit d'anticrénelage près. Les trois contraintes de l'AC4 tiennent (aucune largeur sur `accent`/`neutral`, un seul retour d'appui du neutre, `DISABLED_CLASSES` commun) ; aucune valeur nouvelle dans `CtaButton.vue`. 1137 tests (+6), build vert, `design:check` et `design:check:file` à 0.
 - **Revue de code du 2026-09-19** (`01402db..HEAD`, trois relecteurs) : voir Tasks › Review Findings. Deux décisions de Nathan — gouttière intérieure des cartes **retirée**, CTA et pictos inactifs **plats** (`disabled:shadow-none`) —, et le rendu JDS de la découpe attesté (scènes `07` et `09` aux trois formats, comparées à `HEAD`).
 
 ### File List
@@ -413,12 +414,13 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
 - `1score/src/components/ActionBar.test.ts` — deux cas : la grille reprise, les pictos étirés
 - `1score/src/components/ShotClock.vue` — demi-anneau et prop `turnRingSide` retirés (débordement abandonné)
 - `1score/src/components/ShotClock.test.ts` — les cinq cas du demi-anneau remplacés par trois garde-fous (rien de rouge, rien du tour, plus aucune lecture du token retiré)
-- `1score/src/components/CtaButton.vue`, `CtaButton.test.ts` — relief K1, enfoncement par `--size-relief-depth`, inactif plat
+- `1score/src/components/CtaButton.vue`, `CtaButton.test.ts` — relief K1, enfoncement par `--size-relief-depth`, inactif plat ; Task 4 : six variantes interlettrées, `setup` au format de `pass`
+- `1score/src/components/CtaButton.contrast.test.ts` — exception mesurée de `setup` (Task 4)
 - `1score/src/components/IconAction.vue`, `IconAction.test.ts` — même relief, même enfoncement, inactif plat
 - `1score/src/components/ScoreEntryDock.vue`, `ScoreEntryDock.test.ts` — barre de rebours `h-1`
 - `1score/src/components/ModeTile.vue`, `ModeTile.test.ts` — `BIENTÔT` grisé
 - `1score/src/components/GameSummary.vue`, `GameSummary.test.ts` — format du scoreboard (« R1 »), gouttière par le token
-- `1score/src/components/HomeScreen.vue`, `HomeScreen.test.ts` — format du scoreboard (« M »/« T1 »), `setup-header` retiré, `SETUP_POPUP_RESERVE`, gouttière par le token
+- `1score/src/components/HomeScreen.vue`, `HomeScreen.test.ts` — pictos de réglage `size-4` (Task 4) ; format du scoreboard (« M »/« T1 »), `setup-header` retiré, `SETUP_POPUP_RESERVE`, gouttière par le token
 - `1score/src/components/PlayerSetupCard.vue` — rayon de bloc, bandeau resserré
 - `1score/src/components/PromptModal.vue`, `PromptModal.test.ts` — image de bille
 - `1score/src/components/ballAssets.ts` — `BALL_CLASSES` retirée
@@ -431,6 +433,8 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
 - `_bmad-output/implementation-artifacts/deferred-work.md` — reports de la revue et « relier le chrono aux cartes »
 
 ## Change Log
+
+- **2026-09-19 — Task 4, formats de CTA : « la largeur décide du format »** (Nathan, au rendu, « A » contre « B » tonal). Large : `label` 900 ; étroit (réglages, `PASSER LE TOUR`) : picto au-dessus, `stat` 900 sur une ligne ; les six interlettrés `label`. Contraste des réglages mesuré à 5,25:1.
 
 - **2026-09-19 — Jaune joueur `#FFE000` → `#FFF200`** (Nathan, au rendu : « plus peps »), bandeau `#E6DA00`. Quatre passes de comparaison, consignées au Dev Agent Record.
 

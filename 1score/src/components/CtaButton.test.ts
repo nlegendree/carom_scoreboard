@@ -141,15 +141,23 @@ describe('CtaButton', () => {
     expect(mountCta('neutral').classes()).not.toContain('w-full')
   })
 
-  it('renders the setup variant', () => {
+  // Story 11.5 (Task 4, « A ») : colonne étroite, donc le format de `PASSER LE TOUR` —
+  // picto au-dessus, `stat` 900 sur une ligne. Il était picto en ligne et `label` 700.
+  it('renders the setup variant in the narrow-column format of pass', () => {
     const classes = mountCta('setup').classes()
 
     expect(classes).toContain('bg-(image:--gradient-blue)')
-    expect(classes).toContain('text-label')
-    expect(classes).toContain('font-bold')
-    expect(classes).toContain('gap-2')
+    expect(classes).toEqual(expect.arrayContaining(['flex-col', 'text-stat', 'font-black', 'leading-tight', 'gap-1', 'tracking-label']))
+    expect(classes).not.toContain('text-label')
     expect(classes).toContain('min-h-(--size-touch-target)')
     expect(classes).toContain('active:brightness-90')
+  })
+
+  // Story 11.5 (Task 4, « A ») : les CTA sont interlettrés `label`, comme le rôle le
+  // prévoit — `VALIDER` et `ANNULER` se lisaient plus serrés que `+ POINTS ADVERSAIRE`.
+  // Les colonnes étroites aussi (Nathan, au rendu : « interlettre ») — la règle est sans exception.
+  it.each(VARIANTS)('tracks the %s variant with the label tracking', (variant) => {
+    expect(mountCta(variant).classes()).toContain('tracking-label')
   })
 
   it('renders the start variant', () => {
