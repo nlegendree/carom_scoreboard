@@ -24,6 +24,8 @@ describe('ModeTile', () => {
     expect(wrapper.attributes('disabled')).toBeUndefined()
     expect(background(wrapper).classes()).toContain('bg-(image:--gradient-blue)')
     expect(background(wrapper).classes()).not.toContain('opacity-45')
+    expect(background(wrapper).classes()).not.toContain('grayscale')
+    expect(wrapper.find('[data-testid="tile-title"]').classes()).not.toContain('text-white/50')
     expect(wrapper.classes()).toContain('active:brightness-125')
     expect(wrapper.emitted('select')).toHaveLength(1)
   })
@@ -38,7 +40,11 @@ describe('ModeTile', () => {
     expect(wrapper.find('[data-testid="soon-badge"]').text()).toBe('BIENTÔT')
     expect(wrapper.findComponent(PictoIcon).exists()).toBe(false)
     expect(background(wrapper).classes()).toContain('opacity-45')
-    expect(wrapper.find('[data-testid="tile-title"]').classes()).not.toContain('opacity-45')
+    // Story 11.5 (« griser ») : le fond est aussi DÉSATURÉ et le titre atténué — le bleu seul
+    // atténué se lisait encore comme ouvert. Le badge, lui, n'est jamais atténué.
+    expect(background(wrapper).classes()).toContain('grayscale')
+    expect(wrapper.find('[data-testid="tile-title"]').classes()).toContain('text-white/50')
+    expect(wrapper.find('[data-testid="soon-badge"]').classes().join(' ')).not.toMatch(/opacity|text-white\//)
     expect(wrapper.classes()).not.toContain('active:brightness-125')
     expect(wrapper.emitted('select')).toBeUndefined()
   })

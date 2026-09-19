@@ -54,11 +54,19 @@ function select(): void {
       data-testid="tile-background"
       aria-hidden="true"
       class="absolute inset-0 -z-10"
-      :class="[gradientClass, soon ? 'opacity-45' : '']"
+      :class="[gradientClass, soon ? 'opacity-45 grayscale' : '']"
     />
 
     <span class="flex flex-col gap-1">
-      <span data-testid="tile-title" class="text-title font-black uppercase leading-none">
+      <!-- Story 11.5 (Nathan, 2026-09-19, « griser les éléments ») : une tuile BIENTÔT a le fond
+           DÉSATURÉ (`grayscale`) et le titre à 50 % — le bleu seulement atténué se lisait encore
+           comme une tuile ouverte. Atténuation d'un état inactif : exemptée du contraste (WCAG
+           §1.4.3, `DESIGN.md` › Règle de l'inactif). Le badge reste plein : il porte l'info. -->
+      <span
+        data-testid="tile-title"
+        class="text-title font-black uppercase leading-none"
+        :class="soon ? 'text-white/50' : ''"
+      >
         {{ title }}
       </span>
       <!-- Blanc PLEIN depuis la passe contraste de la 10.7 : `text-white/80` ne donnait

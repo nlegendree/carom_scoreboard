@@ -462,7 +462,7 @@ Le relief est réservé à **ce qui se tape**, à **ce qui flotte** et à **la b
 ### Named Rules
 **La Règle du relief tapable.** Un conteneur est plat et cerné ; seul un objet qu'on tape a du corps (relief, filet de lumière, rayon de 8 px). Une ombre sur une carte joueur, une tuile ou une colonne est une faute ; les deux ombres portées du produit vont à ce qui flotte (pop-up) et à la barre latérale.
 
-**La Règle de l'inactif.** Ce qui n'est pas disponible s'atténue (`disabled` à 30 %, `BIENTÔT` à 45 % du fond) **et** porte un badge : l'information ne repose jamais sur la couleur seule. Cette atténuation ne se « corrige » pas au contraste (WCAG §1.4.3).
+**La Règle de l'inactif.** Ce qui n'est pas disponible s'atténue (`disabled` à 30 %, `BIENTÔT` : fond à 45 % **et désaturé**, titre en blanc à 50 % — Story 11.5, Nathan, 2026-09-19, « griser les éléments » : le fond bleu seulement atténué se lisait encore comme une tuile ouverte ; le badge, lui, reste plein, c'est lui qui porte l'information) **et** porte un badge : l'information ne repose jamais sur la couleur seule. Cette atténuation ne se « corrige » pas au contraste (WCAG §1.4.3).
 
 ## Shapes
 
