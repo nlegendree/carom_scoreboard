@@ -71,9 +71,16 @@ const NEUTRAL_COLUMN_CLASSES = 'bg-surface text-white'
 // rayée de fins traits de fond. Écart assumé à UX-DR13, qui demandait des colonnes
 // entières « et pas une grille de lignes ».
 const CELL_CLASSES = 'flex flex-1 items-center justify-center'
-// La colonne de libellés prend le même aplat neutre que la colonne perdante : sur la
-// référence les deux se lisent dans la même tonalité, seul le texte les distingue.
-const LABEL_CELL_CLASSES = 'bg-surface text-white/50'
+// Story 11.5 (Nathan, au rendu, 2026-09-19, « R1 ») : la colonne des libellés devient le
+// CREUX central — comme le chrono au scoreboard et les commandes au paramétrage. Les cellules
+// n'ont plus d'aplat : c'est la COLONNE qui porte la base nue (`bg-bg`), gouttières comprises.
+// Texte à 75 % et non plus 50 % : « un petit souci de contraste avec le texte central ».
+// Mesuré sur la base : 50 % → 4,92:1, juste au-dessus du seuil AA du petit texte et terne à
+// côté des cellules pleines ; 75 % → 9,23:1, les libellés restent en retrait des valeurs.
+// ⚠️ La colonne porte `px-1` : le fond étant désormais sur ELLE, des cellules collées à ses
+// bords sont un constat `cramped-padding` du détecteur. Le texte est centré, le retrait ne se
+// voit pas — c'est une correction, pas un écart étiqueté.
+const LABEL_CELL_CLASSES = 'text-white/75'
 
 const modeLabel = computed(() => GAME_MODE_LABELS[props.mode])
 
@@ -100,7 +107,7 @@ const players = computed<Record<PlayerId, Player>>(() => ({
 <template>
   <div
     data-testid="game-summary"
-    class="flex h-full w-full flex-col border border-border bg-surface"
+    class="flex h-full w-full flex-col overflow-hidden rounded-zone border border-border bg-surface"
   >
     <!-- Bandeau au modèle Billiboard (2e passe de rendu, Nathan, réf. `billiboard_recap`) :
          une BANDE CLAIRE court d'un bord à l'autre et porte les deux couples
@@ -167,12 +174,16 @@ const players = computed<Record<PlayerId, Player>>(() => ({
          l'aplat de couleur est porté par la CELLULE et non plus par la colonne entière.
          Ordre des lignes revu : `RÉSULTAT` puis POINTS · REPRISES · MOY · SÉRIE — le
          score d'abord, la moyenne après le nombre de reprises dont elle se déduit.
-         Angles vifs : un conteneur n'a aucun `rounded-*` (DESIGN.md › Shapes). -->
-    <div class="flex min-h-0 flex-1 gap-2 p-4">
+         Story 11.5 (Nathan, au rendu, 2026-09-19, « R1 ») : le format du scoreboard. Le
+         conteneur est le grand bloc (rayon de zone, `overflow-hidden` qui arrondit aussi le
+         bandeau VS), et chaque colonne devient un BLOC au rayon de bloc, ses cellules jointives
+         dedans. Retrait et gouttière à une unité. Exception aux angles vifs : `DESIGN.md` ›
+         Shapes, la mise en page carte · colonne · carte. -->
+    <div class="flex min-h-0 flex-1 gap-1 p-1">
       <template v-for="(side, index) in SIDES" :key="side">
         <div
           v-if="index === 1"
-          class="flex w-1/5 shrink-0 flex-col gap-1 text-center text-stat font-bold tracking-stat"
+          class="flex w-1/5 shrink-0 flex-col gap-1 overflow-hidden rounded-block bg-bg px-1 text-center text-stat font-bold tracking-stat"
         >
           <span :class="[CELL_CLASSES, LABEL_CELL_CLASSES]">RÉSULTAT</span>
           <span :class="[CELL_CLASSES, LABEL_CELL_CLASSES]">POINTS</span>
@@ -184,7 +195,7 @@ const players = computed<Record<PlayerId, Player>>(() => ({
         <div
           data-testid="summary-column"
           :data-side="side"
-          class="flex min-w-0 flex-1 flex-col gap-1 text-center"
+          class="flex min-w-0 flex-1 flex-col gap-1 overflow-hidden rounded-block text-center"
         >
           <div :class="[CELL_CLASSES, columnClasses(side)]">
             <div class="flex flex-col items-center gap-1">

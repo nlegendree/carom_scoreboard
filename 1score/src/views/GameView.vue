@@ -504,11 +504,13 @@ const SUMMARY_SIDEBAR_EXIT: SideBarItem = {
            collée au bord, panneau de contenu à contour. Le marine clair (niveau 1, Story 11.2)
            est porté par `<main>` et non par la coquille : la barre est le niveau 0, et un
            conteneur coloré sans marge intérieure est un constat du détecteur. La barre basse
-           provisoire de la 10.4 a disparu avec ses deux boutons. -->
+           provisoire de la 10.4 a disparu avec ses deux boutons.
+           Story 11.5 (Nathan, au rendu, 2026-09-19, « R1 ») : marge d'UNE unité autour du
+           grand bloc, comme au scoreboard et au paramétrage (`p-4` → `p-1`). -->
       <div class="flex min-h-0 flex-1">
         <SideBar :items="SUMMARY_SIDEBAR_ITEMS" :exitItem="SUMMARY_SIDEBAR_EXIT" />
 
-        <main class="flex min-w-0 flex-1 flex-col bg-bg-raised p-4">
+        <main class="flex min-w-0 flex-1 flex-col bg-bg-raised p-1">
           <GameSummary
             class="min-h-0 flex-1"
             :mode="mode"

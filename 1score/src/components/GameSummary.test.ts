@@ -96,15 +96,34 @@ describe('GameSummary', () => {
     expect(source).not.toContain('rounded-full')
   })
 
-  // AC1 : la coquille de l'Epic 10 — conteneur à contour, aucun arrondi, plus de `bg-bg`
-  // (le dégradé de l'écran est posé par `GameView`, le panneau n'est plus opaque).
-  it('wears the outlined container of the epic, with no rounding left', () => {
+  // AC1 : la coquille de l'Epic 10 — conteneur à contour, plus de `bg-bg` (le fond de l'écran
+  // est posé par `GameView`, le panneau n'est plus opaque). ⚠️ « Aucun arrondi » ne tient plus
+  // depuis la Story 11.5 (Nathan, « R1 ») : le conteneur prend le rayon de ZONE du grand bloc.
+  // Ce qui reste interdit, c'est un rayon hors tokens (`rounded-3xl` de l'Epic 10).
+  it('wears the outlined container of the epic, with the zone radius of the big block', () => {
     const root = mountSummary().find('[data-testid="game-summary"]')
 
     expect(root.classes()).toContain('border')
     expect(root.classes()).toContain('border-border')
+    expect(root.classes()).toContain('rounded-zone')
     expect(root.classes()).not.toContain('bg-bg')
     expect(source).not.toContain('rounded-3xl')
+  })
+
+  // Story 11.5 (« R1 ») : chaque colonne est un BLOC au rayon de bloc ; la colonne des libellés
+  // est le creux central (base nue portée par la COLONNE, pas par les cellules). Texte à 75 % :
+  // 50 % mesurait 4,92:1 sur la base, juste au seuil AA et terne (« souci de contraste »).
+  it('lays its three columns out as blocks, labels in a readable recess', () => {
+    const wrapper = mountSummary()
+    const columns = wrapper.findAll('[data-testid="summary-column"]')
+    const labels = columns[0]!.element.parentElement!.children[1]!
+
+    for (const c of columns) expect(c.classes()).toContain('rounded-block')
+    expect([...labels.classList]).toEqual(expect.arrayContaining(['rounded-block', 'bg-bg']))
+    for (const cell of labels.children) {
+      expect([...cell.classList]).toContain('text-white/75')
+      expect([...cell.classList]).not.toContain('bg-surface')
+    }
   })
 
   // AC13 : le mode en surtitre discret, jamais en concurrence avec les noms.
