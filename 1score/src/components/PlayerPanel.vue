@@ -335,7 +335,7 @@ function adjust(delta: number): void {
       v-if="active"
       data-testid="turn-ring"
       aria-hidden="true"
-      class="pointer-events-none absolute inset-0 z-10 ring-8 ring-turn-active ring-inset"
+      class="pointer-events-none absolute inset-0 z-10 rounded-block ring-8 ring-turn-active ring-inset"
     />
   </div>
 </template>

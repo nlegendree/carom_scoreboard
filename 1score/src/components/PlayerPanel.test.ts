@@ -64,6 +64,11 @@ describe('PlayerPanel', () => {
     expect(ring.classes()).toContain('ring-turn-active')
     expect(ring.classes()).toContain('absolute')
     expect(ring.classes()).toContain('inset-0')
+    // Story 11.5 (Nathan, au rendu, 2026-09-19) : le liseré porte le MÊME rayon que la carte.
+    // Sans lui, seul son bord extérieur s'arrondissait — rogné par l'`overflow-hidden` de la
+    // carte — et son bord intérieur restait à angle vif. Un `ring` inset suit le rayon de
+    // l'élément qui le porte : encore faut-il que cet élément en ait un.
+    expect(ring.classes()).toContain('rounded-block')
     // Rendu APRÈS les zones : c'est ce qui le met au-dessus des aplats opaques.
     expect(ring.element.previousElementSibling).toBe(
       active.find('[data-testid="score-minus"]').element.parentElement,
