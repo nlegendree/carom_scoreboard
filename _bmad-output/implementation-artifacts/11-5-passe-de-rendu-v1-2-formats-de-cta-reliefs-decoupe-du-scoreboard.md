@@ -128,11 +128,11 @@ so that l'Epic 11 se close sur un design **fini** et non sur un design system pr
   - [x] `CtaButton.contrast.test.ts` remis à jour à chaque dégradé / taille / graisse qui bouge ; **vérifié par mutation** (casser une valeur doit rougir)
   - [x] Toute valeur de contraste écrite dans `DESIGN.md` est **mesurée**, avec le point de mesure nommé
   - [x] Passe navigateur manuelle, trois formats, **paysage seulement**, les douze scènes parcourues
-- [ ] **Task 7 — Scans, tests, build** (AC7)
-  - [ ] Serveur de dev **neuf**, puis `design:check` + `design:check:file` ; **codes de sortie** lus, constats corrigés ou encodés avec raison mesurée
-  - [ ] Snippets de `.impeccable/design.json` alignés sur ce que le code rend maintenant
-  - [ ] `npm test`, `npm run build` verts ; `git diff --stat -- 1score/src/stores` **vide**
-  - [ ] 36 captures d'**après**, comparées à celles de Task 1 : **tout écart doit être une décision**, ou c'est un défaut
+- [x] **Task 7 — Scans, tests, build** (AC7)
+  - [x] Serveur de dev **neuf**, puis `design:check` + `design:check:file` ; **codes de sortie** lus, constats corrigés ou encodés avec raison mesurée
+  - [x] Snippets de `.impeccable/design.json` alignés sur ce que le code rend maintenant
+  - [x] `npm test`, `npm run build` verts ; `git diff --stat -- 1score/src/stores` **vide**
+  - [x] 36 captures d'**après**, comparées à celles de Task 1 : **tout écart doit être une décision**, ou c'est un défaut
 - [ ] **Task 8 — `useRejectFeedback`** (AC8) — *conditionnelle, reportable*
   - [ ] Seulement si les trois hôtes de saisie ont déjà été ouverts par une décision de rendu ; sinon, laisser le report intact et le dire
 - [ ] **Task 9 — Clôture de l'epic** (AC9)
@@ -406,6 +406,10 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
   - **`CtaButton.contrast.test.ts` vérifié par MUTATION**, deux sens : (1) stop sombre de `--gradient-blue` éclairci (`#1D4ED8` → `#2D5EE8`) → rouge (« ne fait confiance à une mesure que si la surface mesurée n'a pas bougé » — les exceptions `setup` et `pass` exigent une remesure) ; (2) `setup` remonté en `label` → rouge (« ne garde aucune exception mesurée devenue inutile »). Les deux restaurés, suite verte.
   - **Toute valeur de contraste touchée par la story porte son point de mesure** dans `DESIGN.md` : jaune franc 17,95:1 et jaune bandeau 14,39:1 (calculés sur l'aplat plein) ; libellés du récap 9,23:1 (calculé : blanc 75 % composé sur la base nue `#1E2438`, seul fond sous le texte — la valeur était écrite sans point) ; verre des pop-ups (V2) : 13,35:1 sur l'aplat plein, **11,47:1 au pire** à travers le verre (95 % de `#272E49` sur un aplat blanc pur dessous ; le verre léger à 88 % descendait à 9,16:1) ; réglages 5,25:1 et `PASSER LE TOUR` mesurés au pixel (Task 4). Les valeurs antérieures à la story (stops de dégradé, anneau de focus, ruban) sont des calculs sur hexadécimaux déjà nommés : non retouchées.
   - **Passe navigateur, paysage seul, les douze scènes aux trois formats** (1133×744, 1180×733, 1920×1080 — Chromium headless par le harnais, Chrome ne pouvant ouvrir 1920 sur l'écran de 1440×900). Contrôle outillé par rectangles (`getBoundingClientRect`, jamais `scrollWidth` — `CLAUDE.md` §12) : texte hors écran, texte rogné par un ancêtre qui coupe, texte hors de son bouton, texte tronqué, cible de moins de 44 px → **0 constat sur 36 écrans**. ⚠️ Le contrôle est lui-même vérifié par mutation : une première version ne voyait PAS un libellé débordant d'un bouton qui ne rogne rien (60 px dans 229) ; la règle « hors de son bouton » a été ajoutée et le détecte, et une hauteur de `PASSER LE TOUR` forcée à 30 px sort en « cible basse ». Puis relecture des planches aux trois formats : rien d'anormal.
+- **Task 7 — scans, tests, build (AC7), 2026-09-19.**
+  - **`.impeccable/design.json` réaligné** (sidecar de `DESIGN.md`) : jaunes en OKLCH (`#FFF200` → `oklch(94.1% 0.200 105.7)`, `#E6DA00` → `oklch(87.0% 0.185 105.6)` — la conversion retrouve au dixième les valeurs de l'ancien jaune, elle est donc fiable) ; ombres en miroir du frontmatter (`light-edge-start` retirée, quatre `cta-relief-*` et `bottom-bar` ajoutées : 6 → 10) ; snippets des six CTA et du picto d'action (tranche, enfoncement de `--size-relief-depth`, inactif plat, interlettrage `label`, réglage au format de `PASSER LE TOUR`) et de la carte de pop-up (verre dense 95 % / 16 px, CTA en relief) ; règles nommées, do et don't recopiés de `DESIGN.md` (trois règles et un do avaient divergé). Deux « Do » de `DESIGN.md` périmés corrigés au passage (« quatre gabarits de CTA » → six variantes ; « angles vifs sur les conteneurs » → sauf la mise en page carte · colonne · carte).
+  - **36 captures d'après comparées à la ligne de base de la Task 1.** ⚠️ Le dossier archivé à la Task 1 (`…/scratchpad/baseline-11.5/`) a disparu avec le scratchpad de sa session ; la ligne de base est **reconstituée à l'identique** en rendant `123cf19` (code applicatif inchangé depuis, attesté à la Task 1) dans un worktree, même harnais, même gel des animations, même binaire. Résultat : **JDS (02) identique** aux trois formats ; **accueil (01)** : seul le quart bas-droit bouge, les tuiles `BIENTÔT` grisées (`607ba5a`) ; **paramétrage (03–06), scoreboard (07–10, 12), récap (11)** : tous changés, et chacun par des décisions de la story (format du scoreboard « M »/« T1 »/« R1 », découpe et chrono, jaune `#FFF200`, formats de CTA « A », relief « K1 », ombre de barre « O2 », verre « V2 »). Aucun écran qu'aucune décision ne touchait n'a bougé ; le contenu des écrans changés a été relu à la Task 6 (planches aux trois formats, contrôle par rectangles à 0).
+  - Serveur de dev **neuf** : `design:check` → **0**, `design:check:file` → **0**. `npm test` : **1139 tests / 32 fichiers**, verts. `npm run build` : vert. `git diff --stat 123cf19..HEAD -- 1score/src/stores` : **vide**.
 - **Revue de code du 2026-09-19** (`01402db..HEAD`, trois relecteurs) : voir Tasks › Review Findings. Deux décisions de Nathan — gouttière intérieure des cartes **retirée**, CTA et pictos inactifs **plats** (`disabled:shadow-none`) —, et le rendu JDS de la découpe attesté (scènes `07` et `09` aux trois formats, comparées à `HEAD`).
 
 ### File List
@@ -438,11 +442,14 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
 - `1score/src/assets/tokens.test.ts` — `shadow-none` admis, `translate-[xy]-[…]` interdit (revue)
 - `1score/scripts/render-static.cjs` — attend `setup-mode-label` au lieu de `setup-header` (revue)
 - `1score/CLAUDE.md` — §10 : `--game-clock-bleed` retiré, lecteurs de `--game-column-gutter`
+- `.impeccable/design.json` — sidecar réaligné (Task 7)
 - `.impeccable/baseline/2026-09-19-scan-src.json`, `2026-09-19-scan-url.json` — scans du 2026-09-19 (antérieurs à `87c6776` et `607ba5a` : à rejouer en Task 7)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — clé en `in-progress`
 - `_bmad-output/implementation-artifacts/deferred-work.md` — reports de la revue et « relier le chrono aux cartes »
 
 ## Change Log
+
+- **2026-09-19 — Task 7, clôture technique.** `design.json` réaligné sur `DESIGN.md` (jaunes, dix ombres, snippets des CTA et de la pop-up, règles) ; 36 captures comparées à la ligne de base reconstituée depuis `123cf19` — tout écart est une décision ; scans à 0, 1139 tests, build vert, stores intacts.
 
 - **2026-09-19 — Task 6, contraste et passe navigateur.** Test de contraste vérifié par mutation dans les deux sens ; points de mesure écrits pour toute valeur touchée par la story (dont les libellés du récap et le verre des pop-ups, 11,47:1 au pire) ; passe des douze scènes aux trois formats, 0 constat, contrôle lui-même vérifié par mutation.
 
