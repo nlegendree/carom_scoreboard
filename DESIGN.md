@@ -147,7 +147,10 @@ rounded:
 shadows:
   key-relief: "inset 0 1px 0 rgba(255,255,255,0.10), 0 2px 0 rgba(0,0,0,0.45)"
   key-relief-active: "inset 0 1px 0 rgba(255,255,255,0.06)"
-  light-edge-start: "inset 0 1px 0 rgba(255,255,255,0.25)"
+  cta-relief-blue: "inset 0 1px 0 rgba(255,255,255,0.25), 0 3px 0 #163A9E"
+  cta-relief-red: "inset 0 1px 0 rgba(255,255,255,0.25), 0 3px 0 #8A1520"
+  cta-relief-neutral: "inset 0 1px 0 rgba(255,255,255,0.14), 0 3px 0 #181B24"
+  cta-relief-active: "inset 0 1px 0 rgba(255,255,255,0.10)"
   light-edge-field: "inset 0 1px 0 rgba(255,255,255,0.35)"
   popup: "0 32px 80px rgba(0,0,0,0.65)"
   sidebar: "6px 0 28px rgba(0,0,0,0.45)"
@@ -179,6 +182,7 @@ components:
     textColor: "{colors.blanc-pur}"
     typography: "{typography.label}"
     rounded: "{rounded.tappable}"
+    shadow: "{shadows.cta-relief-blue}"
     height: "{spacing.touch-target}"
   button-accent-active:
     backgroundColor: "{colors.bleu-roi}"
@@ -188,13 +192,14 @@ components:
     textColor: "{colors.blanc-pur}"
     typography: "{typography.label}"
     rounded: "{rounded.tappable}"
+    shadow: "{shadows.cta-relief-neutral}"
     height: "{spacing.touch-target}"
   button-start:
     backgroundColor: "{colors.rouge-cta-sombre}"
     textColor: "{colors.blanc-pur}"
     typography: "{typography.start-button}"
     rounded: "{rounded.tappable}"
-    shadow: "{shadows.light-edge-start}"
+    shadow: "{shadows.cta-relief-red}"
     height: "{spacing.start-button}"
     padding: "0 16px"
   button-setup:
@@ -202,6 +207,7 @@ components:
     textColor: "{colors.blanc-pur}"
     typography: "{typography.label}"
     rounded: "{rounded.tappable}"
+    shadow: "{shadows.cta-relief-blue}"
     height: "{spacing.touch-target}"
     padding: "0 16px"
   button-bar-cta:
@@ -209,6 +215,7 @@ components:
     textColor: "{colors.blanc-pur}"
     typography: "{typography.label}"
     rounded: "{rounded.tappable}"
+    shadow: "{shadows.cta-relief-blue}"
     height: "{spacing.touch-target}"
     padding: "0 32px"
   button-pass-turn:
@@ -216,12 +223,14 @@ components:
     textColor: "{colors.blanc-pur}"
     typography: "{typography.stat}"
     rounded: "{rounded.tappable}"
+    shadow: "{shadows.cta-relief-blue}"
     height: "{spacing.touch-target}"
   icon-action:
     backgroundColor: "{colors.surface-voilee}"
     textColor: "{colors.blanc-pur}"
     typography: "{typography.picto}"
     rounded: "{rounded.tappable}"
+    shadow: "{shadows.cta-relief-neutral}"
     size: "{spacing.touch-target}"
     padding: "0 8px"
   key:
@@ -443,11 +452,12 @@ Le relief est réservé à **ce qui se tape**, à **ce qui flotte** et à **la b
 
 ### Shadow Vocabulary
 - **Relief de touche** (`key-relief` : `inset 0 1px 0 rgba(255,255,255,0.10), 0 2px 0 rgba(0,0,0,0.45)`) : plaques des claviers. À l'appui (`key-relief-active` : `inset 0 1px 0 rgba(255,255,255,0.06)`) l'ombre portée disparaît, le filet clair tombe à 6 % et la touche descend d'un pixel : elle s'enfonce.
-- **Filet de lumière** (`light-edge-start` : `inset 0 1px 0 rgba(255,255,255,0.25)` sur `DÉMARRER` ; `light-edge-field` : `0.35` sur les champs de paramétrage) : un seul trait clair en haut, qui donne du corps sans ombre. Deux tokens, deux intensités (Nathan, 11.2).
+- **Relief de CTA** (Story 11.5, Nathan, au rendu, 2026-09-19, proposition « K1 ») : le relief de touche, étendu à **tous les CTA** et aux pictos de la barre basse — un filet de lumière en haut et une **tranche de 3 px dessous, de la couleur du bouton en plus sombre** : `cta-relief-blue` (tranche `#163A9E`), `cta-relief-red` (`#8A1520`), `cta-relief-neutral` (`#181B24`, filet à 14 % seulement : il s'éclaircit à l'appui, un filet fort le ferait briller). ⚠️ Tranche **teintée**, jamais noire : une tranche noire se perdait sur les fonds sombres (creux du paramétrage, barre basse), mesuré au rendu. À l'appui (`cta-relief-active`), la tranche disparaît et le bouton **descend de 3 px** — la même distance que la tranche : il s'enfonce exactement de son épaisseur. Remplace `light-edge-start`, le filet seul de `DÉMARRER`, dont la valeur survit dans `cta-relief-red`.
+- **Filet de lumière** (`light-edge-field` : `inset 0 1px 0 rgba(255,255,255,0.35)` sur les champs de paramétrage) : un seul trait clair en haut, qui donne du corps sans ombre.
 - **Ombre de pop-up** (`popup` : `0 32px 80px rgba(0,0,0,0.65)`) : la carte de toute pop-up, posée sur le voile à 25 %.
 - **Ombre de barre** (`sidebar` : `6px 0 28px rgba(0,0,0,0.45)`) : la barre latérale la projette sur le contenu, à droite. Avec celle de pop-up, l'une des deux seules ombres portées diffuses du produit. La barre basse du scoreboard n'en porte pas (écartée au rendu : « pas hyper bien intégrée »).
 
-**Retours d'appui** : `brightness(0.9)` sur les CTA en dégradé bleu et rouge, `brightness(1.25)` sur le neutre, `brightness(1.10)` au survol et `1.25` à l'appui sur les tuiles, fond blanc 15 % sur les pictos d'action, noir 16 % et opacité pleine sur `−` / `+`. **Instantanés** (aucune transition), sauf 75 ms sur les touches.
+**Retours d'appui** : sur tout CTA et tout picto de la barre basse, **la tranche disparaît et le bouton descend de 3 px** (Story 11.5), en plus de `brightness(0.9)` sur les CTA en dégradé bleu et rouge et `brightness(1.25)` sur le neutre ; `brightness(1.10)` au survol et `1.25` à l'appui sur les tuiles, fond blanc 15 % sur les pictos d'action, noir 16 % et opacité pleine sur `−` / `+`. **Instantanés** (aucune transition), sauf 75 ms sur les touches.
 
 ### Named Rules
 **La Règle du relief tapable.** Un conteneur est plat et cerné ; seul un objet qu'on tape a du corps (relief, filet de lumière, rayon de 8 px). Une ombre sur une carte joueur, une tuile ou une colonne est une faute ; les deux ombres portées du produit vont à ce qui flotte (pop-up) et à la barre latérale.
@@ -489,7 +499,7 @@ Le relief est réservé à **ce qui se tape**, à **ce qui flotte** et à **la b
 - **CTA neutre** (pop-ups) : dégradé ardoise opaque, blanc, sans contour. `ANNULER` prend un tiers de la largeur, `VALIDER` le reste. Il **s'éclaircit** à l'appui (`brightness(1.25)`) là où tous les autres s'assombrissent — c'est le seul retour d'appui du neutre depuis la Story 11.3 : les trois hôtes de saisie portaient `brightness(0.9)`, la pop-up de décision `1.25`, et le même objet ne peut pas réagir de deux façons.
 - **`PASSER LE TOUR`** : dégradé bleu (depuis la 11.2 : une action de jeu, pas un retour), rayon tapable, pleine largeur de colonne, picto au-dessus du libellé en `stat` — le picto le repousse à **72,2 % de la hauteur** du bouton, donc dans la partie sombre du dégradé à 160° : fond `#2a64e5`, **5,18:1** aux deux formats tablette et 5,25:1 à 1920 (mesuré au pixel le 2026-09-17, Story 11.4). ⚠️ La valeur « 4,95:1 au milieu du dégradé » annoncée jusque-là était une estimation, et le libellé n'est pas au milieu ; la mesure la remplace. C'est ce qui ferme le report de la revue de la 11.2 SANS monter le rôle en `label` : à 14 px/700 le seuil est 4,5:1 (le rôle `stat` est en 700, cf. frontmatter ; la valeur « 900 » écrite ici jusqu’au 2026-09-18 était fausse — sans effet sur la conclusion, 14 px étant sous le plancher « grand texte » de 18,66 px dans les deux cas), et 5,18:1 le tient — le stop clair (#3B82F6, 3,68:1) ne le tiendrait pas, mais le libellé ne s'y pose pas. Verrouillé par `CtaButton.contrast.test.ts`, exception à retrait automatique. ⚠️ **Famille à part, et c'est assumé** : l'AC d'`epics.md` en prévoyait cinq, `CtaButton` en porte six. Picto au-dessus (et non en ligne) et rôle `stat` (et non `label`) : l'absorber dans `accent` aurait demandé deux dérogations dans un composant fait pour en supprimer (écart tranché à la Story 11.3). L'état inactif, lui, n'est plus un motif de séparation — il est commun aux six depuis la revue du 2026-09-17.
 - **CTA de réglage** (paramétrage) : dégradé bleu, rayon tapable, picto 24 px en ligne devant le libellé en `label` 700 (monté de `stat` par la 11.1 : c'est la taille qui fait tenir le contraste AA), empilés pleine largeur.
-- **`DÉMARRER`** : dégradé rouge, rayon tapable, `start-button` (110 px sur tablette), chevron nu à gauche, libellé `start-button` interlettré `label`, filet de lumière `light-edge-start`. Le seul CTA rouge du produit.
+- **`DÉMARRER`** : dégradé rouge, rayon tapable, `start-button` (110 px sur tablette), chevron nu à gauche, libellé `start-button` interlettré `label`, relief `cta-relief-red` (filet de lumière et tranche rouge sombre, Story 11.5). Le seul CTA rouge du produit.
 - **CTA de barre basse** (`+ POINTS ADVERSAIRE`, `+1 ADVERSAIRE`) : dégradé bleu, rayon tapable, `label` 900 interlettré `label`, largeur de la colonne du joueur assis.
 - **Correction `−` / `+`** : 90 px, noir 8 % sur la carte, rayon tapable, `adjust` 900 à 60 % d'opacité ; rattrapage d'arbitrage, il ne doit pas concurrencer le score.
 - **Focus** : anneau `focus-visible` de 4 px rouge vif (`--color-turn-active`), décalé de 2 px. Pas de navigation clavier attendue.
@@ -532,7 +542,7 @@ Trois briques sans aucune connaissance du jeu : aucun `useGameStore`, aucune rè
 - *Props* : `variant: 'accent' | 'neutral' | 'setup' | 'start' | 'bar' | 'pass'`, `disabled?: boolean` (défaut `false`).
 - *Émet* : `press`, sur `@pointerdown` — **jamais** `@click` (AR8 : un `@click` réintroduirait le délai de 300 ms sur iPad, qu'aucun test unitaire ne verrait).
 - *Slot* : `default` — libellé, picto, barre de rebours.
-- *Tokens consommés* : `--gradient-blue` / `--gradient-neutral` / `--gradient-red`, `--radius-tappable`, `--size-touch-target` (ou `--size-start-button` pour `start`), `--text-label` / `--text-stat` / `--text-start-button`, `--tracking-label`, `--shadow-light-edge-start`.
+- *Tokens consommés* : `--gradient-blue` / `--gradient-neutral` / `--gradient-red`, `--radius-tappable`, `--size-touch-target` (ou `--size-start-button` pour `start`), `--text-label` / `--text-stat` / `--text-start-button`, `--tracking-label`, `--shadow-cta-relief-blue` / `--shadow-cta-relief-red` / `--shadow-cta-relief-neutral` et `--shadow-cta-relief-active` à l'appui.
 - *États* : repos, appui (`brightness(0.9)`, **`1.25` sur `neutral`**), `disabled` (**30 % d'opacité, sur les six variantes** — décision de Nathan à la revue du 2026-09-17 : l'état inactif ne portait que sur `pass`, si bien qu'un `accent` inactif rendait un CTA mort impossible à distinguer d'un CTA vivant. L'écran d'identification joueur de l'Epic 4 doit pouvoir griser son `VALIDER` sans rien créer).
 - *Ce qui reste à l'appelant, et pourquoi* : la **largeur quand elle est contextuelle** (`w-1/3` d'`ANNULER`, `flex-1` de `VALIDER`), `mt-auto`, `relative overflow-hidden` (la barre de rebours de `VALIDER` s'y clippe), le `data-testid`. Tout se fusionne par `class`. Les variantes `accent` **et** `neutral` ne portent **aucune** largeur : deux utilitaires `w-*` sur le même élément se disputeraient `width`, et l'ordre de la feuille générée trancherait. (La 11.3 avait laissé un `w-full` sur `accent`, empilé sur le `flex-1` de ses trois appelants de saisie — retiré à la revue du 2026-09-17 ; ses deux emplacements de `PromptModal` sont étirés par leur conteneur, pied en `flex-col` et grille en `auto-cols-fr`.)
 - *Ce qu'il ne porte pas* : `touch-manipulation select-none` — la règle globale de `main.css` couvre déjà tout `<button>`.

@@ -42,6 +42,13 @@ const emit = defineEmits<{ press: [] }>()
 // sortie de l'epic veut qu'il le fasse SANS RIEN CRÉER.
 const DISABLED_CLASSES = 'disabled:opacity-30'
 
+// Relief de CTA (Story 11.5, Nathan, au rendu, 2026-09-19, « K1 ») : chaque variante porte sa
+// TRANCHE (`shadow-cta-relief-*`, teintée à sa couleur) ; l'ENFONCEMENT, lui, est commun aux
+// six : la tranche disparaît et le bouton descend de 3 px. ⚠️ 3 px = l'épaisseur de la tranche
+// dans `main.css` : le bouton s'enfonce exactement de son épaisseur. Si l'une bouge, l'autre
+// aussi. Instantané, comme tous les retours d'appui des CTA (`DESIGN.md` › Elevation).
+const PRESS_CLASSES = 'active:translate-y-[3px] active:shadow-cta-relief-active'
+
 const VARIANT_CLASSES: Record<CtaVariant, string> = {
   // Pop-up de décision (principal, choix) et `VALIDER` des trois hôtes de saisie.
   // ⚠️ AUCUNE largeur, comme `neutral` : ses trois appelants de saisie posent `flex-1` et ses
@@ -51,25 +58,25 @@ const VARIANT_CLASSES: Record<CtaVariant, string> = {
   // et c'est l'ordre de la feuille générée qui aurait tranché hors d'un conteneur flex
   // (revue du 2026-09-17).
   accent:
-    'min-h-(--size-touch-target) rounded-tappable bg-(image:--gradient-blue) text-label font-black text-white active:brightness-90',
+    'min-h-(--size-touch-target) rounded-tappable bg-(image:--gradient-blue) text-label font-black text-white shadow-cta-relief-blue active:brightness-90',
   // Le RETOUR. Un seul retour d'appui, celui que `DESIGN.md` › Elevation nomme : il
   // s'ÉCLAIRCIT. `PromptModal` le portait déjà ; les trois hôtes de saisie l'assombrissaient
   // (`brightness-90`) — c'est le seul changement visuel volontaire de la Story 11.3, et il ne
   // touche que l'état ENFONCÉ.
   neutral:
-    'min-h-(--size-touch-target) rounded-tappable bg-(image:--gradient-neutral) text-label font-black text-white active:brightness-125',
+    'min-h-(--size-touch-target) rounded-tappable bg-(image:--gradient-neutral) text-label font-black text-white shadow-cta-relief-neutral active:brightness-125',
   // Réglage de l'accueil : picto EN LIGNE devant le libellé, `font-bold` et non `font-black`.
   setup:
-    'flex min-h-(--size-touch-target) w-full min-w-0 items-center justify-center gap-2 rounded-tappable bg-(image:--gradient-blue) px-2 text-center text-label font-bold text-white active:brightness-90',
-  // `DÉMARRER` : l'action qui engage la partie, seule à être ROUGE et à porter son propre
-  // filet clair. Sa hauteur est un token à elle (`--size-start-button`).
+    'flex min-h-(--size-touch-target) w-full min-w-0 items-center justify-center gap-2 rounded-tappable bg-(image:--gradient-blue) px-2 text-center text-label font-bold text-white shadow-cta-relief-blue active:brightness-90',
+  // `DÉMARRER` : l'action qui engage la partie, seule à être ROUGE — son relief l'est aussi
+  // (`cta-relief-red`, qui absorbe le filet clair qu'elle était seule à porter avant la 11.5). Sa hauteur est un token à elle (`--size-start-button`).
   start:
-    'flex min-h-(--size-start-button) w-full items-center justify-center gap-2 rounded-tappable bg-(image:--gradient-red) px-2 text-start-button font-black tracking-label text-white shadow-light-edge-start active:brightness-90',
+    'flex min-h-(--size-start-button) w-full items-center justify-center gap-2 rounded-tappable bg-(image:--gradient-red) px-2 text-start-button font-black tracking-label text-white shadow-cta-relief-red active:brightness-90',
   // CTA de la barre basse, pleine largeur de la colonne du joueur assis.
-  bar: 'flex w-full min-h-(--size-touch-target) items-center justify-center rounded-tappable bg-(image:--gradient-blue) px-4 text-label font-black tracking-label text-white active:brightness-90',
+  bar: 'flex w-full min-h-(--size-touch-target) items-center justify-center rounded-tappable bg-(image:--gradient-blue) px-4 text-label font-black tracking-label text-white shadow-cta-relief-blue active:brightness-90',
   // `PASSER LE TOUR` : picto AU-DESSUS du libellé, rôle `stat`. L'état inactif est désormais
   // commun aux six (`DISABLED_CLASSES`), il ne figure plus ici.
-  pass: 'flex min-h-(--size-touch-target) w-full flex-col items-center justify-center gap-1 rounded-tappable bg-(image:--gradient-blue) px-2 text-center text-stat font-black leading-tight text-white active:brightness-90',
+  pass: 'flex min-h-(--size-touch-target) w-full flex-col items-center justify-center gap-1 rounded-tappable bg-(image:--gradient-blue) px-2 text-center text-stat font-black leading-tight text-white shadow-cta-relief-blue active:brightness-90',
 }
 </script>
 
@@ -77,7 +84,7 @@ const VARIANT_CLASSES: Record<CtaVariant, string> = {
   <button
     type="button"
     :disabled="disabled"
-    :class="[VARIANT_CLASSES[variant], DISABLED_CLASSES]"
+    :class="[VARIANT_CLASSES[variant], PRESS_CLASSES, DISABLED_CLASSES]"
     @pointerdown="emit('press')"
   >
     <slot />

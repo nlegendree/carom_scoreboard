@@ -357,4 +357,13 @@ describe('ScoreEntryDock', () => {
     expect(classes).not.toContain('bg-white/70')
   })
 
+  // Story 11.5 (Nathan, 2026-09-19, « un peu plus discrète ») : la barre s'affine, `h-2` → `h-1`.
+  // La discrétion passe par la HAUTEUR : l'opacité, elle, reste pleine (cas ci-dessus).
+  it('keeps the countdown bar thin', () => {
+    const classes = mountDock('12').find('[data-testid="validate-countdown"]').classes()
+
+    expect(classes).toContain('h-1')
+    expect(classes).not.toContain('h-2')
+  })
+
 })

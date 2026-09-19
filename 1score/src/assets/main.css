@@ -286,7 +286,17 @@
      n'écrit une ombre en `shadow-[…]` : `tokens.test.ts` le verrouille. */
   --shadow-key-relief: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 2px 0 rgba(0, 0, 0, 0.45);
   --shadow-key-relief-active: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  --shadow-light-edge-start: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  /* Relief de CTA (Story 11.5, Nathan, au rendu, 2026-09-19, « K1 ») : le relief de touche,
+     étendu à tous les CTA et aux pictos de la barre basse — filet de lumière en haut, TRANCHE de
+     3 px dessous, de la couleur du bouton en plus sombre. ⚠️ Tranche teintée, jamais noire : une
+     tranche noire se perdait sur les fonds sombres. ⚠️ Les 3 px de la tranche et les 3 px dont
+     le bouton descend à l'appui (`CtaButton`, `IconAction`) sont la MÊME distance : le bouton
+     s'enfonce exactement de son épaisseur. Remplace `--shadow-light-edge-start`, dont la valeur
+     survit dans le filet de `--shadow-cta-relief-red`. */
+  --shadow-cta-relief-blue: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 3px 0 #163A9E;
+  --shadow-cta-relief-red: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 3px 0 #8A1520;
+  --shadow-cta-relief-neutral: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 3px 0 #181B24;
+  --shadow-cta-relief-active: inset 0 1px 0 rgba(255, 255, 255, 0.10);
   --shadow-light-edge-field: inset 0 1px 0 rgba(255, 255, 255, 0.35);
   --shadow-popup: 0 32px 80px rgba(0, 0, 0, 0.65);
   /* La barre latérale la porte sur le contenu, à sa droite : c'est elle qui la sépare du

@@ -15,6 +15,25 @@ const mountCta = (variant: CtaVariant, props: Record<string, unknown> = {}) =>
   mount(CtaButton, { props: { variant, ...props }, slots: { default: 'LIBELLÉ' } })
 
 describe('CtaButton', () => {
+  // Story 11.5 (Nathan, au rendu, 2026-09-19, « K1 ») : chaque variante porte le relief de SA
+  // couleur — une tranche teintée, jamais noire (elle se perdait sur les fonds sombres) — et les
+  // six s'enfoncent de la même façon : tranche retirée, 3 px de descente, l'épaisseur de la tranche.
+  const RELIEF: Record<CtaVariant, string> = {
+    accent: 'shadow-cta-relief-blue',
+    neutral: 'shadow-cta-relief-neutral',
+    setup: 'shadow-cta-relief-blue',
+    start: 'shadow-cta-relief-red',
+    bar: 'shadow-cta-relief-blue',
+    pass: 'shadow-cta-relief-blue',
+  }
+  it.each(VARIANTS)('gives the %s variant the relief of its colour, and sinks it on press', (variant) => {
+    const classes = mountCta(variant).classes()
+
+    expect(classes).toContain(RELIEF[variant])
+    expect(classes).toEqual(expect.arrayContaining(['active:translate-y-[3px]', 'active:shadow-cta-relief-active']))
+    expect(classes).not.toContain('shadow-light-edge-start')
+  })
+
   it('renders a real button that never submits a form', () => {
     const wrapper = mountCta('accent')
 
@@ -135,7 +154,8 @@ describe('CtaButton', () => {
     expect(classes).toContain('bg-(image:--gradient-red)')
     expect(classes).toContain('text-start-button')
     expect(classes).toContain('tracking-label')
-    expect(classes).toContain('shadow-light-edge-start')
+    // Le filet clair qu'elle était seule à porter vit désormais dans son relief (Story 11.5).
+    expect(classes).toContain('shadow-cta-relief-red')
     expect(classes).toContain('min-h-(--size-start-button)')
     expect(classes).toContain('active:brightness-90')
   })

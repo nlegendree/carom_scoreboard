@@ -168,13 +168,16 @@ function onValidate(): void {
                porteur d'information (WCAG 1.4.11, seuil 3:1), et `bg-white/70` ne donnait
                que 2,45:1 sur le stop clair de `--gradient-blue` — 3,46:1 en blanc plein.
                Elle survit à `prefers-reduced-motion` (décision de Nathan) : elle dit que le
-               score va se valider seul et changer le tour, ce qu'aucun autre élément ne dit. -->
+               score va se valider seul et changer le tour, ce qu'aucun autre élément ne dit.
+               Story 11.5 (Nathan, 2026-09-19, « un peu plus discrète ») : plus FINE, `h-2` →
+               `h-1` (16 → 8 px sur tablette). ⚠️ La discrétion passe par la hauteur, JAMAIS par
+               l'opacité : le blanc plein est ce qui tient les 3:1 ci-dessus. -->
           <span
             v-if="hasInput"
             :key="countdownKey"
             data-testid="validate-countdown"
             :data-countdown="countdownKey"
-            class="absolute inset-x-0 bottom-0 h-2 origin-left bg-white animate-input-countdown"
+            class="absolute inset-x-0 bottom-0 h-1 origin-left bg-white animate-input-countdown"
             :style="{ animationDuration: `${AUTO_VALIDATE_DELAY_MS}ms` }"
           />
         </CtaButton>
