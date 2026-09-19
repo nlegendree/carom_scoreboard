@@ -58,16 +58,19 @@ function fieldClasses(field: 'name' | 'distance', focused: 'name' | 'distance' |
   <div
     :data-testid="`player-card-${side}`"
     :data-ball="ball"
-    class="flex min-h-0 min-w-0 flex-1 flex-col items-stretch gap-5 overflow-hidden border border-border p-6"
+    class="flex min-h-0 min-w-0 flex-1 flex-col items-stretch gap-5 overflow-hidden rounded-block border border-border p-6"
     :class="CARD_CLASSES[ball]"
   >
     <!-- En-tête de carte (revue de rendu du 2026-09-12) : la bille en picto et son nom,
          CALÉS À GAUCHE, sur un aplat très légèrement plus sombre que la carte, et un filet
          FIN qui court sur toute la largeur. Les marges négatives annulent le padding de la
-         carte : sans elles le bandeau s'arrêterait avant les bords. -->
+         carte : sans elles le bandeau s'arrêterait avant les bords.
+         Story 11.5 (Nathan, 2026-09-19, « ici tu peux réduire le padding ») : retrait resserré,
+         `px-6 py-4` → `px-4 py-2`. Les marges négatives, elles, NE BOUGENT PAS : elles
+         annulent le `p-6` de la carte, pas le retrait du bandeau. -->
     <header
       data-testid="card-header"
-      class="-mx-6 -mt-6 mb-1 flex shrink-0 items-center gap-3 border-b border-black/12 bg-black/6 px-6 py-4"
+      class="-mx-6 -mt-6 mb-1 flex shrink-0 items-center gap-3 border-b border-black/12 bg-black/6 px-4 py-2"
     >
       <img :src="BALL_PICTOS[ball]" alt="" aria-hidden="true" class="size-5 shrink-0 object-contain" />
       <span class="text-stat font-black tracking-stat opacity-75">{{ BALL_LABELS[ball] }}</span>

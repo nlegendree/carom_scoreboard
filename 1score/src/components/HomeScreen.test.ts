@@ -497,15 +497,18 @@ describe('HomeScreen', () => {
     expect(ballOn(wrapper, 'right')).toBe('yellow')
   })
 
-  // AC10, revu le 2026-09-12 : le mode se lit en GRAND dans un bandeau de titre en haut
-  // de l'écran (réf. Cueuny), plus en surtitre discret de la colonne centrale.
+  // AC10, revu le 2026-09-12 puis le 2026-09-19 (Story 11.5, « T1 ») : le mode se lit en
+  // GRAND, mais EN TÊTE DE LA COLONNE CENTRALE — le bandeau de titre au-dessus de l'écran a
+  // disparu avec le grand bloc. Le titre doit donc vivre DANS `setup-center`, et plus nulle
+  // part ailleurs : un bandeau qui reviendrait par erreur ferait rougir ce cas.
   it('titles the screen with the mode, and shows the two setting CTAs', async () => {
     const wrapper = mount(HomeScreen)
 
     await goToPlayersStep(wrapper, 'cadre-47-2')
 
-    const title = wrapper.find('[data-testid="setup-header"] [data-testid="setup-mode-label"]')
+    const title = wrapper.find('[data-testid="setup-center"] [data-testid="setup-mode-label"]')
     expect(title.text()).toBe('CADRE 47/2')
+    expect(wrapper.find('[data-testid="setup-header"]').exists()).toBe(false)
     expect(title.classes()).toContain('text-title')
     expect(wrapper.find('[data-testid="change-ball-button"]').text()).toContain('CHANGER DE BILLE')
     expect(wrapper.find('[data-testid="change-side-button"]').text()).toContain('CHANGER DE CÔTÉ')

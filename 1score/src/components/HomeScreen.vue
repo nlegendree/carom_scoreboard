@@ -88,14 +88,19 @@ const JDS_TILE_LAYOUT = [
 // qu'elle mesure — si cette mise en page bouge, ces deux valeurs se voient dans le même
 // fichier, et non trois dossiers plus loin.
 //
-// Lecture : barre latérale (`--size-sidebar`) + padding de `<main>` (`p-4`, 4 unités) + deux
-// cartes qui se partagent les 3/4 restants (0,375 du reste chacune) + gouttière de 4 unités.
+// Lecture (Story 11.5, grand bloc) : barre latérale (`--size-sidebar`) + marge du grand bloc
+// (`m-1`) + son filet (1 px) + son retrait (`p-1`) + une carte + la gouttière (`gap-1`). La
+// largeur utile C vaut `100vw - sidebar - 4 unités - 2 px` ; la colonne centrale en prend le
+// quart et chaque carte `0,375·C - 1 unité`. D'où, jusqu'au bord de la colonne centrale :
+// à gauche `sidebar + 2 unités + 1 px + 0,375·C`, à droite `0,375·C + 2 unités + 1 px`.
+// ⚠️ Avant la 11.5 : `p-4` et gouttière de 4 unités, soit `+ 4 unités` et C = 100vw - sidebar
+// - 8 unités. Si la mise en page du grand bloc bouge, ces deux valeurs bougent avec elle.
 // ⚠️ L'ASYMÉTRIE est réelle — la barre latérale n'est que d'un côté : deux valeurs, pas une.
 // `--size-sidebar` et `--spacing` restent des tokens et restent lus : ce sont des intentions
 // (largeur de la barre, unité de grille). Ce qui part, c'est leur PRODUIT par une mise en page.
 const SETUP_POPUP_RESERVE: Record<TableSide, string> = {
-  left: 'calc(var(--size-sidebar) + var(--spacing) * 4 + (100vw - var(--size-sidebar) - var(--spacing) * 8) * 0.375)',
-  right: 'calc((100vw - var(--size-sidebar) - var(--spacing) * 8) * 0.375 + var(--spacing) * 4)',
+  left: 'calc(var(--size-sidebar) + var(--spacing) * 2 + 1px + (100vw - var(--size-sidebar) - var(--spacing) * 4 - 2px) * 0.375)',
+  right: 'calc((100vw - var(--size-sidebar) - var(--spacing) * 4 - 2px) * 0.375 + var(--spacing) * 2 + 1px)',
 }
 
 // Les trois cadres du catalogue, dans l'ordre d'affichage de la pop-up.
@@ -501,22 +506,16 @@ function fixDistance(): void {
       <SideBar :items="PLAYERS_SIDEBAR_ITEMS" :exitItem="PLAYERS_SIDEBAR_EXIT" />
 
       <div class="flex min-w-0 flex-1 flex-col bg-bg-raised">
-        <!-- Bandeau de titre (revue de rendu de Nathan, 2026-09-12, réf. Cueuny) : le mode
-             se lit en grand, centré, en haut de l'écran — il ne tient plus en surtitre
-             discret de la colonne centrale, où personne ne le voyait. -->
-        <header
-          data-testid="setup-header"
-          class="flex shrink-0 items-center justify-center border-b border-border px-4 py-2"
+        <!-- Story 11.5 (Nathan, au rendu, 2026-09-19, propositions « M » puis « T1 ») : le
+             MÊME format que le scoreboard — un grand bloc voilé contient trois blocs séparés
+             d'une unité, la colonne centrale en creux. Plus de bandeau de titre au-dessus : il
+             faisait une double ligne avec le filet du grand bloc, et le mode se lit désormais en
+             tête de la colonne centrale. Les cartes gagnent toute la hauteur du bandeau.
+             Exception aux angles vifs : `DESIGN.md` › Shapes, étendue à la mise en page carte ·
+             colonne · carte. ⚠️ `SETUP_POPUP_RESERVE` mesure CETTE géométrie. -->
+        <main
+          class="m-1 flex min-h-0 min-w-0 flex-1 gap-1 rounded-zone border border-border bg-surface p-1"
         >
-          <h1
-            data-testid="setup-mode-label"
-            class="text-title font-black tracking-title text-white"
-          >
-            {{ modeLabel }}
-          </h1>
-        </header>
-
-        <main class="flex min-h-0 min-w-0 flex-1 gap-4 p-4">
           <PlayerSetupCard
             side="left"
             :ball="leftBall"
@@ -526,13 +525,24 @@ function fixDistance(): void {
             @focus="openEntry(leftBall, $event)"
           />
 
-          <!-- Colonne centrale, 1/4 de la zone (3e passe de rendu) : les deux CTA de réglage
-               et DÉMARRER, en bloc calé en bas. Le mode est en bandeau de titre au-dessus,
-               les claviers sont des pop-ups : la colonne ne change jamais de largeur. -->
+          <!-- Colonne centrale, 1/4 de la zone (3e passe de rendu) : le MODE en tête, puis les
+               deux CTA de réglage et DÉMARRER en bloc calé en bas. Les claviers sont des pop-ups :
+               la colonne ne change jamais de largeur. En creux depuis la 11.5 : base nue,
+               rayon de bloc, retrait d'une unité — celui de `PASSER LE TOUR` dans la sienne. -->
           <section
             data-testid="setup-center"
-            class="flex min-h-0 w-1/4 shrink-0 flex-col gap-2 p-3"
+            class="flex min-h-0 w-1/4 shrink-0 flex-col gap-2 rounded-block bg-bg p-1"
           >
+            <!-- Le mode en grand, en tête de la colonne (Nathan, 2026-09-19, « T1 ») : il tenait
+                 un bandeau à lui au-dessus de l'écran, il occupe maintenant le haut du creux,
+                 vide jusque-là. Il passe à la ligne plutôt que d'être tronqué : un quart de
+                 largeur, et « CADRE 47/2 » est le plus long des modes jouables. -->
+            <h1
+              data-testid="setup-mode-label"
+              class="pt-4 text-center text-title font-black tracking-title text-balance text-white"
+            >
+              {{ modeLabel }}
+            </h1>
             <!-- Les trois commandes forment un BLOC, calé en bas de la colonne (modèle
                  Cueuny) : deux réglages bleus côte à côte, puis l'action qui engage. -->
             <div class="mt-auto flex shrink-0 flex-col gap-2">
