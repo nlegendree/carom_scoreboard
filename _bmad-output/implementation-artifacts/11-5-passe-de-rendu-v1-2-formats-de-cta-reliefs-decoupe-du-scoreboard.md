@@ -120,10 +120,10 @@ so that l'Epic 11 se close sur un design **fini** et non sur un design system pr
   - [x] `DESIGN.md` › Components › Buttons **d'abord**, puis `VARIANT_CLASSES` / `main.css` ; **zéro valeur visuelle** dans `CtaButton.vue`
   - [x] Les trois contraintes préservées : pas de largeur sur `accent` / `neutral`, un seul retour d'appui pour le neutre, `DISABLED_CLASSES` commun aux six
   - [x] `CtaButton.test.ts` et `CtaButton.contrast.test.ts` mis à jour et verts
-- [ ] **Task 5 — Reliefs** (AC5)
-  - [ ] 🔴 **Comparaison au rendu AVANT tout code** : au plus deux propositions par relief, côte à côte, aux trois formats ; **arbitrage obtenu et noté**, puis frontmatter `shadows` de `DESIGN.md` **d'abord**, `main.css` ensuite
-  - [ ] Les deux arbitrages rouverts sont **re-tranchés et datés** : ombre de barre basse, verre des pop-ups
-  - [ ] Si la Règle du relief tapable est mise en défaut, elle est **réécrite**, pas contournée
+- [x] **Task 5 — Reliefs** (AC5)
+  - [x] 🔴 **Comparaison au rendu AVANT tout code** : au plus deux propositions par relief, côte à côte, aux trois formats ; **arbitrage obtenu et noté**, puis frontmatter `shadows` de `DESIGN.md` **d'abord**, `main.css` ensuite
+  - [x] Les deux arbitrages rouverts sont **re-tranchés et datés** : ombre de barre basse, verre des pop-ups
+  - [x] Si la Règle du relief tapable est mise en défaut, elle est **réécrite**, pas contournée
 - [ ] **Task 6 — Contraste et passe navigateur** (AC6)
   - [ ] `CtaButton.contrast.test.ts` remis à jour à chaque dégradé / taille / graisse qui bouge ; **vérifié par mutation** (casser une valeur doit rougir)
   - [ ] Toute valeur de contraste écrite dans `DESIGN.md` est **mesurée**, avec le point de mesure nommé
@@ -397,6 +397,11 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
   - `607ba5a` — tuiles `BIENTÔT` grisées (fond désaturé, titre à 50 %) : « griser les éléments ».
 - **Jaune joueur, 2026-09-19** (Nathan, au rendu, « un jaune plus moderne », puis « plus peps ») : `#FFE000` → **`#FFF200`** (bandeau `#E6CA00` → `#E6DA00`, le jaune à 90 %), bleu toujours à zéro, teinte 52,7° → 57°. Quatre passes par surcharges CSS aux formats 1180 et 1920, sur le paramétrage et les deux scoreboards : chaud `#FFCF33` / beurre `#FFE566` (écartés : pas assez peps), citron `#FFEB00` / fluo `#F5FF00`, déclinaisons du citron (`#FFF200` retenu ; bandeau marqué `#D6C500` et version adoucie `#FFEE33` écartés), puis quatre versions plus claires (`#FFF533` à `#FFF880`, écartées : « on reste sur A1 pour l'instant »). ⚠️ Écart assumé à « au plus deux propositions » : Nathan a demandé les déclinaisons. Encre noire 17,95:1 sur la carte, 14,39:1 sur le bandeau ; placeholder de champ 4,96 → 5,18:1. `DESIGN.md` d'abord, `main.css` ensuite. `.impeccable/design.json` garde les `oklch` de l'ancien jaune : à régénérer en Task 7.
 - **Task 4 — formats de CTA (AC4), 2026-09-19.** Constat de départ, au rendu : aucune règle commune — `accent` et `neutral` non interlettrés alors que le rôle `label` le prévoit (`VALIDER` plus serré que `+ POINTS ADVERSAIRE`), et deux colonnes de même largeur qui plaçaient leur picto différemment (`CHANGER DE BILLE` en ligne sur deux lignes, `PASSER LE TOUR` au-dessus). **Deux propositions** par surcharges CSS, aux trois formats, sur les scènes où vivent les six variantes (06, 04/05/08/10, 07/09/12) : « A » — la largeur décide du format (large : `label` 900 interlettré ; étroit : picto au-dessus, `stat` 900 sur une ligne) — et « B » — A plus les réglages en tonal (fond bleu translucide, filet, sans relief), `DÉMARRER` seul CTA plein du paramétrage. **Nathan retient A.** Au rendu de contrôle, les réglages de la proposition étaient interlettrés (la surcharge les attrapait par `text-label`) : le code s'y aligne, puis Nathan étend l'interlettrage à `PASSER LE TOUR` (« interlettre ») — **les six sont interlettrés `label`, sans exception**. Contraste des réglages en `stat` (4,5:1 exigé, le stop clair donne 3,68:1) tenu par la POSITION du libellé, comme `pass` : mesuré au pixel, `#2963e4` sous le libellé à 72,2 % de la hauteur, **5,25:1** au pire des trois formats — exception mesurée ajoutée à `CtaButton.contrast.test.ts`. `PASSER LE TOUR` remesuré interlettré par la même méthode : 5,25:1 au pire (la valeur inscrite, 5,18:1 du 2026-09-17, reste la plus prudente). Contrôle : rendu du code identique à la proposition au bruit d'anticrénelage près. Les trois contraintes de l'AC4 tiennent (aucune largeur sur `accent`/`neutral`, un seul retour d'appui du neutre, `DISABLED_CLASSES` commun) ; aucune valeur nouvelle dans `CtaButton.vue`. 1137 tests (+6), build vert, `design:check` et `design:check:file` à 0.
+- **Task 5 — reliefs (AC5), 2026-09-19.** Le relief des CTA (« K1 », `87c6776`) était déjà livré ; restaient les **deux arbitrages rouverts de la 11.2**. Deux propositions chacun, par surcharges CSS aux trois formats (scènes 07/09/12 pour la barre, 04/05/08/10 pour les pop-ups) :
+  - **Ombre de barre basse** — « O1 » la même ombre douce sur les deux zones sœurs, « O2 » la barre seule, projetée vers le haut. Constat mesuré et dit à Nathan avant son choix : sur la base marine et à une unité d'écart, une ombre diffuse se lit à peine (zoom 1920 : les trois versions presque identiques). **Nathan retient O2** — nouveau token `bottom-bar` (`0 -6px 24px rgba(0,0,0,0.45)`), frontmatter `shadows` d'abord, `main.css` ensuite, consommé par `ActionBar`.
+  - **Verre des pop-ups** — le verre léger (88 %, flou 8 px) laissait transparaître une teinte olive et le fantôme du score géant sous le pavé. « V1 » opaque, « V2 » verre dense 95 % + flou 16 px. **Nathan retient V2** — `bg-bg-raised/95 backdrop-blur-lg` dans `PopupCard` (utilitaires standard, aucun token nouveau). L'ignore `low-contrast` de la scène 10 (faux positif à travers `backdrop-filter`) reste valable : le flou demeure.
+  - **Règle du relief tapable réécrite**, datée : elle faisait du « rayon de 8 px » la marque de ce qui se tape (les conteneurs sont désormais arrondis en `zone`/`block` sans avoir de corps) et comptait deux ombres portées (trois désormais : pop-up, barre latérale, barre basse).
+  Contrôle : rendu du code identique à la proposition au bruit connu près. 1139 tests (+2), build vert, `design:check` et `design:check:file` à 0.
 - **Revue de code du 2026-09-19** (`01402db..HEAD`, trois relecteurs) : voir Tasks › Review Findings. Deux décisions de Nathan — gouttière intérieure des cartes **retirée**, CTA et pictos inactifs **plats** (`disabled:shadow-none`) —, et le rendu JDS de la découpe attesté (scènes `07` et `09` aux trois formats, comparées à `HEAD`).
 
 ### File List
@@ -410,12 +415,13 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
 - `1score/src/components/PlayerPanel.vue` — rayon de bloc, liseré arrondi ; gouttière intérieure et prop `side` retirées (revue)
 - `1score/src/components/PlayerPanel.test.ts` — rayon de bloc, liseré, retrait symétrique
 - `1score/src/assets/typography.test.ts` — `column-gutter` rejoint `clock-bleed` dans `SPACING_EXCLUDED`
-- `1score/src/components/ActionBar.vue` — la barre reprend la grille des colonnes (groupes en `flex-1`, gouttière et retrait partagés, pictos étirés), rayon de zone, voile et filet
+- `1score/src/components/ActionBar.vue` — ombre `shadow-bottom-bar` (Task 5) ; la barre reprend la grille des colonnes (groupes en `flex-1`, gouttière et retrait partagés, pictos étirés), rayon de zone, voile et filet
 - `1score/src/components/ActionBar.test.ts` — deux cas : la grille reprise, les pictos étirés
 - `1score/src/components/ShotClock.vue` — demi-anneau et prop `turnRingSide` retirés (débordement abandonné)
 - `1score/src/components/ShotClock.test.ts` — les cinq cas du demi-anneau remplacés par trois garde-fous (rien de rouge, rien du tour, plus aucune lecture du token retiré)
 - `1score/src/components/CtaButton.vue`, `CtaButton.test.ts` — relief K1, enfoncement par `--size-relief-depth`, inactif plat ; Task 4 : six variantes interlettrées, `setup` au format de `pass`
 - `1score/src/components/CtaButton.contrast.test.ts` — exception mesurée de `setup` (Task 4)
+- `1score/src/components/PopupCard.vue`, `PopupCard.test.ts` — verre dense 95 % / flou 16 px (Task 5)
 - `1score/src/components/IconAction.vue`, `IconAction.test.ts` — même relief, même enfoncement, inactif plat
 - `1score/src/components/ScoreEntryDock.vue`, `ScoreEntryDock.test.ts` — barre de rebours `h-1`
 - `1score/src/components/ModeTile.vue`, `ModeTile.test.ts` — `BIENTÔT` grisé
@@ -433,6 +439,8 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
 - `_bmad-output/implementation-artifacts/deferred-work.md` — reports de la revue et « relier le chrono aux cartes »
 
 ## Change Log
+
+- **2026-09-19 — Task 5, reliefs : les deux arbitrages de la 11.2 re-tranchés** (Nathan, au rendu). Barre basse : ombre projetée vers le haut (« O2 », token `bottom-bar`). Pop-ups : verre dense 95 % / flou 16 px (« V2 »), la teinte olive et le fantôme du score disparaissent. Règle du relief tapable réécrite.
 
 - **2026-09-19 — Task 4, formats de CTA : « la largeur décide du format »** (Nathan, au rendu, « A » contre « B » tonal). Large : `label` 900 ; étroit (réglages, `PASSER LE TOUR`) : picto au-dessus, `stat` 900 sur une ligne ; les six interlettrés `label`. Contraste des réglages mesuré à 5,25:1.
 

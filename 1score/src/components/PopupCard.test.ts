@@ -42,16 +42,18 @@ describe('PopupCard', () => {
     expect(classes).toContain('bg-black/25')
   })
 
-  it('renders the glass card of the shared pattern', () => {
+  // Story 11.5 (Task 5, Nathan, au rendu, « V2 ») : verre DENSE — 95 % et flou 16 px. Le verre
+  // léger (88 %, 8 px) laissait transparaître une teinte olive et le score géant sous le pavé.
+  it('renders the dense glass card of the shared pattern', () => {
     const classes = card(mountCard()).classes()
 
     expect(classes).toContain('rounded-popup')
     expect(classes).toContain('border')
     expect(classes).toContain('border-border')
-    expect(classes).toContain('bg-bg-raised/88')
+    expect(classes).toContain('bg-bg-raised/95')
     expect(classes).toContain('p-3')
     expect(classes).toContain('shadow-popup')
-    expect(classes).toContain('backdrop-blur-sm')
+    expect(classes).toContain('backdrop-blur-lg')
   })
 
   it('renders both slots', () => {

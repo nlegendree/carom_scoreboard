@@ -134,7 +134,7 @@ const placement = computed(() => {
   >
     <div
       :data-testid="cardTestid"
-      class="flex max-h-full w-full flex-col rounded-popup border border-border bg-bg-raised/88 p-3 shadow-popup backdrop-blur-sm"
+      class="flex max-h-full w-full flex-col rounded-popup border border-border bg-bg-raised/95 p-3 shadow-popup backdrop-blur-lg"
       :class="[WIDTH_CLASSES[width], GAP_CLASSES[gap], contain && 'relative overflow-hidden']"
     >
       <slot />

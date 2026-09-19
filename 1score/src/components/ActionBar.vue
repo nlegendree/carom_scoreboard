@@ -118,10 +118,13 @@ const pictoActions = computed<BarAction[]>(() => [
          2026-09-18). Et elle ne porte plus SA PROPRE grille : elle reprend celle des
          colonnes, terme à terme, pour que les boutons tombent exactement sous les cartes
          (« qu'ils prennent tout l'espace sous les cards blanche et jaune »). Vérifié à la
-         mesure : 0,0 px d'écart à 1920, 1180 et 1133, à gauche comme à droite. -->
+         mesure : 0,0 px d'écart à 1920, 1180 et 1133, à gauche comme à droite.
+         Story 11.5 (Task 5, Nathan, au rendu, « O2 ») : seule des deux sœurs à porter une
+         ombre, projetée vers le haut sur le grand bloc (`shadow-bottom-bar`) — l'arbitrage de
+         la 11.2 qui l'écartait est re-tranché, voir `DESIGN.md` › Shadow Vocabulary. -->
     <div
       data-testid="action-bar-row"
-      class="flex flex-1 items-center gap-(--game-column-gutter) rounded-zone border border-border bg-surface p-1"
+      class="flex flex-1 items-center gap-(--game-column-gutter) rounded-zone border border-border bg-surface p-1 shadow-bottom-bar"
       :class="ROW_CLASSES[ctaSide]"
     >
       <!-- Le CTA occupe TOUTE la largeur de la colonne du joueur assis, comme la barre

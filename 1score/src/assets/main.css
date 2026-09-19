@@ -286,7 +286,7 @@
 
   /* Marine clair, NIVEAU 1 (Story 11.2, modèle Cueuny) : fond des quatre écrans hors jeu
      (accueil, JDS, paramétrage, récap — à PLAT, `--gradient-bg` est retiré) et carte de
-     pop-up en verre léger (`bg-bg-raised/88 backdrop-blur-sm`). Le scoreboard n'en a pas. */
+     pop-up en verre dense (`bg-bg-raised/95 backdrop-blur-lg`, Story 11.5). Le scoreboard n'en a pas. */
   --color-bg-raised: #272E49;
 
   /* Ombres (DESIGN.md › Elevation & Depth › Shadow Vocabulary, Story 11.2) : namespace
@@ -311,6 +311,9 @@
   /* La barre latérale la porte sur le contenu, à sa droite : c'est elle qui la sépare du
      fond, plus aucun filet droit (modèle Cueuny). */
   --shadow-sidebar: 6px 0 28px rgba(0, 0, 0, 0.45);
+  /* Barre basse du scoreboard, projetée VERS LE HAUT sur le grand bloc (Story 11.5, Task 5,
+     Nathan, au rendu, « O2 ») : l'arbitrage de la 11.2 qui l'écartait est re-tranché. */
+  --shadow-bottom-bar: 0 -6px 24px rgba(0, 0, 0, 0.45);
 }
 
 * {

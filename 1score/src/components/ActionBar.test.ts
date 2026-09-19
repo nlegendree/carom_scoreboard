@@ -112,6 +112,8 @@ describe('ActionBar', () => {
     // coïncider la barre avec le `m-1` du grand bloc des colonnes (`GameView`).
     expect(bar.find('[data-testid="action-bar"]').classes()).toContain('p-1')
     expect(row.classes()).toContain('p-1')
+    // Story 11.5 (Task 5, « O2 ») : la barre porte son ombre, projetée sur le grand bloc.
+    expect(row.classes()).toContain('shadow-bottom-bar')
     // Les deux groupes latéraux s'étirent comme les cartes, et rétrécissent comme elles
     // (`min-w-0`) ; aucune largeur recopiée.
     for (const g of [groups[0]!, groups[2]!]) {
