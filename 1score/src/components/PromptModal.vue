@@ -2,7 +2,7 @@
 import { computed, useId } from 'vue'
 import CtaButton from './CtaButton.vue'
 import PopupCard from './PopupCard.vue'
-import { BALL_CLASSES } from './ballAssets'
+import { BALL_PICTOS } from './ballAssets'
 import type { PlayerColor } from '../types/game'
 import type { PromptAction } from '../types/ui'
 
@@ -91,12 +91,16 @@ const titleId = useId()
       <!-- Titre TOUJOURS centré (revue du 2026-09-12) : la carte est resserrée, un titre
            collé à gauche y flottait. -->
       <header data-testid="prompt-header" class="flex shrink-0 items-center justify-center gap-4">
-        <span
+        <!-- L'IMAGE de la bille (Story 11.5, Nathan, 2026-09-19), la même que sur la carte de
+             paramétrage et le récap : l'aplat de couleur qu'elle remplace se lisait comme un
+             simple disque blanc. -->
+        <img
           v-if="ball"
           data-testid="prompt-ball"
+          :src="BALL_PICTOS[ball]"
+          alt=""
           aria-hidden="true"
-          class="h-5 w-5 shrink-0 rounded-full"
-          :class="BALL_CLASSES[ball]"
+          class="size-5 shrink-0 object-contain"
         />
         <h2
           :id="titleId"

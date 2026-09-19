@@ -67,9 +67,13 @@ describe('PromptModal', () => {
   it('shows the ball of the player concerned, when there is one', () => {
     expect(find(mountPrompt(), 'prompt-ball').exists()).toBe(false)
 
+    // Story 11.5 (Nathan, au rendu, 2026-09-19) : l'IMAGE de la bille, celle de la carte de
+    // paramétrage et du récap — plus un aplat de couleur, qui se lisait comme un disque blanc.
     const ball = find(mountPrompt({ ball: 'yellow' }), 'prompt-ball')
     expect(ball.exists()).toBe(true)
-    expect(ball.classes()).toContain('bg-player-yellow')
+    expect(ball.element.tagName).toBe('IMG')
+    expect(ball.attributes('src')).toBe('/bille_jaune.png')
+    expect(find(mountPrompt({ ball: 'white' }), 'prompt-ball').attributes('src')).toBe('/bille_blanche.png')
   })
 
   // AC18 : le voile est INERTE. La pop-up de fin monte sous le doigt qui vient de

@@ -1,9 +1,9 @@
 import type { PlayerColor, PlayerId } from '../types/game'
 
-// Les trois tables de la BILLE, partagées — même emplacement et même patron que
+// Les tables de la BILLE, partagées — même emplacement et même patron que
 // `keyClasses.ts`. Avant la Story 11.3 elles vivaient recopiées : `BALL_PICTOS` deux fois
 // (`PlayerSetupCard` en `PlayerColor`, `GameSummary` en `PlayerId`, mêmes deux chemins),
-// `BALL_LABELS` et `BALL_CLASSES` chacune dans son fichier. L'audit du design system le
+// `BALL_LABELS` et `BALL_CLASSES` (retirée depuis) chacune dans son fichier. L'audit du design system le
 // relève en P2 (« constantes dupliquées »).
 //
 // Clés par `PlayerColor` — la bille est une COULEUR, pas une place à la table. Un écran qui
@@ -23,12 +23,9 @@ export const BALL_LABELS: Record<PlayerColor, string> = {
   yellow: 'BILLE JAUNE',
 }
 
-// ⚠️ Classes écrites en TOUTES LETTRES : le scanner JIT de Tailwind v4 ne voit qu'elles, et
-// une classe construite à partir d'un nom de couleur n'émettrait rien, en silence.
-export const BALL_CLASSES: Record<PlayerColor, string> = {
-  white: 'bg-player-white',
-  yellow: 'bg-player-yellow',
-}
+// ⚠️ `BALL_CLASSES` (l'aplat de couleur de la bille) est RETIRÉE par la Story 11.5 : son seul
+// consommateur, la pastille de `PromptModal`, affiche désormais l'image de `BALL_PICTOS`
+// (Nathan, au rendu, 2026-09-19). Les couleurs `bg-player-*` restent consommées par les cartes.
 
 // `player1` joue la bille BLANCHE, `player2` la jaune : la règle était déjà écrite en
 // commentaire dans `GameSummary`, elle est ici une fonction — un seul endroit où la lire, et

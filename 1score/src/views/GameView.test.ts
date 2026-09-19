@@ -795,7 +795,8 @@ describe('GameView — fin de partie', () => {
     expect(wrapper.find('[data-testid="prompt-message"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="prompt-primary"]').text()).toBe('ANDRÉ JOUE')
     expect(wrapper.find('[data-testid="prompt-secondary"]').text()).toBe('FIN DE PARTIE')
-    expect(wrapper.find('[data-testid="prompt-ball"]').classes()).toContain('bg-player-white')
+    // La bille du joueur qui a fini, en IMAGE depuis la Story 11.5 (plus un aplat de couleur).
+    expect(wrapper.find('[data-testid="prompt-ball"]').attributes('src')).toBe('/bille_blanche.png')
     expect(panels(wrapper)[1]!.find('[data-testid="turn-ring"]').exists()).toBe(true)
   })
 
