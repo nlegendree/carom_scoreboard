@@ -67,7 +67,7 @@ typography:
     fontVariation: "tabular-nums"
   clock:
     fontFamily: "Saira, system-ui, Avenir, Helvetica, Arial, sans-serif"
-    fontSize: "40cqmin"
+    fontSize: "48cqmin"
     fontWeight: 900
     lineHeight: 1
     fontVariation: "tabular-nums"
@@ -378,7 +378,7 @@ Rendus indiqués aux trois formats de vérification : 1133 / 1180 / 1920 px de l
 
 - **Score** (`score-1` … `score-4`, `score-more` ; 900, interligne 1, tabulaire) : le plus gros élément de l'écran, sans exception. La taille se choisit selon le nombre de chiffres — `min(42vw, 40vh, 520px)` à un chiffre, puis 24 / 16 / 12 / 9 vw à deux, trois, quatre, cinq chiffres et plus : `vw` protège de la largeur de la carte, `vh` de sa hauteur (298 / 293 / 432 px), 520 px ne plafonne qu'au-delà de 1080 px de haut (signage). Le token historique `--text-score` est supprimé.
 - **Reprise** (`reprise` ; 900, `clamp(72px, 7.5vw, 144px)` → 85 / 88 / 144, interligne 1) : numéro de reprise de la colonne centrale, dimensionné pour un cinquième d'écran.
-- **Chrono** (`clock` ; 900, `40cqmin` du disque, tabulaire) : chiffre du chrono de tir, relatif au disque et non à l'écran.
+- **Chrono** (`clock` ; 900, `48cqmin` du disque, tabulaire) : chiffre du chrono de tir, relatif au disque et non à l'écran.
 - **Série en cours** (`series` ; 900, `clamp(24px, 10cqw, 80px)` → 45 / 47 / 77, rouge profond, tabulaire) : la valeur au pied de la carte joueur, relative à la largeur de la carte.
 - **Correction** (`adjust` ; 900, `clamp(30px, 2.5vw, 48px)` → 30 / 30 / 48, à 60 % d'opacité) : `−` / `+` du pied de carte ; un rattrapage d'arbitrage, jamais en concurrence avec le score.
 - **Hero** (`hero` ; 900, `clamp(48px, 4.75vw, 91px)` → 54 / 56 / 91, interligne serré) : accroche d'accueil, titre de la sélection JDS, `VS` du récap (italique synthétisé, blanc 60 %).
@@ -473,7 +473,7 @@ Le relief est réservé à **ce qui se tape**, à **ce qui flotte** et à **la b
 
 `--radius-cta`, `--radius-key`, `--radius-modal` et `--radius-container` (mort) sont retirés ; `tokens.test.ts` interdit tout `rounded-[…]` de gabarit et tout `--radius-*` que ce document ne nomme pas.
 
-**Cercles** : billes (`rounded-full`, images PNG de 40 px), disque du chrono (`aspect-square`, `min(100cqw, 100cqh)`), arc SVG à rayon 36 et trait 7 sur un viewBox 100, cap plat.
+**Cercles** : billes (`rounded-full`, images PNG de 40 px), disque du chrono (`aspect-square`, `min(100cqw, 100cqh)`), arc SVG à rayon 43 et trait 6 sur un viewBox 100, cap plat.
 
 **Filets** : 1 px blanc 22 % sur tout conteneur et sur toute carte de pop-up ; 2 px sur les champs de paramétrage (noir 25 %, rouge vif quand visé) ; liseré de tour `ring-8` intérieur rouge vif ; filet vertical `w-px` entre nom et distance sur le bandeau du récap. La barre latérale n'en a plus : son ombre la sépare.
 
@@ -519,7 +519,7 @@ Le relief est réservé à **ce qui se tape**, à **ce qui flotte** et à **la b
 - **Barre basse du scoreboard** : marine sombre, grille 2/5 · 1/5 · 2/5, CTA de saisie et quatre **pictos d'action** (surface voilée, filet, rayon tapable, 90 × 90 px, picto 32 px + libellé `picto`, blanc 15 % à l'appui, 30 % si inactif).
 
 ### Shot Clock (signature)
-Disque marine sombre (la couleur de la colonne : `bg-bg`, aucun token propre), dimensionné `min(100cqw, 100cqh)` de la colonne, débordant de 3 unités (24 px sur tablette) sur chaque carte. Arc SVG rayon 36 / trait 7 / cap plat, piste à 20 %, se vidant depuis midi en 1 s linéaire ; couleur interpolée en HSL du vert (130°) au rouge alerte (3°) sur l'arc **et** le chiffre (`clock`, 40 cqmin, 900, tabulaire). Demi-anneau rouge vif de 8 px, clippé à la bande de débordement, qui prolonge le liseré de tour autour du disque.
+Disque marine sombre (la couleur de la colonne : `bg-bg`, aucun token propre), dimensionné `min(100cqw, 100cqh)` de la zone, qui occupe toute la largeur de la colonne (retrait annulé) : **il ne déborde plus sur les cartes** depuis la Story 11.5. Arc SVG **rayon 43 / trait 6** / cap plat (Story 11.5, Nathan, 2026-09-19 : « agrandis-le un peu dans le cadre » — le rayon 36 de la 10.4 servait à détacher le médaillon des cartes qu'il chevauchait ; sans chevauchement, l'arc vient presque au bord), piste à 20 %, se vidant depuis midi en 1 s linéaire ; couleur interpolée en HSL du vert (130°) au rouge alerte (3°) sur l'arc **et** le chiffre (`clock`, **48 cqmin**, 900, tabulaire — suit l'agrandissement du disque intérieur, 80 % du diamètre contre 62 %). Plus de demi-anneau de tour : le liseré `ring-8` de la carte active est un contour continu.
 
 ### Pop-ups (signature)
 Un seul patron pour les quatre (`PromptModal`, `ScoreEntryDock`, `NumericPadDock`, `AlphaKeyboardSheet`), et depuis la Story 11.3 ce patron **est un composant** — `PopupCard.vue` (contrat en fin de section) : voile noir 25 % sans flou, `role="dialog"`, carte en verre léger à rayon pop-up et filet 22 %, pied de CTA en `gap-2`. **Jamais de croix** : le retour est un gros CTA `ANNULER`, et toute pop-up qui en porte un se ferme aussi au tap dehors (geste complet, appui et relâchement du même pointeur). Une pop-up sans retour (fin de partie par série) garde un voile inerte. Titre toujours centré ; pas de message redondant.

@@ -84,7 +84,7 @@
   /* Numéro de reprise : dimensionné pour la colonne centrale (w-1/5). */
   --text-reprise: clamp(72px, 7.5vw, 144px);
   /* Chiffre du chrono : relatif au DISQUE (`cqmin`), pas à l'écran. */
-  --text-clock: 40cqmin;
+  --text-clock: 48cqmin;
   /* Série en cours au pied de la carte : relative à la largeur de la CARTE (`cqw`). */
   --text-series: clamp(24px, 10cqw, 80px);
   /* Signes `−` / `+` de correction. */

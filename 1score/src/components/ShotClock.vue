@@ -29,8 +29,7 @@ const props = defineProps<{
 }>()
 
 // Taille du disque : le plus petit des deux côtés de la zone (jamais plus large que la
-// colonne élargie, jamais plus haut que la place restante). Partagée avec le demi-anneau de
-// tour, qui doit avoir EXACTEMENT le même rayon pour raccorder au liseré.
+// colonne, jamais plus haut que la place restante).
 const DISC_SIZE_CLASSES = 'aspect-square w-[min(100cqw,100cqh)]'
 
 // 1re passe de rendu de la 10.4 (Nathan, réf. `cueuny_scoreboard.png`) : l'arc est RENTRÉ
@@ -40,8 +39,12 @@ const DISC_SIZE_CLASSES = 'aspect-square w-[min(100cqw,100cqh)]'
 // 2e passe (2026-09-14) : trait AFFINÉ (10 → 7). Le disque ayant grossi en même temps, un
 // trait épais redevenait lourd ; fin, il se lit comme un cadran et laisse respirer le
 // chiffre. Le rayon ne bouge pas — c'est le disque entier qui grandit, porté par la colonne.
-const RADIUS = 36
-const STROKE_WIDTH = 7
+// Story 11.5 (Nathan, 2026-09-19, « agrandis-le un peu dans le cadre ») : rayon 36 → 43 et
+// trait 7 → 6. Le rayon 36 détachait le médaillon des CARTES qu'il chevauchait ; le débordement
+// abandonné, cette marge sombre ne sépare plus rien et l'arc vient presque au bord (bord
+// extérieur à 46 sur 50). Le trait s'affine pour ne pas alourdir un anneau plus grand.
+const RADIUS = 43
+const STROKE_WIDTH = 6
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 const ratio = computed(() =>
@@ -113,10 +116,10 @@ const color = computed(() => {
             :style="{ strokeDasharray: CIRCUMFERENCE, strokeDashoffset: dashoffset, stroke: color }"
           />
         </svg>
-        <!-- Le disque est lui-même un conteneur de taille : `text-clock` (40cqmin) = 40 % de SON diamètre
+        <!-- Le disque est lui-même un conteneur de taille : `text-clock` (48cqmin) = 48 % de SON diamètre
              (pas de celui de la zone), pour que deux chiffres tabulaires tiennent dans le
-             disque intérieur — 62 % du diamètre depuis que l'arc est rentré à `RADIUS 36`,
-             contre 76 % avant : le chiffre descend d'autant. -->
+             disque intérieur — 80 % du diamètre depuis que l'arc est ressorti à `RADIUS 43`
+             (Story 11.5 ; 62 % à rayon 36) : le chiffre remonte d'autant, 40 → 48 cqmin. -->
         <span
           data-testid="shot-clock-value"
           class="relative text-clock leading-none font-black tabular-nums transition-colors duration-1000 ease-linear"
