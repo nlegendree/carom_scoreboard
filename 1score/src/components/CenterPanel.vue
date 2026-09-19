@@ -89,7 +89,7 @@ function passTurn(): void {
 
 <template>
   <div
-    class="relative flex w-1/5 min-w-0 shrink-0 flex-col items-center gap-3 overflow-visible rounded-block bg-bg p-2"
+    class="relative flex w-1/5 min-w-0 shrink-0 flex-col items-center gap-3 overflow-visible rounded-block bg-bg p-1"
   >
     <div class="flex w-full min-w-0 flex-col items-center" :class="repriseBlockClass">
       <span data-testid="reprise-label" class="text-stat text-white/60">REP</span>
@@ -110,10 +110,13 @@ function passTurn(): void {
          liseré rouge et la bande grise finissaient tous les trois sur une diagonale. Quatre
          passes de rendu ont cherché un raccord propre avant l'abandon.
          Ce qu'il en reste ici : la zone ne s'élargit plus d'un débordement, mais elle ANNULE
-         le retrait de la colonne (`p-2`) pour que l'anneau aille d'un bord à l'autre —
+         le retrait de la colonne (`p-1`) pour que l'anneau aille d'un bord à l'autre —
          « contente-toi de mettre le chrono le plus gros possible dans le container, tu peux
          retirer la padding autour de l'anneau ». Le calcul reste sur la CONTENT BOX : `100%`
-         vaut la colonne moins ses deux `p-2`, d'où les 4 unités rendues.
+         vaut la colonne moins ses deux `p-1`, d'où les 2 unités rendues.
+         Story 11.5 (Nathan, 2026-09-19) : le retrait de la colonne passe de 2 unités à 1 —
+         « le même padding que là », celui du CTA de la barre basse dans sa barre. `PASSER LE
+         TOUR` se pose donc à la même distance de son bloc que `+1 ADVERSAIRE` de la sienne.
          ⚠️ `z-20` conservé : il n'y a plus de liseré à masquer, mais l'ordre de peinture
          reste explicite de part et d'autre (`PlayerPanel` › `ring-8` est à `z-10`), et s'en
          remettre au contexte d'empilement de `@container` n'avait pas suffi en 10.4.
@@ -127,7 +130,7 @@ function passTurn(): void {
     <div
       v-if="secondsRemaining !== null"
       data-testid="shot-clock-bleed"
-      class="relative z-20 flex min-h-0 w-[calc(100%_+_var(--spacing)_*_4)] flex-1 -mx-2"
+      class="relative z-20 flex min-h-0 w-[calc(100%_+_var(--spacing)_*_2)] flex-1 -mx-1"
     >
       <ShotClock :secondsRemaining="secondsRemaining" :totalSeconds="SHOT_CLOCK_SECONDS" />
     </div>

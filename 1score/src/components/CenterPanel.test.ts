@@ -100,6 +100,18 @@ describe('CenterPanel', () => {
   // fond, elle hériterait visuellement du voile et le creux arbitré par Nathan disparaîtrait.
   // L'intention est inchangée — la colonne EST LA BASE —, c'est le moyen qui change : elle la
   // déclare (`bg-bg`) au lieu de la laisser transparaître. Le filet, lui, reste interdit.
+  // Story 11.5 (AC3), arbitrage de Nathan : le CREUX, pas le relief — le grand bloc est voilé,
+  // la colonne centrale garde la base NUE et se creuse dedans, avec le rayon de BLOC des deux
+  // cartes. ⚠️ Ce cas avait disparu par accident en réécrivant le test du débordement : il
+  // est rétabli, et verrouille aussi le retrait arbitré le 2026-09-19 — le même que celui du
+  // CTA de la barre basse dans sa barre (`ActionBar` › `p-1`).
+  it('stays a rounded recess, inset like the bottom bar', () => {
+    const classes = mount(CenterPanel, { props: baseProps }).classes()
+
+    expect(classes).toEqual(expect.arrayContaining(['rounded-block', 'bg-bg', 'p-1']))
+    expect(classes).not.toContain('p-2')
+  })
+
   it('is a bare, borderless column that declares the base as its ground', () => {
     const classes = mount(CenterPanel, { props: baseProps }).classes()
 
@@ -123,7 +135,8 @@ describe('CenterPanel', () => {
   // elle ANNULE le retrait de la colonne pour que l'anneau aille d'un bord à l'autre — « le
   // chrono le plus gros possible dans le container, tu peux retirer la padding autour de
   // l'anneau ». Le calcul reste sur la CONTENT BOX : `100%` vaut la colonne moins ses deux
-  // `p-2`, d'où les 4 unités rendues et le `-mx-2` qui les recale. En unités de grille, jamais
+  // `p-1`, d'où les 2 unités rendues et le `-mx-1` qui les recale. ⚠️ Les deux bougent
+  // ENSEMBLE : si le retrait de la colonne change, ce calcul doit changer avec lui. En unités de grille, jamais
   // en pixels (la grille est fluide). Aucun CSS n'étant calculé en test, seule la classe peut
   // être verrouillée ici — c'est la passe navigateur qui prouve que le disque est d'aplomb.
   it('gives the clock the full width of its column, padding cancelled', () => {
@@ -131,8 +144,8 @@ describe('CenterPanel', () => {
       props: { ...baseProps, secondsRemaining: 40 },
     }).find('[data-testid="shot-clock-bleed"]')
 
-    expect(bleed.classes()).toContain('w-[calc(100%_+_var(--spacing)_*_4)]')
-    expect(bleed.classes()).toContain('-mx-2')
+    expect(bleed.classes()).toContain('w-[calc(100%_+_var(--spacing)_*_2)]')
+    expect(bleed.classes()).toContain('-mx-1')
     // Le débordement est RETIRÉ : plus aucune classe ne lit le token disparu.
     expect(bleed.classes().join(' ')).not.toContain('--game-clock-bleed')
     // ⚠️ `z-20` conservé : il n'y a plus de liseré à masquer, mais l'ordre de peinture reste
