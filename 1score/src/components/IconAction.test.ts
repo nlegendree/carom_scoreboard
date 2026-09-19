@@ -35,7 +35,7 @@ describe('IconAction', () => {
 
     expect(wrapper.emitted('press')).toBeUndefined()
     expect(wrapper.attributes('disabled')).toBeDefined()
-    expect(wrapper.classes().join(' ')).toContain('disabled:opacity-30')
+    expect(wrapper.classes()).toEqual(expect.arrayContaining(['disabled:opacity-30', 'disabled:shadow-none']))
   })
 
   it('stays inert in the soon state and shows the BIENTÔT badge', async () => {

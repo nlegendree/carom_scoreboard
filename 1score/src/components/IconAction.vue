@@ -28,8 +28,9 @@ const emit = defineEmits<{ press: [] }>()
 // s'accordent pas sur l'envoi des pointer events aux contrôles désactivés (Chromium en a
 // changé en 2023). Les deux, toujours — pour l'état BIENTÔT comme pour le grisé.
 // Relief de CTA (Story 11.5, « K1 ») : les pictos de la barre basse portent le même relief que
-// les CTA — tranche ardoise de 3 px, et à l'appui ils descendent de 3 px, l'épaisseur de la
-// tranche. Commentaire ici et non dans le gabarit : un commentaire à la racine en ferait un
+// les CTA — tranche ardoise de `--size-relief-depth`, et à l'appui ils descendent de ce même
+// token, l'épaisseur de la tranche. Inactifs (grisé ou BIENTÔT), ils sont PLATS : la tranche
+// tombe avec l'opacité (revue de la 11.5, décision de Nathan). Commentaire ici et non dans le gabarit : un commentaire à la racine en ferait un
 // fragment (`CLAUDE.md` §12).
 function press(): void {
   if (props.disabled || props.state === 'soon') return
@@ -41,7 +42,7 @@ function press(): void {
   <button
     type="button"
     :disabled="disabled || state === 'soon'"
-    class="flex min-h-(--size-touch-target) min-w-(--size-touch-target) flex-col items-center justify-center gap-1 border border-border bg-surface px-1 text-center text-white rounded-tappable shadow-cta-relief-neutral active:translate-y-[3px] active:bg-white/15 active:shadow-cta-relief-active disabled:opacity-30"
+    class="flex min-h-(--size-touch-target) min-w-(--size-touch-target) flex-col items-center justify-center gap-1 border border-border bg-surface px-1 text-center text-white rounded-tappable shadow-cta-relief-neutral active:translate-y-(--size-relief-depth) active:bg-white/15 active:shadow-cta-relief-active disabled:opacity-30 disabled:shadow-none"
     @pointerdown="press"
   >
     <PictoIcon :name="picto" class="size-4" />

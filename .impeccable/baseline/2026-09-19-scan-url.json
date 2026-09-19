@@ -2,7 +2,7 @@
  "date": "2026-09-19",
  "mode": "url",
  "detector": "impeccable 4.0.0 (lanceur du dépôt)",
- "baseUrl": "http://localhost:5173/",
+ "baseUrl": "http://localhost:5180/",
  "exitCode": 0,
  "scenes": [
   "01-accueil",

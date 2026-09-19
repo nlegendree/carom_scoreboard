@@ -17,7 +17,8 @@ const mountCta = (variant: CtaVariant, props: Record<string, unknown> = {}) =>
 describe('CtaButton', () => {
   // Story 11.5 (Nathan, au rendu, 2026-09-19, « K1 ») : chaque variante porte le relief de SA
   // couleur — une tranche teintée, jamais noire (elle se perdait sur les fonds sombres) — et les
-  // six s'enfoncent de la même façon : tranche retirée, 3 px de descente, l'épaisseur de la tranche.
+  // six s'enfoncent de la même façon : tranche retirée, descente de `--size-relief-depth`, le token
+  // qui fait aussi l'épaisseur de la tranche.
   const RELIEF: Record<CtaVariant, string> = {
     accent: 'shadow-cta-relief-blue',
     neutral: 'shadow-cta-relief-neutral',
@@ -30,7 +31,7 @@ describe('CtaButton', () => {
     const classes = mountCta(variant).classes()
 
     expect(classes).toContain(RELIEF[variant])
-    expect(classes).toEqual(expect.arrayContaining(['active:translate-y-[3px]', 'active:shadow-cta-relief-active']))
+    expect(classes).toEqual(expect.arrayContaining(['active:translate-y-(--size-relief-depth)', 'active:shadow-cta-relief-active']))
     expect(classes).not.toContain('shadow-light-edge-start')
   })
 
@@ -68,7 +69,10 @@ describe('CtaButton', () => {
   // retour d'appui, impossible à distinguer d'un CTA vivant. L'écran d'identification joueur
   // de l'Epic 4 doit pouvoir griser son `VALIDER` sans rien créer.
   it.each(VARIANTS)('renders an inactive state for the %s variant', (variant) => {
-    expect(mountCta(variant, { disabled: true }).classes()).toContain('disabled:opacity-30')
+    expect(mountCta(variant, { disabled: true }).classes()).toEqual(
+      // Plat quand il est mort (revue de la 11.5) : la tranche tombe avec l'opacité.
+      expect.arrayContaining(['disabled:opacity-30', 'disabled:shadow-none']),
+    )
   })
 
   it('is not disabled by default', () => {

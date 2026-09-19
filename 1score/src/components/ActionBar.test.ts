@@ -108,9 +108,14 @@ describe('ActionBar', () => {
     expect(row.classes()).toEqual(
       expect.arrayContaining(['gap-(--game-column-gutter)', 'rounded-zone', 'bg-surface', 'border', 'border-border']),
     )
-    // Les deux groupes latéraux s'étirent comme les cartes ; aucune largeur recopiée.
+    // La marge d'une unité au pourtour est portée par le `<nav>` : c'est elle qui fait
+    // coïncider la barre avec le `m-1` du grand bloc des colonnes (`GameView`).
+    expect(bar.find('[data-testid="action-bar"]').classes()).toContain('p-1')
+    expect(row.classes()).toContain('p-1')
+    // Les deux groupes latéraux s'étirent comme les cartes, et rétrécissent comme elles
+    // (`min-w-0`) ; aucune largeur recopiée.
     for (const g of [groups[0]!, groups[2]!]) {
-      expect(g.classes()).toContain('flex-1')
+      expect(g.classes()).toEqual(expect.arrayContaining(['flex-1', 'min-w-0']))
       expect(g.classes()).not.toContain('w-2/5')
     }
     // L'espaceur central garde le cinquième de la colonne centrale.

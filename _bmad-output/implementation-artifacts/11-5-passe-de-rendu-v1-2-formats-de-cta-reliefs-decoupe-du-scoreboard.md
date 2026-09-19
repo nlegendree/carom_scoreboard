@@ -1,6 +1,6 @@
 # Story 11.5: Passe de rendu V1.2 — formats de CTA, reliefs, découpe du scoreboard
 
-Status: ready-for-dev
+Status: in-progress
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -140,6 +140,26 @@ so that l'Epic 11 se close sur un design **fini** et non sur un design system pr
   - [ ] `deferred-work.md` : reports de la story, entrée « passe de rendu V1.2 » **close**
   - [ ] Liste de contrôle du critère de sortie mise à jour pour l'Epic 4
   - [ ] `epics.md` › Epic 11 annotée de la Story 11.5 ; `sprint-status.yaml` → `review`
+
+### Review Findings
+
+Revue de code du 2026-09-19 (bmad-code-review, 3 relecteurs sur `01402db..HEAD`, story EN COURS — Tasks 4 à 9 ouvertes : ce qui relève d'une task ouverte est écarté, pas relevé).
+
+- [x] [Review][Patch] Gouttière intérieure morte des cartes — ✅ TRANCHÉ (Nathan, 2026-09-19) : retirer, ramener au retrait symétrique de la carte, rendu avant/après aux trois formats AVANT commit — — `INNER_GUTTER_CLASSES` (`pr-4`/`pl-4`, `PlayerPanel.vue:76-85`) réservait la place du débordement du chrono, abandonné par cette story ; le commentaire la justifie encore par `--game-clock-bleed`, token retiré, et `PlayerPanel.test.ts:196-215` la verrouille. Coût : 32 px (tablette) / 52 px (1920) morts côté centre, score et nom décentrés vers l'extérieur, nom tronqué plus tôt. Retirer (ou ramener au retrait `px-3` du pied) change le rendu → à trancher au rendu.
+- [x] [Review][Patch] CTA inactif qui garde sa tranche de relief — ✅ TRANCHÉ (Nathan, 2026-09-19) : retirer la tranche à l'inactif (plat), rendu montré avant commit, écrit dans DESIGN.md — — `shadow-cta-relief-*` reste posé sous `disabled`/BIENTÔT, seule l'opacité tombe à 30 % : un bouton mort garde l'air d'un objet qu'on enfonce (Règle de l'inactif). Garder, ou retirer la tranche à l'état inactif (`CtaButton.vue`, `IconAction.vue`).
+- [x] [Review][Patch] Le harnais de rendu attend `setup-header`, supprimé par `f1d4481` : timeout au paramétrage aux trois formats, plus aucune capture après `02-jds`, `design:check` cassé [1score/scripts/render-static.cjs:201,243]
+- [x] [Review][Patch] `active:translate-y-[3px]` — valeur arbitraire dans deux gabarits (CLAUDE.md §7, AC4), couplée à l'épaisseur de tranche de `main.css` sans source commune : naître en token (`DESIGN.md` d'abord, `main.css` ensuite) lu par les ombres de relief ET l'enfoncement [1score/src/components/CtaButton.vue, 1score/src/components/IconAction.vue]
+- [x] [Review][Patch] `GAME_POPUP_RESERVE` pas recalculé pour le grand bloc (`m-1` + filet + `p-1` + gouttière), à la différence de `SETUP_POPUP_RESERVE` ; commentaire « 40vw à fleur de bord » faux [1score/src/views/GameView.vue:105-115]
+- [x] [Review][Patch] Lecteurs de `--game-column-gutter` faux partout : `CenterPanel` ne le lit plus, `ActionBar` le lit et n'est cité nulle part (CLAUDE.md §10, commentaire `GameView.vue:360-373`, `DESIGN.md` › Layout « trois lectures », `main.css`) [1score/CLAUDE.md:176]
+- [x] [Review][Patch] `DESIGN.md` périmé ou contradictoire : paragraphes qui supposent encore le débordement (« déborder encore dans la carte », « Plafond mesuré de la gouttière », coût 21,5 → 8,5 px) ; « se resserrent d'une unité au lieu de trois » alors que `gap-3` est conservé ; « Deux rayons » pour quatre ; le récap dans la liste des angles vifs (et `GameView.vue` / `main.css` « QUE pour le scoreboard ») ; barre de rebours « 16 px (`h-2`) » → `h-1` ; barre basse « marine sombre, grille 2/5 · 1/5 · 2/5 » [DESIGN.md:428-532]
+- [x] [Review][Patch] Fiche en retard sur le code : en-tête `Status: ready-for-dev` (sprint : `in-progress`) ; aucune trace des 8 commits du 2026-09-19 dans Dev Agent Record / Change Log (chrono 43/6/48cqmin, liseré arrondi, colonne `p-1`, paramétrage « M »/« T1 » et retrait du bandeau `setup-header`, récap « R1 », bille image de `PromptModal`, relief K1 + barre de rebours `h-1`, BIENTÔT grisé) ; arbitrage K1 non noté alors que la Task 4/5 l'exige ; passe 6 à cinq variantes (I, J, b, c, d) non signalée ; File List incomplète (≈15 fichiers) avec trois entrées périmées ; décompte « 16 écrans / quatre écrans de scoreboard » faux (3 scènes × 5 = 15) [_bmad-output/implementation-artifacts/11-5-…:3,273-391]
+- [x] [Review][Patch] Renvois à `deferred-work.md` sans entrée : « une autre manière de relier le chrono aux cartes » (`main.css:256-265`, `DESIGN.md` › Layout) — créer l'entrée [_bmad-output/implementation-artifacts/deferred-work.md]
+- [x] [Review][Patch] Rendu JDS de la découpe non attesté (AC3 « en 3 Bandes ET en JDS », Task 3 cochée) : une fois le harnais réparé, capturer la scène scoreboard JDS aux trois formats et le noter [_bmad-output/implementation-artifacts/11-5-…]
+- [x] [Review][Patch] Gouttière du paramétrage et du récap en `gap-1` écrite en dur alors que le « même format » du scoreboard lit `--game-column-gutter` : lire le token (valeur identique, rendu inchangé) [1score/src/components/HomeScreen.vue:517, 1score/src/components/GameSummary.vue]
+- [x] [Review][Patch] Groupes `flex-1` de la barre basse sans `min-w-0` : un contenu plus large que la carte (≈ 416 px demandés pour 431 à 1133) casse l'alignement au pixel en silence [1score/src/components/ActionBar.vue:121,136]
+- [x] [Review][Patch] Tests qui ne tiennent pas ce qu'ils annoncent : `reproduces the column grid` ne vérifie pas le `p-1` du `<nav>` ; colonne des libellés du récap trouvée par position DOM (ajouter un `data-testid`) ; `column-gutter` exclu du miroir DESIGN.md ↔ main.css sans contrôle de remplacement ; commentaire « AC16 : l'anneau déborde » resté dans `CenterPanel.test.ts` [1score/src/components/ActionBar.test.ts, GameSummary.test.ts, 1score/src/assets/typography.test.ts:47-54]
+- [x] [Review][Defer] `overflow-hidden` ajouté au récap pour arrondir le bandeau : rogne sans signal si la hauteur utile baisse (barre Safari) ou si la cellule `RÉSULTAT` se charge (badge record, Story 3.5) [1score/src/components/GameSummary.vue:110,186,198] — deferred, aucun cas réel aujourd'hui
+- [x] [Review][Defer] Le `<h1>` du mode passe après la carte du joueur gauche dans l'ordre DOM : VoiceOver lit les champs avant le titre [1score/src/components/HomeScreen.vue:540] — deferred, lecteur d'écran hors usage en salle
 
 ## Dev Notes
 
@@ -337,6 +357,8 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
 | 6 | **I** chrono dans son bloc · **J** chrono débordant · puis **b** cadre fermé, **c** anneau complet, **d** rouge contournant | « il faut que le rouge **et le bord du cadre** contournent l'anneau, là c'est cut un peu » |
 | 7 | **K** anneaux concentriques · **L** colonne bombée (croquis de Nathan) | ⚠️ **K rejeté sèchement** : « c'est n'importe quoi ce contour, la ligne grise fait tout le tour, pourquoi ? » — j'avais dessiné des anneaux **concentriques au disque** au lieu de suivre le **contour de la colonne**. Puis, sur L : **abandon** — « on va abandonner l'effet de débordement, ça me paraît trop complexe à faire… contente-toi de mettre le chrono le plus gros possible dans le container, tu peux retirer la padding autour de l'anneau » |
 
+⚠️ **Écart à la règle bloquante « au plus deux propositions », consigné à la revue du 2026-09-19** : la passe 6 en a montré **cinq** — `I` et `J` d'abord, puis `b`, `c`, `d`, trois variantes de `J` produites dans la même passe en réponse à la remarque de Nathan sur le raccord. L'écart n'a pas été signalé sur le moment.
+
 **Ce qui est livré (arbitrage de Nathan, 2026-09-18).**
 - **Deux niveaux de forme.** Un **grand bloc** (`rounded-zone`, 16 px, surface voilée, filet) contient les trois colonnes ; dedans, **trois blocs** (`rounded-block`, 12 px) séparés d'**une unité** de gouttière. La **barre basse** est la sœur du grand bloc : même rayon, même voile, même filet. Tout est décollé des bords de l'écran d'une unité.
 - **Le centre en creux** : le grand bloc est voilé, la colonne centrale garde la base marine sombre **nue** (`bg-bg` explicite — sans lui elle hériterait du voile et le creux disparaîtrait). La proposition inverse a été rendue côte à côte et écartée.
@@ -352,11 +374,11 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
 **Task 3 — vérifications.**
 - `npm test` : **1115 tests / 32 fichiers, verts** (1107 à la ligne de base ; +8 nets, le solde de cas ajoutés et de cas retirés avec le demi-anneau). `npm run build` vert. `git diff --stat -- 1score/src/stores` **vide**.
 - `npm run design:check` → **code de sortie `0`**, `npm run design:check:file` → **`0`**, sur serveur de dev neuf.
-- **36 captures d'après comparées à la ligne de base : 16 écrans ont bougé**, et chacun est une décision — les quatre écrans de scoreboard (`07`, `09`, `12`) et les **deux pop-ups qui se posent dessus** (`08`, `10`, dont le fond est le scoreboard). Le 17e, `05-popup-pave-numerique-1920x1080`, est le **bruit d'un pixel** déjà caractérisé à la Task 2 (delta 5/255 en (326, 735), identique d'une passe à l'autre sur le même code).
+- **36 captures d'après comparées à la ligne de base : 15 ont bougé**, et chacune est une décision — les trois scènes de scoreboard (`07`, `09`, `12`) et les **deux pop-ups qui se posent dessus** (`08`, `10`, dont le fond est le scoreboard), aux trois formats. La 16e, `05-popup-pave-numerique-1920x1080`, est le **bruit d'un pixel** déjà caractérisé à la Task 2 (delta 5/255 en (326, 735), identique d'une passe à l'autre sur le même code).
 
 **Reports ouverts par la Task 3** (à porter dans `deferred-work.md`) :
 - **Relier le chrono aux cartes autrement.** Le débordement est abandonné, pas remplacé : « je vais réfléchir à une autre manière de faire ». Sept passes de rendu et leurs mesures sont consignées ci-dessus pour ne pas les refaire à l'aveugle.
-- **La gouttière intérieure des cartes** (`INNER_GUTTER_CLASSES`, `pr-4` / `pl-4`) n'avait qu'une raison : absorber le débordement. Cette raison a disparu. Elle est **conservée en l'état** — la retirer déplacerait le score sur les deux cartes, ce qui est une décision de rendu que Nathan n'a pas prise.
+- **La gouttière intérieure des cartes** (`INNER_GUTTER_CLASSES`, `pr-4` / `pl-4`) n'avait qu'une raison : absorber le débordement. Cette raison a disparu. Elle est **conservée en l'état** — la retirer déplacerait le score sur les deux cartes, ce qui est une décision de rendu que Nathan n'a pas prise. ➡️ **Tranché à la revue de code du 2026-09-19** (Nathan) : retirée, rendu avant/après aux trois formats.
 
 ### Completion Notes List
 
@@ -364,26 +386,53 @@ Les deux non-lectures sont **verrouillées par un cas de test chacune** (`ShotCl
 - **Task 2 — géométrie du chrono découplée (AC2).** Gouttière introduite comme **une seule valeur** (`--game-column-gutter`, token de frontmatter), lue par `GameView` (l'écart réel) et `CenterPanel` (la zone qui la traverse) ; `ShotClock` et `PlayerPanel` ne la lisent **pas**, par décision dérivée, vérifiée et verrouillée par un test chacun. **Rendu constant prouvé** : 36 captures identiques au pixel à la ligne de base (au bruit d'un pixel près sur un écran non déterministe, caractérisé). Plafond de gouttière **mesuré** aux trois formats — c'est l'entrée chiffrée de l'arbitrage de la Task 3.
 - **Task 3 — découpe arbitrée et livrée (AC3).** Sept passes de comparaison au rendu, toutes par surcharges CSS ; le tableau du Debug Log garde ce que chacune a écarté et pourquoi. Livré : deux niveaux de forme (grand bloc 16 px / trois blocs 12 px), centre en creux, barre basse alignée sur la grille des colonnes à **0,0 px**, exception à `Shapes` datée et bornée au scoreboard. **Le débordement du chrono est abandonné** (renverse l'AC16 de la 10.4) : token, demi-anneau et deux props morts retirés, le liseré de la carte active redevient un contour continu, et le disque remplit exactement la colonne aux trois formats.
 
+- **Passes de rendu du 2026-09-19, hors Tasks 1 à 3** (consignées à la revue de code du jour : la fiche n'avait été mise à jour qu'au premier commit de la story). Chaque ligne est un commit, chaque décision est de Nathan au rendu :
+  - `79f0710` — anneau du chrono agrandi dans son bloc (rayon 36 → 43, trait 7 → 6, chiffre 40 → 48 cqmin) : « agrandis-le un peu dans le cadre » ; frontmatter `clock` d'abord.
+  - `d4d3837` — le liseré de tour prend le rayon de la carte (`rounded-block`) : son bord intérieur restait à angle vif.
+  - `6e9bd3d` — colonne centrale `p-2` → `p-1` : « le même padding que là », celui de `+1 ADVERSAIRE` dans sa barre ; la zone du chrono suit (`-mx-2` → `-mx-1`).
+  - `f1d4481` — paramétrage au format du scoreboard, propositions « M » puis « T1 » : grand bloc, centre en creux, **bandeau `setup-header` retiré** (il doublait le filet du grand bloc ; renverse la revue du 2026-09-12), mode en tête de la colonne centrale, bandeau de carte resserré ; `SETUP_POPUP_RESERVE` recalculée ; exception de Shapes étendue.
+  - `43145c4` — récap au format du scoreboard, proposition « R1 » : grand bloc, trois blocs-colonnes, libellés en creux à 75 % (4,92 → 9,23:1).
+  - `3458484` — la pastille de `PromptModal` (« JOUEUR N A FINI ») affiche l'image de la bille (`BALL_PICTOS`) au lieu d'un aplat ; `BALL_CLASSES` retirée, sans autre consommateur.
+  - `87c6776` — **relief des CTA, proposition « K1 »** : tranche teintée sous les six variantes et les pictos, enfoncement à l'appui ; barre de rebours de `VALIDER` `h-2` → `h-1` (« un peu plus discrète »). ⚠️ C'est du travail des **Tasks 4 et 5**, livré avant qu'elles soient ouvertes : l'arbitrage (« K1 ») est noté ici, mais **les propositions concurrentes de K1 n'ont pas été consignées** au moment du rendu. Les deux arbitrages rouverts de la 11.2 (ombre de barre basse, verre des pop-ups) restent à re-trancher en Task 5.
+  - `607ba5a` — tuiles `BIENTÔT` grisées (fond désaturé, titre à 50 %) : « griser les éléments ».
+- **Revue de code du 2026-09-19** (`01402db..HEAD`, trois relecteurs) : voir Tasks › Review Findings. Deux décisions de Nathan — gouttière intérieure des cartes **retirée**, CTA et pictos inactifs **plats** (`disabled:shadow-none`) —, et le rendu JDS de la découpe attesté (scènes `07` et `09` aux trois formats, comparées à `HEAD`).
+
 ### File List
 
 - `DESIGN.md` — frontmatter `spacing` › `column-gutter` ; Layout : les trois lectures, l'arbitrage token/constante, le plafond mesuré
-- `1score/src/assets/main.css` — `--game-column-gutter` (`@theme static`), à côté de `--game-clock-bleed`
+- `1score/src/assets/main.css` — `--game-column-gutter` (`@theme static`) ; `--game-clock-bleed` retiré ; rayons `zone`/`block` ; `clock` ; `--shadow-cta-relief-*` (K1) ; `--size-relief-depth` (revue)
 - `1score/src/views/GameView.vue` — `data-testid="game-columns"`, `gap-(--game-column-gutter)` sur la rangée des trois colonnes
 - `1score/src/views/GameView.test.ts` — la gouttière vient du token partagé
-- `1score/src/components/CenterPanel.vue` — troisième terme dans la largeur/marge de la zone du chrono
+- `1score/src/components/CenterPanel.vue` — la zone du chrono annule seulement le retrait de la colonne (`-mx-1`), sans lire la gouttière ; colonne `p-1`, centre en creux
 - `1score/src/components/CenterPanel.test.ts` — attendu mis à jour
-- `1score/src/components/ShotClock.vue` — dérivation écrite : le clip ne lit pas la gouttière
-- `1score/src/components/ShotClock.test.ts` — cas verrouillant cette non-lecture
-- `1score/src/components/PlayerPanel.vue` — la gouttière intérieure ne suit pas la gouttière entre colonnes
-- `1score/src/components/PlayerPanel.test.ts` — cas verrouillant cette non-lecture
+- `1score/src/components/PlayerPanel.vue` — rayon de bloc, liseré arrondi ; gouttière intérieure et prop `side` retirées (revue)
+- `1score/src/components/PlayerPanel.test.ts` — rayon de bloc, liseré, retrait symétrique
 - `1score/src/assets/typography.test.ts` — `column-gutter` rejoint `clock-bleed` dans `SPACING_EXCLUDED`
 - `1score/src/components/ActionBar.vue` — la barre reprend la grille des colonnes (groupes en `flex-1`, gouttière et retrait partagés, pictos étirés), rayon de zone, voile et filet
 - `1score/src/components/ActionBar.test.ts` — deux cas : la grille reprise, les pictos étirés
 - `1score/src/components/ShotClock.vue` — demi-anneau et prop `turnRingSide` retirés (débordement abandonné)
 - `1score/src/components/ShotClock.test.ts` — les cinq cas du demi-anneau remplacés par trois garde-fous (rien de rouge, rien du tour, plus aucune lecture du token retiré)
+- `1score/src/components/CtaButton.vue`, `CtaButton.test.ts` — relief K1, enfoncement par `--size-relief-depth`, inactif plat
+- `1score/src/components/IconAction.vue`, `IconAction.test.ts` — même relief, même enfoncement, inactif plat
+- `1score/src/components/ScoreEntryDock.vue`, `ScoreEntryDock.test.ts` — barre de rebours `h-1`
+- `1score/src/components/ModeTile.vue`, `ModeTile.test.ts` — `BIENTÔT` grisé
+- `1score/src/components/GameSummary.vue`, `GameSummary.test.ts` — format du scoreboard (« R1 »), gouttière par le token
+- `1score/src/components/HomeScreen.vue`, `HomeScreen.test.ts` — format du scoreboard (« M »/« T1 »), `setup-header` retiré, `SETUP_POPUP_RESERVE`, gouttière par le token
+- `1score/src/components/PlayerSetupCard.vue` — rayon de bloc, bandeau resserré
+- `1score/src/components/PromptModal.vue`, `PromptModal.test.ts` — image de bille
+- `1score/src/components/ballAssets.ts` — `BALL_CLASSES` retirée
+- `1score/src/views/GameView.vue` — grand bloc ; `GAME_POPUP_RESERVE` recalculée (revue)
+- `1score/src/assets/tokens.test.ts` — `shadow-none` admis, `translate-[xy]-[…]` interdit (revue)
+- `1score/scripts/render-static.cjs` — attend `setup-mode-label` au lieu de `setup-header` (revue)
+- `1score/CLAUDE.md` — §10 : `--game-clock-bleed` retiré, lecteurs de `--game-column-gutter`
+- `.impeccable/baseline/2026-09-19-scan-src.json`, `2026-09-19-scan-url.json` — scans du 2026-09-19 (antérieurs à `87c6776` et `607ba5a` : à rejouer en Task 7)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — clé en `in-progress`
+- `_bmad-output/implementation-artifacts/deferred-work.md` — reports de la revue et « relier le chrono aux cartes »
 
 ## Change Log
+
+
+- **2026-09-19 — Revue de code (bmad-code-review, trois relecteurs sur `01402db..HEAD`).** 2 décisions de Nathan (gouttière intérieure des cartes retirée ; CTA et pictos inactifs plats), 11 correctifs, 2 reports, 7 constats écartés (relevant des Tasks 5 à 7 ouvertes, ou sans objet). Le plus grave : le harnais de rendu attendait `setup-header`, supprimé par `f1d4481` — plus aucune capture après `02-jds`. Fiche remise à jour des huit commits du jour.
 
 - **2026-09-18 — Découpe arbitrée en sept passes de rendu, et débordement du chrono ABANDONNÉ.** Le scoreboard passe en blocs arrondis (exception datée à `DESIGN.md` › Shapes, bornée à cet écran) : un grand bloc voilé de rayon 16 contenant trois blocs de rayon 12, centre en creux, barre basse alignée sur la grille des colonnes à 0,0 px. ⚠️ **L'AC16 de la Story 10.4 est renversée** : le disque du chrono ne déborde plus sur les cartes. Le débordement était la signature de colonnes soudées ; en blocs séparés, la gouttière s'arrêtait contre le disque au lieu d'en faire le tour et tout ce qu'il croisait finissait sur une diagonale. Quatre passes ont cherché un raccord propre avant l'abandon (Nathan : « trop complexe à faire »). `--game-clock-bleed`, le demi-anneau et deux props deviennent morts et sont retirés ; le liseré de la carte active redevient un contour continu ; le disque remplit exactement sa colonne.
 

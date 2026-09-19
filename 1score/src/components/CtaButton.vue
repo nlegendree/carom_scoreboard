@@ -40,14 +40,16 @@ const emit = defineEmits<{ press: [] }>()
 // à un `disabled`) — un CTA mort impossible à distinguer d'un CTA vivant. L'écran
 // d'identification joueur de l'Epic 4 a justement un `VALIDER` à griser : le critère de
 // sortie de l'epic veut qu'il le fasse SANS RIEN CRÉER.
-const DISABLED_CLASSES = 'disabled:opacity-30'
+// Un CTA inactif est PLAT (revue de la 11.5, décision de Nathan, 2026-09-19) : il perd sa
+// tranche de relief, sans quoi il garderait l'air d'un objet qu'on peut enfoncer.
+const DISABLED_CLASSES = 'disabled:opacity-30 disabled:shadow-none'
 
 // Relief de CTA (Story 11.5, Nathan, au rendu, 2026-09-19, « K1 ») : chaque variante porte sa
 // TRANCHE (`shadow-cta-relief-*`, teintée à sa couleur) ; l'ENFONCEMENT, lui, est commun aux
-// six : la tranche disparaît et le bouton descend de 3 px. ⚠️ 3 px = l'épaisseur de la tranche
-// dans `main.css` : le bouton s'enfonce exactement de son épaisseur. Si l'une bouge, l'autre
-// aussi. Instantané, comme tous les retours d'appui des CTA (`DESIGN.md` › Elevation).
-const PRESS_CLASSES = 'active:translate-y-[3px] active:shadow-cta-relief-active'
+// six : la tranche disparaît et le bouton descend de `--size-relief-depth`, le token qui fait
+// aussi l'épaisseur de la tranche dans `main.css` : le bouton s'enfonce exactement de son
+// épaisseur, et une seule valeur les tient toutes les deux. Instantané, comme tous les retours d'appui des CTA (`DESIGN.md` › Elevation).
+const PRESS_CLASSES = 'active:translate-y-(--size-relief-depth) active:shadow-cta-relief-active'
 
 const VARIANT_CLASSES: Record<CtaVariant, string> = {
   // Pop-up de décision (principal, choix) et `VALIDER` des trois hôtes de saisie.

@@ -122,8 +122,10 @@ describe('CenterPanel', () => {
     expect(classes.filter((c) => c.startsWith('bg-'))).toEqual(['bg-bg'])
   })
 
-  // AC16 : l'anneau du chrono déborde sur les cartes voisines — la colonne doit donc
-  // laisser SORTIR son contenu. Si un `overflow-hidden` revient ici, le débordement meurt.
+  // AC16 (10.4) est CADUC : le chrono ne déborde plus sur les cartes (Story 11.5). La garde
+  // reste, pour une raison plus étroite : la zone du chrono annule le retrait de la colonne
+  // et l'anneau va d'un bord à l'autre — un `overflow-hidden` ici ou sur un ancêtre le
+  // rognerait SANS ERREUR (voir `GameView`).
   it('lets the shot clock ring overflow the column', () => {
     const classes = mount(CenterPanel, { props: { ...baseProps, secondsRemaining: 40 } }).classes()
 

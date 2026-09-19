@@ -6,7 +6,7 @@ import source from './main.css?raw'
 // `server.fs.allow: ['..']` dans `vitest.config.ts` rend cet import possible : `DESIGN.md`
 // vit à la RACINE DU DÉPÔT, hors de la racine Vite (Story 11.4, AC5).
 import design from '../../../DESIGN.md?raw'
-import { extractFrontmatter, roleNames, property, sizeAtWidth } from './designFrontmatter'
+import { extractFrontmatter, roleNames, property, readSection, sizeAtWidth } from './designFrontmatter'
 
 // Story 11.1 (AC1, AC3) : `DESIGN.md` nomme les rôles, `main.css` les déclare, aucun
 // gabarit n'écrit une taille ni un interlettrage en valeur arbitraire. happy-dom ne calcule
@@ -88,6 +88,18 @@ describe('main.css — échelle typographique (Story 11.1)', () => {
       `« ${role} » est exclu de SIZE_ROLES par ce test, mais DESIGN.md ne le déclare plus : ` +
         `retirer l'exclusion, ou restaurer l'entrée`,
     ).toContain(role)
+  })
+
+  // `column-gutter` sort du miroir des `--size-*`, mais pas du miroir tout court : sans ce cas,
+  // changer la valeur dans UN SEUL des deux fichiers restait vert (revue de la 11.5). La
+  // référence `{spacing.base}` du frontmatter se lit `var(--spacing)` dans `main.css`.
+  it('mirrors spacing › column-gutter into --game-column-gutter, value included', () => {
+    const written = readSection(frontmatter, 'spacing')['column-gutter']
+    expect(typeof written).toBe('string')
+    const expected = String(written).split('{spacing.base}').join('var(--spacing)')
+    expect(source).toMatch(
+      new RegExp(`^\\s*--game-column-gutter: ${expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')};`, 'm'),
+    )
   })
 
   // Le miroir dans l'autre sens : un token qui n'est pas dans DESIGN.md n'existe pas

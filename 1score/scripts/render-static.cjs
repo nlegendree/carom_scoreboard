@@ -198,7 +198,7 @@ function writeAudit(results) {
     if (withFocus) await focusShot(page, f, '01b-accueil-focus', 'category-series', report)
     await press(page, 'category-series'); await page.waitForSelector('[data-testid="jds-title"]')
     await shot(page, f, '02-jds', report)
-    await press(page, 'mode-libre'); await page.waitForSelector('[data-testid="setup-header"]')
+    await press(page, 'mode-libre'); await page.waitForSelector('[data-testid="setup-mode-label"]')
     await shot(page, f, '03-parametrage-vide', report)
     await page.dispatchEvent('[data-testid="player-card-left"] [data-testid="name-field"]', 'pointerdown', { pointerId: 1, isPrimary: true, bubbles: true })
     await page.waitForSelector('[data-testid="alpha-keyboard-sheet"]')
@@ -240,7 +240,7 @@ function writeAudit(results) {
     ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1 })
     page = await ctx.newPage()
     await open(page)
-    await press(page, 'category-3bandes'); await page.waitForSelector('[data-testid="setup-header"]')
+    await press(page, 'category-3bandes'); await page.waitForSelector('[data-testid="setup-mode-label"]')
     for (const side of ['left', 'right']) {
       await page.dispatchEvent(`[data-testid="player-card-${side}"] [data-testid="distance-field"]`, 'pointerdown', { pointerId: 1, isPrimary: true, bubbles: true })
       await page.waitForSelector('[data-testid="numeric-pad-dock"]')

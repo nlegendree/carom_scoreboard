@@ -142,6 +142,9 @@ describe('gabarits — aucune ombre ni rayon hors DESIGN.md (Story 11.2)', () =>
   it.each(names)('%s writes no shadow or radius value outside DESIGN.md', (file) => {
     const text = stripComments(files[file] ?? '')
     expect(text).not.toMatch(/\bshadow-\[/)
+    // L'enfoncement d'un CTA est une distance du design system (`--size-relief-depth`), pas un
+    // `translate-y-[3px]` recopié à côté de l'épaisseur de tranche (revue de la 11.5).
+    expect(text).not.toMatch(/\btranslate-[xy]-\[/)
     expect(text).not.toMatch(/\brounded(-[trblse]{1,2})?-\[/)
     expect(text).not.toMatch(/\brounded(-[trblse]{1,2})?-(xs|sm|md|lg|[2-9]?xl)\b/)
   })
@@ -152,7 +155,9 @@ describe('gabarits — aucune ombre ni rayon hors DESIGN.md (Story 11.2)', () =>
   // (4 px), `shadow-<échelle>`, `inset-shadow-*` et `drop-shadow-*` tombent sous la même
   // règle : ils ne sont pas dans DESIGN.md.
   const radiusAllowed = new Set([...RADIUS_ROLES, 'none', 'full'])
-  const shadowAllowed = new Set(SHADOW_ROLES.map((r) => `shadow-${r}`))
+  // `shadow-none` est l'utilitaire de Tailwind qui RETIRE une ombre, pas un rôle : un CTA
+  // inactif perd sa tranche avec lui (revue de la 11.5).
+  const shadowAllowed = new Set([...SHADOW_ROLES.map((r) => `shadow-${r}`), 'shadow-none'])
   it.each(names)('%s uses only the radius and shadow tokens DESIGN.md names', (file) => {
     const text = stripComments(files[file] ?? '')
     const radii = [...text.matchAll(/(?<![\w-])rounded(?:-[trblse]{1,2})?(?:-([a-z0-9-]+))?(?![\w-])/g)]

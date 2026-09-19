@@ -107,12 +107,16 @@ const entryAlign = computed<TableSide>(() =>
 // (`integration-bmad-impeccable.md` §6). Sa place est ici, à côté de la mise en page qu'elle
 // mesure.
 //
-// Lecture : le scoreboard n'a PAS de barre latérale, ses trois colonnes valent 2/5 · 1/5 ·
-// 2/5 à fleur de bord. L'inset réserve donc la carte visée (40vw) plus une gouttière de
-// 4 unités, pour que la pop-up ne la TOUCHE jamais. Symétrique, à la différence du
-// paramétrage : les deux cartes sont à égale distance des bords.
+// Lecture : le scoreboard n'a PAS de barre latérale. Depuis la Story 11.5, ses trois
+// colonnes vivent dans le GRAND BLOC (`m-1`, filet de 1 px, `p-1`, gouttière d'une unité) :
+// avec C = 100vw - 4 unités - 2 px (sa content box), une carte vaut 0,4·C - 1 unité et son
+// bord intérieur tombe à `0,4·C + 1 unité + 1 px` du bord d'écran. L'inset réserve cette
+// distance plus 4 unités d'écart, pour que la pop-up ne TOUCHE jamais la carte visée.
+// Symétrique, à la différence du paramétrage : les deux cartes sont à égale distance des bords.
+// ⚠️ Si la mise en page du grand bloc bouge (`game-columns` plus bas), cette valeur bouge avec
+// elle — c'est la jumelle de `SETUP_POPUP_RESERVE` (`HomeScreen`), recalculée en même temps.
 // ⚠️ `--spacing` reste un token et reste lu : c'est l'unité de grille, une intention.
-const GAME_POPUP_RESERVE = 'calc(100vw * 0.4 + var(--spacing) * 4)'
+const GAME_POPUP_RESERVE = 'calc((100vw - var(--spacing) * 4 - 2px) * 0.4 + var(--spacing) * 5 + 1px)'
 
 // Valeur en cours de frappe, portée par la carte du joueur qui a la main et par elle seule
 // (AC3a) ; `null` partout ailleurs, y compris sur la carte d'en face.
@@ -358,18 +362,19 @@ const SUMMARY_SIDEBAR_EXIT: SideBarItem = {
 
     <template v-else-if="status === 'playing'">
       <!-- Story 11.5 (AC2/AC3) : la gouttière entre les trois colonnes est UNE SEULE VALEUR
-           (`--game-column-gutter`), et c'est ici qu'elle produit l'écart réel. `CenterPanel`
-           la relit pour que la zone du chrono la TRAVERSE ; `PlayerPanel` ne la lit pas (la
-           part qui tombe dans la gouttière tombe hors de la carte).
+           (`--game-column-gutter`), et c'est ici qu'elle produit l'écart réel. `ActionBar` la
+           relit pour que ses boutons tombent exactement sous les cartes ; le paramétrage et le
+           récap la relisent pour le même format. Ni `CenterPanel` ni `PlayerPanel` ne la
+           lisent depuis l'abandon du débordement du chrono (revue de la 11.5).
            LE GRAND BLOC (Nathan, au rendu, 2026-09-18, quatre passes de comparaison) : la
            partie du haut est une FORME, pas trois colonnes à fleur de bord — « les blocs
            michel, rep et j-pierre doivent aussi être dans un grand bloc en commun ». Rayon de
            ZONE dehors, rayon de BLOC sur ce qu'il contient : c'est l'écart entre les deux qui
            fait lire l'emboîtement. Exception à « conteneurs à angles vifs », datée et motivée
-           dans `DESIGN.md` › Shapes — elle ne vaut QUE pour le scoreboard.
+           dans `DESIGN.md` › Shapes — étendue à la mise en page carte · colonne · carte.
            La marge (`m-1`) et le retrait intérieur (`p-1`) s'écrivent en utilitaires de
            grille, PAS en token : une seule lecture chacune, rien à faire coïncider. Seule la
-           gouttière est un token, parce qu'elle a trois lectures (`DESIGN.md` › Layout).
+           gouttière est un token, parce qu'elle a plusieurs lectures (`DESIGN.md` › Layout).
            ⚠️ AUCUN `overflow-hidden` ici : le rayon est porté par les blocs eux-mêmes, et un
            `overflow-hidden` sur cette rangée rognerait l'anneau du chrono SANS ERREUR. -->
       <div
@@ -378,15 +383,13 @@ const SUMMARY_SIDEBAR_EXIT: SideBarItem = {
       >
         <!-- Story 10.4 (AC4) : les cartes ne sont PLUS TAPABLES. Le passage de main est
              passé au CTA `PASSER LE TOUR` de la colonne centrale, seul geste possible —
-             plus rien de destructif ne se déclenche au contact d'une carte.
-             `side` ne sert qu'à la gouttière réservée au débordement de l'anneau (AC16). -->
+             plus rien de destructif ne se déclenche au contact d'une carte. -->
         <PlayerPanel
           :player="leftPlayer"
           :active="activePlayer === leftId"
           :average="averages[leftId]"
           :bestSeries="bestSeries[leftId]"
           :showRemaining="isThreeCushions"
-          side="left"
           :seriesValue="openSeries[leftId]"
           :entryValue="entryValueOf(leftId)"
           @adjust-score="adjustScore(leftId, $event)"
@@ -404,7 +407,6 @@ const SUMMARY_SIDEBAR_EXIT: SideBarItem = {
           :average="averages[rightId]"
           :bestSeries="bestSeries[rightId]"
           :showRemaining="isThreeCushions"
-          side="right"
           :seriesValue="openSeries[rightId]"
           :entryValue="entryValueOf(rightId)"
           @adjust-score="adjustScore(rightId, $event)"

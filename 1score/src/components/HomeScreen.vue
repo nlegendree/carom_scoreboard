@@ -512,9 +512,11 @@ function fixDistance(): void {
              faisait une double ligne avec le filet du grand bloc, et le mode se lit désormais en
              tête de la colonne centrale. Les cartes gagnent toute la hauteur du bandeau.
              Exception aux angles vifs : `DESIGN.md` › Shapes, étendue à la mise en page carte ·
-             colonne · carte. ⚠️ `SETUP_POPUP_RESERVE` mesure CETTE géométrie. -->
+             colonne · carte. ⚠️ `SETUP_POPUP_RESERVE` mesure CETTE géométrie. La gouttière
+             LIT `--game-column-gutter`, le token du scoreboard, au lieu d'un `gap-1` recopié :
+             même format, même valeur (revue de la 11.5). -->
         <main
-          class="m-1 flex min-h-0 min-w-0 flex-1 gap-1 rounded-zone border border-border bg-surface p-1"
+          class="m-1 flex min-h-0 min-w-0 flex-1 gap-(--game-column-gutter) rounded-zone border border-border bg-surface p-1"
         >
           <PlayerSetupCard
             side="left"

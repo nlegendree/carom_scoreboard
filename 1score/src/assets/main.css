@@ -136,6 +136,12 @@
   /* Planchers des grilles de touches : N rangées au plancher de touche plus les N − 1 gaps. */
   --size-pad-min: calc(var(--size-key-numeric) * 4 + var(--spacing) * 6);   /* 288 → 468 : 4 rangées, gap-2 */
   --size-alpha-min: calc(var(--size-key-alpha) * 6 + var(--spacing) * 5);   /* 382 → 621 : 6 rangées, gap-1 */
+  /* Épaisseur de la tranche des CTA ET distance dont ils s'enfoncent à l'appui (Story 11.5,
+     revue du 2026-09-19) : UNE valeur, lue par `--shadow-cta-relief-*` et par
+     `active:translate-y-(--size-relief-depth)` de `CtaButton` et `IconAction` — le bouton
+     descend exactement de son épaisseur. Fixe en px, comme les filets : un relief ne suit
+     pas la grille. */
+  --size-relief-depth: 3px;
 
   /* Palier `lg` SUPPRIMÉ, pas seulement non déclaré (revue de la 11.2) : Tailwind v4 le
      fournit par défaut à 64rem (1024 px), un `lg:` s'appliquerait donc sur l'iPad à 1180.
@@ -195,9 +201,9 @@
      `--radius-key` / `--radius-modal` / `--radius-container`.
      ⚠️ « Rien sur les conteneurs » a une EXCEPTION depuis la Story 11.5, datée et motivée dans
      `DESIGN.md` › Shapes : le SCOREBOARD est en blocs arrondis (Nathan, au rendu, 2026-09-18,
-     après quatre passes de comparaison). Deux niveaux de forme, donc deux rayons de plus —
-     et l'exception ne vaut QUE pour cet écran : tuiles, barre latérale, récap et bandeaux
-     restent à angles vifs. */
+     après quatre passes de comparaison). Deux niveaux de forme, donc deux rayons de plus.
+     Étendue le 2026-09-19 à la mise en page carte · colonne · carte (paramétrage, récap) :
+     seuls tuiles, barre latérale et bandeaux restent à angles vifs. */
   --radius-tappable: 8px;
   --radius-block: 12px;
   --radius-popup: 12px;
@@ -287,15 +293,15 @@
   --shadow-key-relief: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 2px 0 rgba(0, 0, 0, 0.45);
   --shadow-key-relief-active: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   /* Relief de CTA (Story 11.5, Nathan, au rendu, 2026-09-19, « K1 ») : le relief de touche,
-     étendu à tous les CTA et aux pictos de la barre basse — filet de lumière en haut, TRANCHE de
-     3 px dessous, de la couleur du bouton en plus sombre. ⚠️ Tranche teintée, jamais noire : une
-     tranche noire se perdait sur les fonds sombres. ⚠️ Les 3 px de la tranche et les 3 px dont
-     le bouton descend à l'appui (`CtaButton`, `IconAction`) sont la MÊME distance : le bouton
-     s'enfonce exactement de son épaisseur. Remplace `--shadow-light-edge-start`, dont la valeur
+     étendu à tous les CTA et aux pictos de la barre basse — filet de lumière en haut, TRANCHE
+     (`--size-relief-depth`) dessous, de la couleur du bouton en plus sombre. ⚠️ Tranche teintée, jamais noire : une
+     tranche noire se perdait sur les fonds sombres. ⚠️ L'épaisseur de la tranche et la distance
+     dont le bouton descend à l'appui (`CtaButton`, `IconAction`) lisent le MÊME token : le
+     bouton s'enfonce exactement de son épaisseur. Remplace `--shadow-light-edge-start`, dont la valeur
      survit dans le filet de `--shadow-cta-relief-red`. */
-  --shadow-cta-relief-blue: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 3px 0 #163A9E;
-  --shadow-cta-relief-red: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 3px 0 #8A1520;
-  --shadow-cta-relief-neutral: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 3px 0 #181B24;
+  --shadow-cta-relief-blue: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 var(--size-relief-depth) 0 #163A9E;
+  --shadow-cta-relief-red: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 var(--size-relief-depth) 0 #8A1520;
+  --shadow-cta-relief-neutral: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 var(--size-relief-depth) 0 #181B24;
   --shadow-cta-relief-active: inset 0 1px 0 rgba(255, 255, 255, 0.10);
   --shadow-light-edge-field: inset 0 1px 0 rgba(255, 255, 255, 0.35);
   --shadow-popup: 0 32px 80px rgba(0, 0, 0, 0.65);

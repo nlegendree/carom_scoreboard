@@ -178,11 +178,14 @@ const players = computed<Record<PlayerId, Player>>(() => ({
          conteneur est le grand bloc (rayon de zone, `overflow-hidden` qui arrondit aussi le
          bandeau VS), et chaque colonne devient un BLOC au rayon de bloc, ses cellules jointives
          dedans. Retrait et gouttière à une unité. Exception aux angles vifs : `DESIGN.md` ›
-         Shapes, la mise en page carte · colonne · carte. -->
-    <div class="flex min-h-0 flex-1 gap-1 p-1">
+         Shapes, la mise en page carte · colonne · carte. La gouttière LIT
+         `--game-column-gutter`, le token du scoreboard : « même format » veut dire même
+         valeur, et un `gap-1` recopié ne suivrait pas un changement du token (revue de la 11.5). -->
+    <div data-testid="summary-columns" class="flex min-h-0 flex-1 gap-(--game-column-gutter) p-1">
       <template v-for="(side, index) in SIDES" :key="side">
         <div
           v-if="index === 1"
+          data-testid="summary-labels"
           class="flex w-1/5 shrink-0 flex-col gap-1 overflow-hidden rounded-block bg-bg px-1 text-center text-stat font-bold tracking-stat"
         >
           <span :class="[CELL_CLASSES, LABEL_CELL_CLASSES]">RÉSULTAT</span>

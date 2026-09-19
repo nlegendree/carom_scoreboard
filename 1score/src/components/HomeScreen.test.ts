@@ -510,6 +510,10 @@ describe('HomeScreen', () => {
     expect(title.text()).toBe('CADRE 47/2')
     expect(wrapper.find('[data-testid="setup-header"]').exists()).toBe(false)
     expect(title.classes()).toContain('text-title')
+    // Le grand bloc lit la gouttière du scoreboard, pas un `gap-1` recopié (revue de la 11.5).
+    expect([...wrapper.find('[data-testid="setup-center"]').element.parentElement!.classList]).toContain(
+      'gap-(--game-column-gutter)',
+    )
     expect(wrapper.find('[data-testid="change-ball-button"]').text()).toContain('CHANGER DE BILLE')
     expect(wrapper.find('[data-testid="change-side-button"]').text()).toContain('CHANGER DE CÔTÉ')
     expect(wrapper.find('[data-testid="confirm-button"]').text()).toBe('DÉMARRER')

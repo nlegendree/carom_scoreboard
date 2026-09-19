@@ -41,11 +41,11 @@ describe('GameView', () => {
   })
 
   // Story 11.5 (AC2) : la gouttière entre les trois colonnes est UNE SEULE VALEUR, et c'est
-  // ici qu'elle produit l'écart réel. Les deux autres lectures (`CenterPanel` pour la zone du
-  // chrono, `PlayerPanel` pour la gouttière intérieure) n'ont de sens qu'en regard de
-  // celle-ci : trois recopies se décaleraient au pixel, exactement comme les deux valeurs de
-  // débordement avant qu'elles ne deviennent `--game-clock-bleed`. happy-dom ne calcule aucun
-  // CSS : seule la classe peut être verrouillée.
+  // ici qu'elle produit l'écart réel. Les autres lectures (`ActionBar`, et le même format au
+  // paramétrage et au récap) n'ont de sens qu'en regard de celle-ci : des recopies se
+  // décaleraient au pixel. `CenterPanel` et `PlayerPanel` ne la lisent plus depuis l'abandon
+  // du débordement du chrono (revue de la 11.5). happy-dom ne calcule aucun CSS : seule la
+  // classe peut être verrouillée.
   it('spaces its three columns from the shared gutter token, never from a recopied value', async () => {
     const wrapper = mount(GameView)
     const store = useGameStore()

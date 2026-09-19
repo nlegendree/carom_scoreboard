@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Player, PlayerColor, TableSide } from '../types/game'
+import type { Player, PlayerColor } from '../types/game'
 
 // Carte joueur du scoreboard (Story 10.4), en TROIS zones depuis la 1re passe de rendu
 // (Nathan) — le bandeau suit désormais le modèle Billiboard de bout en bout :
@@ -32,9 +32,6 @@ const props = withDefaults(
     // pas le mode) ; le calcul, lui, appartient au panneau : les deux termes sont sur
     // `player`.
     showRemaining?: boolean
-    // Côté d'ÉCRAN de la carte (Story 10.4) : sert uniquement à réserver la marge
-    // intérieure sous l'anneau du chrono, qui déborde de la colonne centrale (AC16).
-    side?: TableSide
     // Série OUVERTE du joueur, comptée par les `+1` du 3 Bandes (`null` en JDS, où la
     // série est écrite d'un bloc à la validation).
     seriesValue?: number | null
@@ -46,7 +43,6 @@ const props = withDefaults(
     average: 0,
     bestSeries: 0,
     showRemaining: false,
-    side: 'left',
     seriesValue: null,
     entryValue: null,
   },
@@ -68,21 +64,11 @@ const BAND_COLOR_CLASSES: Record<PlayerColor, string> = {
   yellow: 'bg-panel-yellow-band',
 }
 
-// L'anneau du chrono déborde de la colonne centrale sur les deux cartes (AC16) : chacune
-// réserve une gouttière sur son bord INTÉRIEUR pour que ni le score, ni le bandeau, ni la
-// ligne de statistiques ne passent dessous. Le FOND, lui, reste pleine largeur.
-// Élargie de 24 à 32 px à la 2e passe de rendu : l'anneau ayant grossi, il déborde de
-// 24 px de chaque côté au lieu de 15.
-// ⚠️ Story 11.5 (AC2) : elle NE SUIT PAS `--game-column-gutter`, et c'est une décision
-// écrite. Ce qu'il faut absorber est le débordement DANS la carte, soit `--game-clock-bleed`
-// seul (3 unités) : la part `gouttière` de l'élargissement de la zone tombe HORS de la
-// carte, dans le vide entre les colonnes, et la carte n'a rien à lui réserver. Réserver
-// `bleed + gouttière` creuserait un blanc que rien ne viendrait occuper. La contrainte
-// reste donc `4 unités ≥ 3 unités`, indépendamment de la découpe.
-const INNER_GUTTER_CLASSES: Record<TableSide, string> = {
-  left: 'pr-4',
-  right: 'pl-4',
-}
+// Plus de gouttière intérieure (revue de la 11.5, décision de Nathan, 2026-09-19) : elle
+// réservait, côté centre, la place de l'anneau du chrono qui débordait sur les cartes (AC16 de
+// la 10.4). Le débordement est abandonné par la 11.5 ; la réserve laissait 4 unités mortes et
+// décentrait nom et score vers l'extérieur. La carte a désormais le même retrait des deux
+// côtés, et ne connaît plus son côté d'écran.
 
 // Le score doit être le plus GROS possible dans sa carte. Une taille unique ne peut pas
 // y suffire : le panneau fait 40 % de la largeur d'écran, et ce qui tient à un chiffre
@@ -105,7 +91,6 @@ const SCORE_SIZE_FALLBACK = 'text-score-more'
 
 const colorClasses = computed(() => PLAYER_COLOR_CLASSES[props.player.color])
 const bandClasses = computed(() => BAND_COLOR_CLASSES[props.player.color])
-const gutterClass = computed(() => INNER_GUTTER_CLASSES[props.side])
 
 const displayedScore = computed(() => String(props.player.score))
 const scoreSizeClass = computed(
@@ -206,7 +191,7 @@ function adjust(delta: number): void {
     <div
       data-testid="panel-header"
       class="flex shrink-0 flex-col gap-1 overflow-hidden px-3 py-2.5"
-      :class="[bandClasses, gutterClass]"
+      :class="bandClasses"
     >
       <div class="flex items-baseline justify-between gap-2">
         <span
@@ -257,7 +242,6 @@ function adjust(delta: number): void {
     <div
       data-testid="score-zone"
       class="flex min-h-0 flex-1 items-center justify-center overflow-hidden px-3"
-      :class="gutterClass"
     >
       <span
         data-testid="score"

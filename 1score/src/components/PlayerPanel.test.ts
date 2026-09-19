@@ -181,39 +181,28 @@ describe('PlayerPanel — les quatre zones de la carte', () => {
     expect(sizeOf(oneDigit)).not.toBe(sizeOf(threeDigits))
   })
 
-  // AC16 : l'anneau du chrono déborde sur les cartes — chacune réserve une marge sur son
-  // bord INTÉRIEUR (à droite pour la carte de gauche, à gauche pour celle de droite).
-  it('reserves an inner gutter on the side facing the centre column', () => {
-    const left = mount(PlayerPanel, { props: { player: makePlayer(), active: false, side: 'left' } })
-    const right = mount(PlayerPanel, {
-      props: { player: makePlayer(), active: false, side: 'right' },
-    })
+  // Revue de la 11.5 (décision de Nathan, 2026-09-19) : la gouttière intérieure qui réservait
+  // la place de l'anneau débordant (AC16 de la 10.4) est RETIRÉE avec le débordement. Le
+  // bandeau et la zone de score ont le même retrait des deux côtés : une réserve qui
+  // reviendrait décentrerait de nouveau nom et score vers l'extérieur.
+  it('pads its band and score zone symmetrically, with no inner gutter', () => {
+    const card = mount(PlayerPanel, { props: { player: makePlayer(), active: false } })
 
-    expect(left.find('[data-testid="score-zone"]').classes()).toContain('pr-4')
-    expect(right.find('[data-testid="score-zone"]').classes()).toContain('pl-4')
+    for (const id of ['panel-header', 'score-zone']) {
+      const classes = card.find(`[data-testid="${id}"]`).classes()
+      expect(classes).toContain('px-3')
+      expect(classes.filter((c) => /^p[lr]-/.test(c))).toEqual([])
+    }
   })
 
-  // Story 11.5 (AC2) : cette gouttière intérieure NE SUIT PAS `--game-column-gutter`, et
-  // c'est une décision écrite. Ce qu'elle absorbe est le débordement DANS la carte
-  // (`--game-clock-bleed` seul) ; la part `gouttière` de l'élargissement de la zone tombe
-  // HORS de la carte. La faire grandir avec la découpe creuserait un blanc que rien ne
-  // viendrait occuper. Sans ce cas, la prochaine découpe « corrigerait » la carte.
   // Story 11.5 (AC3) : la carte est un BLOC dans le grand bloc — rayon de bloc (12 px),
   // plus petit que le rayon de zone (16 px) qui l'entoure. C'est l'écart entre les deux qui
   // fait lire l'emboîtement ; les égaliser l'aplatirait. Exception à « conteneurs à angles
-  // vifs » datée dans `DESIGN.md` › Shapes, et limitée au scoreboard.
+  // vifs » datée dans `DESIGN.md` › Shapes.
   it('carries the block radius of the zone it sits in', () => {
-    const card = mount(PlayerPanel, { props: { player: makePlayer(), active: false, side: 'left' } })
+    const card = mount(PlayerPanel, { props: { player: makePlayer(), active: false } })
 
     expect(card.classes()).toContain('rounded-block')
-  })
-
-  it('sizes that gutter on the clock bleed alone, never on the column gutter', () => {
-    const left = mount(PlayerPanel, { props: { player: makePlayer(), active: false, side: 'left' } })
-
-    for (const c of left.find('[data-testid="score-zone"]').classes()) {
-      expect(c).not.toContain('--game-column-gutter')
-    }
   })
 })
 

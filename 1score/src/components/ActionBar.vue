@@ -127,8 +127,11 @@ const pictoActions = computed<BarAction[]>(() => [
       <!-- Le CTA occupe TOUTE la largeur de la colonne du joueur assis, comme la barre
            pleine largeur du Billiboard (`상대선수 득점 +1`). ⚠️ `flex-1`, plus `w-2/5` :
            la gouttière rétrécit les cartes, et une largeur recopiée ne pouvait plus les
-           suivre (Story 11.5). Le groupe s'étire exactement comme la carte au-dessus. -->
-      <div class="flex flex-1">
+           suivre (Story 11.5). Le groupe s'étire exactement comme la carte au-dessus.
+           `min-w-0` comme les cartes (`PlayerPanel`) : sans lui, un contenu plus large que la
+           carte (libellé allongé, 5e picto) refuserait de rétrécir et casserait l'alignement
+           au pixel EN SILENCE (revue de la 11.5 — 416 px demandés pour 431 à 1133). -->
+      <div class="flex min-w-0 flex-1">
         <CtaButton
           :data-testid="ctaTestId"
           :data-side="ctaOwner"
@@ -146,7 +149,7 @@ const pictoActions = computed<BarAction[]>(() => [
 
       <!-- ⚠️ 1,5 unité = 12 px sur tablette (UX-DR52) et non `gap-3`, qui vaudrait 24 px :
            `--spacing` est à 8 px sur tablette, fluide jusqu'à 13 px à 1920 (Story 11.1). -->
-      <div class="flex flex-1 items-center gap-1.5" :class="PICTO_ROW_CLASSES[ctaSide]">
+      <div class="flex min-w-0 flex-1 items-center gap-1.5" :class="PICTO_ROW_CLASSES[ctaSide]">
         <IconAction
           v-for="action in pictoActions"
           :key="action.testid"

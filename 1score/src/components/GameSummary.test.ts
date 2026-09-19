@@ -116,11 +116,18 @@ describe('GameSummary', () => {
   it('lays its three columns out as blocks, labels in a readable recess', () => {
     const wrapper = mountSummary()
     const columns = wrapper.findAll('[data-testid="summary-column"]')
-    const labels = columns[0]!.element.parentElement!.children[1]!
+    // Par son `data-testid`, plus par sa position dans le DOM : un élément ajouté entre les
+    // colonnes faisait tester la mauvaise (revue de la 11.5).
+    const labels = wrapper.find('[data-testid="summary-labels"]')
 
     for (const c of columns) expect(c.classes()).toContain('rounded-block')
-    expect([...labels.classList]).toEqual(expect.arrayContaining(['rounded-block', 'bg-bg']))
-    for (const cell of labels.children) {
+    // Le creux central, entre les deux colonnes de joueur — l'ordre, lui, se vérifie ici.
+    expect([...labels.element.parentElement!.children].indexOf(labels.element)).toBe(1)
+    // `px-1` : les cellules de libellé ne touchent pas le rayon du bloc.
+    expect(labels.classes()).toEqual(expect.arrayContaining(['rounded-block', 'bg-bg', 'px-1']))
+    // Même gouttière que le scoreboard : le token, pas un `gap-1` recopié.
+    expect(wrapper.find('[data-testid="summary-columns"]').classes()).toContain('gap-(--game-column-gutter)')
+    for (const cell of labels.element.children) {
       expect([...cell.classList]).toContain('text-white/75')
       expect([...cell.classList]).not.toContain('bg-surface')
     }
